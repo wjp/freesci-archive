@@ -3,7 +3,11 @@
 #include <script.h>
 
 
+#ifndef _SCI_VM_H
+#define _SCI_VM_H
+
 typedef unsigned char byte;
+typedef guint16 heap_ptr;
 
 struct freelist_node
 {
@@ -43,3 +47,5 @@ extern int max_instance;
 
 int emulate(state* s, object* obj, int method);
 instance* instantiate(heap* h, object* o);
+
+#endif /* !_SCI_VM_H */

@@ -68,6 +68,10 @@ int main(int argc, char** argv)
   ggi_visual_t bigvis;
   int noobj = 0;
   resource_t *resource, *font;
+  port_t clipframe = {0, 150, 120, 180, 200};
+  port_t winframe = {0, 12, 110, 46, 209};
+  int boxcol = 15, boxpri = 12, boxflags = 0;
+
   int pointernr = 999; /* mouse pointer ID */
   int bgpicnr = 10; /* background picture number */
 
@@ -150,6 +154,9 @@ int main(int argc, char** argv)
   cmdHookInt(&view_cell, "view_cell", "demo: view loop frame number");
   cmdHookInt(&drawflags, "bgpic_flags", "demo: Flags for pic drawing");
   cmdHookInt(&drawpalette, "bgpic_palette", "demo: Default palette for pic");
+  cmdHookInt(&boxcol, "box_color", "demo: Text box FG color");
+  cmdHookInt(&boxpri, "box_priority", "demo: Text box priority");
+  cmdHookInt(&boxflags, "box_flags", "demo: Text box flags");
   cmdHook(&c_quit, "quit", "", "demo: Quits");
   cmdHook(&c_redraw, "redraw", "", "demo: Redraw background picture");
   cmdHook(&c_drawadd, "drawadd", "i", "demo: Add to background picture");
@@ -197,9 +204,14 @@ int main(int argc, char** argv)
 
       copyPicture(pic, bgpic);
 
+      resource = findResource(sci_font, 0);
+      if (resource)
+	drawWindow(pic, &winframe, boxcol, boxpri, "Title", resource->data, boxflags);
+
       resource = findResource(sci_view, view_nr); /* Hero */
       if (resource)
-	drawView0(pic, 200-(sci_pointer_x/2), 153, 14, view_loop, view_cell, resource->data);
+	drawView0(pic, &winframe,
+		  100-(sci_pointer_x/2), -3, 13, view_loop, view_cell, resource->data);
 
       if (pointernr != -1) {
 	resource = findResource(sci_cursor, pointernr);

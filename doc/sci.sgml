@@ -15,17 +15,36 @@
   <BookInfo>
 
     <Author>
-     <FirstName>Christoph</>
-     <SurName>Reichenbach</>
+     <FirstName>Christoph</firstname>
+     <SurName>Reichenbach</surname>
      <AuthorBlurb><Para>
-       Christoph Reichenbach (<Email>creichen@rbg.informatik.tu-darmstadt.de</Email>)
+       Christoph Reichenbach (<Email>jameson@linuxgames.com</Email>)
        maintains this document and the FreeSCI interpreter.
      </Para></AuthorBlurb>
     </Author>
 
+    <Author>
+     <FirstName>Lars</firstname>
+     <SurName>Skovlund</surname>
+     <AuthorBlurb><Para>
+      Lars Skovlund (<Email>skovmanden50@hotmail.com</Email>) contributed information about the
+      SCI heap, many of the kernel functions, and wrote the description of SCI ports.
+     </Para></AuthorBlurb>
+    </Author>
+
+    <Author>
+     <Firstname/Ravi/<surname/I./
+      <authorblurb><para>
+       Ravi (<email/ravi.i@softhome.net/), the SCI Decoding Project's sound specialist,
+       contributed information about the
+       sound subsystem.
+      </para>
+      </authorblurb>
+    </author>
+
     <Othercredit>
-     <FirstName>Carl</>
-     <SurName>Muckenhoupt</>
+     <FirstName>Carl</firstname>
+     <SurName>Muckenhoupt</surname>
      <AuthorBlurb><Para>
       Carl Muckenhoupt (<Email>carl@wurb.com</Email>), author of the original SCI
       decoding utilities for DOS, discovered most of the decompression and graphics
@@ -39,17 +58,17 @@
       FreeSCI interpreter for those games.
       Please contact the author if you find that anything is being described
       incorrectly or missing.
-      <warning>
+      <warning><para>
         This version of the documentation is *very* incomplete and covers only a few
         limited parts of SCI0.
-      </warning>
+      </para></warning>
     </Para></Abstract>
 
     <ReleaseInfo/This document is still far from complete and does almost only SCI0./
 
     <LegalNotice>
      <Para>
-     Copyright (C) 1999 Christoph Reichenbach
+     Copyright (C) 1999 Christoph Reichenbach, Lars Skovlund, Ravi I.
      </Para>
      <Para>
    Permission is hereby granted, free of charge, to any person obtaining a
@@ -66,7 +85,7 @@
    THE DOCUMENTATION IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-   THE AUTHOR(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+   THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
    CONNECTION WITH THE DOCUMENTATION OR THE USE OR OTHER DEALINGS IN THE DOCUMENTATION.
      </Para><Para>
@@ -95,12 +114,348 @@
    and SCI Decoding Projects and their supporters, as well as Carl Muckenhoupt,
    who took the first steps of SCI decoding, for their valuable help and
    support.
+   </para><para>
+    Please note that some of the text contributions have been cut, reformatted or
+    slightly modified in an attempt to improve the general quality of this document.
    </para>
    </Preface>
 
 
+ <Chapter>
+ <Title/Introduction/
+<sect1>
+<Title/The basics/
+<para>
+The Sierra Creative Interpreter is a complete virtual machine. It cointains
+functionality for displaying graphics, playing sound, receiving input, writing
+data to the hard disk, and handling complex logical functions.
+In version 0.xxx of the interpreter, Sierra split the game data into nine
+different types of information:
+<simpleList>
+<member/script data/
+<member/vocab data/
+<member/patch data/
+<member/sound data/
+<member/cursor data/
+<member/view data/
+<member/pic data/
+<member/font data/
+<member/text data/
+</simpleList>
+</para>
+<para>
+Each game may contain up to 1000 different elements of each data type; these
+elements are referred to as "resources". The index numbers of the various
+resources need not be in sequence; they are usually assigned arbitrarily.
+<Footnote><para>With several notable exceptions, used mainly by the debugger.</para></Footnote>
+</para>
+</sect1>
+<sect1>
+<title/Resource storage/
+<para>
+Individual resources can be stored in one of two ways: Either in resource files
+(which, surprisingly, are called something like "resource.000" or
+"resource.001"), or in external patch files (not to be confused with "patch"
+resources). The external files are called something like "pic.100" or
+"script.000", and they take precedence over data from resource files.
+</para>
+<para>
+There is also a file called "resource.map", which contains a lookup table for
+the individual resources, and another file, "resource.cfg", which contains
+configuration information; neither of those is used by FreeSCI.
+</para>
+<para>
+Resource information stored in external patch files is not compressed and
+therefore easily readable. It is, however, preceeded by two bytes:
+The first byte contains the resource type ORed with 0x80, the purpose of the
+second byte is unknown (but it appears to be ignored by the original SCI
+version 0 engine).
+</para>
+<para>
+As stated before, external patch files take precedence over resource resource
+files. Applying those external files as patches is an option since FreeSCI
+version 0.2.2.
+</para>
+<para>
+The resource files, however, are more complicated. Each of them contains a
+sequence of resources preceeded by a header; these resources may be compressed.
+It is, also, quite common to find resources shared by several resource files.
+The reason for this obviously is that, back when hard disks were rare and hard
+to come by, the games had to be playable from floppy disks. To prevent
+unneccessary disk-jockeying, common stuff was placed in several resource files,
+each of which was then stored on one disk.
+</para>
+</sect1>
+
+<sect1>
+<title/The individual resources: A summary/
+<para>
+The resource types of SCI0 can be roughly grouped into four sets:
+<itemizedlist>
+<ListItem><para>Graphics (pic, view, font, cursor)</para></ListItem>
+<ListItem><para/Sound (patch, sound)/</ListItem>
+<ListItem><para/Logic (script, vocab)/</ListItem>
+<ListItem><para/Text/</ListItem>
+</itemizedList>
+
+Text resources are nothing more than a series of ASCIIZ strings; but the other
+resources deserve further discussion.
+
+</para>
+<sect2>
+<Title/Graphical resources summarized/
+<para>
+The screen graphics are compromised of the four graphics resources. The
+background pictures are drawn using vector-oriented commands from at least one
+pic resource (several resources may be overlaid). The fact that vector graphics
+were used for SCI0 allows for several interesting picture quality improvements.
+Pic resources also include two additional "screens": The priority screen, which
+marks parts of the pictures with a certain priority, so that other things with
+less priority can be fully or partially covered by them even if they are drawn
+at a later time, and the special screen, which delimits the walking area and
+some special places used by the game logic. FreeSCI uses a fourth auxiliary
+screen for during drawing time (this is a heritage from Carl Muckenhoupt's
+original code).
+</para>
+<para>
+The view resources compromise the bitmaps of the game. They are somewhat
+compressed, and include transparency information. Also, each view resource may
+contain several animation "loops" consisting of one or more "cells", each of
+which is an image.
+</para>
+<para>
+View resources are used for foreground images as well as for background images
+(for example, the "Spielburg" sign in QfG1 (EGA) is stored in a view resource
+and added to the background picture after it is drawn).
+The cursor resource contains simple bitmaps for drawing the mouse pointer. It
+only allows for black, white, and transparent pixels in SCI0.
+The fourth graphics resource is font data. It contains bitmapped fonts which
+are used to draw most of the text in the games. Text is used in one of four
+places: Text boxes, Text input fields, the title bar menu, and (rarely)
+on-screen.
+</para>
+</sect2>
+<sect2>
+<Title/Sound resources summarized/
+<para>
+SCI0 uses two types of resources for sound: Patch resources, and sound
+resources. Sound resources contain a rather simple header, and music data
+stored in a slightly modified version of the MIDI standard.
+</para>
+<para>
+Patch resources contain device-dependant instrument mapping information for the
+instruments used in the sound resources. SCI0 sound resources do not adhere to
+the General Midi (GM) standard (which was, to my knowledge, written several
+years after the first SCI0 game was released), though later SCI versions may do
+so.
+</para>
+<para>
+Since FreeSCI currently only takes advantage of GM output, it maps the
+instruments according to strings taken from patch resource 002 (Used by the
+IMF/FB01 sound device, whatever that may be). This works almost adequately.
+</para>
+</sect2>
+
+<sect2>
+<title/Logic resources summarized/
+<para>
+Whenever the parser needs to look up a word, it looks for it in one of
+the vocab resources. This is not the sole purpose of the vocab resources,
+though; they provide information required by the debugger, including the help
+text for the debugger help menu and the names of the various SCI opcodes
+and kernel functions.
+</para><para>
+Script resources are the heart (or, rather, the brains) of the game. They
+contain commands to load and display resources, to react on certain actions,
+and generally to find out what happens next.
+</para><para>
+To be more precise, scripts are composed of classes and class data.
+To run the game, scripts are instantiated on the SCI stack, where their
+functions are executed by a virtual machine. They use a set of 0x7d opcodes,
+which may take either 8 or 16 bit parameters (so, effectively, there is twice
+the amount of commands). The functions may refer to global data, local temporary
+data, local function parameter data, or object data (selectors). They may,
+additionally, indirectly refer to "hunk" data, which is stored outside of the
+SCI heap. Since the whole design is object oriented, functions may
+re-use or overload the functions of their superclass, which allows for a quite
+powerful design.
+</para><para>
+One of the most powerful things functions can do is to call a kernel command.
+This is the SCI equivalent to a system call as provided by traditional
+operating systems. These kernel commands are practically unexplored, but we can
+safely assume that they are used to perform tasks like playing a song, drawing
+an image, waiting for a key, changing the mouse pointer appearance, or loading
+a save game file.
+</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title/SCI01 extensions/
+<para>
+SCI01 differs only in very few respects: It uses different compression
+algorithms (all of which are supported since FreeSCI 0.2.1), and a
+different type of sound resources, which may contain digitized sound effects
+(samples). The basic music data, however, still resembles MIDI data. It has not
+been examined yet.
+</para>
+</sect1>
+
+
+<sect1>
+<title/SCI1 extensions/
+<para>
+SCI1, which is not covered by FreeSCI at the moment, introduces new concepts
+like Palettes, scaled bitmap images and several new compression algorithms.
+</para>
+</sect1>
+
+ </Chapter>
 
  <Chapter>
+ <Title/Graphics resources/
+ <sect1>
+ <Title/General stuff/
+ <para>
+ The graphics in SCI are generated using four resource types:
+ <itemizedlist>
+ <listitem><para/Pic resources for background pictures/</listitem>
+ <listitem><para/View resources for images/</listitem>
+ <listitem><para/Font resources for drawing text/</listitem>
+ <listitem><para/Cursor resources for displaying the mouse pointer/</listitem>
+ </itemizedlist>
+ 
+ Those resources are drawn on three distinct screens:
+ <itemizedlist>
+ <listitem><para/The visual screen, used for displaying the actual pictures the player sees/</listitem>
+ <listitem><para/The priority screen, which keeps information about how the depth of the screen/</listitem>
+ <listitem><para/The control screen, which contains special information/</listitem>
+ </itemizedlist>
+ </para>
+ </sect1>
+ <sect1>
+ <Title/SCI Ports/
+ <para>
+ <author><firstname/Lars/ <surname/Skovlund/ </author>
+
+</para><para>
+  Version 1.0,
+  6. July 1999
+</para><para>
+ Note that the observations made in this document are
+generally based on SCI version 0.000.572 (the one that comes with LSL3),
+but should be valid even for SCI01 and SCI1, as well. I know already
+about
+some differences in the port system from SCI0 to SCI1, but I feel we
+should
+have an interpreter running for SCI0 before dealing with SCI1.
+</para><para>
+This article discusses a key data structure in SCI graphics handling;
+this data structure is called a port, and it is involved in most
+graphics-related
+operations. The port is basically a graphics state record, storing
+things
+like pen color, current font, cursor position etc. Each port also has
+an origin and a size. The actual port data structure has remained
+absolutely
+unchanged from SCI0 up to the latest versions of SCI1. 
+</para><para>
+The port can be viewed as a rectangle in which things are drawn. Every
+drawing operation (even KDrawPic) is executed relative to the origin
+coordinates of the current port (depending on the kernel function, other
+parameters in the port structure are used as well), such that coordinate
+(0, 0) in the "picture window" (such a thing really exists in SCI!) is
+<emphasis/not/ the top of the screen, but rather the leftmost point underneath
+the menu bar. The coordinate set (0,0) is called the local coordinates,
+and its physical position on the screen, (0, 10), is called the global
+coordinates. Kernel calls exist to ease conversion between the two
+coordinate
+systems, but they are, it appears, meant for event handlers to use, and
+not generally usable (I think they take a pointer to an Event object as
+a
+parameter).
+</para><para>
+At least three ports are created and managed automatically by the SCI
+interpreter. These are the "window manager" port, the menu port, and the
+picture port (which is actually a window, see later). The latter two
+should be fairly easy to understand. The menu bar is drawn in the menu
+port,
+and the current room is drawn in the picture port. What may be less
+obvious
+is that the window manager port is an "invisible" port, on which the
+window
+backgrounds are drawn, although the windows have a port themselves. If
+you
+are familiar with <Trademark>Windows</trademark>
+programming, the term "client rectangle" may
+ring a
+bell here - SCI draws the window backgrounds, using values in the window
+manager port, while the window's own port controls what is drawn inside
+it.
+The window manager port covers the same bounding rectangle as the
+picture
+window, but it is transparent so it doesn't mess up the graphics.
+</para><para>
+I feel compelled to mention windows for a bit here, not in depth - they
+are
+the subject of a later article - but just to mention that the structure
+used
+to manage windows is just an extension of the port structure. Whenever
+an
+SCI system call needs a pointer to a port structure, a pointer to a
+window
+structure will do. This implicates that the SysWindow class (which
+implements
+windows) has no "port" property. Instead, its "window" property points
+to the
+extended port/window structure which can safely be passed to KSetPort.
+Not
+surprisingly, many of KNewWindow's arguments end up in the port part of
+the
+window structure.
+</para><para>
+An SCI program can't directly instantiate a port. If a program wants to
+access a specific part of the screen using ports, it has to instantiate
+a
+transparent window. In fact, SCI creates the picture window using
+RNewWindow,
+the same function that the kernel call KNewWindow ends up calling,
+asking for
+an untitled window with a transparent background - but more on that in a
+later article.
+</para><para>
+It must be stressed that ports are purely internal structures. Although
+a
+program can select different ports to draw in, the data structures
+themselves
+are absolutely off-limits to SCI code. KNewWindow fills a port structure
+with
+user-supplied data, but there is no way of changing that data, short of
+dis-
+posing the window and instantiating it again. The structure is
+frequently
+changed by SCI itself, though.
+</para><para>
+Only two kernel calls deal directly with ports:
+</para><para>
+<simpleList>
+<member>KGetPort (see <XREF LINKEND="KGetPort">)</member>
+<member>KSetPort (see <XREF LINKEND="KSetPort">)</member>
+</simplelist>
+</para><para>
+These two functions are often used in pairs (also internally), like:
+</para><para><programlisting>
+var temp;
+
+temp=KGetPort();  /* Save the old port */
+KSetPort(...);      /* Activate some other port */
+..                            /* Draw some stuff */
+KSetPort(temp);    /* Reactivate the old port */
+</programlisting>
+ </para>
+
+</sect1>
+ <sect1>
  <Title/The Cursor resource/
 
   <para>
@@ -136,8 +491,11 @@
    color it should be drawn in, the corresponding bits of both bitmask lists mentioned
    above have to be examined. In the table below, A represents a bit from
    the first list, and B the corresponding bit from the lower list.
-   <InformalTable frame="all">
+   </para>
+   <sect2>
          <title>Color mapping for the SCI0 mouse pointer</title>
+   <para>
+   <InformalTable frame="all">
          <tgroup cols="2">
            <thead>
              <row>
@@ -165,10 +523,16 @@
            </tbody>
          </tgroup>
        </InformalTable>
+   </para>
+   </sect2>
+
+   <sect2>
+         <title>Color mapping for the SCI1 mouse pointer</title>
+   <para>
    Since this method of doing things wastes one combination, the table was changed for
    SCI01 and SCI1:
+
    <InformalTable frame="all">
-         <title>Color mapping for the SCI1 mouse pointer</title>
          <tgroup cols="2">
            <thead>
              <row>
@@ -197,10 +561,11 @@
          </tgroup>
        </InformalTable>
   </para>
- </Chapter>
+  </sect2>
+ </sect1>
 
 
-<Chapter>
+<sect1>
   <Title/The SCI0 View Resource/
    <para>
     In SCI0, Views are collections of images or sprites. Each View resource
@@ -212,9 +577,11 @@
     a single View resource.
     Please note that the byte order of the following data is always little endian.
 
-
+ </para>
+ <sect2>
+   <Title/The View Resource/
  <para>
- <VariableList> <Title/The View Resource/
+ <VariableList>
    <VarListEntry><Term>0x00 - 0x01
       </Term><ListItem><para>
         The number of image groups available.
@@ -236,10 +603,13 @@
    </para></ListItem></VarListEntry>
  </VariableList>
  </para>
+ </sect2>
 
 
+ <sect2>
+   <Title/Cell List/
  <para>
-  <VariableList> <Title/Cell List/
+  <VariableList>
     <VarListEntry><Term>0x00 - 0x01
        </Term><ListItem><Para>
          The number of image cells available for this group.
@@ -256,11 +626,12 @@
     </para></ListItem></VarListEntry>
   </VariableList>
  </para>
+ </sect2>
 
 
- 
+ <sect2><Title/Image Cell/
  <para>
- <VariableList><Title/Image Cell/
+ <VariableList>
    <VarListEntry><Term>0x00 - 0x01
       </Term><ListItem><Para>
         The horizontal (X) size of the image.
@@ -290,6 +661,1329 @@
    </para></ListItem></VarListEntry>
  </VariableList>
  </para>
+ </sect2>
+</sect1>
+<sect1 ID="LarsWindows">
+<Title/Windows, Dialogs and Controls/
+<para>
+by <Author><firstname/Lars/<surname/Skovlund/</Author></para><para>
+Version 1.0, 7. July 1999
+</para><para>
+I am going to start by mentioning the menus. It has nothing to do with the
+material I deal with in this essay. They use different kernel calls, and
+such things as port management are handled internally by the kernel 
+routines.
+The SCI program just sets up a menu structure using the kernel calls.
+Since they are irrelevant to the subject of this essay, I will not spend 
+more
+time on them.
+</para><para>
+The Rect structure is important (also to ports) since it is the basis for
+passing a screen position to the interpreter. It looks like this:
+</para><para>
+<programlisting>
+typedef struct
+{
+  short top, left, bottom, right;
+}
+</programlisting>
+</para><para>
+It will be seen from this that rectangle coordinates in SCI are not normal-
+ly represented in the usual (x,y,width,height) fashion. So pay close atten-
+tion to this structure! Also, it is not passed as a pointer, but rather as
+the four values in order. This is particularly true of SCI objects, where
+the property names nsTop etc. actually form a Rect structure which can be
+used directly by the interpreter.
+</para><para>
+Windows are created using the KNewWindow kernel function. Each window has
+six attributes which are passed from the script to the kernel function:
+</para><para>
+<simplelist>
+<member/Bounding rectangle/
+<member/Title/
+<member/Type/
+<member/Priority/
+<member/Foreground color/
+<member/Background color/
+</simplelist>
+</para><para>
+Of these, the type and priority are the most interesting, because they 
+decide
+the appearance of the window. The type is a bit field:
+</para><para>
+<simplelist>
+<member/bit 0 - transparency/
+<member/bit 1 - window does _not_ have a frame/
+<member/bit 2 - the window has a title/
+<member/bit 3-6 - unused/
+<member/bit 7 - see below/
+</simplelist>
+</para><para>
+Bit 0 specifies a transparent window. KNewWindow does not save the image
+behind the created window - it stays on the screen until the pic is redrawn,
+so windows with this style definitely can't be used as message boxes. It 
+does
+have some special uses, though. If this bit is not set, KNewWindow draws
+a rectangle in the specified background color using the bounding rectangle
+coordinates (using the WM port). When this bit is set,
+</para><para>
+Bit 1 specifies a window without a frame. The frame is the black shading you
+can see in the corner of a message box.
+</para><para>
+Bit 2 tells KNewWindow to draw a grey title bar with a title printed in
+white. In the version I have used for this essay, it is not possible to
+change the title bar colors. Note that the bounding rectangle is always
+specified as if the window had no title bar. If this bit is set, ten pixels
+are reserved above the coordinates specified. Although this bit is set,
+the Title parameter may still be NULL. If this is the case, an empty title
+bar is drawn.
+</para><para>
+Bit 7 has a special meaning; it is used only in window type 0x81, and is not
+tested in any other way. When this style is chosen, KNewWindow does not
+draw anything at all. It is the caller's responsibility to draw a
+window frame on the WM port. CB1 uses this style for its ornate windows,
+and draws the frame manually.
+</para><para>
+The picture window which I mentioned in the last article is created using
+style 3 (that is, TRANSPARENT | NOFRAME). The normal message box styles used
+in LSL3 are 0 and 4.
+</para><para>
+I have not been able to investigate the priority property yet, so the fol-
+lowing is based on suppositions. It is only used when drawing transparent
+windows. In this case, if priority is not -1 (which means not used), the
+window is drawn onto the priority map (with the specified priority value) as
+well as the screen.
+</para><para>
+There is a class called SysWindow which is just a simple wrapper around the
+following two kernel calls. Try breaking on SysWindow::open, then type c
+to inspect the current object. You can change all the parameters to KNewWin-
+dow (the Rect is split in its fields, to nsTop, nsLeft etc.)
+</para><para>
+To create a window structure, use KNewWindow (see <XREF LINKEND="KNewWindow">);
+to remove it again, apply KDisposeWindow (see <XREF LINKEND="KDisposeWindow">) on
+it.
+</para><para>
+So how do we put stuff inside these windows? That question is a little com-
+plicated to answer, because it is really a shared effort between the inter-
+preter and the object hierarchy, and this is one case where the interpreter
+actually interacts with the objects itself. I will start by explaining the
+classes involved.
+</para><para>
+All control types are descendants of a common class (I do not know its name,
+since it appears to have an invalid name property). Among other things, this
+common class contains a type number and a state. The type number is the only
+thing that distinguishes the control types from each other inside the
+interpreter - if a wrong type is set, the interpreter might try to change
+a non-existent property.
+</para><para>
+The type numbers are laid out as follows:
+<simplelist>
+<member/  1 - Button control/
+<member/  2 - Text control/
+<member/  3 - Edit control/
+<member/  4 - Icon control/
+<member/  5 - not used/
+<member/  6 - Selector control (as in the Save and Restore boxes)/
+</simplelist>
+The gauge "controls" are not really controls. I don't know how they work
+(yet).
+</para><para>
+Each control also has a state value. These are laid out as follows:
+<simplelist>
+<member/bit 0 - selectable. If this bit is set, the control can be selected using 
+the
+Tab key. Except for the text and icon controls, all controls are selectable./
+<member/bit 1 - unknown. Always set, except for the text and icon controls/
+<member/bit 2 - disabled. When this bit is set, a button is grayed out. No other
+control types are affected./
+<member/bit 3 - selected. When this bit is set, a frame is drawn around the control./
+</simplelist>
+Note that state 3 is by far the most common.
+With that explained, I'll move on to the kernel functions. There are three
+functions associated with controls - KDrawControl (see <XREF LINKEND="KDrawControl">),
+KHiliteControl (see <XREF LINKEND="KHiliteControl">) and
+KEditControl (see <XREF LINKEND="KEditControl">).
+ Note that there is a KOnControl kernel call which is entirely
+unrelated to window management.
+</para><para>
+The dialogs are implemented using not one, but two classes - Dialog and
+Window. While the Window class maintains the window (It is derived from
+SysWindow), the Dialog class is just a list of controls. It is derived from
+the List class, but has extended functionality to tell its members to redraw
+etc. There is a special function, located in script 255, which allows
+scripts to push information about the dialog on the stack instead of 
+creating
+the Dialog object manually.
+</para><note><para>
+Note that the internal debugger uses the same window calls as the SCI 
+script.
+That is why the screen messes up if you step through drawing code - the de-
+bugger has activated the Debug window port, and "forgets" to switch back
+while stepping across instructions. Thus, all graphics commands are
+redirected to the debug window port. Not a pretty sight.
+
+</para></note>
+</sect1>
+</chapter>
+
+<chapter>
+  <Title/The Sound subsystem/
+   <sect1>
+     <Title/The SCI0 Sound Resource Format/
+     <para> by <author><firstname/Ravi/<surname/I./</author>
+     </para><para>
+       Revision 5, Jul. 5th, 1999
+     </para>
+     <sect2><Title/Preface/
+      <para>
+   Sierra's SCI0 sound resources contain the music and sound effects played
+   in the game. With the introduction of SCI, the company took advantage of
+   new sound hardware which allowed for far better music than the traditional
+   PC speaker could ever create. Sierra chose two devices to specifically
+   target: the MT-32, and the Adlib. The MT-32 is a MIDI synth while the
+   Adlib is a less expensive card based around the OPL2, a non-MIDI chip.
+   Anyone interested in Sierra music and its history can find information at
+   the Sierra Soundtrack Series (http://www.queststudios.com).
+      </para><para>
+   Music is stored as a series of MIDI events, and the sound resource is
+   basically just a MIDI file. Much of what I write here comes from outside
+   documents, and I would direct anyone seeking more information to a MIDI
+   specification. The MIDI resource page (http://www.midi.org/resource.htm)
+   on midi.org has some good links as well as tables with status and
+   control information.
+      </para><para>
+   Some people prefer the one-based numbering system for channel and program
+   numbers. I personally prefer the zero-based system, and use it here. If
+   you're familiar with channels 1-16, be aware that I will call them 0-15.
+   My intention is not to be deviant from other programs but to be more
+   accurate in representing the way information gets stored. The same is true
+   for programs 0-127 as opposed to 1-128. For whatever reason, convention
+   already holds that controls be numbered 0-127, so nothing in my treatment
+   of them should be abnormal.
+      </para><para>
+   Sierra changed its sound file format in the switch to SCI1. I refer only
+   to SCI0 sound files in this specification. Hybrid interpreters such as
+   the one used for Quest for Glory II are also excluded. Finally, SCI games
+   written for non-DOS systems may have different formats. This document
+   applies to Sierra's IBM games.
+      </para>
+ </sect2><sect2><title/Sound Devices/
+  <para>
+   A gamer's sound hardware greatly affects how the music will sound. Devices
+   used by SCI0 can be broken into 3 categories:
+  <variablelist>
+      <varlistentry><term>MIDI Synths</term><listitem><para>
+                   These will generally give the best sound quality. MIDI
+                   synths are polyphonic with defineable instruments through
+                   patch files and full support for MIDI controls. The
+                   General MIDI standard had not been written when Sierra
+                   began writing SCI games, and as far as I know no SCI0 game
+                   uses a GM driver or includes a GM track. This means that
+                   synths had to be individually supported.
+            </para></listitem></varlistentry>
+      <varlistentry><term>Non-MIDI Synths</term><listitem><para>
+                   Generally not as good as MIDI synths, but also less
+                   expensive. The OPLx family of chips are still very common
+                   among home PC users thanks to the Adlib and SoundBlaster
+                   cards. Synths are polyphonic with defineable instruments
+                   through patch files, but drivers must be written to
+                   interpret MIDI events and turn them into commands the
+                   hardware will recognize. Support for most sound controls
+                   gets lost in the process. Furthermore, drivers must map
+                   logical, polyphonic MIDI channels to physical, monophonic
+                   hardware channels. A specific control was introduced for
+                   this purpose and will be discussed later. There is no
+                   common way of accessing these devices, so they must be
+                   individually supported. These days, however, most people
+                   have an Adlib compatible card.
+            </para></listitem></varlistentry>
+      <varlistentry><term/Beepers/<listitem><para>
+                   Beepers produce very poor music and don't support instrument
+                   definitions, but all PC users have one so supporting them
+                   covers people without special sound hardware. The most
+                   common device is the PC speaker, which is monophonic.
+                   Another is the Tandy speaker with 3 channels. Drivers must
+                   interpret MIDI events, but need only concern themselves
+                   with basic functionality. Interpreting the MIDI events is
+                   also made easier because each channel is monophonic. To
+                   play a chord on the Tandy, for example, each voice must be
+                   put in a separate MIDI channel.
+       </para></listitem></varlistentry>
+   </variablelist>
+   </para><para>
+   With such a diverse group of devices to support, Sierra put a lot of the
+   work on the shoulders of the drivers. Functions for loding patch files,
+   handling events, pausing, etc. are all in the drivers. The interpreter
+   calls them as needed but does not concern itself at all with how they
+   get implemented.
+  </para><para>
+   Listed here are devices supported by the SCI0 interpreter with a little
+   information about each. There could very well be other hardware not listed
+   here, so please send in any missing information. Also, since the
+   interpreter is made to be device independent, this list could be easily
+   expanded. The process would require that a new driver be written and a
+   patch file created if appropriate. Since the driver is responsible for
+   choosing which patch file to use and then entering it into the device, the
+   second step would be quite easy.
+  </para><para>
+   <informaltable frame="all">
+    <tgroup cols="5">
+     <thead><row>
+      <entry/Device Name/
+      <entry/Driver/
+      <entry/Patch/
+      <entry/Poly/
+      <entry/Flag/
+     </row></thead>
+     <tbody>
+      <row>
+      <entry/    Roland MT-32      /<entry/  mt32    /<entry/   001   /<entry/   32   / <entry//
+     </row><row>
+      <entry/        Adlib         /<entry/  adl     /<entry/   003   /<entry/   9    /<entry/04h/
+     </row><row>
+      <entry/     PC Speaker       /<entry/  std     /<entry/    *    /<entry/   1    /<entry/20h/
+     </row><row>
+      <entry/  Tandy 1000 or PCJr   /<entry/  jr      /<entry/    *    /<entry/   3    /<entry/+/
+     </row><row>
+      <entry/  Tandy 1000 SL, TL   /<entry/  tandy   /<entry/    *    /<entry/   3    /<entry/+/
+     </row><row>
+      <entry/  IBM Music Feature   /<entry/  imf     /<entry/   002   /<entry/   8    /<entry//
+     </row><row>
+      <entry/    Yamaha FM-01      /<entry/  fb01    /<entry/   002   /<entry/   8    /<entry//
+     </row><row>
+      <entry/  CMS or Game Blaster  /<entry/  cms     /<entry/   101   /<entry/   12   /<entry//
+     </row><row>
+      <entry/  Casio MT540 or CT460   /<entry/  mt540   /<entry/   004   /<entry/   10   /<entry//
+     </row><row>
+      <entry/     Casio CSM-1      /<entry/          /<entry/   007   /<entry/        /<entry//
+     </row><row>
+      <entry/  Roland D110,D10,D20   /<entry/          /<entry/   000   /<entry/        /<entry//
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+              (thanks to Shane T. for providing some of this).
+              Blank fields are unknown, not unused.
+   <simplelist>
+            <member/*  when asked which patch to load, the PC and Tandy
+                  speaker drivers return 0xFFFF, which is a signal
+                  that they do not use patches/
+            <member/+  the Tandy drivers almost certainly use 10h for their
+                  play flag, but this is unconfirmed so I'll leave
+                  it out for now/
+   </simplelist>
+
+   The driver field is the file name of the driver without the drv extension.
+   Patch specifies which patch file the driver requests. Poly is the maximum
+   number of voices which can be playing at once as reported by the driver.
+   The play flag specifies which channels the device will play and gets
+   explained in the header section.
+  </para>
+ </sect2>
+ <sect2><Title/File Format/
+  <para>
+   Sound files follow the same format as all extracted SCI0 resources: the
+   first two bytes of the file contain a magic number identifying the
+   resource type and the rest of the file contains a dump of the uncompressed
+   data. The identifier is the resource type (04h for sound) OR-ed with 80h
+   and stored as a word. The result will be 84h 00h in extracted sound files.
+ <footnote><para>Please note that FreeSCI's resource_t.data[] stores information
+   without the two-byte header.</para></footnote>
+  </para><para>  
+   The sound resource data itself is a header with channel initialization
+   followed by a series of MIDI events.
+  </para>
+ </sect2>
+ <sect2><Title/Header/
+  <para>
+   The header provides the sound driver with 2 pieces of information about
+   each channel. The first is a byte which specifies how many voices each
+   logical MIDI channel will be playing. For MIDI synths, this information is
+   not really necessary and is probably ignored. The same goes for beepers.
+   This byte is only useful for non-MIDI synths which must know how many
+   hardware channels each logical MIDI channel will need. This value is only
+   an initial setting. Sound files can request changes to the mapping later
+   with control changes.
+  </para><para>
+   It's worth mentioning here that previous revisions of this specification
+   said that some of the MIDI controls could be initialized using the first
+   byte. I now believe this is a bug in the Adlib driver which happens when
+   the value gets too large and causes overflows into other areas of memory.
+   There should not be more requested channels than the device has hardware
+   channels.
+  </para><para>
+   The second byte describes how the user's sound harware should treat the
+   channel. It is the combination of bit flags which may be OR-ed together.
+   If the appropriate bit is set for the currently selected sound device, the
+   channel will be played. If it is not, the channel will be silent. The
+   driver decides which bit it will use as the play flag, and the table under
+   Sound Devices lists the flag used by each driver. Drivers ignore the first
+   byte (used to request hardware channels) on MIDI channels it won't play.
+  </para><para>
+   Before the channel initialization is a byte which specifies whether the
+   header holds information for 15 or 16 channels. A value of 0 means that
+   there will be 16 channels and a value of 2 means that there will be 15
+   channels. All other values are undefined and will render sound files
+   unplayable.
+  </para><para>
+   The header format:
+   <simplelist>
+      <member/1 byte  - number of channels code (usually 0, can also be 2)/
+      <member/2 bytes - initialization for channel 0/
+      <member/2 bytes - initialization for channel 1/
+      <member/./
+      <member/./
+      <member/./
+      <member/2 bytes - initialization for channel 15/
+    </simplelist>
+   Notice that the space for channel 15's initialization will always be
+   present. If the number of channels code is 2, the last two bytes of the
+   header will be ignored, but they are stil in the resource. The header is
+   always 33 bytes in length.
+  </para>
+</sect2><sect2>
+ <title/Events/
+  <para>
+   The actual music is stored in a series of events. The generic form for an
+   event is:
+  <simplelist>
+      <member/&lt;byte - delta time&gt; [byte - status] [byte - p1 [p2]]/
+  </simplelist>
+  </para><para>
+   Delta time is the number of ticks to wait after executing the previous
+   event before executing this event. Standard MIDI stores this as a variable
+   length value. In sound resources, it will be exactly one byte and the most
+   significant bit is in fact used as part of the value. There are 60 ticks
+   per second, which is about 16667 microseconds between ticks.
+  </para><para>
+   The status byte is basically a command. The most significant bit is always
+   set. This feature is important because the status byte will not always be
+   present. If you read a byte expecting it to be a status byte but the most
+   significant bit is not set, that byte is actually a paramater and you
+   should repeat the last status used. This is know as running status mode
+   and appears to get used relatively often.
+  </para><para>
+   There generic form for a status byte is (in bits) 1xxxcccc - The lower
+   nibble designates which channel the message affects. The upper nibble is
+   the command, but as stated earlier, the most significant bit must be 1.
+   That leaves space for 8 messages, most of which require at least one
+   paramater. Paramaters will never have their most significant bit set.
+  </para>
+ </sect2>
+ <sect2><title/Status Reference/
+  <para>
+  <variablelist>
+   <varlistentry><term/8x n v/<listitem><para/Note off: Stop playing note n on channel x, releasing the key
+            with velocity v. If a hold pedal is pressed, the note will
+            continue to play after this status is received and end when the
+            pedal is released. A zero velocity note on can also be used to
+            stop playing a note./</listitem></varlistentry>
+   <varlistentry><term/9x n v/<listitem><para/Note on: Play note n on with velocity v on channebl x. The
+            velocity is the speed with which the key gets pressed, which
+            basically means how loud the note should be played. Playing a
+            note with velocity 0 is a way of turning the note off./</listitem></varlistentry>
+   <varlistentry><term/Ax n p/<listitem><para/Key pressure (after-touch): Set key pressure to p for note n on
+            channel x. This is to modify key pressure for a note that is
+            already playing./</listitem></varlistentry>
+   <varlistentry><term/Bx c s/<listitem><para>Control: Set control c to s on channel x. This can be confusing
+            because there isn't just one meaning. Changing the settings on
+            different controls will, of course, have different outcomes.
+         </para><para>
+            Controls which handle any value are continuous controllers. They
+            have a continuous range. Controls which are only on/off are
+            switches. Their defined range is only 01h (OFF) and 7Fh (ON).
+            However, in order to respond to all values, 01h-3Fh is treated as
+            OFF and 40h-7Fh is treated as ON. While in practice they may only
+            use bit 6 as a flag, my personal opinion is that values between
+            01h and 7Fh should be avoided for the sake of clarity.
+         </para><para>
+            I used to include a list of common controls with brief summaries
+            but now consider it outside the scope of this specification.
+            Instead of listing standard MIDI controls, here are some of the
+            non-standard controls used by drivers. These will be ignored by
+            real MIDI synths but are useful to non-MIDI synths. You should
+            know, however, that not all controls are supported in all
+            drivers. For that matter, most standard controls are unsupported
+            in non-MIDI synths. This was not a problem for Sierra, who could
+            package their drivers with the game, but could be a hardship for
+            new developers who want to write games for the original
+            interpreters. It should not be a problem on new interpreters
+            since they can make a more standardized solution to the problem
+            playing MIDI files on non-MIDI synths.
+         </para><para>
+            Control Refrence
+            <variablelist>
+               <varlistentry><term/4Bh/<listitem><para/
+                        Channel mapping: When a channel sets this control, it
+                        tells the  driver how many notes it will be playing
+                        at once, and therefore how many hardware channels it
+                        occupies./</listitem></varlistentry>
+
+               <varlistentry><term/4Ch/<listitem><para/Unknown: untested/</listitem></varlistentry>
+
+               <varlistentry><term/4Eh/<listitem><para/
+                        Unknown: Experiments in setting and clearing it show
+                        that a value of 0 will cause notes to be played
+                        without regard for the velocity paramater while a
+                        value of 1 will enable velocities./</listitem></varlistentry>
+            </variablelist>
+          </para></listitem></varlistentry>
+
+   <varlistentry><term/Cx p/<listitem><para/
+          Program change: Set program (patch, instrument etc.) to p for
+          channel x. This is a simple instrument change./</listitem></varlistentry>
+
+   <varlistentry><term/Dx p/<listitem><para/
+          Pressure (after-touch): Set key pressure to p on channel x. This is
+          similar to Ax but differs in its scope. Message Ax is applied on a
+          per-note basis while message Dx is applied to an entire channel./</listitem></varlistentry>
+
+   <varlistentry><term/Ex t b/<listitem><para/
+            Pitch wheel: Set the pitch wheel to tb. The setting is actually
+            a 14 bit number with the least significant 7 bits stored in b
+            and the most significant 7 bits stored in t. (Remember the top
+            bit can't be used for either byte.) The range of settings is
+            0000h to 3FFFh. A setting of 2000h means the pitch wheel is
+            centered. Larger values raise pitch and smaller values lower it./</listitem></varlistentry>
+
+   <varlistentry><term/Fx/<listitem><para>
+        These are *not* channel messages; the lower nibble does not signify
+        a channel. There are two types of messages with the upper nibble set
+        to all 1's: "System Common Messages" and "System Real-Time Messages".
+        The only one I've seen in sound resources is FCh, which is a
+        real-time message that means stop the current sequence. It is used at
+        the end of all sound files.
+     <footnote><para>
+       This does not conform to the MIDI specification, which requires a track
+       to terminate with the sequence 0xff 0x2f 0x00
+     </para></footnote>
+        The Adlib driver does, however, include
+        support for F0h, which signifies the start of system exclusive data.
+        System exclusive data must terminate with F7h, and the driver picks
+        up at this point to continue playback.
+        </para></listitem></varlistentry>
+  </variablelist>
+ </para>
+</sect2>
+<sect2>
+ <title/Revision history/
+  <para>
+  <variablelist>
+   <varlistentry><term/Revision 5 - Jul. 5, 1999/
+     <listitem><para><itemizedlist>
+      <listitem><para/Rewrote much of the specification, trying to focus less on explaining
+        MIDI and more on explaining sound resources/</listitem>
+      <listitem><para/Removed information about standard MIDI controls/</listitem>
+      <listitem><para/Added driver table/</listitem>
+      <listitem><para/Expanded sound device section/</listitem>
+      <listitem><para/Completed header information/</listitem>
+     </itemizedlist></para></listitem></varlistentry>
+
+   <varlistentry><term/Revision 4 - Jun. 19, 1999/
+     <listitem><para><itemizedlist>
+      <listitem><para/Fixed the list of changes in Revision 3 (was incomplete)/</listitem>
+      <listitem><para/Expanded the introductory blurb about controls/</listitem>
+      <listitem><para/I began working with a disassembly of ADL.DRV, and am hoping to use
+        it to complete this specification. The next revision should be more
+        interesting than this one./</listitem>
+     </itemizedlist></para></listitem></varlistentry>
+
+   <varlistentry><term/Revision 3 - May 4, 1999/
+     <listitem><para><itemizedlist>
+      <listitem><para/Removed the "compatible games" list. I haven't found a non-compatible
+        SCI0 game yet, which makes the list quite useless./</listitem>
+      <listitem><para/Verified that SCI1 sound resources are different./</listitem>
+      <listitem><para/Tidied the "About the output medium" section. Does that term "output
+        medium" sound wordy or unclear? I don't really like it, but I didn't
+        want to beat "sound device" to death./</listitem>
+      <listitem><para/More information about the header/</listitem>
+      <listitem><para/Modified the explanation for message FCh./</listitem>
+      <listitem><para/Changed most references to status bytes as "commands" with "messges"
+        to stay more consistent with MIDI terminology./</listitem>
+      <listitem><para/Added midi.org as a source for more MIDI information/</listitem>
+      <listitem><para/Removed labels like "tentative" and "incomplete" as things become
+        more concrete -- not complete yet, but getting there./</listitem>
+      <listitem><para/More information about controls/</listitem>
+     </itemizedlist></para></listitem></varlistentry>
+
+   <varlistentry><term/Revision 2 - Jan. 16, 1999/
+     <listitem><para><itemizedlist>
+      <listitem><para/Got rid of the HTML. I originally intented to post this as a message
+        on the webboard, but ended up distributing the file. If I'm going to
+        distribute it as a file, there's no need to bother with the HTML
+        since I can do all my formatting as plain text./</listitem>
+      <listitem><para/I found refrences to command 8x in the 1988 Christmas Card, so my
+        comment about not seeing one got removed. To date, I haven't seen any
+        examples of commands Ax or Dx./</listitem>
+      <listitem><para/Expanded the header section./</listitem>
+      <listitem><para/Added information about controls./</listitem>
+      <listitem><para/Added information about the output mediums./</listitem>
+      <listitem><para/Tried to be more consistent with terminology/</listitem>
+     </itemizedlist></para></listitem></varlistentry>
+
+   <varlistentry><term/Revision 1 - Dec. 29, 1998/
+     <listitem><para><itemizedlist>
+      <listitem><para/First release of the specification/</listitem>
+     </itemizedlist></para></listitem></varlistentry>
+  </variablelist>
+  </para>
+ </sect2>
+   </sect1>
+   <sect1>
+    <title/Mapping instruments in FreeSCI/
+    <sect2><Title/The Patch.002 resource/
+     <para>
+       As Ravi describes in his description of the patch resources (which have not been included
+       here), one of the major problems with SCI sound support is the lack of General Midi (GM)
+       support in the earlier games. Since those were written before GM was conceived, this
+       can hardly be considered to be Sierra's fault; but this fact doesn't help when it comes
+       to supporting the games in a portable manner.
+     </para><para>
+       Unfortunately, almost every SCI0 game uses an individual instrument mapping scheme. This
+       means that there are only two options to generate GM music from the original SCI sound
+       resources: Either create a manual mapping for each game, or abuse existing data from the
+       game for this purpose. Obviously, the latter way would be either impossible or much
+       easier.
+     </para><para>
+       So, the solution would be to use an existing instrument mapping scheme. Those mapping schemes
+       are stored in the patch resources, and, as such, easily accessible to an SCI engine.
+       As those patch files are driver dependant (which, in turn, are hardware dependant), most
+       of the patch data is unusable. The Adlib data, for example, will only work for an OPL-2
+       FM synthesizer chip or one of its successors, the MT-32 data (which consists of one massive
+       sysex block) won't help anyone without an MT-32 or LAPC-1, and so on. So, to recycle
+       this hardware-dependant data, two new possibilities remain: Either extract and interpret
+       the patch data using a portable software synthesizer (such as timidity), or extract
+       instrument names and map those to GM instruments. The first approach would, of course,
+       yield the better results (at the cost of computation power); but the only software emulator
+       for a specific sound system I've seen so far was an OPL-2 emulator. So the alternative,
+       extracting a text ID of each instrument and using it to map this instrument to a GM instrument,
+       looks much more promising.
+     </para><para>
+       Now, most SCI0 games come with a patch.002 resource, which is used by the IBM Music Feature card
+       and Yamaha FM-01 sound synthesizers (both of which appear to use frequency modulation).
+       This is the only patch file that includes text descriptions of most of its instruments. Note
+       this, not all instruments have name representation. This means that some of them can't be
+       mapped and have to be silenced; but those instruments are either used for sound effects only
+       or not used at all, so this isn't critical.
+     </para><para>
+       Using those 7-letter instrument names, it is now possible to build a small database of
+       instruments, which, subseqently, can be mapped to GM instruments.
+     </para><para>
+       The file structure is relatively simple (for this purpose): Every patch.002 consists of
+       either one or two instrument banks carrying 48 instruments each. Every instrument has a
+       fixed block size of 0x40 bytes; each block starts with the 7-letter description of the
+       instrument or seven blanks if none is available.
+     </para><para>
+       If two banks are present, the second bank is separated from the first one by a two-byte
+       sequence (0xab, 0xcd). Keeping this in mind, it is trivial to extract the instrument names
+       of the 48 or 96 instruments.
+     </para>
+    </sect2>
+    <sect2><title/Percussion instruments/
+     <para>
+       Percussion instruments are treated specially in the MIDI standard. MIDI channel 10 (or 9,
+       if you count from 0 to 15 like most people do) is reserved for percussions and some
+       special effects; each key for this channel represents either nothing or one
+       fixed percussion instrument.
+     </para><para>
+       At first glance, this might lead to an additional problem of mapping those percussion
+       instruments. Fortunately, the General Midi standard extends on the MT-32 percussion mappings,
+       which are used in SCI0, so that channel 9 can be left completely untouched in the process
+       of instrument mapping.
+     </para>
+    </sect2>
+   </sect1>
+</chapter>
+
+<Chapter>
+ <Title/The SCI virtual machine/
+  <sect1>
+  <Title/Fixme/
+  <para>
+   This section is severely lacking a good introduction.
+   [More to come]
+  </para>
+  </sect1>
+  <sect1>
+  <title/Interpreter initialization and the main execution loop/
+  <para>
+By <author><firstname/Lars/<surname/Skovlund/</author>
+Version 1.0, 7. July 1999
+</para><para>
+When the interpreter initializes, it sets up a timer for 60 hertz (one that
+"ticks" 60 times per second). This timer does two things: it lets
+the so-called servers execute (most notably, the sound player and input
+manager) and it "feeds" the internal game clock. This 60 hz. "systick" is
+used all over the place. For example, it is accessible using the KGetTime
+kernel function. Some graphic effects depend on it, for example the
+"shake screen" effect. In SCI1, it is also used for timing in the palette
+fades. And naturally, it is used in the KWait kernel call.
+</para><para>
+Basically, the initialization proceeds as follows:
+<simplelist>
+<member/   Initialize the heap and hunk./
+<member/   Parse the config file and the command line./
+<member/   Load the drivers specified in the config file/
+<member/   Initialize the graphics subsystem./
+<member/   Initialize the event manager/
+<member/   Initialize the window manager/
+<member/   Initialize the text parser (i.e. load the vocabulary files)/
+<member/   Initialize the music player/
+<member/   Save the machine state for restarting the game later on, see note/
+<member/   Allocate the PMachine stack on the heap./
+<member/   Get a pointer to the game object/
+<member/   And run, by executing the play or replay method./
+</simplelist>
+Note: This is quite interesting, the KRestartGame kernel call is implemented
+using a simple setjmp/longjmp pair.
+</para><para>
+The right game object is found by looking in the "dispatch table" of script
+0. The dispatch table has block type 7, and is an array of words. The first
+entry is a pointer (script relative) to the game object, for instance SQ3.
+If the game was restarted, the interpreter executes the replay method, play
+otherwise.
+</para><para>
+After looking up the address of the method in the object block, execution is
+started. It can be viewed as a huge switch statement, which executes con-
+tinuously. When the last ret statement (in the play or replay method) is
+met, the interpreter terminates.
+</para><para>
+The ExecuteCode function, which contains the mentioned switch statement,
+is called recursively. It lets other subroutines handle the object
+complexity, all the ExecuteCode function has is a pointer to the next in-
+struction. Thus, it is easy to terminate the interpreter; just return from
+all running instances of ExecuteCode.
+</para><para>
+So, how does an SCI program execute? Well, the play method is defined in the
+Game class, and it is never overridden. It consists of a huge loop which
+calls Game::doit continuously, followed by a pause according to the selected
+animation speed. That is, the script, not the interpreter, handles animation
+speed. Notice how the debugger very often shows the statement sag $12 upon
+entering the debugger? This instruction resides in Game::play, and the break
+occurs here because of a KWait kernel call which is executed right before
+that instruction. This wait takes the most execution time, so therefore the
+debug break is most likely to be
+A game programmer would then override Game::doit and place the game
+specific main loop here (still, Game::doit is almost identical from game to
+game). Execution of the Game::play main loop stops when an event causes
+global variable 4 to be non-zero. The last ret instruction is met, and the
+interpreter terminates.
+</para>
+  </sect1>
+
+  <sect1>
+   <Title/The SCI Heap/
+    <para>
+     SCI0 (and probably SCI1 as well) uses a heap consisting of 0xffff bytes of
+     memory; this size corresponds to the size of one i386 real-mode memory segment
+     minus one.
+     <Footnote><para/
+     This appears to be the maximum size; the games generally require less heap
+     space./
+     </Footnote>
+    </para>
+
+     <sect2>
+     <Title/Heap structure/
+     <para>
+      The original heap starts with 200 separate entries with a size of four bytes.
+      Each of those entries appears to be a pointer to "hunk" memory, which is
+      separate from the heap and not covered here. The actual heap base pointer
+      points to the first byte that is not part of these pointers.
+     </para>
+     </sect2>
+
+     <sect2>
+      <Title/Memory handles/
+      <para>
+      A memory handle consists of two consecutive unsigned 16 bit integers:
+      <itemizedlist>
+       <listitem><para>The memory block size</para></listitem>
+       <listitem><para>The heap address of the next memory handle</para></listitem>
+      </itemizedlist>
+      in this sequence.
+      </para><para>
+      Memory handles are stored inside of the heap; they delimit the holes in the
+      heap by indexing each other, with the exception of the last handle, which
+      points to zero.
+     </para>
+     </sect2>
+
+
+     <sect2>
+     <Title/Initialization/
+     <para>
+      The list is initialized to 0. Memory handle #0 is set to contain 0xffff minus
+      the size required by the memory handles (800 bytes) to a total of 0xfcdf,
+      the pointer to the next free index is set to 0x0.
+     </para>
+     </sect2>
+
+     <sect2>
+     <Title/Memory allocation/
+     <para>
+      The memory allocation function takes one parameter; this is the requested allocation
+      block size. If it is 0, the function aborts. Otherwise, the size is increased by 2
+      (and then again by 1, if it is odd, for alignment purposes).
+     </para><para>
+      After the memory allocation algorithm finds a sufficiently large memory hole, it
+      allocates its memory by splitting the memory hole and allocating the lower part
+      (or by swallowing the upper part if its size would be less than four). It adjusts the
+      previous memory handle (which used to point to the start of the now allocated part
+      of the heap) to point to the next hole, and then goes on to write its size to the first
+      two bytes of its newly allocated home.
+     </para><para>
+      If no sufficiently large memory hole can be found, the function returns 0; otherwise,
+      it returns a heap pointer to the start of the allocated block (i.e. to the two bytes
+      that carry the block's size).
+     </para>
+     <para>
+      Memory deallocation does this process in reverse; it also merges adjacent memory holes
+      to prevent memory fragmentation.
+     </para>
+     </sect2>
+  </sect1>
+  <sect1 ID="Kfunctions">
+   <Title/Kernel functions/
+<note><para/Thanks to Lars Skovlund for additional information!/</note>
+<para>
+In SCI0, calls to the SCI kernel are initiated by using the <function>callk</function> opcode.
+<function>callk</function> has the opcode <literal>0x42</literal>
+or <literal>0x43</literal>; <literal>0x42</literal> takes one 16 bit little endian and
+one 8 bit paramter, <literal/0x43/ takes two 8 bit parameters.
+The first parameter is the number of the kernel function to be called, the
+second number undetermined (as of yet).
+</para><para>
+Opcode summary:
+</para><para>
+<simplelist>
+<member>op 0x42: callk W kfunct, B kparams  (4 bytes)</member>
+<member>op 0x43: callk B kfunct, B kparams  (3 bytes)</member>
+</simplelist>
+</para><para>
+The number of parameters passed to the kernel function are determined
+by kparam. A total number of (kparams+2) bytes are removed from the local
+stack and passed on to the kernel function.
+The first two of those bytes are apparently always created by pushing
+the number of following bytes.
+For example, if Load(view, 10) is called, then we've got two word
+parameters, "view" (0x0080) and "10" (0x000a). So the callk function would
+have kparams set to 4; this value would be pushed to the stack first,
+followed by the two parameters.
+So the stack would look like this (left means lower address, byte ordering
+little endian):
+</para><para>
+
+<literal/02 00  80 00  0a 00/
+</para><para>
+
+before calling Load().
+</para><para>
+
+Return values are returned into the accumulator, unless stated otherwise.
+If return type is stated as (void), then the accumulator is not modified.
+</para>
+
+
+<sect2>
+<Title/Parameter types/
+<para>
+SCI0 uses only little endian 16 bit integer values for parameters. However, this document
+distinguishes between different uses of those integers by defining the following variable
+types:
+<simplelist>
+<member><Type/(word)/: 16 bit signed little endian integer</member>
+<member><Type/(HeapPtr)/: As <Type/(word)/; interpreted as a pointer to a heap address</member>
+<member><Type/(DblList)/: As <Type/(HeapPtr)/; interpreted as offset of a doubly linked list</member>
+<member><Type/(&amp;FarPtr)/: As <Type/(HeapPtr)/; interpreted as the 32 bit pointer stored at
+           the referenced heap address</member>
+<member><Type/(Rect)/: A sequence of four <Type/(word)/s describing a rectangle. If you read
+"(Rect) foo", think "(word) foo_ymin, (word) foo_xmin, (word) foo_ymax, (word) foo_xmax" instead.
+</member>
+</simplelist>
+</para><para>
+Parameters in brackets (like "[foo]") are optional.
+</para><para>
+Most functions exit gracefully if either a NULL HeapPtr or DblList is
+provided.
+</para></sect2>
+
+<sect2><Title/SCI0 Kernel functions/
+
+  <sect3>
+<Title/Kernel function 0x00: Load(word, word)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x00: Load
+    </funcdef><paramdef>
+word ResType, word ResNr</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/ResType/: The resource type number | 0x80 (as in the patch files)
+    </member><member><type>
+(word)
+    </type>
+<parameter/ResNr/: The resource number
+    </member></simplelist></para><para>
+    Returns: <type>
+(&amp;FarPtr)
+    </type>:
+A <Type/HeapPtr/ pointing to an actual pointer on the heap.
+    </para><para>
+Loads a resource. The returned HeapPtr points to a special point on the heap
+where a pointer (32 bits) to the memory location of the specified resource
+is located.
+    </para>
+  </sect3>
+
+
+
+  <sect3>
+<Title/Kernel function 0x01: UnLoad(word, word)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x01: UnLoad
+    </funcdef><paramdef>
+word ResType, word ResNr</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/ResType/: The resource type number | 0x80
+    </member><member><type>
+(word)
+    </type>
+<parameter/ResNr/: The resource number
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function unloads a resource identified by its ResType and ResNr, NOT by the HeapPtr
+it has been loaded to.
+    </para>
+  </sect3>
+
+
+
+
+  <sect3>
+<Title/Kernel function 0x02:ScriptID(word, word)/
+    <funcsynopsis><funcprototype><funcdef>
+? kfunct 0x02: ScriptID
+    </funcdef><paramdef>
+word ScriptNr, word ObjNr</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/ScriptNr/: Number of the script to reference
+    </member><member><type>
+(word)
+    </type>
+<parameter/ObjNr/: Number of the Object inside the script to reference
+    </member></simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>:
+The address of the object
+    </para><para>
+This function loads a script and (apparently) returns the address of the object
+ObjNr in the accumulator.
+    </para>
+  </sect3>
+
+
+
+
+  <sect3>
+<Title/Kernel function 0x03: DisposeScript(word ScriptNumber)/
+    <funcsynopsis><funcprototype><funcdef>
+? kfunct 0x03: DisposeScript
+    </funcdef><paramdef>
+word ScriptNumber</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/ScriptNumber/
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Unknown. I assume that this function flags a script to be disposed after
+the VM returns from processing it (this function is usually called immediately
+before a 'ret' operation is executed, inside the "dispose" method of some
+objects).
+    </para>
+  </sect3>
+
+
+<sect3><Title/Kernel function 0x04: Clone(2)/<para></para>
+</sect3>
+
+
+<sect3><Title/Kernel function 0x05: DisposeClone(?)/<para></para>
+</sect3>
+
+
+<sect3><Title/Kernel function 0x06: IsObject(2)/<para></para>
+</sect3>
+
+
+<sect3><Title/Kernel function 0x07: RespondsTo(?)/<para></para>
+</sect3>
+
+  <sect3>
+<Title/Kernel function 0x08: DrawPic(word, word, word, word)/
+    <funcsynopsis><funcprototype><funcdef>
+? kfunct 0x08: DrawPic
+    </funcdef><paramdef>
+word PicNr, word &lt;unknown&gt;, word Flags, word DefaultPalette</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/PicNr/: The resource number of the picture to draw
+    </member><member><type>
+(word)
+    </type>
+<parameter/&lt;unknown&gt;/
+    </member><member><type>
+(word)
+    </type>
+<parameter/Flags/:<msgtext>
+     <simplelist>
+        <member><type/Bit 0/: Allow pic resource fill command?</member>
+        <member><type/Bit 1-f/: unknown, probably unused</member>
+     </simplelist></msgtext>
+    </member><member><type>
+(word)
+    </type>
+<parameter/DefaultPalette/: The default palette number to use for drawing
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+The second parameter does not appear to affect anything. In QfG1, it appears
+to be set to 0x64 constantly.
+DefaultPalette is used to differentiate between day and night in QfG1. Palette
+1 is used for "night" pictures, Palette 0 for "day" pictures there.
+The picture is drawn to the background image (which is used for restauration of
+everything with the exception of the mouse pointer). To bring it to the
+foreground, Animate() must be used.
+    </para>
+  </sect3>
+
+  <sect3>
+<Title/Kernel function 0x09: Show()/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x09: Show
+    </funcdef><paramdef></paramdef></funcprototype></funcsynopsis><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Sets the PicNotValid flag to 2.
+    </para>
+  </sect3>
+
+
+  <sect3>
+<Title/Kernel function 0x0a: PicNotValid([word])/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x0a: PicNotValid
+    </funcdef><paramdef>
+[(word) NewPicNotValid]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member>[<type>
+(word)
+    </type>
+<parameter/NewPicNotValid/]: The new value of the "PicNotValid" flag.
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>:
+The previous value of the "PicNotValid" flag
+    </para><para>
+This sets the PicNotValid flag that determines whether or not the current
+background picture should be considered "valid" by the other kernel functions.
+    </para>
+  </sect3>
+
+
+  <sect3>
+<Title/Kernel function 0x0b: Animate([DblList], word)/
+    <funcsynopsis><funcprototype><funcdef>
+?? kfunct 0x0b: Animate
+    </funcdef><paramdef>
+[DblList ViewList], &lt;unknown&gt;</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member>[<type>
+(DblList)
+    </type>
+<parameter/ViewList/]: List of views that are to be drawn on top of the background picture
+    </member><member><type>
+(word)
+    </type>
+&lt;unknown&gt;
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function draws a background picture plus some views to the foreground.
+If the first parameter is 0 or not present, it does not add any views; other-
+wise, it does add them (they probably are some kind of doubly linked list).
+The purpose of the second parameter is unknown, as it does not seem to affect
+anything.
+This method does allow for special effects while transferring a picture; the
+"how" remains a mystery, though.
+    </para>
+  </sect3>
+
+
+
+
+  <sect3>
+<Title/Kernel function 0x0c: SetNowSeen(DblList)/
+    <funcsynopsis><funcprototype><funcdef>
+?? kfunct 0x0c: SetNowSeen
+    </funcdef><paramdef>
+DblList ViewList</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(DblList)
+    </type>
+<parameter/ViewList/: List of affected views
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+    </para>
+  </sect3>
+
+<sect3><Title/Kernel function 0x0d: NumLoops(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x0e: NumCells(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x0f: CellWide(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x10: CellHigh(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x11: DrawCell(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x12: AddToPic(2)/<para></para></sect3>
+
+<sect3 ID="KNewWindow"><Title/Kernel function 0x13: NewWindow(Rect, HeapPtr, word, word, word, word)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct NewWindow
+    </funcdef><paramdef>
+Rect Boundaries, HeapPtr Title, word Flags, word Priority, word FGColor, word BGColor</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(Rect)
+    </type>
+<parameter/Boundaries/: The bounding rectangle of the window
+    </member><member><type>
+(HeapPtr)
+    </type>
+<parameter/Title/: A pointer to the window title
+    </member><member><type>
+(word)
+    </type>
+<parameter/Flags/:<msgtext><simplelist>
+<member/bit 0 - transparency/
+<member/bit 1 - window does not have a frame/
+<member/bit 2 - the window has a title (starting 10 pixels above the minimum y position specified as the first element of <parameter/Boundaries/)/
+<member/bit 3-6 - unused/
+<member/bit 7 - don't draw anything/
+</simplelist>
+</msgtext>
+    </member><member><type>
+(word)
+    </type>
+<parameter/Priority/: The priority at which the window should be drawn, or -1 to force on-top drawing
+    </member><member><type>
+(word)
+    </type>
+<parameter/FGColor/: The foreground color for the window
+    </member><member><type>
+(word)
+    </type>
+<parameter/BGColor/: The background color
+    </member></simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>:
+The position of the window structure on the heap
+    </para><para>
+This function creates a window (see also <XREF LINKEND="LarsWindows">), sets
+this window as the active port, draws the window (if neccessary), and returns
+with the window's heap address.
+    </para>
+  </sect3>
+
+
+
+  <sect3 ID="KGetPort">
+<Title/Kernel function 0x14: GetPort()/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x14: GetPort
+    </funcdef><paramdef></paramdef></funcprototype></funcsynopsis><para>
+    Returns: <type>
+(HeapPtr)
+    </type>:
+A pointer to a record with the internal representation of the currently active port.
+    </para><para>
+Returns a heap pointer to a port structure.
+    </para>
+  </sect3>
+
+  <sect3 ID="KSetPort">
+<Title/Kernel function 0x15: SetPort()/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x15: SetPort
+    </funcdef><paramdef>
+HeapPtr NewPort</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/NewPort/: The new port to set
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This selects the new port which many kernel functions will draw to.
+</para><para>
+If 0 is passed, the window manager port is selected.
+The picture window is not accessible using this call. Only other kernel
+calls like KDrawPic may activate the picture window - and they always
+save the old port and restore it before they return.
+    </para>
+  </sect3>
+
+
+
+<sect3 ID="KDisposeWindow">
+<Title/Kernel function 0x16: DisposeWindow(HeapPtr Window)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x16: DisposeWindow
+    </funcdef><paramdef>
+HeapPtr Window</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/Window/: The heap address of the window to destroy
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Destroys a window and frees the associated heap structure.
+    </para>
+  </sect3>
+
+<sect3 ID="KDrawControl"><Title/Kernel function 0x17: DrawControl(HeapPtr)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x17: DrawControl
+    </funcdef><paramdef>
+HeapPtr Control</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/Control/: The heap address of the Control to draw
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function draws a Control (see <XREF LINKEND="LarsWindows"> for details).
+Please note that the correct port must be selected beforehand.
+    </para>
+  </sect3>
+
+<sect3 ID="KHiliteControl"><Title/Kernel function 0x18: HiliteControl(HeapPtr)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x18: HiliteControl
+    </funcdef><paramdef>
+HeapPtr Control</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/Control/: The control to highlight
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function is used to highlight a control by drawing it with an inverted color
+scheme. It requires the correct port to be set beforehand.
+See <XREF LINKEND="LarsWindows"> for details on the windowing/Control system.
+    </para>
+  </sect3>
+
+<sect3 ID="KEditControl"><Title/Kernel function 0x19: EditControl(HeapPtr)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x19: EditControl
+    </funcdef><paramdef>
+HeapPtr Control</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/Control/: A heap pointer to the Control to edit
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function will give control to the kernel and allow the editing of a type
+3 (Edit window) Control (see <XREF LINKEND="LarsWindows"> for a description
+of the control system). If it is called to edit a Control which is not of type
+3, it returns without error. Please note that the correct port (usually the
+window which the Control was drawn in) must be selected beforehand.
+    </para>
+  </sect3>
+
+<sect3><Title/Kernel function 0x1a: TextSize(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x1b: Display(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x1c: GetEvent(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x1d: GlobalToLocal(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x1e: LocalToGlobal(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x1f: MapKeyToDir(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x20: DrawMenuBar(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x21: MenuSelect(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x22: AddMenu(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x23: DrawStatus(?)/
+<para>
+Draws Title bar
+</para>
+</sect3>
+
+<sect3><Title/Kernel function 0x24: Parse(?)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x25: Said(2)/<para></para></sect3>
+
+  <sect3>
+<Title/Kernel function 0x57: SetDebug()/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x57: SetDebug
+    </funcdef><paramdef></paramdef></funcprototype></funcsynopsis><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function forces the interpreter to enter debug mode. It is equivalent
+to pressing LShift-RShift-PadMinus.
+    </para>
+  </sect3>
+ </sect2>
+</sect1>
+
 </Chapter>
 
 </Book>

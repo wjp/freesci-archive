@@ -189,7 +189,64 @@ static char *GM_Instrument_Names[] = {
   /*7e*/  "Applause",
   /*7f*/  "Gunshot"
 };
-     
+
+
+#define MIDI_PERCUSSIONS 9
+/* This is the MIDI channel used for percussion instruments */
+
+/* The GM Percussion map is downwards compatible to the MT32 map, which is used in SCI */
+static char *GM_Percussion_Names[] = {
+  /*00*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  /*10*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  /*20*/  0, 0, 0, /* The preceeding percussions are not covered by the GM standard */
+  /*23*/  "Bass Drum",
+  /*24*/  "Bass Drum 1",
+  /*25*/  "Side Stick",
+  /*26*/  "Acoustic Snare",
+  /*27*/  "Hand Clap",
+  /*28*/  "Electric Snare",
+  /*29*/  "Low Floor Tom",
+  /*2a*/  "Closed Hi-Hat",
+  /*2b*/  "High Floor Tom",
+  /*2c*/  "Pedal Hi-Hat",
+  /*2d*/  "Low Tom",
+  /*2e*/  "Open Hi-Hat",
+  /*2f*/  "Low-Mid Tom",
+  /*30*/  "Hi-Mid Tom",
+  /*31*/  "Crash Cymbal 1",
+  /*32*/  "High Tom",
+  /*33*/  "Ride Cymbal 1",
+  /*34*/  "Chinese Cymbal",
+  /*35*/  "Ride Bell",
+  /*36*/  "Tambourine",
+  /*37*/  "Splash Cymbal",
+  /*38*/  "Cowbell",
+  /*39*/  "Crash Cymbal 2",
+  /*3a*/  "Vibraslap",
+  /*3b*/  "Ride Cymbal 2",
+  /*3c*/  "Hi Bongo",
+  /*3d*/  "Low Bongo",
+  /*3e*/  "Mute Hi Conga",
+  /*3f*/  "Open Hi Conga",
+  /*40*/  "Low Conga",
+  /*41*/  "High Timbale"
+  /*42*/  "Low Timbale"
+  /*43*/  "High Agogo",
+  /*44*/  "Low Agogo",
+  /*45*/  "Cabasa",
+  /*46*/  "Maracas",
+  /*47*/  "Short Whistle",
+  /*48*/  "Long Whistle",
+  /*49*/  "Short Guiro",
+  /*4a*/  "Long Guiro",
+  /*4b*/  "Claves",
+  /*4c*/  "Hi Wood Block",
+  /*4d*/  "Low Wood Block",
+  /*4e*/  "Mute Cuica",
+  /*4f*/  "Open Cuica",
+  /*50*/  "Mute Triangle",
+  /*51*/  "Open Triangle"
+};
 
 #define INSTR_NOT_FOUND -1
 #define INSTR_NOT_MAPPED -2
@@ -199,10 +256,10 @@ char *name;
 int gm_instr;
 } SCI0_patch2_instrmaps[] = {
 {"       ", INSTR_NOT_MAPPED},
-{"SnareDr", 0x72}, /* !?! */
-{"HiHat  ", 0x77}, /* !?! */
-{"Kick D.", INSTR_NOT_MAPPED},
-{"Tom Tom", INSTR_NOT_MAPPED},
+{"SnareDr", INSTR_NOT_MAPPED}, /* percussion */
+{"HiHat  ", INSTR_NOT_MAPPED}, /* percussion */
+{"Kick D.", INSTR_NOT_MAPPED}, /* percussion */
+{"Tom Tom", INSTR_NOT_MAPPED}, /* percussion */
 {"Trump2 ", 0x38},
 {"T-Bone2", 0x39},
 {"FHorn  ", 0x3c},
@@ -261,7 +318,7 @@ int gm_instr;
 {"Agogo  ", 0x71},
 {"SchoolD", INSTR_NOT_MAPPED},
 {"Whistle", 0x4e},
-{"SnBrass", 0x3e},
+{"SnBrass", 0x3d}, /* PQ2 */
 {"SnBass4", 0x27},
 {"SndTrk ", INSTR_NOT_MAPPED},
 {"WarmBel", INSTR_NOT_MAPPED},
@@ -316,7 +373,7 @@ int gm_instr;
 {"EQuake ", INSTR_NOT_MAPPED},
 {"ContraB", 0x2b},
 {"Telepho", 0x7c},
-{"RD Cymb", 0x77},
+{"RD Cymb", INSTR_NOT_MAPPED},
 {"Hollow ", 0x66}, /* ? */
 {"Bells  ", 0x70}, /* ? */
 {"Piano  ", 0x00},
@@ -348,6 +405,26 @@ int gm_instr;
 {"Trumpt2", 0x38},
 {"Flugelh", 0x00},
 {"Glasses", 0x0e}, /* ?? */
+
+{"Glocken", 0x70},
+{"Vibes1 ", 0x0b},
+{"WaterB ", 0x62}, /* ? */
+{"TubeBel", 0x0e},
+{"EPno 1n", 0x04},
+{"Fant MS", 0x58}, /* ? */
+{"BottleB", 0x4c},
+{"Gunshot", 0x7f},
+{"StrSec3", 0x30},
+{"OBXaBrt", 0x3e},
+{"OBXa MS", 0x3f},
+{"Sbrass3", 0x3d},
+{"UprtBas", 0x20},
+{"StrSec1", 0x30},
+{"StrSec2", 0x31},
+{"Guitar2", 0x19},
+{"Busy   ", 0x50}, /* ?? */
+{"WoodBlk", INSTR_NOT_MAPPED}, /* percussion */
+{"JungleT", 0x54},
 {0,0}
 };
 
@@ -371,6 +448,19 @@ const char MIDI_Track[4] = "MTrk";
 const char MIDI_NOP[4] = {0xff, 0x01, 0x01, 0x00};
 /* text command with length 1 */
 
+
+#define MAP_INSTRUMENT(channel, sci_instrument)  /* Maps sci_instrument to channel if appropriate */ \
+if ((channel == MIDI_PERCUSSIONS) || (MIDI_map[(sci_instrument) / 48][(sci_instrument) % 48] >= 0)) { \
+    obstack_1grow(stackp,0xc0 | channel); /* set instrument 'pos' to... */     \
+    obstack_1grow(stackp, MIDI_map[(sci_instrument) / 48 ][(sci_instrument % 48)]); /* this. */   \
+    muteflags[channel] = 0; \
+} else { \
+  muteflags[channel] = 1; /* Mute instrument if if isn't mapped */ \
+  obstack_grow(stackp, &MIDI_NOP, sizeof(MIDI_NOP)); /* Do nothing */ \
+}
+
+
+
 guint8 *
 makeMIDI0(const guint8 *src, int *size)
 /* Generates a MIDI memory block (looking like a MIDI file).
@@ -380,6 +470,7 @@ makeMIDI0(const guint8 *src, int *size)
 {
   struct obstack stack; /* This is where we store the temp results */
   struct obstack *stackp = &stack;
+  char muteflags[16]; /* Remembers unmapped instruments */
   guint32 pos; /* position in src */
   int EOT = 0; /* end of track reached */
   guint8 *result; /* Herein will be the final results */
@@ -400,10 +491,8 @@ makeMIDI0(const guint8 *src, int *size)
   */
 
   for (pos = 0; pos < 0x10; pos++) {
-    obstack_1grow(stackp, 0); /* don't wait... */
-    obstack_1grow(stackp,0xc0 | pos); /* set instrument 'pos' to... */
-    obstack_1grow(stackp, MIDI_map[0][src[(pos << 1) + 1]]); /* this. */
-    /* init sound mapping (???) (FIXME?) */
+    obstack_1grow(stackp, 0); /* don't wait */
+    MAP_INSTRUMENT(pos, src[(pos << 1) + 1]);
   }
 
   pos = 0x21; /* skip the header */
@@ -439,12 +528,10 @@ makeMIDI0(const guint8 *src, int *size)
     else if (command < 0xd0) { /* Program Change: Set instr. mapping */
       commandlength += 1;
       alt += 1; /* copying is handled here */
-      obstack_1grow(stackp, command);
-      obstack_1grow(stackp, MIDI_map[0][src[pos+1]]);
+      MAP_INSTRUMENT(command & 0xf, src[pos+1]);
     } else if (command < 0xe0) commandlength += 1; /* Channel Key Pressure */
     else if (command < 0xf0) commandlength += 2; /* pitch bend */
     else if (command == 0xfc) { /* End of Track (is this official?) */
-      commandlength += 0;
       alt = 1;
       obstack_1grow(stackp, 0xff);
       obstack_1grow(stackp, 0x2f);
@@ -462,6 +549,12 @@ makeMIDI0(const guint8 *src, int *size)
     } else {
       SCIswarn("Illegal or unsupported MIDI extended instruction: %02x\n", command);
       return NULL;
+    }
+
+    if ((command < 0xf0) && (muteflags[command & 0x0f])) {
+      alt = 1; /* If a channel command was sent to a muted channel, NOP instead */
+      if ((command & 0xf0) != 0xc0)
+	obstack_grow(stackp, &MIDI_NOP, sizeof(MIDI_NOP)); 
     }
 
     if (!alt)
@@ -488,6 +581,8 @@ makeMIDI0(const guint8 *src, int *size)
 
   return result;
 }
+
+#undef MAP_INSTRUMENT(channel, sci_instrument)
 
 
 int
@@ -527,7 +622,7 @@ mapMIDIInstruments(void)
   }
 
   if (!(logfile = fopen("freesci_instr", "a")))
-    perror("While trying to open ~/freesci_instr");
+    perror("While trying to open freesci_instr");
 
   banks = patch2->length / (0x40 * 48);
 

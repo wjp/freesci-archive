@@ -35,7 +35,7 @@
 
 #include "graphics.h"
 
-short maxchar; /* Highest available character +1 (usually 0x80) */
+short maxchar; /* biggest available character number +1 (usually 0x80) */
 short lastwidth, lastheight;
 short maxheight;
 short lastx, lasty;
@@ -74,37 +74,25 @@ void getTextParams(char *text, char *font)
   lastheight += localmaxheight + 1;
 }
 
-void drawTextboxxy0(picture_t dest, short x, short y, char *text, char *font,
-		     char color)
+
+void drawTextCentered0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
+		  char color)
 {
   getTextParams(text, font);
-  lastx = x; lasty = y;
-  drawBox0(dest, lastx-8, lasty-5, lastwidth+16, lastheight+9, color);
+  drawText0(dest, port,
+	    x + ((port->xmax - port->xmin - rowwidths[0]) >> 1),
+	    y, text, font, color);
 }
 
-void drawTextboxy0(picture_t dest, short y, char *text, char *font, char color)
-{
-  getTextParams(text, font);
-  lastx = 160 - (lastwidth >> 1);
-  lasty = y;
-  drawBox0(dest, lastx-8, lasty-5, lastwidth+16, lastheight+9, color);
-}
-
-void drawTextbox0(picture_t dest, char *text, char *font, char color)
-{
-  getTextParams(text, font);
-  lastx = 160 - (lastwidth >> 1);
-  lasty = 105 - (lastheight >> 1);
-  drawBox0(dest, lastx-8, lasty-5, lastwidth+16, lastheight+9, color);
-}
-
-
-void drawTextxy0(picture_t dest, short x, short y, char *text, char *font,
+void drawText0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
 		  char color)
 {
   unsigned char foo;
   short rowcounter = 0;
-  short xhome = x;
+  short xhome = x + port->xmin;
+
+  x += port->xmin;
+  y += port->ymin;
 
   getTextParams(text, font);
   x += (lastwidth - rowwidths[0]) >> 1;
@@ -155,7 +143,3 @@ void drawTextxy0(picture_t dest, short x, short y, char *text, char *font,
   }
 }
 
-void drawText0(picture_t dest, char* text, char* font, char color)
-{
-  drawTextxy0(dest, lastx, lasty, text, font, color);
-}

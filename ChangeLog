@@ -1,3 +1,19 @@
+1999-07-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/graphics.c (drawView0): Views appear to clip correctly
+	to ports and windows now.
+
+	* src/graphics/window.c (drawWindow): Implemented SCI0-style text boxes
+	with the usual headers. Still needs to be tested, but it looks adequate
+	for the time being. Still, one port-related clipping bugs will have to
+	be squashed now.
+
+	* src/sound/midi.c: Thanks to Shane T., the quality of instrument
+	mapping should have improved now (the PQ2 instrument mappings were
+	very helpful).
+	Unmapped instruments now are ignored when generating the MIDI data,
+	instead of being mapped to a wrong instrument.
+
 1999-06-28  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
 
 	* src/console/commands.c (c_hexgrep): Added a function for non-regexp

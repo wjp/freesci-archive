@@ -6,12 +6,12 @@
 /* #undef WORDS_BIGENDIAN */
 
 #define PACKAGE "freesci"
-#define VERSION "0.2.2"
+#define VERSION "0.2.3"
 #define HAVE_LIBGGI 1
-/* #undef HAVE_LIBPNG */
+#define HAVE_LIBPNG 1
 
 /* Define if you have the <gsi/gsi_interface.c> header file.  */
-/* #undef HAVE_GSI_GSI_INTERFACE_C */
+#define HAVE_GSI_GSI_INTERFACE_C 1
 
 /* Define if you have the <sys/soundcard.h> header file.  */
 #define HAVE_SYS_SOUNDCARD_H 1
@@ -20,5 +20,5 @@
 #define PACKAGE "freesci"
 
 /* Version number of package */
-#define VERSION "0.2.2"
+#define VERSION "0.2.3"
 

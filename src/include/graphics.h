@@ -33,6 +33,7 @@
 #define _SCI_GRAPHICS_H_
 
 #include <resource.h>
+#include <vm.h>
 
 
 #define SCI_GRAPHICS_ALLOW_256
@@ -51,6 +52,29 @@ typedef guint8** picture_t;
 ** creating the picture.
 */
 
+
+typedef struct {
+  guint16 padding; /* Used for compatibility to window_t */
+
+  gint16 ymin, xmin; /* Upper left corner */
+  gint16 ymax, xmax; /* Lower right corner */
+} port_t;
+
+
+typedef struct {
+  guint16 heapsize; /* SCI heap block size. Just leave it alone. */
+
+  gint16 ymin, xmin; /* Upper left corner */
+  gint16 ymax, xmax; /* Lower right corner */
+
+  heap_ptr title; /* Window title (if applicable) */
+
+  gint16 flags; /* Window flags. See below. */
+
+  gint16 priority, bgcolor, color; /* Priority/color values as usual */
+} window_t; /* Can be typecast safely to become a port_t */
+
+
 #define SCI_COLOR_DITHER 0
 /* Standard mode */
 #define SCI_COLOR_INTERPOLATE 1
@@ -63,6 +87,23 @@ typedef guint8** picture_t;
 /* Fill with the selected color */
 #define SCI_FILL_BLACK 0
 /* Fill with black */
+
+
+
+/* The following flags are applicable to windows in SCI0: */
+#define WINDOW_FLAG_TRANSPARENT 0x01
+/* Window doesn't get filled with background color */
+
+#define WINDOW_FLAG_NOFRAME 0x02
+/* No frame is drawn around the window onto wm_view */
+
+#define WINDOW_FLAG_TITLE 0x04
+/* Add titlebar to window (10 pixels high, framed, text is centered and written
+** in white on dark gray
+*/
+
+#define WINDOW_FLAG_DONTDRAW 0x80
+/* Don't draw anything */
 
 
 extern int sci_color_mode;
@@ -119,10 +160,11 @@ void clearPicture(picture_t pic, int fgcol);
 ** to be drawn ontop of an already existing picture.
 */
 
-int drawView0(picture_t dest, int x, int y, short priority,
+int drawView0(picture_t dest, port_t *port, int x, int y, short priority,
 	      short group, short index, guint8 *data);
 /* Draws a specified element of a view resource to a picture.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
+**             (port_t *) port: The viewport to draw to (NULL for the WM port)
 **             (int) x,y: The position to draw to (clipping is performed).
 **             (short) priority: The image's priority in the picture. Images
 **                               with a higher priority cannot be overdrawn
@@ -137,48 +179,45 @@ int drawView0(picture_t dest, int x, int y, short priority,
 **             found, or -2 if the index inside the group is invalid.
 */
 
-void drawBox0(picture_t dest, short x, short y, short xl, short yl, char color);
-/* Draws a shaded box.
+void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
+/* Draws a simple box.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
 **             (short) x,y: The coordinates to draw to.
 **             (short) xl,yl: The width and height of the box.
 **             (char) color: The color to draw with.
+**             (char) priority: The priority to fill the box with (it still overwrites anything)
 ** Returns   : (void)
-** The box will then be drawn accoding to the provided parameters, outlined
-** in black (thus increasing the size) and provided with a shadow (one pixel
-** thick, black and towards the lower right).
+** The box does not come with any fancy shading. Use drawWindow to do this.
 */
 
-void drawTextboxxy0(picture_t dest, short x, short y, char *text, char *font,
-		     char color);
-void drawTextboxy0(picture_t dest, short y, char *text, char *font, char color);
-void drawTextbox0(picture_t dest, char* text, char *font, char color);
-/* Draws a shaded box according to width and height calculated from the
-** provided text and font.
-** Parameters: (picture_t) dest: The picture_t to draw to.
-**             (short) x,y: The coordinates to draw to.
-**             (char *) text: The text.
-**             (char *) font: The font to calculate with.
-**             (char) color: The color to draw the box in.
-** Returns   : (void)
-** This will only draw the BOX, not the actual text.
-** If either the x coordinate or both x and y coordinates are not provided,
-** the box will be centered.
+
+void drawWindow(picture_t dest, port_t *port, char color, char priority,
+		char *title, guint8 *titlefont, gint16 flags);
+/* Draws a window with the appropriate facilities
+** Parameters: (picture_t) dest: The picture_t to draw to
+**             (port_t *) port: The port to draw to
+**             (short) color: The background color of the window
+**             (short) priority: The window's priority
+**             (char *) title: The title to draw (see flags)
+**             (char *) titlefont: The font which the title should be drawn with
+**             (gint16) flags: The window flags (see the beginning of this header file)
+** This function will draw a window; it is very similar to the kernel call NewWindow() in its
+** functionality.
 */
 
-void drawTextxy0(picture_t dest, short x, short y, char *text, char *font,
-		  char color);
-void drawText0(picture_t dest, char *text, char *font, char color);
+
+void drawText0(picture_t dest, port_t *port, int x, int y, char *text, char *font, char color);
+void drawTextCentered0(picture_t dest, port_t *port, int x, int y, char *text, char *font, char color);
 /* Draws text in a specific font and color.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
-**             (short) x,y: The coordinates to draw to.
+**             (port_t *) port: The port to draw to.
+**             (int) x, y: The coordinates (relative to the port) to draw to.
 **             (char *) text: The text to draw.
 **             (char *) font: The font to draw the text in.
 **             (char) color: The color to use for drawing.
 ** Returns   : (void)
-** This will only draw the TEXT, without any surrounding box.
-** If no x,y coordinates are provided, the coordinates of the last drawTextBox()
-** call are assumed.
+** This will only draw the supplied text, without any surrounding box.
+** drawTextCentered will, in addition, center the text to the supplied port.
 */
 
 

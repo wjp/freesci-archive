@@ -10,18 +10,40 @@ configure:759: checking for working automake
 configure:772: checking for working autoheader
 configure:785: checking for working makeinfo
 configure:802: checking for gcc
-configure:915: checking whether the C compiler (gcc -ggdb -mcpu=ev56 -Wa,-m21164a ) works
-configure:931: gcc -o conftest -ggdb -mcpu=ev56 -Wa,-m21164a   conftest.c  1>&5
-configure:957: checking whether the C compiler (gcc -ggdb -mcpu=ev56 -Wa,-m21164a ) is a cross-compiler
+configure:915: checking whether the C compiler (gcc  ) works
+configure:931: gcc -o conftest    conftest.c  1>&5
+configure:957: checking whether the C compiler (gcc  ) is a cross-compiler
 configure:962: checking whether we are using GNU C
+configure:971: gcc -E conftest.c
 configure:990: checking whether gcc accepts -g
 configure:1024: checking for ranlib
 configure:1052: checking how to run the C preprocessor
+configure:1073: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1135: checking for gsi/gsi_interface.c
+configure:1145: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1175: checking for sys/soundcard.h
+configure:1185: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1213: checking for ggi
 configure:1349: checking for glib-config
 configure:1384: checking for GLIB - version >= 0.9.7
-configure:1483: gcc -o conftest -ggdb -mcpu=ev56 -Wa,-m21164a -I/usr/lib/glib/include   conftest.c -L/usr/lib -lglib  1>&5
+configure:1483: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
 configure:1576: checking for libpng
 configure:1656: checking whether byte ordering is bigendian
+configure:1674: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure:1689: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure: In function `main':
+configure:1684: `not' undeclared (first use in this function)
+configure:1684: (Each undeclared identifier is reported only once
+configure:1684: for each function it appears in.)
+configure:1684: parse error before `big'
+configure: failed program was:
+#line 1678 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/param.h>
+int main() {
+
+#if BYTE_ORDER != BIG_ENDIAN
+ not big endian
+#endif
+; return 0; }

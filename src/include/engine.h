@@ -24,6 +24,9 @@
     Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
 
 ***************************************************************************/
+#ifndef _SCI_ENGINE_H
+#define _SCI_ENGINE_H
+
 #include <config.h>
 #include <graphics.h>
 #include <resource.h>
@@ -34,14 +37,27 @@
 #include <console.h>
 #include <vm.h>
 
+
+
+
 typedef struct {
 
   int pointer_nr; /* Mouse pointer number */
   int pounter_x, pointer_y; /* Mouse pointer coordinates */
 
+  port_t *view; /* The currently active view */
+
+  port_t titlebar_port; /* Title bar viewport (0,0,9,319) */
+  port_t wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
+  port_t picture_port; /* The background picture viewport (10,0,199,319) */
+
   picture_t bgpic; /* The background picture */
   picture_t pic; /* The foreground picture */
 
   state vm_state; /* Heap and VM status */
+  heap* heap; /* Pointer to the heap stored in vm_state, for ease of use */
 
 } gamestate_t;
+
+
+#endif /* !_SCI_ENGINE_H */

@@ -58,13 +58,13 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 CC = gcc
-GLIB_CFLAGS = -I/usr/lib/glib/include
-GLIB_CONFIG = /usr/bin/glib-config
-GLIB_LIBS = -L/usr/lib -lglib
+GLIB_CFLAGS = -I/usr/local/lib/glib/include -I/usr/local/include
+GLIB_CONFIG = /usr/local/bin/glib-config
+GLIB_LIBS = -L/usr/local/lib -lglib
 MAKEINFO = makeinfo
 PACKAGE = freesci
 RANLIB = ranlib
-VERSION = 0.2.2
+VERSION = 0.2.3
 ac_ggi_includes = -I/usr/local/include
 ac_ggi_libraries = -L/usr/local/lib -lggi -lgii
 ac_glib_includes = 
@@ -72,8 +72,8 @@ ac_glib_libraries =
 ac_graphics_ggi_libfile = graphics_ggi.c
 ac_graphics_ggi_libobjects = graphics_ggi.o
 ac_moresubdirs = demo
-ac_png_includes = 
-ac_png_libraries = 
+ac_png_includes = -I/usr/local/include
+ac_png_libraries = -L/usr/lib -lpng
 
 EXTRA_DIST = bytecode.htm curspecs.htm decrypt.c fonts.html kernfunc.htm objhiera.htm objstruc.htm overview.html resmap.html respack.html said.htm scivariables.html scr000.txt scr_code.cpp script.java scripted.htm scrsrc.htm scrstruc.htm sd.c sde.c sdv.c tables.html wordfile.htm qfg1-classes.txt patch.txt pq2map.txt
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -89,9 +89,9 @@ GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps doc/misc/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu doc/misc/Makefile
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -104,6 +104,11 @@ distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 subdir = doc/misc
 
 distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu doc/misc/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \

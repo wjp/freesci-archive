@@ -342,7 +342,7 @@ void plotpattern(int x, int y)
 
 
 
-int drawView0(picture_t dest, int xp, int yp, short _priority,
+int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 	      short group, short index, guint8 *data)
 {
   gint8 *dataptr,*lookup;
@@ -351,6 +351,12 @@ int drawView0(picture_t dest, int xp, int yp, short _priority,
   guint8 transparency;
   guint8 reverse;
   gint16 *test;
+  gint16 absx = xp, absy = 10 + yp, clipmaxx = 319, clipmaxy = 199;
+
+  if (port) {
+    clipmaxy = port->ymax - port->ymin;
+    clipmaxx = port->xmax - port->xmin + 1;
+  }
 
   drawenable = 1;
   if (data == 0) return -3;
@@ -378,28 +384,31 @@ int drawView0(picture_t dest, int xp, int yp, short _priority,
     y = yp;
     dataptr += 7;
     transparency = dataptr[-1];
-    reverse = (getInt16(data+2)>>(loop-1)) & 1; /* experimental */
+    reverse = (getInt16(data+2)>>(loop-1)) & 1;
 
-    if (y < 10) { /* clipping the ceiling */
-      blindtop = (10-y)*maxx;
-      y = 10;
+    if (y < 0) { /* clipping the ceiling */
+      blindtop = (-y)*maxx;
+      y = 0;
     } else blindtop = 0;
 
     maxx += x;
     maxy += y;
+    if (maxy > clipmaxy) maxy = clipmaxy;
+
     if (maxx < 0) return 0;
-    if (y > 199) return 0;
-    if (maxy < 10) return 0;
+    if (y > clipmaxy) return 0;
+    if (maxy < 0) return 0;
 
     /* clipping the sides: */
     if (xp < 0) {
       blindleft = x - xp;
       maxx -= blindleft;
+      xp = 0;
     } else blindleft = 0;
 
-    blindright = maxx-320;
+    blindright = maxx-(clipmaxx + 1);
 
-    if (maxx > 320) maxx = 320;
+    if (maxx > (clipmaxx + 1)) maxx = (clipmaxx + 1);
 
     if (reverse) { /* mirror picture along the y axis */
       int j = blindleft;
@@ -421,7 +430,7 @@ int drawView0(picture_t dest, int xp, int yp, short _priority,
 	} else blindtop -= rep;
       } while (blindtop > 0);
 
-      homepos = (reverse? maxx : x) + (y << 6) + (y << 8); /* x + y*320 */
+      homepos = port->xmin + (reverse? maxx-1 : x) + (y + port->ymin) * 320;
 
       /* Clip left boundary (right boundary if reverse */
       while (y < maxy) {
@@ -476,7 +485,7 @@ int drawView0(picture_t dest, int xp, int yp, short _priority,
 	  }
 	}
 
-	/* clip right boundary (left boundary if reversed */
+	/* clip right boundary (left boundary if reversed) */
 	i = blindright;
 	while (i > 0) {
 	  if (rep >= i) {
@@ -691,47 +700,3 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 /***************************************************************************/
 
 
-void drawBox0(picture_t dest, short x, short y, short xl, short yl, char color)
-{
-  int c; /* counter */
-  int startpos, pos;
-
-  if (x<1) x = 1;
-  if (y<11) y = 11;
-  if (x+xl>317) xl = 317-x;
-  if (y+yl>197) yl = 197-yl;
-  if (xl<1) return;
-  if (yl<1) return;
-
-  startpos = pos = x + y*320;
-  startpos -= 321;
-
-  for (c=0; c<yl; c++) {
-    memset(dest[0]+pos,color,xl);
-    memset(dest[1]+pos,15,xl); /* set high priority */
-    pos += 320;
-  }
-
-  memset(dest[0]+startpos, 0, xl+2);
-  memset(dest[1]+startpos, 15, xl+2);
-  
-  memset(dest[0]+pos-1, 0, xl+3);
-  memset(dest[1]+pos-1, 15, xl+3);
-
-  pos += 320;
-  memset(dest[0]+pos, 0, xl+2);
-  memset(dest[1]+pos, 15, xl+2);
-
-  pos = startpos;
-  pos += 320;
-  for (c=0; c<yl; c++) {
-    *(dest[0]+pos)= 0;
-    *(dest[1]+pos)= 15;
-    *(dest[0]+pos+xl+1)= 0;
-    *(dest[1]+pos+xl+1)= 15;
-    *(dest[0]+pos+xl+2)= 0;
-    *(dest[1]+pos+xl+2)= 15;
-    pos += 320;
-  }
-
-}

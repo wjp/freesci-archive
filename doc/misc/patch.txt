@@ -1,76 +1,108 @@
-Old System Patches shipped on Disk:
-
-Patch.001      MT-32 (LAPC-I, CM32-L, CM64)
-Patch.002      IMF/FB01
-Patch.003      Adlib/SoundBlaster
-Patch.004      Casio MT540/CT460
-Patch.007      Casio CSM-1
-Patch.101      CMS
-
-BBS Support:
-
-Patch.000      D110/10/20
-
-New System Patches Shipped on Disk:
-
-Patch.001      MT-32 (LAPC-I, CM32-L, CM64)
-Patch.003      Adlib/SoundBlaster
-Patch.101      CMS
-
-BBS Support:
-
-Patch.002      IMF/FB01
+SCI Patch Resource Format                                           Revision 1
+Ravi I.                                                           Jul. 5, 1999
 
 
-MIDI.EXE sysex  loader is used to  load patches for other  devices. Devices
-supported in this manner:
+Preface
 
-Roland  D110       (Patches named: KQ5D110, QFG2D110, etc...)
-Roland  D10/20     (Patches named: KQ5D20, QFG2D20, etc...)
-EMU     Proteus/1  (Patches named: KQ5PRO1, QFG2PRO1, etc...)
-EMU     Proteus/2  (Patches named: KQ5PRO2, QFG2PRO2, etc...)
+   With the introduction of SCI, Sierra began supporting a variety of sound
+   devices which allowed for much better music than the PC internal speaker.
+   The new hardware allowed definable instruments, and the patch resource is
+   how these instruments get stored in SCI games.
 
-These patches  must be loaded  into the device  before playing the  game by
-using MIDI.EXE.  D-110/10/20's must always be  set to unit #18  in order to
-receive the  sysex massage. EMU Proteus/1  & Proteus/2 must be  set to Unit
-00. Run MIDI and load the appropriate  patch. Run the Sierra game using the
-MT-32 driver.
+   Unfortunately, the General MIDI standard was not formed until after Sierra
+   began making games. The FreeSCI project (http://freesci.linuxgames.com)
+   has taken the approach of looking at the instrument names present in some
+   patch files and using them to choose a GM replacement. A database of all
+   instruments and their mappings could be built that supports the Sierra
+   games with no native GM support.
 
+   Unlike many other resources, patch files seem to have undergone little to
+   no changes through different versions of the SCI interpreter. Compatibilty
+   is listed up to early SCI1 games. I haven't begun looking at later SCI1
+   games yet, but I see no reason why patches should have changed when the
+   devices they were designed for didn't.
 
-NOTE: Casio  is not supported as  of yet in the  new system. However, there
-are  plans  to  support  some  of  their  devices  in the future. The Music
-Department will keep  the BBS up to date as  new drivers and patches become
-available.
+   Please post comments or questions to the SCI webboard:
+      http://www.InsideTheWeb.com/mbs.cgi/mb173941
 
-OLD SYSTEM
-
-          PATCH#
-GAME      000       001       002       003       004       007       101
-Camelot   X         X         X         X         X         X         X
-CB        X
-Hoyles    X
-ICE       X                   X         X
-KQ1                           X
-KQ4       X                                                           X
-LL2       X                                                           X
-LL3       X
-MG                            X
-Oils      X
-PQ2       X                                                           X
-QFG1      X
-Silph     X
-Sorc      X         X         X         X         X         X         X
-SQ3       X                                                 X         X
+   You can contact me personally at ravi.i@softhome.net, but I would prefer
+   that SCI messages be posted on the webboard so everyone can see them.
 
 
-NEW SYSTEM Extra Patches/Drivers
+Sound Devices
 
-          Device
-GAME      D110      D10/20    Prot1     Prot2     IMF
-Jones     X                                       X
-KQ5       X         X         X         X         X
-QFG2      X         X         X         X         X
-Stellar   X
-Thex2     X                                       X
+   Patch files are completely device specific and are handled by the sound
+   driver. Here's a table of known sound drivers with the patches they use.
+   It could be incomplete, so please send in any information you have. An
+   expanded version on this table, showing more information, is available in
+   the SCI0 Sound Resource Specification. Note that this table is based on
+   drivers for SCI0 only.
 
-
+            +----------------------+----------+---------+
+            |     Device Name      |  Driver  |  Patch  |
+            +----------------------+----------+---------+
+            |    Roland MT-32      |  mt32    |   001   |
+            |        Adlib         |  adl     |   003   |
+            |     PC Speaker       |  std     |    *    |
+            |  Tandy 1000 / PCJr   |  jr      |    *    |
+            |  Tandy 1000 SL, TL   |  tandy   |    *    |
+            |  IBM Music Feature   |  imf     |   002   |
+            |    Yamaha FM-01      |  fb01    |   002   |
+            |  CMS / Game Blaster  |  cms     |   101   |
+            |  Casio MT540/CT460   |  mt540   |   004   |
+            |     Casio CSM-1      |          |   007   |
+            |  Roland D110/10/20   |          |   000   |
+            +----------------------+----------+---------+
+              thanks to Shane T. for providing some of this
+              blank fields are unknown, not unused
+            *  when asked which patch to load, the PC and Tandy
+                  speaker drivers return 0xFFFF, which is a signal
+                  that they do not use patches
+
+
+First Two Bytes
+
+   As with all extracted SC0 resources, the first two bytes in a file are the
+   resource type number OR 0x80 and stored as a word. For extracted patch
+   files, this is 89h 00h. Any offset I give is an offset in the resource,
+   not the extracted file.
+
+
+Roland MT-32, LAPC-1, etc.
+
+   The first part of the patch is a 63 character string. It appears that the
+   last two characters must both be NULL. This string is probably what
+   appears on the display panel of the MT-32. I'm pretty certain about that,
+   but can't check because I don't have one. Patch 001 did not change through
+   SCI0 and early SCI1.
+
+   The other part of patch 001 is a big sysex message. Its header is always
+   the same:
+
+        F0h     SysEx Status
+        41h     Roland ID
+        10h     Device ID
+        16h     Model ID
+        12h     Command ID (DTI)
+        10h     Address MSB
+        00h     Address
+        01h     Address LSB
+
+   The F7h status which signifies end-of-sysex is NOT in the patch file. I
+   don't think the checksum is present, either, but can't say for sure.
+
+
+Adlib (also Sound Blaster, or any card with an OPLx chip)
+
+   The Adlib driver in my copy of King's Quest IV loads patch 003 as one or
+   two blocks of 540h (1344 decimal) bytes. If the second block is present,
+   the word 0xABCD must come at offset 540h, right at the end of the first
+   block and right before the second block. This patch also did not change
+   through SCI0 or early SCI1.
+
+
+Revision history
+
+   Revision 1 - Jul. 5, 1999
+      - First release of the specification
+      - Information for the MT-32 and Adlib patches
