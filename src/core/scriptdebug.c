@@ -1208,6 +1208,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
   if (_debug_step_running)
     _debug_step_running--;
 
+  /* Suspend music playing */
+  if (s->sfx_driver)
+    (s->sfx_driver->suspend)(s);
 
   if (s->onscreen_console) {
 
@@ -1240,4 +1243,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
     }
 
   }
+
+  /* Resume music playing */
+  if (s->sfx_driver)
+    (s->sfx_driver->resume)(s);
 }

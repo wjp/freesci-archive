@@ -15,6 +15,16 @@
   <BookInfo>
 
     <Author>
+     <FirstName>Lars</firstname>
+     <SurName>Skovlund</surname>
+     <AuthorBlurb><Para>
+      Lars Skovlund (<Email>skovmanden50@hotmail.com</Email>) contributed information about the
+      SCI heap, many of the kernel functions, and wrote the description of SCI ports.
+     </Para></AuthorBlurb>
+    </Author>
+
+
+    <Author>
      <FirstName>Christoph</firstname>
      <SurName>Reichenbach</surname>
      <AuthorBlurb><Para>
@@ -23,14 +33,6 @@
      </Para></AuthorBlurb>
     </Author>
 
-    <Author>
-     <FirstName>Lars</firstname>
-     <SurName>Skovlund</surname>
-     <AuthorBlurb><Para>
-      Lars Skovlund (<Email>skovmanden50@hotmail.com</Email>) contributed information about the
-      SCI heap, many of the kernel functions, and wrote the description of SCI ports.
-     </Para></AuthorBlurb>
-    </Author>
 
     <Author>
      <Firstname/Ravi/<surname/I./
@@ -4489,6 +4491,29 @@ to pressing LShift-RShift-PadMinus.
     </para>
   </sect3>
 
+	<sect3>
+	<Title/Kernel function 0x61: GetSaveFiles(String, String, HeapPtr*)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x61: GetSaveFiles
+		</funcdef><paramdef>String game_id, String strspace, HeapPtr *ptrs</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ game_id: The game ID as a string</member>
+                       <member><type/(String)/ strspace: The string which the result should be stored in</member>
+                       <member><type/(HeapPtr *)/ ptrs: The array of pointers which the string starts are to be stored in</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        The number of savegames for the specified game_id.
+		</para><para>
+                   Returns an array of strings describing the existing save games for game_id.
+                   The strings are put into strspace one by one, and heap pointers to each of
+                   them are put into the ptrs array.
+                   The number is saved games is returned in the accumulator.
+		</para>
+	</sect3>
+
+
         <sect3>
         <Title/Kernel function 0x62: GetCWD(HeapPtr)/
                 <funcsynopsis><funcprototype><funcdef>
@@ -4511,18 +4536,180 @@ to pressing LShift-RShift-PadMinus.
                 
 
 	<sect3>
+	<Title/Kernel function 0x63: CheckFreeSpace(String)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x63: CheckFreeSpace
+		</funcdef><paramdef>String path</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ path: The path to examine</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        1 if saving is possible, 0 otherwise
+		</para><para>
+                     Returns TRUE if there would be enough space left on the specified path to
+                     save the current game (but doesn't actually save).
+		</para>
+	</sect3>
+
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(word, String[, String])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word sub_function, String string1[, String string2]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ sub_function: A numeric value from 0 to 3, inclusive. See below.</member>
+                       <member><type/(String)/ string1: See below.</member>
+                       <member><type/(String)/ string2: See below.</member>
+                   </simplelist></para>
+		<para>
+			Returns: See below
+		</para><para>
+                        Depending on the value of sub_function, this system call executes one of
+                        four defined actions:
+                        <simplelist>
+                          <member/0: GET_DEVICE/
+                          <member/1: GET_CURRENT_DEVICE/
+                          <member/2: PATHS_EQUAL/
+                          <member/3: IS_FLOPPY/
+                        </simplelist>
+                        See the specific function definitions below for more information.
+		</para>
+	</sect3>
+
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(GET_DEVICE, String, String)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word GET_DEVICE, String input, String output</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ GET_DEVICE: Constant sub-function identifier (0)</member>
+                       <member><type/(String)/ input: A path whose device identifier should be extracted</member>
+                       <member><type/(String)/ output: The destination of the device identifier</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(HeapPtr)</type>
+                        Points to the terminating zero character of output
+		</para><para>
+                   GET_DEVICE returns the drive/device on which "input" resides in output
+                   (and a pointer to the terminating NULL in the accumulator).
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(GET_CURRENT_DEVICE, String output)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word GET_CURRENT_DEVICE, String output</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ GET_CURRENT_DEVICE: Constant sub-function identifier (1)</member>
+                       <member><type/(String)/ output: The destination which the CWD device
+                            identifier should be written to.</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(HeapPtr)</type>
+                           Points to the terminating null character of output
+		</para><para>
+                       GET_CURRENT_DEVICE returns the drive/device that contains the current working
+                       directory (and a pointer to the terminating NULL in the accumulator)
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(PATHS_EQUAL, String path1, String path2)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word PATHS_EQUAL, String path1, String path2</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ PATHS_EQUAL: Constant sub-function identifier (2)</member>
+                       <member><type/(String)/ path1: First path to compare</member>
+                       <member><type/(String)/ path2: Second path to compare</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        1 if path1 and path2 point to the same physical location, 0 otherwise.
+		</para><para>
+                    PATHS_EQUAL returns TRUE if the two supplied paths point to the same place.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(IS_FLOPPY, String path)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word IS_FLOPPY, String path</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ IS_FLOPPY: Constant sub-function identifier (3)</member>
+                       <member><type/(String)/ path:</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        1 if <parameter/path/ is on a floppy disk, 0 otherwise
+		</para><para>
+                     PATHS_EQUAL returns TRUE if the two supplied paths point to the same place.
+		</para>
+	</sect3>
+
+	<sect3>
 	<Title/Kernel function 0x68: GetSaveDir()/
 		<funcsynopsis><funcprototype><funcdef>
 			kfunct 0x68: GetSaveDir
 		</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
 		<para>
-			Returns: <type>(HeapPtr)</type>
+			Returns: <type>(String)</type>
 		</para><para>
 			This function returns the heap position allocated to store the string
 			representation of the save game directory. This heap space is
 			allocated automatically during startup.
 		</para>
 	</sect3>
+
+
+	<sect3>
+	<Title/Kernel function 0x69: CheckSaveGame(String, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x69: CheckSaveGame
+		</funcdef><paramdef>String game_id, word game_nr</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ game_id: The savegame ID string</member>
+                       <member><type/(word)/ game_nr: The savegame number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        1 if the savegame is loadable, 0 otherwise
+		</para><para>
+                      Returns TRUE if the specified save game is valid and loadable (i.e., not for
+                      another game/interpreter/version).
+		</para>
+	</sect3>
+
+
+<!-- Template for kernel function entries (14 lines)
+	<sect3>
+	<Title/Kernel function 0x: ()/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x: 
+		</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/()/ :</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>()</type>
+		</para><para>
+		</para>
+	</sect3>
+-->
+
 
 
 

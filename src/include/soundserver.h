@@ -138,6 +138,14 @@ int
 sound_restore(struct _state *s, char *dir);
 /* Default implementation for restoring the sound state */
 
+void
+sound_suspend(struct _state *s);
+/* Default implementation for suspending sound output */
+
+void
+sound_resume(struct _state *s);
+/* Default implementation for resuming sound ouput after it was suspended */
+
 /* Song library commands: */
 
 

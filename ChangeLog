@@ -1,3 +1,10 @@
+1999-11-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/scriptdebug.c (script_debug): Added functions to the
+	sound driver protocol to support suspending (and, afterwards,
+	resuming) all sound. Used this to prevent most causes of sound
+	server deaths by SIGPIPEs.
+
 1999-11-22  Lars Skovlund <lskovlun@worldonline.dk>
 
 	* src/core/kernel.c (kDisplay): Fixed a bug in kDisplay which was the
@@ -7,7 +14,7 @@
 1999-11-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vocab.c (vocab_get_suffices): Fixed suffix reading, which
-	simply didn't work
+	simply didn't work (thanks to Rink Springer for pointing this out!)
 
 1999-11-20  Christoph Reichenbach  <jameson@linuxgames.com>
 

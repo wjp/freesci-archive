@@ -1,4 +1,4 @@
-dnl aclocal.m4 generated automatically by aclocal 1.4a
+dnl aclocal.m4 generated automatically by aclocal 1.4
 
 dnl Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
@@ -103,11 +103,11 @@ AC_ARG_WITH(curses-libraries,
 AC_FIND_FILE(curses.h,$_ac_curses_includes,ac_curses_includes)
 AC_FIND_FILE(libncurses.so,$_ac_curses_libraries,ac_curses_libraries)
 
-if test "$_ac_curses_includes" != NO; then
+if test "$ac_curses_includes" != NO; then
 
-	if test "$_ac_curses_libraries" = NO; then
+	if test "$ac_curses_libraries" = NO; then
 		AC_FIND_FILE(libcurses.so, $_ac_curses_libraries, ac_curses_libraries)
-		if test "$_ac_curses_libraries" != NO; then
+		if test "$ac_curses_libraries" != NO; then
 			AC_MSG_RESULT([libcurses found]);
 			ac_curses_libraries=-L"$ac_curses_libraries -lcurses"
 		fi
@@ -249,8 +249,6 @@ dnl AM_INIT_AUTOMAKE(package,version, [no-define])
 
 AC_DEFUN(AM_INIT_AUTOMAKE,
 [AC_REQUIRE([AC_PROG_INSTALL])
-dnl We require 2.13 because we rely on SHELL being computed by configure.
-AC_PREREQ([2.13])
 PACKAGE=[$1]
 AC_SUBST(PACKAGE)
 VERSION=[$2]

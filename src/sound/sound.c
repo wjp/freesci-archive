@@ -168,6 +168,19 @@ sound_exit(state_t *s)
 }
 
 
+void
+sound_suspend(state_t *s)
+{
+  sound_command(s, SOUND_COMMAND_SUSPEND_SOUND, 0, 0);
+}
+
+void
+sound_resume(state_t *s)
+{
+  sound_command(s, SOUND_COMMAND_RESUME_SOUND, 0, 0);
+}
+
+
 int
 _sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *timeoutmessage)
 {
@@ -241,6 +254,8 @@ sound_command(state_t *s, int command, int handle, int parameter)
   case SOUND_COMMAND_MAPPINGS:
   case SOUND_COMMAND_SAVE_STATE: /* Those two commands are only used from special wrapper */
   case SOUND_COMMAND_RESTORE_STATE: /* functions that provide additional data. */
+  case SOUND_COMMAND_SUSPEND_SOUND:
+  case SOUND_COMMAND_RESUME_SOUND:
   case SOUND_COMMAND_STOP_ALL:
     write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
     return 0;

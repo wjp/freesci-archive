@@ -107,7 +107,11 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
   FILE *fh;
 
   if (chdir(dir)) {
-    fprintf(debugstream, "Failed to enter '%s'\n", dir);
+    char *cwd;
+
+    cwd = getcwd(NULL, 0);
+    fprintf(debugstream, "Failed to enter '%s', cwd is '%s'\n", dir, cwd);
+    free(cwd);
     return 1;
   }
 

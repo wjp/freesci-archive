@@ -845,7 +845,7 @@ _cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof)
 
 
 /* Auto-generated CFSML declaration and function block ends here */
-/* Auto-generation performed by cfsml.pl 0.6.4 */
+/* Auto-generation performed by cfsml.pl 0.6.5 */
 #line 96 "CFSML input file"
 
 /* Sound state saving reference implementation */
@@ -860,7 +860,11 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
   FILE *fh;
 
   if (chdir(dir)) {
-    fprintf(debugstream, "Failed to enter '%s'\n", dir);
+    char *cwd;
+
+    cwd = getcwd(NULL, 0);
+    fprintf(debugstream, "Failed to enter '%s', cwd is '%s'\n", dir, cwd);
+    free(cwd);
     return 1;
   }
 
@@ -926,7 +930,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
   _cfsml_write_sound_lib_file_t(fh, &write_rec);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 172 "CFSML input file"
+#line 176 "CFSML input file"
 
   fclose(fh);
   fprintf(stderr,"Finished all writing.\n");
@@ -976,7 +980,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
     error = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 209 "CFSML input file"
+#line 213 "CFSML input file"
 
   if (error) {
     if(read_rec.songs)

@@ -131,11 +131,11 @@ AC_ARG_WITH(curses-libraries,
 AC_FIND_FILE(curses.h,$_ac_curses_includes,ac_curses_includes)
 AC_FIND_FILE(libncurses.so,$_ac_curses_libraries,ac_curses_libraries)
 
-if test "$_ac_curses_includes" != NO; then
+if test "$ac_curses_includes" != NO; then
 
-	if test "$_ac_curses_libraries" = NO; then
+	if test "$ac_curses_libraries" = NO; then
 		AC_FIND_FILE(libcurses.so, $_ac_curses_libraries, ac_curses_libraries)
-		if test "$_ac_curses_libraries" != NO; then
+		if test "$ac_curses_libraries" != NO; then
 			AC_MSG_RESULT([libcurses found]);
 			ac_curses_libraries=-L"$ac_curses_libraries -lcurses"
 		fi

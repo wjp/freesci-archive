@@ -326,6 +326,9 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
     s->execution_stack = realloc(s->execution_stack,
 				 sizeof(exec_stack_t) * (s->execution_stack_size += 8));
 
+/*  sciprintf("Exec stack: [%d/%d], origin %d\n", s->execution_stack_pos,
+      s->execution_stack_size, origin); /* */
+
   xstack = s->execution_stack + s->execution_stack_pos;
 
   xstack->objp = objp;

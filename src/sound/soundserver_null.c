@@ -110,7 +110,9 @@ sfx_driver_t sound_null = {
   &sound_get_event,
   &sound_save,
   &sound_restore,
-  &sound_command
+  &sound_command,
+  &sound_suspend,
+  &sound_resume
 };
 
 /************************/
@@ -163,7 +165,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
   int debugging = 0;   /* Debugging enabled? */
   int command = 0;
   int ccc = 127; /* cumulative cue counter */
-
+  int suspended = 0; /* Used to suspend the sound server */
 
   gettimeofday((struct timeval *)&last_played, NULL);
 
@@ -249,17 +251,28 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
     }
     do {
+      struct timeval suspend_time; /* Used for suspend mode */
+      struct timeval *wait_tvp;
       int got_input;
 
-      wakeup_time = song_next_wakeup_time(&last_played, ticks);
+      if (!suspended) {
+	wakeup_time = song_next_wakeup_time(&last_played, ticks);
 
-      wait_tv = song_sleep_time(&last_played, ticks);
+	wait_tv = song_sleep_time(&last_played, ticks);
+	wait_tvp = (struct timeval *)&wait_tv;
+
+      } else {
+	/* Sound server is suspended */
+
+	wait_tvp = NULL; /* select()s infinitely long */
+
+      }
 
       FD_ZERO(&input_fds);
       FD_SET(fd_in, &input_fds);
 
       /* Wait for input: */
-      got_input = select(fd_in + 1, &input_fds, NULL, NULL, (struct timeval *)&wait_tv);
+      got_input = select(fd_in + 1, &input_fds, NULL, NULL, wait_tvp);
 
       if (got_input) { /* We've got mail! */
 	sound_event_t event;
@@ -526,6 +539,32 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  }
 	  break;
 
+	  case SOUND_COMMAND_SUSPEND_SOUND: {
+
+	    gettimeofday(&suspend_time, NULL);
+	    suspended = 1;
+
+	  }
+	  break;
+
+	  case SOUND_COMMAND_RESUME_SOUND: {
+
+	    struct timeval wakeup_time;
+
+	    gettimeofday(&wakeup_time, NULL);
+	    /* Modify last_played relative to wakeup_time - suspend_time */
+	    last_played.tv_sec += wakeup_time.tv_sec - suspend_time.tv_sec - 1; 
+	    last_played.tv_usec += wakeup_time.tv_usec - suspend_time.tv_usec + 1000000;
+
+	    /* Make sure that 0 <= tv_usec <= 999999 */
+	    last_played.tv_sec -= last_played.tv_usec / 1000000;
+	    last_played.tv_usec %= 1000000;
+
+	    suspended = 0;
+
+	  }
+	  break;
+
 	  case SOUND_COMMAND_STOP_ALL: {
 
 	    song_t *seeker = *songlib;
@@ -560,7 +599,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
       gettimeofday((struct timeval *)&ctime, NULL);
 
-    } while ((wakeup_time.tv_sec > ctime.tv_sec)
+    } while (suspended
+	     || (wakeup_time.tv_sec > ctime.tv_sec)
 	     || ((wakeup_time.tv_sec == ctime.tv_sec)
 		 && (wakeup_time.tv_usec > ctime.tv_usec)));
   }

@@ -117,6 +117,17 @@ typedef struct {
   **             (int) parameter: The function parameter
   */
 
+  void (*suspend)(struct _state *s);
+  /* Suspends the sound subsystem
+  ** Parameters: (state_t *) s: The current state
+  ** Only resume, shutdown, save and restore commands need to be handled in suspended mode.
+  */
+
+  void (*resume)(struct _state *s);
+  /* Resumes the sound subsystem
+  ** Parameters: (state_t *) s: The current state
+  */
+
 } sfx_driver_t;
 
 
@@ -167,6 +178,10 @@ extern sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-term
 ** directory following the command, size specified in PARAMETER (incl. trailing \0).
 ** Returns one int (0 for success, 1 for failure)
 */
+#define SOUND_COMMAND_SUSPEND_SOUND 15
+/* Halt all sound execution (issued when the interpreter is stopped for debugging) */
+#define SOUND_COMMAND_RESUME_SOUND 16
+/* Resume all sound execution (issued when the interpreter is re-enabled after debugging) */
 
 
 #define SOUND_SIGNAL_CUMULATIVE_CUE 0
