@@ -205,10 +205,12 @@ scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock);
 */
 
 void
-scir_unlock_resource(resource_mgr_t *mgr, resource_t *res);
+scir_unlock_resource(resource_mgr_t *mgr, resource_t *res, int restype, int resnum);
 /* Unlocks a previously locked resource
 ** Parameters: (resource_mgr_t *) mgr: The manager the resource should be freed from
 **             (resource_t *) res: The resource to free
+**             (int) type: Type of the resource to check (for error checking)
+**             (int) number: Number of the resource to check (ditto)
 ** Returns   : (void)
 */
 

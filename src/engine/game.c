@@ -342,7 +342,7 @@ script_init_engine(state_t *s, sci_version_t version)
 
 		}
 	}
-	scir_unlock_resource(s->resmgr, vocab996);
+	scir_unlock_resource(s->resmgr, vocab996, sci_vocab, 996);
 	vocab996 = NULL;
 
 	s->_heap = heap_new();

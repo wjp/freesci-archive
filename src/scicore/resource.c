@@ -551,12 +551,12 @@ scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock)
 }
 
 void
-scir_unlock_resource(resource_mgr_t *mgr, resource_t *res)
+scir_unlock_resource(resource_mgr_t *mgr, resource_t *res, int resnum, int restype)
 {
 	if (!res) {
 		sciprintf("Resmgr: Warning: Attempt to unlock non-existant"
-			  " resource %s.%03d\n",
-			  sci_resource_types[res->type], res->number);
+			  " resource %s.%03d!\n",
+			  sci_resource_types[restype], resnum);
 		return;
 	}
 

@@ -1,3 +1,8 @@
+2002-05-07  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/resource.c (scir_unlock_resource): Fixed a potential
+	segfault.
+
 2002-04-25  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/savegame.cfsml: Made savegame support backwards
