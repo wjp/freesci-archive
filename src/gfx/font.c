@@ -300,9 +300,10 @@ render_char(byte *dest, byte *src, int width, int line_width, int lines, int byt
 }
 
 gfx_pixmap_t *
-gfxr_draw_font(gfx_bitmap_font_t *font, char *text, int characters,
+gfxr_draw_font(gfx_bitmap_font_t *font, char *stext, int characters,
 	       gfx_pixmap_color_t *fg0, gfx_pixmap_color_t *fg1, gfx_pixmap_color_t *bg)
 {
+	unsigned char *text = (unsigned char *) stext;
 	int height = font->height;
 	int line_height = font->line_height;
 	int width = 0;
@@ -312,11 +313,14 @@ gfxr_draw_font(gfx_bitmap_font_t *font, char *text, int characters,
 	byte *offset;
 
 	for (i = 0; i < characters; i++) {
-		if (text[i] >= font->chars_nr) {
+		int ch = (int) text[i];
+
+		if (ch >= font->chars_nr) {
 			GFXERROR("Invalid character 0x%02x encountered!\n", text[i]);
 			return NULL;
 		}
-		width += font->widths[(int) text[i]];
+
+		width += font->widths[ch];
 	}
 
 	pxm = gfx_pixmap_alloc_index_data(gfx_new_pixmap(width, height, GFX_RESID_NONE, 0, 0));

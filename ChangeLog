@@ -1,3 +1,8 @@
+2002-05-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/font.c (gfxr_draw_font): Signedness bug fix in strings:
+	correctly derive characted sizes
+
 2002-05-07  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/resource.c (scir_unlock_resource): Fixed a potential
