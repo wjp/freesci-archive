@@ -301,8 +301,10 @@ The DirectX driver does not support any options at this time.
 The DirectFB driver does not support any options at this time.
 
 2.1.1.6 Dreamcast driver:
---------------------
-The Dreamcast driver does not support any options at this time.
+-------------------------
+- render_mode = vram | pvr
+Determines the rendering mode to use. VRAM mode uses the framebuffer directly,
+while PVR mode renders a textured quad. Default is 'vram'. 
 
 2.1.1.7 NULL driver:
 --------------------

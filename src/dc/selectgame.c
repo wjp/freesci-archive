@@ -77,6 +77,7 @@ void mouse_render() {
 /* This function is called from main()  */
 void choose_game() {
 	int fexit = 0;
+	FILE *cfile;
 
 	/* Do basic setup */
 	pvr_init_defaults();
@@ -132,5 +133,13 @@ void choose_game() {
 		
 	}
 	
+	/* Write config file */
+	cfile = fopen("/ram/config", "w");
+	fputs("gfx.dc.render_mode = vram\n", cfile);
+	fputs("midi_device = adlibemu\n", cfile);
+	fputs("pcmout_stereo = 0\n", cfile);
+	fputs("pcmout_rate = 11025\n", cfile);
+	fclose(cfile);
+
 	return;
 }

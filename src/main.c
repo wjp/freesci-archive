@@ -442,10 +442,13 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 
 	/* On the Dreamcast there is no command line, so we don't try to read
 	** any options and just set the savegame_name to NULL and return a
-	** game name of NULL.
+	** game name of NULL. We set the path to the config file to
+	** "/ram/config", this file is created by the Dreamcast game
+	** selection menu.
 	*/
 	
-	savegame_name = NULL;	
+	savegame_name = NULL;
+	commandline_config_file = sci_strdup("/ram/config");
 	return NULL;
 	
 #else /* !_DREAMCAST */
@@ -1283,6 +1286,8 @@ main(int argc, char** argv)
 		active_conf->mouse : cl_options.mouse;
 
 #ifdef _DREAMCAST
+	if (fs_unlink("/ram/config"))
+		sciprintf("%s, L%d: fs_unlink(\"/ram/config\") failed!\n", __FILE__, __LINE__);
 	dc_retrieve_mirrored(gamestate->game_name);
 #endif
 

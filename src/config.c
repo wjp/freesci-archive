@@ -24,6 +24,12 @@
 #include <stdlib.h>
 #ifndef _WIN32
 #include <unistd.h>
+#else
+#ifndef YY_ALWAYS_INTERACTIVE
+#ifndef YY_NEVER_INTERACTIVE
+extern int isatty YY_PROTO(( int ));
+#endif
+#endif
 #endif
 
 /* Use prototypes in function declarations. */
@@ -855,7 +861,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 859 "config.c"
+#line 865 "config.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1020,7 +1026,7 @@ YY_DECL
 #line 289 "config.l"
 
 
-#line 1024 "config.c"
+#line 1030 "config.c"
 
 	if ( yy_init )
 		{
@@ -1287,7 +1293,7 @@ YY_RULE_SETUP
 #line 443 "config.l"
 ECHO;
 	YY_BREAK
-#line 1291 "config.c"
+#line 1297 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2240,23 +2246,10 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	conf->gfx_driver_name = NULL;
         conf->pcmout_driver = pcmout_find_driver(NULL);
-#ifdef _DREAMCAST
-	/* On Dreamcast, default to 11025hz mono for performance reasons. */
-        conf->pcmout_rate = 11025;
-	conf->pcmout_stereo = 0;
-#else
         conf->pcmout_rate = 22050;
         conf->pcmout_stereo = 1;
-#endif
         conf->midiout_driver = midiout_find_driver(NULL);
-#ifdef _DREAMCAST
-	/* On Dreamcast, default to adlibemu, because the other midi devices
-	** have no Dreamcast drivers.
-	*/
-	conf->midi_device = midi_find_device("adlibemu");
-#else
         conf->midi_device = midi_find_device(NULL);
-#endif
 	conf->sound_server = sound_server_find_driver(NULL);
 
 	conf->x_scale = 0;

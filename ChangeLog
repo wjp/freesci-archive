@@ -1,3 +1,11 @@
+2003-02-24  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README, src/config.l, src/main.c, src/dc/selectgame.c: On
+	Dreamcast, configuration options are now set by a config file which
+	is created from the game selection menu.
+	* src/gfx/drivers/dc_driver.c: Implemented PVR rendering mode and
+	added a render_mode config option to select it.
+
 2003-02-22  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README.DC: Documentation updated.
