@@ -208,13 +208,13 @@ typedef struct {
 
 typedef object_t clone_t;
 
-typedef struct {
+typedef struct _node_struct {
 	reg_t pred, succ; /* Predecessor, successor */
 	reg_t key;
 	reg_t value;
 } node_t; /* List nodes */
 
-typedef struct {
+typedef struct _list_struct {
 	reg_t first;
 	reg_t last;
 } list_t;
@@ -317,8 +317,8 @@ typedef struct {
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {
-	heap_ptr obj;
-	heap_ptr signalp;    /* Used only indirectly */
+	reg_t obj;
+	reg_t *signalp;    /* Used only indirectly */
 	reg_t *underBitsp; /* The same goes for the handle storage */
 	int underBits; /* Copy of the underbits: Needed for cleanup */
 

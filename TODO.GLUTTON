@@ -2,14 +2,13 @@ Problem:
 	VC++ 6.0 (SP5) + SDL
 
 Next TODO:
-	* [C] Implement DisposeScript()
+	* [S] Re-implement kClone/kDisposeClone
 	* [C] Implement Animate()
 	* [C] Implement CanBeHere()
 	* [C] Implement DoBresen()
 	* [X] Find out why all lockers are exactly 1, fix this erroneous
 	  situation
 	* [X] Check validity of OBJ_SPECIES, OBJ_SUPERCLASS, OBJ_ISCLASS in vm.c
-	* [S] Re-implement kClone/kDisposeClone
 	* [X] Re-implement 'delete' and 'doit' calls in kgraphics (upcalls)
 	* [C] Add sound cues
 	* [C] Implement Sort()

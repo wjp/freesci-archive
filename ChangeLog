@@ -1,5 +1,10 @@
 2002-11-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kscripts.c (invoke_selector): Re-enabled selector
+	invocation
+
+2002-11-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
 	* src/engine/kemu_old.c (write_selector16): 16 bit selector
 	reading/writing added
 

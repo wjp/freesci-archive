@@ -68,51 +68,48 @@ invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kf
 		stack_ptr_t k_argp, int k_argc, /* Kernel function argp/argc */
 		char *fname, int line, int argc, ...)
 {
-#warning "Re-enable selector invocation"
-#if 0
-  va_list argp;
-  int i;
-  int framesize = 4 + 2 * argc;
-  heap_ptr address;
-  heap_ptr stackframe = k_argp + k_argc * 2;
+	va_list argp;
+	int i;
+	int framesize = 2 + 1 * argc;
+	reg_t address;
+	stack_ptr_t stackframe = k_argp + k_argc;
 
-  exec_stack_t *xstack; /* Execution stack */
+	exec_stack_t *xstack; /* Execution stack */
 
-  PUT_HEAP(stackframe, selector_id); /* The selector we want to call */
-  PUT_HEAP((stackframe + 2), argc); /* The number of arguments */
+	stackframe[0] = make_reg(0, selector_id);  /* The selector we want to call */
+	stackframe[1] = make_reg(0, argc); /* Argument count */
 
-  if (lookup_selector(s, object, selector_id, &address) != SELECTOR_METHOD) {
-    SCIkwarn(SCIkERROR, "Selector '%s' of object at %04x could not be invoked (%s L%d)\n",
-	     s->selector_names[selector_id], object, fname, line);
-    if (noinvalid == 0)
-      KERNEL_OOPS("Not recoverable: VM was halted\n");
-    return 1;
-  }
+	if (lookup_selector(s, object, selector_id, NULL, &address) != SELECTOR_METHOD) {
+		SCIkwarn(SCIkERROR, "Selector '%s' of object at "PREG" could not be invoked (%s L%d)\n",
+			 s->selector_names[selector_id], PRINT_REG(object), fname, line);
+		if (noinvalid == 0)
+			KERNEL_OOPS("Not recoverable: VM was halted\n");
+		return 1;
+	}
 
-  va_start(argp, argc);
-  for (i = 0; i < argc; i++) {
-    int j = va_arg(argp, int);
-    PUT_HEAP(stackframe + 4 + (2 * i), j); /* Write each argument */
-  }
-  va_end(argp);
+	va_start(argp, argc);
+	for (i = 0; i < argc; i++) {
+		reg_t arg = va_arg(argp, reg_t);
+		stackframe[2 + i] = arg; /* Write each argument */
+	}
+	va_end(argp);
 
-  /* Write "kernel" call to the stack, for debugging: */
-  xstack = add_exec_stack_entry(s, 0, 0, 0,
-	  k_argc, (heap_ptr)(k_argp - 2), 0, 0,
-	  s->execution_stack_pos, 0);
-  xstack->selector = -42 - kfunct; /* Evil debugging hack to identify kernel function */
-  xstack->type = EXEC_STACK_TYPE_KERNEL;
+	/* Write "kernel" call to the stack, for debugging: */
+	xstack = add_exec_stack_entry(s, NULL_REG, NULL, NULL_REG,
+				      k_argc, k_argp - 1, 0, NULL_REG,
+				      s->execution_stack_pos);
+	xstack->selector = -42 - kfunct; /* Evil debugging hack to identify kernel function */
+	xstack->type = EXEC_STACK_TYPE_KERNEL;
 
-  /* Now commit the actual function: */
-  xstack =
-    send_selector(s, object, object, (heap_ptr)(stackframe + framesize), framesize, 0, stackframe);
+	/* Now commit the actual function: */
+	xstack = send_selector(s, object, object,
+			       stackframe, framesize, stackframe);
 
-  run_vm(s, 0); /* Start a new vm */
+	run_vm(s, 0); /* Start a new vm */
 
-  --(s->execution_stack_pos); /* Get rid of the extra stack entry */
+	--(s->execution_stack_pos); /* Get rid of the extra stack entry */
 
-  return 0;
-#endif
+	return 0;
 }
 
 
@@ -330,16 +327,12 @@ kScriptID(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-void
-kDisposeScript(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  int script = UPARAM(0);
+	int script = argv[0].offset;
 
-  if (script < 1000)
-    script_uninstantiate(s, PARAM(0));
-  else
-    SCIkwarn(SCIkWARNING, "Attemt to dispose invalid script %04x\n", script);
-
+	script_uninstantiate(s, script);
 }
 
 static int

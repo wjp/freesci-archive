@@ -31,7 +31,7 @@
 
 #define LOOKUP_NODE(addr) lookup_node(s, (addr), __FILE__, __LINE__)
 
-static inline node_t *
+inline node_t *
 lookup_node(state_t *s, reg_t addr, char *file, int line)
 {
 	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_NODES);
@@ -58,7 +58,7 @@ lookup_node(state_t *s, reg_t addr, char *file, int line)
 
 #define LOOKUP_LIST(addr) lookup_list(s, addr, __FILE__, __LINE__)
 
-static inline list_t *
+inline list_t *
 lookup_list(state_t *s, reg_t addr, char *file, int line)
 {
 	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_LISTS);
@@ -366,6 +366,14 @@ kNodeValue(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return n->value;
 }
 
+
+reg_t
+kAddToFront(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	_k_add_to_front(s, argv[0], argv[1]);
+	return s->r_acc;
+}
+
 reg_t
 kAddAfter(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
@@ -408,13 +416,6 @@ kAddAfter(state_t *s, int funct_nr, int argc, reg_t *argv)
 		argv[1] = argv[0];
 		return kAddToFront(s, funct_nr, 2, argv + 1);/* Set as initial list node */
 	}
-}
-
-reg_t
-kAddToFront(state_t *s, int funct_nr, int argc, reg_t *argv)
-{
-	_k_add_to_front(s, argv[0], argv[1]);
-	return s->r_acc;
 }
 
 
