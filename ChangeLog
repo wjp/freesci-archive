@@ -1,3 +1,7 @@
+2003-07-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kevent.c (kGetEvent): Added support for NumLock
+
 2003-05-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* configure.in: Applied Bas' patch for using pkg-config
