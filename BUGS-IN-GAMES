@@ -18,3 +18,6 @@ messages, so that they are easily identifiable using the below list.
 
 4. PQ2 calls CanBeHere() with a disposed object in the clip list when
    Keith enters the car.
+
+5. LSL2 tries to allocate zero bytes of memory when entering Molto Lira.
+

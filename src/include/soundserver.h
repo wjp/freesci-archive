@@ -824,7 +824,7 @@ restore_sound_state(sound_server_state_t *ss_state);
 
 #ifdef DEBUG_SOUND_SERVER
 extern int channel_instrument[16];
-void print_channels_any(int mapped, sound_server_state_t *ss_state);
+extern void print_channels_any(int mapped, sound_server_state_t *ss_state);
 void print_song_info(word song_handle, sound_server_state_t *ss_state);
 #endif
 

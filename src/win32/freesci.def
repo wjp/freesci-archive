@@ -1,6 +1,8 @@
 LIBRARY
 DESCRIPTION "FreeSCI"
 EXPORTS
+  script_set_gamestate_save_dir
+  usleep
   vocabulary_get_classes
   vocabulary_get_class_count
   vocabulary_get_knames

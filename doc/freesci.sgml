@@ -344,11 +344,6 @@
 		  like "script.042"), or in a set of resources (if specified like "pic").
 		</para>
 	      </sect3>
-	      <sect3><title/kernelnames/
-		<para>
-		  Lists all kernel function names
-		</para>
-	      </sect3>
 	      <sect3><title/list (string+)/
 		<para>
 		  If called without parameters, it lists all things it can list. Among these
@@ -357,7 +352,9 @@
 		    <member/vars: Global interpreter variables/
 		    <member/cmds: All available commands/
 		    <member/restypes: All resource types/
-		    <member/[restype]: All resources of that type/
+		    <member/selectors: All selectors/
+		    <member/syscalls: All kernel functions/
+		    <member/[resource]: All resources of that type (ex: "list view")/
 		  </simplelist>
 		</para>
 	      </sect3>
@@ -463,11 +460,6 @@
 	      <sect3><title>se</title>
 		<para>
 		  Steps forward until an SCI keyboard event is received.
-		</para>
-	      </sect3>
-	      <sect3><title/selectornames/
-		<para>
-		  Displays the names of all selectors.
 		</para>
 	      </sect3>
 	      <sect3><title/set (variable, int)/

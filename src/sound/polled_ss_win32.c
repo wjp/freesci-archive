@@ -288,8 +288,9 @@ sound_win32p_get_command(GTimeVal *wait_tvp)
 		/* Get event from queue if there is one */
 		if (sound_eq_peek_event(&inqueue))
 			event = sound_eq_retreive_event(&inqueue);
-		else
-			Sleep(1);
+		else {
+			sci_sched_yield();
+		}
 	}
 	__finally
 	{

@@ -51,7 +51,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 msvcrt.lib Release\fsci.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /debug /machine:I386 /out:"..\..\bin\freesci.exe" /fixed:no /FIXED:NO
+# ADD LINK32 Release\fsci.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /debug /machine:I386 /out:"..\..\bin\freesci.exe" /fixed:no /FIXED:NO
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
@@ -68,7 +68,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -76,7 +76,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 msvcrtd.lib Debug\fsci.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /debug /machine:I386 /out:"Debug\freesci.exe" /pdbtype:sept
+# ADD LINK32 Debug\fsci.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /debug /machine:I386 /out:"Debug\freesci.exe" /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none /map
 
 !ELSEIF  "$(CFG)" == "sciv - Win32 Purify"
@@ -94,7 +94,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
-# ADD CPP /nologo /MT /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MT /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -103,7 +103,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 msvcrtd.lib Purify\fsci.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /map /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Debug\freesci.exe"
 # SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 libcmt.lib Purify\fsci.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /incremental:no /map:"Purify/freesci.map" /debug /machine:I386 /out:"Purify\freesci.exe" /fixed:no
+# ADD LINK32 Purify\fsci.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /incremental:no /map:"Purify/freesci.map" /debug /machine:I386 /out:"Purify\freesci.exe" /fixed:no
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -135,10 +135,6 @@ SOURCE=..\main.c
 # Begin Source File
 
 SOURCE=..\scicore\sci_memory.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\usleep.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
