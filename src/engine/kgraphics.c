@@ -1860,11 +1860,9 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 		}
 
 		widget = _k_make_dynview_obj(s, obj, options, sequence_nr--, funct_nr, argc, argp);
-		if (widget) {
+		if (widget)
 			GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
-
-			node = UGET_HEAP(node + LIST_NEXT_NODE); /* Next node */
-		}
+		node = UGET_HEAP(node + LIST_NEXT_NODE); /* Next node */
 	}
 
 

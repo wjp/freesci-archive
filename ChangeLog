@@ -1,3 +1,7 @@
+2003-05-05  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (_k_make_view_list): Applied Mika's patch.
+
 2003-03-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/gfx_console.c (_con_render_text_multiline): Fixed tabs and
