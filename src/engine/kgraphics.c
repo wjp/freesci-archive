@@ -1985,7 +1985,12 @@ _k_update_signals_in_view_list(gfxw_list_t *old_list, gfxw_list_t *new_list)
 			/* Transfer 'stopupd' flag */
 
 			if ((new_widget->pos.x != old_widget->pos.x)
-			    || (new_widget->pos.y != old_widget->pos.y))
+			    || (new_widget->pos.y != old_widget->pos.y)
+			    || (new_widget->z != old_widget->z)
+			    || (new_widget->view != old_widget->view)
+			    || (new_widget->loop != old_widget->loop)
+			    || (new_widget->cel != old_widget->cel)
+			    )
 				carry = 0;
 
 			old_widget->signal = new_widget->signal |= carry;

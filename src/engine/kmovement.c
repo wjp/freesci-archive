@@ -198,19 +198,14 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	y += dy;
 
 
-	/*
-	if ((((x <= destx) && (oldx >= destx)) || ((x >= destx) && (oldx <= destx)))
-	    && (((y <= desty) && (oldy >= desty)) || ((y >= desty) && (oldy <= desty))))
-	*/
-
  	if ((MOVING_ON_X
 	     && (((x < destx) && (oldx >= destx)) /* Moving left, exceeded? */
 		 ||
 		 ((x > destx) && (oldx <= destx)) /* Moving right, exceeded? */
 		 ||
-		 (x == destx && (abs(dx) > 0)) /* Moving fast, reached? */
-		 /* Treat this last case specially- when doing sub-pixel movements,
-		 ** we could still be far away from the destination  */
+		 ((x == destx) && (abs(dx) > abs(dy))) /* Moving fast, reached? */
+		 /* Treat this last case specially- when doing sub-pixel movements
+		 ** on the other axis, we could still be far away from the destination  */
 		 )
 	     )
 	    || (MOVING_ON_Y
@@ -218,7 +213,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		    ||
 		    ((y > desty) && (oldy <= desty)) /* Moving downwards, exceeded? */
 		    ||
-		    (y == desty && (dy > 0)) /* Moving fast, reached? */
+		    ((y == desty) && (abs(dy) >= abs(dx))) /* Moving fast, reached? */
 		    )
 		)
 	    )
