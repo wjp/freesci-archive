@@ -217,7 +217,6 @@ void
 SN76496_volume(sfx_softseq_t *self, int new_volume)
 {
 	global_volume = new_volume;
-	fprintf(stderr, "Global volume is %d\n", new_volume);
 }
 
 

@@ -1,5 +1,8 @@
 2004-01-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/softseq/opl2.c (opl2_init): Forward-ported Solomon's
+	OPL/2 sequencer
+
 	* src/include/sfx_softseq.h: Extended API a bit with an 'allstop'
 	command
 
