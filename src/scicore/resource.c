@@ -342,8 +342,10 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 
 	if (fh <= 0) {
 		char *raiser = filename;
-		while (*raiser)
-			*raiser = toupper(*raiser++); /* Uppercasify */
+		while (*raiser) {
+			*raiser = toupper(*raiser); /* Uppercasify */
+			++raiser;
+		}
 
 		fh = sci_open(filename, O_RDONLY|O_BINARY);
 	}    /* Try case-insensitively name */
