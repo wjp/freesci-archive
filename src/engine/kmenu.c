@@ -41,8 +41,12 @@ void
 kSetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int index = UPARAM(0);
+	int i = 2;
 
-	menubar_set_attribute(s, (index >> 8) - 1, (index & 0xff) - 1, PARAM(1), UPARAM(2));
+	while (i < argc) {
+		menubar_set_attribute(s, (index >> 8) - 1, (index & 0xff) - 1, PARAM(i - 1), UPARAM(i));
+		i += 2;
+	}
 }
 
 void

@@ -1,3 +1,8 @@
+2001-02-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kmenu.c (kSetMenu): Added support for multiple actions in
+	SetMenu()
+
 2001-02-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/gfx_support.c (ALPHA_FACTOR2): Added linear filter
