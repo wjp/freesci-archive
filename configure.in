@@ -1,7 +1,8 @@
-AC_PREREQ(2.13)
-AC_INIT(acinclude.m4)
+AC_PREREQ(2.52)
+AC_INIT
+AC_CONFIG_SRCDIR([acinclude.m4])
 
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET([])
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(freesci, 0.3.3-devel)
 
@@ -48,7 +49,7 @@ else
 
 	*)
 		echo "Your CPU type is $target_cpu."
-		AC_ERROR([
+		AC_MSG_ERROR([
 			" There are no reliable default sizes for short,"
 			" int and long on your target processor known to us,"
 			" so we we cannot support cross-compiling for it."
@@ -80,6 +81,17 @@ AC_PATH_GGI
 #AC_CHECK_FSCI_DLOPEN
 SCIV_LDFLAGS=""
 AC_SUBST(SCIV_LDFLAGS)
+
+AC_CHECK_HEADERS(dmedia/midi.h)
+
+if test "${ac_cv_header_dmedia_audio_h}" = "yes"; then
+    case ${host_os} in
+    irix*)
+       found_sound=yes
+       AC_DEFINE(HAVE_DMEDIA_MIDI_H)
+	LIBS="-lmd $LIBS"
+    esac
+ fi
 
 
 AC_ARG_WITH(sdl, [  --without-sdl           Do not build the SDL driver])
@@ -244,7 +256,7 @@ AC_SUBST(RPM_VERSION)
 
 SDL_CFLAGS="$CFLAGS $SDL_CFLAGS"
 
-AC_OUTPUT(Makefile    \
+AC_CONFIG_FILES([Makefile    \
 	debian/Makefile \
 	desktop/Makefile \
 	doc/Makefile \
@@ -263,5 +275,6 @@ AC_OUTPUT(Makefile    \
 	src/tools/Makefile \
 	src/win32/Makefile \
 	src/sound/Makefile \
-	freesci.spec)
+	freesci.spec])
+AC_OUTPUT
 
