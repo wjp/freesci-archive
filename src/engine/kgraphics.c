@@ -1341,6 +1341,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	int view = GET_SELECTOR(obj, view);
 	int cel = sign_extend_byte(GET_SELECTOR(obj, cel));
 	int loop = sign_extend_byte(GET_SELECTOR(obj, loop));
+	int mode;
 
 	int type = GET_SELECTOR(obj, type);
 	int state = GET_SELECTOR(obj, state);
@@ -1357,13 +1358,13 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		break;
 
 	case K_CONTROL_TEXT:
+		mode = GET_SELECTOR(obj, mode);
 
-		SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d\n", obj, x, y);
+		SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d, mode=%d\n", obj, x, y, mode);
 
-		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_text_control(s->port, obj, area, text, font_nr,
-							  ((s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)?
-							  ALIGN_LEFT : ALIGN_CENTER), !!(state & CONTROL_STATE_DITHER_FRAMED),
-							  inverse));
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_text_control(s->port, obj, area, text, font_nr, mode,
+								!!(state & CONTROL_STATE_DITHER_FRAMED),
+								inverse));
 		break;
 
 	case K_CONTROL_EDIT:
@@ -2115,7 +2116,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		reparentize_primary_widget_lists(s, (gfxw_port_t *) goner->parent);
 	}
 
-	if (GFXWC(s->drop_views->parent) == GFXWC(goner))
+	if (s->drop_views && GFXWC(s->drop_views->parent) == GFXWC(goner))
 		s->drop_views = NULL; /* Kill it */
 
 	pred = gfxw_remove_port(s->visual, goner);

@@ -1,3 +1,8 @@
+2001-07-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_draw_control): Text controls now derive
+	their alignment from their 'mode' selector
+
 2001-07-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kmovement.c (kDoAvoider): Fixed angle calculation

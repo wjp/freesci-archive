@@ -172,6 +172,7 @@ typedef struct {
 	int number;
 
 	int max, cursor; /* Used by EditControl */
+	int mode; /* Used by text controls (-> DrawControl()) */
 
 	int wordFail, syntaxFail, semanticFail; /* Used by Parse() */
 
