@@ -59,7 +59,7 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 
   s->opcodes = vocabulary_get_opcodes();
 
-  if (!(s->selector_names = vocabulary_get_snames(NULL))) {
+  if (!(s->selector_names = vocabulary_get_snames(NULL, s->version))) {
     sciprintf("_init_vocabulary(): Could not retreive selector names (vocab.997)!\n");
     return 1;
   }

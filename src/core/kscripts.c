@@ -255,6 +255,11 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int index = PARAM(1);
   int disp_size;
   heap_ptr disp;
+  int magic_ofs;
+
+  if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+    magic_ofs=2; else
+    magic_ofs=0;
 
   if (argc == 1)
     index = 0;
@@ -277,7 +282,7 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  s->acc = UGET_HEAP(disp + 2 + index*2) + s->scripttable[script].heappos;
+  s->acc = UGET_HEAP(disp + 2 + index*2) + s->scripttable[script].heappos - magic_ofs;
 }
 
 

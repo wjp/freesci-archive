@@ -75,7 +75,7 @@ script_init_state(state_t *s, sci_version_t version)
 
   s->opcodes = vocabulary_get_opcodes();
 
-  if (!(s->selector_names = vocabulary_get_snames(&(s->selector_names_nr)))) {
+  if (!(s->selector_names = vocabulary_get_snames(&(s->selector_names_nr), version))) {
     sciprintf("script_init(): Could not retreive selector names (vocab.997)!\n");
     return 1;
   }

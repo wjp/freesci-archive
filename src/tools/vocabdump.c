@@ -55,7 +55,7 @@ int main(int argc, char** argv)
   }; /* i = 0 */
 
   printf("Selectors:\n");
-  names = vocabulary_get_snames(NULL);
+  names = vocabulary_get_snames(NULL, 0);
   while (names[i]) printf("0x%02X: %s\n", i, names[i++]);
   vocabulary_free_snames(names);
 

@@ -273,7 +273,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
       sprintf (outfilename, "%03d.script", snr);
       f=fopen (outfilename, "wt");
       con_file=f;
-      script_dissect(snr);
+      script_dissect(snr, NULL);
       fclose (f);
     } else 
     {

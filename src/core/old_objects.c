@@ -654,7 +654,7 @@ static int objects_init()
 
 	opcodes=vocabulary_get_opcodes();
 	knames=vocabulary_get_knames(&knames_count);
-	snames=vocabulary_get_snames(NULL);
+	snames=vocabulary_get_snames(NULL, 0);
 
 	return 0;
 }

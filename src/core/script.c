@@ -70,8 +70,7 @@ script_find_selector(state_t *s, char *selectorname)
   int i;
   for (i = 0; i < s->selector_names_nr; i++)
     if (strcmp(selectorname, s->selector_names[i]) == 0)
-      if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-        { return i; } else return i*2;
+        return i;
 
   sciprintf("Warning: Could not map '%s' to any selector!\n", selectorname);
   return -1;
@@ -271,9 +270,8 @@ script_dump_class(char *data, int seeker, int objsize, char **snames)
 
 
 void 
-script_dissect(int res_no)
+script_dissect(int res_no, char **snames)
 {
-  char **snames = vocabulary_get_snames(NULL);
   int objectctr[11] = {0,0,0,0,0,0,0,0,0,0,0};
   int _seeker = 0;
   resource_t *script = findResource(sci_script, res_no);

@@ -34,7 +34,7 @@
 #include <kdebug.h>
 #include <sys/resource.h>
 
-/* #define VM_DEBUG_SEND */
+/*#define VM_DEBUG_SEND*/
 
 
 int script_debug_flag = 0; /* Defaulting to running mode */
@@ -120,7 +120,7 @@ else { s->heap[(guint16)(address)] = (value) &0xff;               \
 /* Is true if the object at the address is a class */
 
 
-inline exec_stack_t *
+/*inline*/ exec_stack_t *
 execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
 	       heap_ptr calling_obj, word argc, heap_ptr argp)
 {
@@ -128,6 +128,7 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
   heap_ptr tableaddress;
   heap_ptr scriptpos;
   int exports_nr;
+  int magic_ofs;
 
   if (s->scripttable[script].heappos == 0) /* Script not present yet? */
       script_instantiate(s, script);
@@ -172,8 +173,12 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
     }
   }
 
+  if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+    magic_ofs=2; else
+    magic_ofs=0;
+
   return 
-    add_exec_stack_entry(s, scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)), sp, 
+    add_exec_stack_entry(s, scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)) - magic_ofs, sp, 
 			 calling_obj, argc, argp, -1, calling_obj, s->execution_stack_pos);
 }
 
@@ -476,7 +481,7 @@ run_vm(state_t *s, int restoring)
       script_error(s, __FILE__, __LINE__, "Absolute stack underflow");
 
     if (xs->sp < xs->variables[VAR_TEMP])
-      script_error(s, __FILE__, __LINE__, "Relative stack underflow");
+	  script_error(s, __FILE__, __LINE__, "Relative stack underflow");
 
     if (xs->sp >= s->stack_base + VM_STACK_SIZE)
       script_error(s, __FILE__, __LINE__, "Stack overflow");
@@ -1118,6 +1123,9 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
   /* Number of variable selectors */
 
   int i;
+  
+  if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+    selectorid&=~1; /* Low bit in this case is read/write toggle */
   for (i = 0; i < varselector_nr * 2; i += 2)
     if (GET_HEAP(heappos + SCRIPT_SELECTOR_OFFSET + varselector_nr * 2 + i) == selectorid)
       { /* Found it? */
@@ -1194,7 +1202,7 @@ script_instantiate(state_t *s, int script_nr)
   if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
     int locals_size = getUInt16(script->data)*2;
     s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size);
-    sciprintf( "Old SCI version; assuming locals size %d\n", locals_size); 
+    sciprintf( "Loading script %d: Old SCI version; assuming locals size %d\n", script_nr, locals_size); 
     /* There won't be a localvar block in this case */
     memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
     pos = script_basepos + 2;

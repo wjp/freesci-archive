@@ -7,7 +7,6 @@
 #include <resource.h>
 #include <vocabulary.h>
 
-
 /* Default kernel name table */
 #define SCI0_KNAMES_DEFAULT_ENTRIES_NR 0x72
 
@@ -152,11 +151,12 @@ int* vocabulary_get_classes(int* count)
   return c;
 }
 
-char** vocabulary_get_snames(int* pcount)
+char** vocabulary_get_snames(int* pcount, sci_version_t version)
 {
   char** t;
   int count;
-  int i;
+  int i,j;
+  int magic;
 
   resource_t* r=findResource(sci_vocab, 997);
 
@@ -164,20 +164,33 @@ char** vocabulary_get_snames(int* pcount)
     return NULL;
 
   count=getInt(r->data);
-  t=g_malloc(sizeof(char*)*(count+1));
+
+  magic=((version==0) || (version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER))? 1 : 2;
+    
+  t=g_malloc(sizeof(char*)*magic*(count+1));
+
+  j=0;
 
   for(i=0; i<count; i++)
     {
       int offset=getInt(r->data+2+i*2);
       int len=getInt(r->data+offset);
-      t[i]=g_malloc(len+1);
-      memcpy(t[i], r->data+offset+2, len);
-      t[i][len]='\0';
+      t[j]=g_malloc(len+1);
+      memcpy(t[j], r->data+offset+2, len);
+      t[j][len]='\0';
+      j++;
+      if ((version!=0) && (version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER))
+      {
+        t[j]=g_malloc(len+1);
+        memcpy(t[j], r->data+offset+2, len);
+        t[j][len]='\0';
+        j++;
+      }
     }
 
-  t[i]=0;
+  t[j]=0;
 
-  if (pcount != NULL) *pcount=count;
+  if (pcount != NULL) *pcount=magic*count;
   
   return t;
 }

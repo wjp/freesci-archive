@@ -36,6 +36,7 @@
 #include <resource.h>
 #include <script.h>
 #include <console.h>
+#include <versions.h>
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
@@ -55,7 +56,7 @@ static struct option options[] = {
   {0, 0, 0, 0}};
 #endif /* HAVE_GETOPT_H */
 
-
+#define SCI_ASSUME_VERSION SCI_VERSION_FTU_NEW_SCRIPT_HEADER
 
 typedef struct name_s {
   int offset;
@@ -210,7 +211,7 @@ disasm_init (disasm_state_t *d)
 {
   int *classes;
   
-  d->snames = vocabulary_get_snames (&d->selector_count);
+  d->snames = vocabulary_get_snames (&d->selector_count, SCI_ASSUME_VERSION);
   d->opcodes = vocabulary_get_opcodes();
   d->kernel_names = vocabulary_get_knames (&d->kernel_names_nr);
   d->words = vocab_get_words (&d->word_count);

@@ -225,7 +225,12 @@ kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = GET_HEAP(UPARAM(0) + LIST_NODE_VALUE);
+  int a;
+  
+  a=UPARAM(0) + LIST_NODE_VALUE;
+
+  s->acc=GET_HEAP(a);
+
 }
 
 

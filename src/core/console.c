@@ -686,7 +686,7 @@ c_hexgrep(state_t *s)
 int c_selectornames(state_t *s)
 {
   int namectr;
-  char **snames = vocabulary_get_snames(&namectr);
+  char **snames = vocabulary_get_snames(&namectr, s->version);
   int seeker = 0;
 
   if (!snames) {
@@ -726,7 +726,7 @@ c_kernelnames(state_t *s)
 int
 c_dissectscript(state_t *s)
 {
-  script_dissect(cmd_params [0].val);
+  script_dissect(cmd_params [0].val, s->selector_names);
   return 0;
 }
 

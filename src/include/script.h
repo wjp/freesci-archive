@@ -30,7 +30,7 @@ enum {
   sci_obj_localvars
 } script_object_types;
 
-void script_dissect(int res_no);
+void script_dissect(int res_no, char **snames);
 
 /* Opcode formats as used by script.c */
 typedef enum {

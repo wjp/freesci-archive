@@ -238,7 +238,7 @@ typedef int kernel_function(struct _state* s);
 extern kernel_function* kfuncs[];
 extern int max_instance;
 
-inline exec_stack_t *
+/*inline*/ exec_stack_t *
 execute_method(struct _state *s, word script, word pubfunct, heap_ptr sp, heap_ptr calling_obj,
 	       word argc, heap_ptr argp);
 /* Executes function pubfunct of the specified script.

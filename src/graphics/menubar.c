@@ -138,11 +138,10 @@ _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *fo
 
   item = &(menu->items[menu->items_nr - 1]);
 
+  memset(item, 0, sizeof(menu_item_t));
+
   if ((item->type = type) == MENU_TYPE_HBAR)
-  {
-    item->keytext = NULL;
     return 0;
-  }    
 
   /* else assume MENU_TYPE_NORMAL */
   item->text = left;
@@ -187,6 +186,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
   } else menubar->menus = realloc(menubar->menus, ++(menubar->menus_nr) * sizeof (menu_t));
 
   menu = &(menubar->menus[menubar->menus_nr-1]);
+  memset(menu, 0, sizeof(menu_t));
   menu->items_nr = 0;
   menu->title = malloc_cpy(title);
 

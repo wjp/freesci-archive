@@ -29,6 +29,7 @@
 #define VOCABULARY_H
 
 #include <heap.h>
+#include <versions.h>
 
 /*#define VOCABULARY_DEBUG /**/
 
@@ -165,7 +166,7 @@ int* vocabulary_get_classes();
 /**
  * Returns a null terminated array of selector names.
  */
-char** vocabulary_get_snames(int *pcount);
+char** vocabulary_get_snames(int *pcount, sci_version_t version);
 /**
  * Frees the aforementioned array
  */

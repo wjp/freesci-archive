@@ -350,7 +350,6 @@ c_scriptinfo(state_t *s)
 
 char *selector_name(state_t *s, int selector)
 {
-  if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER) selector>>=1;
   return s->selector_names[selector];
 }
 
