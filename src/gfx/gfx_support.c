@@ -90,7 +90,7 @@ gfx_draw_line_buffer(byte *buffer, int linewidth, int pixelwidth, rect_t line, u
 void
 gfx_draw_line_pixmap_i(gfx_pixmap_t *pxm, rect_t line, int color)
 {
-  gfx_draw_line_buffer(pxm->index_data, pxm->index_xl, 1, line, color);
+	gfx_draw_line_buffer(pxm->index_data, pxm->index_xl, 1, line, color);
 }
 
 
@@ -345,6 +345,7 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 				    xl, yl, alpha, bytes_per_alpha_line, bytes_per_alpha_pixel,
 				    alpha_mask, alpha_min, alpha_max, priority_pos,
 				    priority_line_width, priority_skip, priority);
+		break;
 
 	default: GFXERROR("Invalid mode->bytespp: %d\n", mode->bytespp);
 		return GFX_ERROR;

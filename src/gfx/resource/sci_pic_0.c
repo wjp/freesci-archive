@@ -1035,7 +1035,7 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int pr
 	if (drawenable & GFX_MASK_CONTROL) {
 
 		p0printf(" ctl:%x", control);
-		gfx_draw_line_pixmap_i(pic->control_map, gfx_rect_translate(line, gfx_point(0, SCI_TITLEBAR_SIZE)), control);
+		gfx_draw_line_pixmap_i(pic->control_map, gfx_rect(x, y, line.xl, line.yl), control);
 	}
 
 

@@ -1685,10 +1685,10 @@ _gfxop_set_pic(gfx_state_t *state)
 {
 	gfx_pixmap_t *pxm = NULL;
 	byte unscaled = (state->options->pic0_unscaled);
-
 	gfx_copy_pixmap_box_i(state->control_map, state->pic->control_map, gfx_rect(0, 0, 320, 200));
 	state->control_map->colors_nr = state->pic->control_map->colors_nr;
 	state->control_map->colors = state->pic->control_map->colors;
+
 
 	switch (state->visible_map) {
 

@@ -1,5 +1,8 @@
 2001-02-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/resource/sci_pic_0.c (_gfxr_draw_line): Re-formulated pixmap
+	line drawing macro expansion to work around gcc bug on ia32
+
 	* src/engine/kmenu.c (kSetMenu): Added support for multiple actions in
 	SetMenu()
 
