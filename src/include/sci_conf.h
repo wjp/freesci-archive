@@ -75,8 +75,11 @@ typedef struct {
 	midi_device_t *midi_device; /* the midi device to use */
 	sound_server_t *sound_server; /* The sound server */
 
+	char *plugin_dir; /* directory to load plugins */
+
 } config_entry_t;
 
+#define SCI_DEFAULT_PLUGIN_DIR "/usr/share/freesci/"
 
 int
 config_init(config_entry_t **conf, char *conffil);
