@@ -64,7 +64,7 @@ pcmout_sdl_init(sfx_pcm_device_t *self)
 	a.format = AUDIO_S16LSB; /* FIXME */
 #endif
 	a.channels = 2; /* FIXME */
-	a.samples = 2048; /* FIXME */
+	a.samples = 8192; /* FIXME */
 	a.callback = timer_sdl_internal_callback;
 	a.userdata = NULL;
 

@@ -404,7 +404,8 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
 	if (P->delta_observations > MAX_DELTA_OBSERVATIONS)
 		P->delta_observations = MAX_DELTA_OBSERVATIONS;
 
-	if (P->delta_observations > MIN_DELTA_OBSERVATIONS) { /* Start improving after a while */
+	/* Disabled, broken */
+	if (0 && P->delta_observations > MIN_DELTA_OBSERVATIONS) { /* Start improving after a while */
 		int d = P->delta_observations - MIN_DELTA_OBSERVATIONS;
 		int diff = self->dev->conf.rate - P->max_delta;
 

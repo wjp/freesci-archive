@@ -59,8 +59,13 @@ sps_set_option(char *name, char *value)
 static int
 sps_open(int patch_len, byte *patch, void *device)
 {
+	int zero = 0;
+
 	sfx_init_sw_sequencer(&sfx_sequencer_sw_pcspeaker, 1, pcm_conf);
 	fprintf(stderr, "init-Chanlast = %p\n", PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0).last);
+
+	sfx_audbuf_write(&(PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0)),
+			 (byte *) &zero, 2, 1);
 	return SFX_OK;
 }
 
