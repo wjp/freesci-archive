@@ -98,6 +98,7 @@ void initColors(ggi_visual_t visual)
   }
   for (i=0; i< 256; i++) {
     ggi_color color;
+
     color.r = INTERCOL((vcal[i & 0xf].r), (vcal[i >> 4].r));
     color.g = INTERCOL((vcal[i & 0xf].g), (vcal[i >> 4].g));
     color.b = INTERCOL((vcal[i & 0xf].b), (vcal[i >> 4].b));
@@ -109,7 +110,7 @@ void initColors(ggi_visual_t visual)
   }
 }
 
-#undef INTERCOL(a, b)
+
 
 ggi_visual_t openVisual()
 {
@@ -200,6 +201,9 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
   int pointer_end_x, pointer_end_y;
   int pointer_x_affected = 0; /* set to 1 if the pointer has to be drawn at all */
 
+  int write_bytelen = 4;      /* Byte length for writing */
+  ggi_pixel *_egacol;         /* Points to egacol, plus offset */
+
   ggiGetMode(vis, &mode);
 
   if (mode.visible.x >= 640) { /* double sized? */
@@ -209,6 +213,34 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
   }
   
   bytelen = GT_SIZE(mode.graphtype) >> 3; /* min of 8 bpp */
+
+
+  /* The following lines should help the compiler in determining the
+  ** possible values for write_bytelen
+  */
+  if (bytelen == 2) /* 15 or 16 bpp */
+    write_bytelen = 2;
+  else if (bytelen == 1) /* 8 bpp */
+    write_bytelen = 1;
+
+#ifdef WORDS_BIGENDIAN
+  /* The following hack shifts the offset of the array we get our color values from
+  ** on bigendian machines, so that the correct data is transmitted. E.g., if ggi_pixel
+  ** is 32 bits/bigendian (sparc) and the display is 16 bpp, the color value in one
+  ** specified pixel might look like this:
+  **    0x 00 00 ff ff
+  ** Since we're 16 bit, only the last to bytes should to be copied, so we shift our offset
+  ** two bytes to the right. Or to wherever the LSB is.
+  */
+  _egacol = (ggi_pixel *)(((char *) &egacol[0]) + 4 - write_bytelen);
+
+#else /* !WORDS_BIGENDIAN */
+
+  _egacol = egacol;
+
+#endif /* !WORDS_BIGENDIAN */
+
+
 
   if (x < 0) {
     xl += x;
@@ -257,25 +289,25 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
 
     if ((!pointer_x_affected) || (pointer_row == -1))
       for (xc=x; xc<xend; xc++)
-	memcpy(&(_sci_xfer[index += bytelen]), &(egacol[data[counter++]]), 4);
+	memcpy(&(_sci_xfer[index += bytelen]), &(_egacol[data[counter++]]), write_bytelen);
     else { /* Check for mouse pointer */
 
       xc = x;
       for (; xc < pointer_x; xc++)
-	memcpy(&(_sci_xfer[index += bytelen]), &(egacol[data[counter++]]), 4);
+	memcpy(&(_sci_xfer[index += bytelen]), &(_egacol[data[counter++]]), write_bytelen);
       
       for (; (xc < pointer_end_x) && (xc < xend); xc++) {
 	int colval = pointer->bitmap[pointer_row + xc - pointer_x];
 	if (colval == pointer->color_key)
 	  colval = data[counter];
 
-	memcpy(&(_sci_xfer[index += bytelen]), &(egacol[colval]), 4);
+	memcpy(&(_sci_xfer[index += bytelen]), &(_egacol[colval]), write_bytelen);
 
 	counter++;
       }
 
       for (; xc < xend; xc++)
-	memcpy(&(_sci_xfer[index += bytelen]), &(egacol[data[counter++]]), 4);
+	memcpy(&(_sci_xfer[index += bytelen]), &(_egacol[data[counter++]]), write_bytelen);
       
     }
 

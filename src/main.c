@@ -127,9 +127,10 @@ get_gets_input(void)
 #ifdef HAVE_GETOPT_H
 static struct option options[] = {
   {"gamedir", required_argument, 0, 'd'},
-  {"run", no_argument, &script_debug_flag, 1 },
-  {"sci-version", required_argument, 0, 'v'},
-  {"version", no_argument, 0, 'V'},
+  {"run", no_argument, &script_debug_flag, 0 },
+  {"debug", no_argument, &script_debug_flag, 1 },
+  {"sci-version", required_argument, 0, 'V'},
+  {"version", no_argument, 0, 'v'},
   {"help", no_argument, 0, 'h'},
   {0,0,0,0}
 };
@@ -165,7 +166,7 @@ main(int argc, char** argv)
       strcpy (gamedir, optarg);
       break;
 
-    case 'v':
+    case 'V':
       {
         int major = *optarg - '0'; /* One version digit */
         int minor = atoi(optarg + 2);
@@ -180,7 +181,7 @@ main(int argc, char** argv)
       /* getopt_long already printed an error message. */
       break;
 
-    case 'V':
+    case 'v':
       printf("%s\n", VERSION);
       return 0;
     
@@ -188,11 +189,12 @@ main(int argc, char** argv)
       printf("Usage: sciv [OPTION]...\n"
              "Run a sierra SCI game.\n"
              "\n"
-             "  --gamedir dir	read game resources from dir\n"
-             "  --run		do not start the debugger\n"
-             "  --sci-version	set the version of sciv to emulate\n"
-             "  --version	display version information and exit\n"
-             "  --help	display this help text and exit\n"
+             "  --gamedir dir	-ddir  read game resources from dir\n"
+             "  --run		-r     do not start the debugger\n"
+             "  --sci-version	-Vver  set the version of sciv to emulate\n"
+             "  --version	-v     display version information and exit\n"
+	     "  --debug                Start up with the debugger enabled\n"
+             "  --help	        -h     display this help text and exit\n"
              );
       return 0;
 
@@ -246,12 +248,15 @@ main(int argc, char** argv)
 
 
   if (script_init_state(&gamestate, cmd_version)) { /* Initialize game state */
-    fprintf(stderr,"Initialization failed. Aborting...\n");
+    fprintf(stderr,"Script initialization failed. Aborting...\n");
     return 1;
   }
   gamestate.have_mouse_flag = 1; /* Assume that a pointing device is present */
 
-  game_init(&gamestate); /* Initialize */
+  if (game_init(&gamestate)) { /* Initialize */
+    fprintf(stderr,"Game initialization failed: Aborting...\n");
+    return 1;
+  }
 
   chdir (startdir);
   config_init(&conf, gamestate.game_name, NULL);

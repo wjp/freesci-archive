@@ -4,8 +4,131 @@
 
 
 #include <string.h>
-#include "resource.h"
-#include "vocabulary.h"
+#include <resource.h>
+#include <vocabulary.h>
+
+
+/* Default kernel name table */
+#define SCI0_KNAMES_DEFAULT_ENTRIES_NR 0x72
+
+char *sci0_default_knames[SCI0_KNAMES_DEFAULT_ENTRIES_NR] =
+{
+/*0x00*/ "Load",
+/*0x01*/ "UnLoad",
+/*0x02*/ "ScriptID",
+/*0x03*/ "DisposeScript",
+/*0x04*/ "Clone",
+/*0x05*/ "DisposeClone",
+/*0x06*/ "IsObject",
+/*0x07*/ "RespondsTo",
+/*0x08*/ "DrawPic",
+/*0x09*/ "Show",
+/*0x0a*/ "PicNotValid",
+/*0x0b*/ "Animate",
+/*0x0c*/ "SetNowSeen",
+/*0x0d*/ "NumLoops",
+/*0x0e*/ "NumCels",
+/*0x0f*/ "CelWide",
+/*0x10*/ "CelHigh",
+/*0x11*/ "DrawCel",
+/*0x12*/ "AddToPic",
+/*0x13*/ "NewWindow",
+/*0x14*/ "GetPort",
+/*0x15*/ "SetPort",
+/*0x16*/ "DisposeWindow",
+/*0x17*/ "DrawControl",
+/*0x18*/ "HiliteControl",
+/*0x19*/ "EditControl",
+/*0x1a*/ "TextSize",
+/*0x1b*/ "Display",
+/*0x1c*/ "GetEvent",
+/*0x1d*/ "GlobalToLocal",
+/*0x1e*/ "LocalToGlobal",
+/*0x1f*/ "MapKeyToDir",
+/*0x20*/ "DrawMenuBar",
+/*0x21*/ "MenuSelect",
+/*0x22*/ "AddMenu",
+/*0x23*/ "DrawStatus",
+/*0x24*/ "Parse",
+/*0x25*/ "Said",
+/*0x26*/ "SetSynonyms",
+/*0x27*/ "HaveMouse",
+/*0x28*/ "SetCursor",
+/*0x29*/ "FOpen",
+/*0x2a*/ "FPuts",
+/*0x2b*/ "FGets",
+/*0x2c*/ "FClose",
+/*0x2d*/ "SaveGame",
+/*0x2e*/ "RestoreGame",
+/*0x2f*/ "RestartGame",
+/*0x30*/ "GameIsRestarting",
+/*0x31*/ "DoSound",
+/*0x32*/ "NewList",
+/*0x33*/ "DisposeList",
+/*0x34*/ "NewNode",
+/*0x35*/ "FirstNode",
+/*0x36*/ "LastNode",
+/*0x37*/ "EmptyList",
+/*0x38*/ "NextNode",
+/*0x39*/ "PrevNode",
+/*0x3a*/ "NodeValue",
+/*0x3b*/ "AddAfter",
+/*0x3c*/ "AddToFront",
+/*0x3d*/ "AddToEnd",
+/*0x3e*/ "FindKey",
+/*0x3f*/ "DeleteKey",
+/*0x40*/ "Random",
+/*0x41*/ "Abs",
+/*0x42*/ "Sqrt",
+/*0x43*/ "GetAngle",
+/*0x44*/ "GetDistance",
+/*0x45*/ "Wait",
+/*0x46*/ "GetTime",
+/*0x47*/ "StrEnd",
+/*0x48*/ "StrCat",
+/*0x49*/ "StrCmp",
+/*0x4a*/ "StrLen",
+/*0x4b*/ "StrCpy",
+/*0x4c*/ "Format",
+/*0x4d*/ "GetFarText",
+/*0x4e*/ "ReadNumber",
+/*0x4f*/ "BaseSetter",
+/*0x50*/ "DirLoop",
+/*0x51*/ "CanBeHere",
+/*0x52*/ "OnControl",
+/*0x53*/ "InitBresen",
+/*0x54*/ "DoBresen",
+/*0x55*/ "DoAvoider",
+/*0x56*/ "SetJump",
+/*0x57*/ "SetDebug",
+/*0x58*/ "InspectObj",
+/*0x59*/ "ShowSends",
+/*0x5a*/ "ShowObjs",
+/*0x5b*/ "ShowFree",
+/*0x5c*/ "MemoryInfo",
+/*0x5d*/ "StackUsage",
+/*0x5e*/ "Profiler",
+/*0x5f*/ "GetMenu",
+/*0x60*/ "SetMenu",
+/*0x61*/ "GetSaveFiles",
+/*0x62*/ "GetCWD",
+/*0x63*/ "CheckFreeSpace",
+/*0x64*/ "ValidPath",
+/*0x65*/ "CoordPri",
+/*0x66*/ "StrAt",
+/*0x67*/ "DeviceInfo",
+/*0x68*/ "GetSaveDir",
+/*0x69*/ "CheckSaveGame",
+/*0x6a*/ "ShakeScreen",
+/*0x6b*/ "FlushResources",
+/*0x6c*/ "SinMult",
+/*0x6d*/ "CosMult",
+/*0x6e*/ "SinDiv",
+/*0x6f*/ "CosDiv",
+/*0x70*/ "Graph",
+/*0x71*/ SCRIPT_UNKNOWN_FUNCTION_STRING
+};
+
 
 int getInt(unsigned char* d)
 {
@@ -36,6 +159,9 @@ char** vocabulary_get_snames()
   int i;
 
   resource_t* r=findResource(sci_vocab, 997);
+
+  if (!r) /* No such resource? */
+    return NULL;
 
   count=getInt(r->data);
   t=malloc(sizeof(char*)*(count+1));
@@ -138,6 +264,16 @@ static char** vocabulary_get_knames0(int* names)
   int count, i, index=2;
   resource_t* r=findResource(sci_vocab, 999);
   
+  if (!r) { /* No kernel name table found? Fall back to default table */
+    t = malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR) * sizeof(char*));
+    *names = SCI0_KNAMES_DEFAULT_ENTRIES_NR - 1; /* index of last element */
+
+    for (i = 0; i < SCI0_KNAMES_DEFAULT_ENTRIES_NR; i++)
+      t[i] = strdup(sci0_default_knames[i]);
+
+    return t;
+  }
+
   count=getInt(r->data);
 
   if (count > 1023)

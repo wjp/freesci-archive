@@ -106,6 +106,8 @@ typedef struct {
 } parse_tree_node_t;
 
 
+
+
 /*FIXME: These need freeing functions...*/
 
 int* vocabulary_get_classes();
@@ -222,6 +224,15 @@ vocab_dump_parse_tree(parse_tree_node_t *nodes);
 ** Returns   : (void)
 */
 
+
+
+
+struct _state;
+/* Decyphers a said block and dumps its content via sciprintf.
+** Parameters: (state_t *) s: The state to use
+**             (heap_ptr) addr: The heap address to decypher
+** For debugging only.
+*/
 void
 vocab_decypher_said_block(struct _state *s, heap_ptr addr);
 

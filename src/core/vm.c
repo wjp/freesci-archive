@@ -1295,7 +1295,12 @@ game_init(state_t *s)
 
   s->kernel_names = vocabulary_get_knames(&s->kernel_names_nr);
   s->opcodes = vocabulary_get_opcodes();
-  s->selector_names = vocabulary_get_snames();
+
+  if (!(s->selector_names = vocabulary_get_snames())) {
+    sciprintf("script_init(): Could not retreive selector names (vocab.997)!\n");
+    return 1;
+  }
+
   for (s->selector_names_nr = 0; s->selector_names[s->selector_names_nr]; s->selector_names_nr++);
   /* Counts the number of selector names */
 

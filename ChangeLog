@@ -1,3 +1,14 @@
+1999-10-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/vocab_debug.c (vocabulary_get_knames0): Added handling for
+	missing vocab.999 (falls back to a default kernel name table)
+
+	* src/graphics/graphics_ggi.c (graphics_draw_region_ggi): Added a hack
+	for bigendian machines that could solve the blank screen problem
+	without too much performance loss (still needs to be tested)
+
+	* src/sound/soundserver_null.c: Removed warnings
+
 1999-09-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c: Fixed numerous bugs

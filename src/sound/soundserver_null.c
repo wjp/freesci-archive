@@ -32,6 +32,7 @@
 #include <signal.h>
 
 
+
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
 
@@ -154,7 +155,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
   songlib[0] = NULL;
 
-  gettimeofday(&last_played, NULL);
+  gettimeofday((struct timeval *)&last_played, NULL);
 
   fprintf(ds, "NULL Sound server initialized\n");
 
@@ -178,7 +179,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
     }
     song = song_lib_find_active(songlib, song);
     if (song == NULL) {
-      gettimeofday(&last_played, NULL);
+      gettimeofday((struct timeval *)&last_played, NULL);
       ticks = 60; /* Wait a second for new commands, then collect your new ticks here. */
     }
     while (ticks == 0) {
@@ -186,7 +187,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
       int newcmd;
       int param;
 
-      gettimeofday(&last_played, NULL);
+      gettimeofday((struct timeval *)&last_played, NULL);
 
       ticks = song->data[(song->pos)++];
       newcmd = song->data[song->pos];
@@ -247,7 +248,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
       FD_ZERO(&input_fds);
       FD_SET(fd_in, &input_fds);
 
-      got_input = select(fd_in + 1, &input_fds, NULL, NULL, &wait_tv); /* Wait for input */
+      /* Wait for input: */
+      got_input = select(fd_in + 1, &input_fds, NULL, NULL, (struct timeval *)&wait_tv);
 
       if (got_input) { /* We've got mail! */
 	sound_event_t event;
@@ -476,7 +478,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	}
       }
 
-      gettimeofday(&ctime, NULL);
+      gettimeofday((struct timeval *)&ctime, NULL);
 
     } while ((wakeup_time.tv_sec > ctime.tv_sec)
 	     || ((wakeup_time.tv_sec == ctime.tv_sec)

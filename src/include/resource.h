@@ -56,6 +56,8 @@
 #include <assert.h>
 #include <glib.h>
 
+
+
 #define SCI_MAX_RESOURCE_SIZE 0x0400000
 /* The maximum allowed size for a compressed or decompressed resource */
 

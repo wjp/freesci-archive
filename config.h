@@ -8,7 +8,7 @@
 #define PACKAGE "freesci"
 #define VERSION "0.2.5"
 #define HAVE_LIBGGI 1
-/* #undef HAVE_LIBPNG */
+#define HAVE_LIBPNG 1
 
 /* Define if you have the fork function.  */
 #define HAVE_FORK 1
