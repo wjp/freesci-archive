@@ -60,7 +60,6 @@ struct _sdl_state {
 
 #define S ((struct _sdl_state *)(drv->state))
 
-#define XASS(foo) { int val = foo; if (!val) sdlerror(drv, __LINE__); }
 #define XFACT drv->mode->xfact
 #define YFACT drv->mode->yfact
 
@@ -124,7 +123,8 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   }
 
   S->primary = NULL;
-  S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, SDL_HWSURFACE);
+  S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, 
+				SDL_HWSURFACE | SDL_SWSURFACE);
 
   if (!S->primary) {
     ERROR("Could not set up a primary SDL surface!\n");
@@ -137,7 +137,10 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     S->primary = NULL;
     return GFX_FATAL;
   }
-  
+
+  printf("Using primary SDL surface of %d,%d @%d bpp (%04x)\n",  
+	 xsize, ysize, bytespp << 3, S->primary);
+
   /* clear palette */
   for (i = 0; i < 256; i++) {
     S->colors[i].r = 0;
@@ -145,7 +148,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     S->colors[i].b = 0;
   }
   if (bytespp == 1) 
-    XASS(SDL_SetColors(S->primary, S->colors, 0, 256));
+    SDL_SetColors(S->primary, S->colors, 0, 256);
 
   /* create an input event mask */
   SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
@@ -181,14 +184,21 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
   /* create the visual buffers */
   for (i = 0; i < 3; i++) {  /* XXX SDL_SRCALPHA ??? */
-    S->visual[i] = SDL_CreateRGBSurface(SDL_HWSURFACE, xsize, ysize, 
+    S->visual[i] = NULL;
+    S->visual[i] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SWSURFACE, 
+					xsize, ysize, 
 					bytespp << 3, 
 					S->primary->format->Rmask, 
 					S->primary->format->Gmask,
 					S->primary->format->Bmask, 
 					S->primary->format->Amask);
+    if (S->visual[i] == NULL) {
+      ERROR("Could not set up visual buffers!\n");
+      return GFX_FATAL;
+    }
     
-    SDL_FillRect(S->primary, NULL, SDL_MapRGB(S->primary->format, 0,0,0));
+    if (SDL_FillRect(S->primary, NULL, SDL_MapRGB(S->primary->format, 0,0,0)))
+      ERROR("Couldn't fill backbuffer!\n");
   }
   
   drv->mode = gfx_new_mode(xfact, yfact, bytespp,
@@ -207,7 +217,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 static int
 sdl_init(struct _gfx_driver *drv)
 {
-  int i = 0;
+  int depth = 0;
 
   drv->debug_flags = 0xffffffff;
 
@@ -216,14 +226,11 @@ sdl_init(struct _gfx_driver *drv)
     return GFX_FATAL;
   }
 
-  for (i = 4; i > 0; i--) {
-    /* 320x200 * (2,2) scaling) */
-    if (SDL_VideoModeOK(640,400, i << 3, SDL_HWSURFACE | SDL_SWSURFACE))
-      if (! sdl_init_specific(drv, 2, 2, i))
-	return GFX_OK;
-  }
+  depth = SDL_VideoModeOK(640,400, 32, SDL_HWSURFACE | SDL_SWSURFACE);
+  if (depth && (! sdl_init_specific(drv, 2, 2, depth >> 3 )))
+    return GFX_OK;
+
   DEBUGB("Failed to find visual!\n");
-  
   return GFX_FATAL;
 }
 
@@ -252,10 +259,11 @@ sdl_map_color(gfx_driver_t *drv, gfx_color_t color)
   if (drv->mode->palette)
     return color.visual.global_index;
 
-  return SDL_MapRGB(S->primary->format,
-		    color.visual.r,
-		    color.visual.g,
-		    color.visual.b);
+  return SDL_MapRGBA(S->primary->format,
+		     color.visual.r,
+		     color.visual.g,
+		     color.visual.b,
+		     color.alpha);
 
 }
 
@@ -413,7 +421,8 @@ sdl_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
     srect.w = rect.xl;
     srect.h = rect.yl;
       
-    SDL_FillRect(S->visual[1], &srect, color);
+    if (SDL_FillRect(S->visual[1], &srect, color))
+      ERROR("Can't fill rect");
   }
   
   if (color1.mask & GFX_MASK_PRIORITY)
@@ -484,16 +493,17 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   srect.y = src.y;
   srect.w = src.xl;
   srect.h = src.yl;
-  drect.x = 0;
-  drect.y = 0;
+  drect.x = dest.x;
+  drect.y = dest.y;
   drect.w = dest.xl;
   drect.h = dest.yl;
   
   fflush(stdout);
 
   if (pxm->internal.handle == SCI_XLIB_PIXMAP_HANDLE_GRABBED) {
-    SDL_BlitSurface((SDL_Surface *)pxm->internal.info, &srect , 
-		    S->visual[bufnr], &drect );
+    if (SDL_BlitSurface((SDL_Surface *)pxm->internal.info, &srect , 
+			S->visual[bufnr], &drect ))
+      ERROR("blt failed");
     return GFX_OK;
   }
 
@@ -508,9 +518,12 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   if (!temp) {
     ERROR("Failed to allocate SDL surface");
     return GFX_ERROR;
-  }
+  }  
 
-  SDL_BlitSurface(S->visual[bufnr], &srect, temp, &drect);
+  drect.x = 0;
+  drect.y = 0;
+  if(SDL_BlitSurface(S->visual[bufnr], &srect, temp, &drect))
+    ERROR("blt failed");
 
   gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest,
 		       (byte *) temp->pixels, temp->pitch,
@@ -518,7 +531,8 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		       S->priority[pribufnr]->index_xl, 1,
 		       GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
   
-  SDL_BlitSurface(temp, &drect, S->visual[bufnr], &srect);
+  if(SDL_BlitSurface(temp, &drect, S->visual[bufnr], &srect))
+    ERROR("blt failed");
 
   SDL_FreeSurface(temp);
   return GFX_OK;
@@ -554,6 +568,12 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 				S->primary->format->Gmask,
 				S->primary->format->Bmask, 
 				S->primary->format->Amask);
+
+    if (!temp) {
+      ERROR("Failed to allocate SDL surface");
+      return GFX_ERROR;
+    }
+
     srect.x = src.x;
     srect.y = src.y;
     srect.w = src.xl;
@@ -563,7 +583,9 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
     drect.w = src.xl;
     drect.h = src.yl;
 
-    SDL_BlitSurface(S->visual[1], &srect, temp, &drect);
+    if (SDL_BlitSurface(S->visual[1], &srect, temp, &drect))
+      ERROR("grab_pixmap:  grab blit failed!\n");
+
     pxm->internal.info = temp;
     pxm->internal.handle = SCI_XLIB_PIXMAP_HANDLE_GRABBED;
     pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
@@ -608,23 +630,19 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
   drect.y = dest.y;
   drect.w = src.xl;
   drect.h = src.yl;
-  
-  SDL_BlitSurface(S->visual[data_source], &srect, 
-		  S->visual[data_dest], &drect);
+
+  if (SDL_BlitSurface(S->visual[data_source], &srect, 
+		      S->visual[data_dest], &drect))
+    ERROR("surface update failed!\n");
   
   if (buffer == GFX_BUFFER_BACK && (src.x == dest.x) && (src.y == dest.y))
     gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
   else {
-    gfx_color_t col;
-    col.mask = GFX_MASK_VISUAL;
-    col.visual.r = 0xff;
-    col.visual.g = 0;
-    col.visual.b = 0;
-    
-    SDL_BlitSurface(S->visual[0], &srect, S->primary, &drect);
-
+    if (SDL_BlitSurface(S->visual[0], &srect, S->primary, &drect))
+      ERROR("surface update failed!\n");
   }
   
+  SDL_UpdateRect(S->primary, 0,0,0,0);
   return GFX_OK;
 }
 
@@ -636,8 +654,8 @@ sdl_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t *
     ERROR("Attempt to set static buffer with unregisterd pixmap!\n");
     return GFX_ERROR;
   }
-  XASS(SDL_BlitSurface((SDL_Surface *)pic->internal.info, NULL, 
-		       S->visual[2], NULL));
+  SDL_BlitSurface((SDL_Surface *)pic->internal.info, NULL, 
+		  S->visual[2], NULL);
 
   gfx_copy_pixmap_box_i(S->priority[1], priority, gfx_rect(0, 0, 320*XFACT, 200*YFACT));
 
@@ -664,13 +682,13 @@ static SDL_Cursor
 *sdl_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer)
 {
   char *visual_data, *mask_data;
-
+  
   S->pointer_data[0] = visual_data = xlib_create_cursor_data(drv, pointer, 1);
   S->pointer_data[1] = mask_data = xlib_create_cursor_data(drv, pointer, 0);
 
   return SDL_CreateCursor(visual_data, mask_data, 
 			  pointer->xl *XFACT, pointer->yl * YFACT,
-			  pointer->xoffset *XFACT, pointer->yoffset * YFACT);
+			  pointer->xoffset * XFACT, pointer->yoffset * YFACT);
   
 }
 
@@ -873,6 +891,9 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
       case SDL_MOUSEMOTION:
 	drv->pointer_x = event.motion.x;
 	drv->pointer_y = event.motion.y;
+	break;
+      case SDL_QUIT:
+	c_quit(NULL);
 	break;
       default:
 	ERROR("Received unhandled SDL event %04x\n", event.type);

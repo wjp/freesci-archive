@@ -1068,6 +1068,11 @@ do_tests(char *conf)
 		test_f();
 }
 
+int 
+c_quit(void *S) 
+{
+  exit(0);
+}
 
 int
 main(int argc, char **argv)
