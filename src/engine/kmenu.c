@@ -115,14 +115,15 @@ struct {
 	 "Dmitry Jemerov\nPort to the Win32 platform, numerous bugfixes\n\n"
 	 "Emmanuel Jeandel\nBugfixes and bug reports\n\n"
 	 "Francois-R Boyer\nMT-32 information and mapping code\n\n"
-	 "George Reid\nFreeBSD package management",
+	 "George Reid\nFreeBSD package management\n\n"
+	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes",
 	 0, 15},
 	{"Even more FreeSCI hackers & contributors",
-	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
 	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32\n\n"
 	 "Paul David Doherty\nGame version information\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
+	 "Rainer Canavan\nIRIX MIDI driver and bug fixes\n\n"
 	 "Rainer De Temple\nSCI research",
 	 0, 15},
 	{"Still more of them",

@@ -1,3 +1,14 @@
+2002-03-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/config.l: Lexer now accepts quoted arguments for config options
+
+2002-03-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* configure.in (HAVE_DMEDIA_MIDI_H): Applied IRIX MIDI patch from Rainer
+	Canavan
+
+	* src/include/sciresource.h: signed -> unsigned fix
+
 2002-03-09  Alexander R Angas <wgd@internode.on.net>
 
         * src/sound/buff_ss.c:

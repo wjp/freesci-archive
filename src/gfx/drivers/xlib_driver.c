@@ -212,13 +212,13 @@ xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 		return GFX_OK;
 	}
 
-#ifdef HAVE_MITSHM
 	if (!strncmp(attribute, "disable_shmem", 14)) {
+#ifdef HAVE_MITSHM
 	  if (string_truep(value))
 	    have_shmem = -1;
+#endif
 	  return GFX_OK;
 	}
-#endif
 
 	ERROR("Attempt to set xlib parameter \"%s\" to \"%s\"\n", attribute, value);
 	return GFX_ERROR;

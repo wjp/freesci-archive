@@ -252,6 +252,9 @@ standard_option standard_options[] = {
 static void
 parse_option(char *option, int optlen, char *value);
 
+char *
+crop_value(char *yytext);
+
 %}
 
 DIGIT [0-9]
@@ -261,6 +264,8 @@ NUMTOKEN {DIGIT}+
 NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
 PATHTOKEN [[:alnum:]"/""\\""."]*
 NUMPATHPARAMTOKEN {NUMPARAMTOKEN}|{PATHTOKEN}
+QUOTED_NUMPATHPARAMTOKEN "\"".*"\""
+QUOTED_NUMPARAMTOKEN "\"".*"\""
 
 %%
 
@@ -309,7 +314,7 @@ NUMPATHPARAMTOKEN {NUMPARAMTOKEN}|{PATHTOKEN}
 }
 
 
-version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} { /***** End of graphics *****/
+version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} {
 
 	yytext = strchr(yytext, '=') + 1;
 
@@ -319,7 +324,7 @@ version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} { /***** End of graphics *****/
 	conf[cur_section].version = version_parse(yytext);
 }
 
-resource_dir[[:blank:]]*"="[[:blank:]]*.+  if (cur_section) {
+resource_dir[[:blank:]]*"="[[:blank:]]*.+	if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
 		yytext++;
@@ -339,7 +344,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
-[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN}[[:blank:]]* {
+[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*({NUMPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]]* {
 /* driver parameters */
         char *subsys_name = yytext;
         char *driver_name;
@@ -361,21 +366,15 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 	while (p2 > option && isspace (*p2))
 		*p2-- = 0;
 
-	while (isspace(*yytext))
-		yytext++;
+	value = crop_value(yytext); /* Get config value */
 
-	value = yytext;
-
-	p2 = yytext+strlen (yytext);        /* trim right spaces */
-	while (p2 > value && isspace (*p2))
-                *p2-- = 0;
-
-	set_config_parameter(conf + cur_section, subsys_name, driver_name, option, value);
+	set_config_parameter(conf + cur_section, subsys_name,
+			     driver_name, option, value);
 
 }
 
 
-{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*{NUMPATHPARAMTOKEN}[[:blank:]]* { /* Normal config option */
+[[:alnum:]][[:blank:]]*"="[[:blank:]]*({NUMPATHPARAMTOKEN}|{QUOTED_NUMPATHPARAMTOKEN})[[:blank:]]* { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
 	char *foo;
@@ -416,6 +415,32 @@ int
 yywrap()
 {
         return 1; /* no further input */
+}
+
+
+char *
+crop_value(char *yytext)
+{
+	char *retval;
+
+	while (isspace(*yytext))
+		++yytext;
+
+	retval = yytext;
+
+	if (*yytext == '"') { /* Magic Quote Mode */
+		++retval;
+		++yytext;
+		while (*yytext && (*yytext != '"'))
+			++yytext;
+		*yytext = 0; /* Terminate */
+	} else {
+		while (!isspace(*yytext))
+			++yytext;
+		*yytext = 0; /* Terminate */
+	}
+
+	return retval;
 }
 
 
@@ -685,7 +710,6 @@ parse_option(char *option, int optlen, char *value)
 			opt = &(standard_options[optindex]);
 		else
 			optindex++;
-
 
 	if (!opt) {
 		fprintf(stderr,"Invalid option '%s'\n", option);

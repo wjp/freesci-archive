@@ -142,7 +142,7 @@ typedef struct _resource_struct {
 	unsigned int size;
 
 	unsigned int file_offset; /* Offset in file */
-	char file; /* Number of the resource file this resource is stored in */
+	signed char file; /* Number of the resource file this resource is stored in */
 
 	unsigned char status;
 	unsigned short lockers; /* Number of places where this resource was locked */
