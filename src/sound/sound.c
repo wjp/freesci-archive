@@ -60,6 +60,10 @@ extern sound_server_t sound_server_win32e;
 extern sound_server_t sound_server_dos;
 #endif
 
+#ifdef _DREAMCAST
+extern sound_server_t sound_server_dc;
+#endif
+
 sound_server_t *sound_servers[] = {
 #ifndef NO_SOUND
 #  ifdef HAVE_SYSV_IPC
@@ -78,6 +82,10 @@ sound_server_t *sound_servers[] = {
 
 #  ifdef _DOS
 	&sound_server_dos,
+#  endif
+
+#  ifdef _DREAMCAST
+	&sound_server_dc,
 #  endif
 #endif /* NO_SOUND */
 	NULL
