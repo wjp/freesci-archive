@@ -81,4 +81,10 @@ void load_option_list();
 */
 int dc_write_config_file();
 
+/* Initializes the menu state based on the current cdrom drive status.
+** Parameters: void.
+** Returns   : void.
+*/
+void init_menu_state();
+
 #endif	/* __GP_H */

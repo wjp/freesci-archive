@@ -1,3 +1,9 @@
+2003-03-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/gamemenu.c, src/dc/gp.h, src/dc/selectgame.c: The Dreamcast
+	game menu now makes use of the cdrom status. Now the user doesn't have
+	to indicate that a (new) cd has been inserted.
+
 2003-03-03  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/options.h: Added to repository.

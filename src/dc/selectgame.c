@@ -86,6 +86,8 @@ void choose_game() {
 	/* Setup background display */
 	bkg_setup();
 
+	init_menu_state();
+
 	load_option_list();
 
 	while (!fexit) {

@@ -36,7 +36,7 @@
 /* Game entries */
 typedef struct {
 	char	fn[256];	/* Game name */
-	char	*dir;		/* Pointer to full directory path */
+	char	dir[256];	/* Full directory path */
 } game;
 
 /* Used to count the number of queued scenes. This is done to make sure that the
@@ -80,22 +80,35 @@ static int framecnt = 0;
 static float throb = 0.2f, dthrob = 0.01f;
 
 /* Current state of menu:
-** 0: Waiting for CD to be inserted
-** 1: Scanning CD
+** 0: Drive lid open.
+** 1: Searching the CD for SCI games
 ** 2: Displaying game list
 ** 3: Running selected game
 ** 4: Displaying option list
 ** 5: Saving options to VMU
+** 6: Waiting for CD lid to open
+** 7: Waiting for Dreamcast to finish scanning the disc
+** 8: Drive empty.
 **
-** State changes: 0->{1,4}, 1->{0,2}, 2->{1,3,4}, 4->{R,5}, 5->{R}
-** R is the state the menu is in before state 4 is entered.
+** State changes: 0->{7}, 1->{2,6}, 2->{0,3,4}, 4->{2,5}, 5->{2}, 6->{0}
+**                7->{0,1,8}, 8->{0}
 */
-static int menu_state = 0;
-/* Holds R as described above */
-static int menu_state_old;
+static int menu_state;
 
 /* Flag which indicated whether the options have been altered */
 static int save_flag = 0;
+
+void init_menu_state()
+{
+	int status;
+	
+	cdrom_get_status(&status, NULL);
+	
+	if ((status == CD_STATUS_PAUSED) || (status == CD_STATUS_STANDBY))
+		menu_state = 1;
+	else
+		menu_state = 0;
+}
 
 static int load_options(char *infname, char *options)
 /* Loads the options from an option file and stores them in an array.
@@ -221,7 +234,7 @@ static void load_game_list(char *dir)
 		while ((de = fs_readdir(d)) && num_games < 200) {
 			if (!stricmp(de->name, "resource.map")) {
 				strncpy(games[num_games].fn, dir, 256);
-				games[num_games].dir = strdup(dir);
+				strncpy(games[num_games].dir, dir, 256);
 				num_games++;
 			}
 			else if (de->size < 0) {
@@ -310,8 +323,7 @@ static void check_controller()
 	if (cont_get_cond(mcont, &cond)) { return; }
 
 	if (!(cond.buttons & CONT_DPAD_UP)) {
-		if (((menu_state == 2) || (menu_state == 4))
-		  && ((framecnt - up_moved) > 10)) {
+		if ((framecnt - up_moved) > 10) {
 			if (*selected > 0) {
 				(*selected)--;
 				if (*selected < *top) {
@@ -322,8 +334,7 @@ static void check_controller()
 		}
 	}
 	if (!(cond.buttons & CONT_DPAD_DOWN)) {
-		if (((menu_state == 2) || (menu_state == 4))
-		  && ((framecnt - down_moved) > 10)) {
+		if ((framecnt - down_moved) > 10) {
 			if (*selected < (*num_entries - 1)) {
 				(*selected)++;
 				if (*selected >= (*top+8)) {
@@ -334,8 +345,7 @@ static void check_controller()
 		}
 	}
 	if (cond.ltrig > 0) {
-		if (((menu_state == 2) || (menu_state == 4))
-		  && ((framecnt - up_moved) > 10)) {
+		if ((framecnt - up_moved) > 10) {
 			*selected -= 8;
 
 			if (*selected < 0) *selected = 0;
@@ -344,8 +354,7 @@ static void check_controller()
 		}
 	}
 	if (cond.rtrig > 0) {
-		if (((menu_state == 2) || (menu_state == 4))
-		  && ((framecnt - down_moved) > 10)) {
+		if ((framecnt - down_moved) > 10) {
 			*selected += 8;
 			if (*selected > (*num_entries - 1))
 				*selected = *num_entries - 1;
@@ -355,25 +364,10 @@ static void check_controller()
 		}
 	}
 
-	if (!(cond.buttons & CONT_Y)) {
-		if (menu_state == 2)
-		{
-			*num_entries = 0;
-			*selected = 0;
-			menu_state = 1;
-		}
-	}
-
 	if (!(cond.buttons & CONT_A)) {
 		if ((framecnt - a_pressed) > 5)
 		{
-			if (menu_state == 0) menu_state = 1;
-			else if (!strcmp(games[*selected].fn, "Error!"))
-			{
-				num_games = 0;
-				menu_state = 1;
-			}
-			else if (menu_state == 2)
+			if (menu_state == 2)
 			{
 				fs_chdir(games[*selected].dir);
 				menu_state = 3;
@@ -400,10 +394,9 @@ static void check_controller()
 				selected = &sel_game;
 				if (save_flag)
 					menu_state = 5;
-				else menu_state = menu_state_old;
+				else menu_state = 2;
 			}
 			else {
-				menu_state_old = menu_state;
 				num_entries = &num_options;
 				top = &top_option;
 				selected = &sel_option;
@@ -421,7 +414,7 @@ void render_button_info() {
 	if ((menu_state != 4) && (menu_state != 5)) {       
 		draw_poly_strf(30.0f,440.0f-96.0f+6+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"D-PAD : Select game              L : Page up");
 		draw_poly_strf(30.0f,440.0f-96.0f+6+24.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"    A : Start game               R : Page down");
-		draw_poly_strf(30.0f,440.0f-96.0f+6+48.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"    Y : Rescan cd                B : Options");
+		draw_poly_strf(30.0f,440.0f-96.0f+6+48.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"                                 B : Options");
 	}
 	else {
 		draw_poly_strf(30.0f,440.0f-96.0f+6+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"D-PAD : Select option            L : Page up");
@@ -436,22 +429,29 @@ int game_menu_render() {
 		0.2f, 0.8f, 0.5f, 0.0f, 0.2f, 0.8f, 0.8f, 0.2f);
 		
 	if (menu_state == 0) {
+		int status;
 		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-			"Please insert a game cd and press A...");
+			"The drive lid is open.");
+		draw_poly_strf(32.0f, 92.0f+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"Please insert a game cd.");
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_BUSY) menu_state = 7;
+		return 0;
 	}
 
 	else if (menu_state == 1) {
 		if (load_queued < 4) {
 			draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-				"Scanning cd for SCI games...");
+				"Searching cd for SCI games...");
 			load_queued++;
 			return 0;
 		} else {
 			iso_ioctl(0,NULL,0);
 			load_game_list("/cd");
 			load_queued = 0;
-			if (num_games == 0) menu_state = 0;
+			if (num_games == 0) menu_state = 6;
 			else menu_state = 2;
+			return 0;
 		}
 	}
 	
@@ -472,6 +472,16 @@ int game_menu_render() {
 	}
 
 	else if (menu_state == 2) {
+		int status;
+		
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_OPEN) {
+			*num_entries = 0;
+			*selected = 0;
+			menu_state = 0;
+			return 0;
+		}
+
 		/* Draw the game listing */
 		draw_listing();
 	}
@@ -481,7 +491,6 @@ int game_menu_render() {
 			draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 				"Saving options, please wait...");
 			load_queued++;
-			return 0;
 		}
 		else {
 			char *vmu;
@@ -496,11 +505,45 @@ int game_menu_render() {
 			else sciprintf("%s, L%d: No VMU found!\n", __FILE__, __LINE__);
 			sci_free(vmu);
 			save_flag = 0;
-			menu_state = menu_state_old;
-			return 0;
+			load_queued = 0;
+			menu_state = 2;
 		}
+		return 0;
 	}
 	
+	else if (menu_state == 6) {
+		int status;
+		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"No SCI games found!");
+		draw_poly_strf(32.0f, 92.0f+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"Please insert a game cd.");
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_OPEN) menu_state = 0;
+		return 0;
+	}
+
+	else if (menu_state == 7) {
+		int status;
+		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"Scanning cd...");
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_PAUSED) menu_state = 1;
+		else if (status == CD_STATUS_NO_DISC) menu_state = 8;
+		else if (status == CD_STATUS_OPEN) menu_state = 0;
+		return 0;
+	}
+
+	else if (menu_state == 8) {
+		int status;
+		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"The drive is empty!");
+		draw_poly_strf(32.0f, 92.0f+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"Please insert a game cd.");
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_OPEN) menu_state = 0;
+		return 0;
+	}
+
 	/* Adjust the throbber */
 	throb += dthrob;
 	if (throb < 0.2f || throb > 0.8f) {
