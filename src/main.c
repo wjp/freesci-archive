@@ -46,6 +46,7 @@
 
 #ifdef _MSC_VER
 #define extern __declspec(dllimport) extern
+#include <win32/getopt.h>
 #endif
 
 #ifdef HAVE_READLINE_READLINE_H
