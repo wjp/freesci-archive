@@ -1,5 +1,5 @@
 /***************************************************************************
- event_ss.c Copyright (C) 2001 Alexander R Angas
+ event_ss.c Copyright (C) 2001,2002 Alexander R Angas
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -202,6 +202,8 @@ void do_sound(sound_server_state_t *sss)
 					*/
 				}
 
+			} else if (this_cmd.midi_cmd == 0) {
+				fprintf(debug_stream, "WARNING: do_sound() ignoring NULL MIDI command\n");
 			} else {
 				fprintf(debug_stream, "ERROR: do_sound() MIDI command 0x%02X is not recognised\n", this_cmd.midi_cmd);
 				exit(-1);
@@ -225,7 +227,7 @@ void do_sound(sound_server_state_t *sss)
 			}
 
 		} else {
-			fprintf(debug_stream, "WARNING: do_sound() has handle with no data!\n");
+			fprintf(debug_stream, "FIXME: do_sound() has handle with no data!\n");
 		}
 
 		/* handle 0xF commands */
