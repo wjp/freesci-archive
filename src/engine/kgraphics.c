@@ -1634,7 +1634,7 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 	while (widget) {
 		int obj = widget->ID;
 
-		if (widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE) == _K_VIEW_SIG_FLAG_FREESCI_PRIVATE) {
+		if ((widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)) == _K_VIEW_SIG_FLAG_FREESCI_PRIVATE) {
 			int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
 
 			if (has_nsrect) {

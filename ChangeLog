@@ -1,3 +1,10 @@
+2001-03-14  Christoph Reichenbach  <jameson@theta.darmstadt.gmd.de>
+
+	* src/engine/kgraphics.c (kCanBeHere): CanBeHere now returns success
+	if invoked cels with IGNORE_ACTOR or DISPOSE_ME set.
+	(_k_view_list_do_postdraw): nsrect -> lsrect copying is now allowed
+	(parentheses error)
+
 2001-03-13  Christoph Reichenbach  <jameson@theta.darmstadt.gmd.de>
 
 	* configure.in: Added X11 MIT-SHM detection

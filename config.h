@@ -9,12 +9,12 @@
 /* #undef X_DISPLAY_MISSING */
 
 /* Define if lex declares yytext as a char * by default, not a char[].  */
-/* #undef YYTEXT_POINTER */
+#define YYTEXT_POINTER 1
 
 #define PACKAGE "freesci"
 #define VERSION "0.3.1-devel"
 #define HAVE_LIBGGI 1
-/* #undef HAVE_LIBPNG */
+#define HAVE_LIBPNG 1
 #define HAVE_CURSES 1
 /* #undef HAVE_GLX */
 /* #undef HAVE_ALSA */

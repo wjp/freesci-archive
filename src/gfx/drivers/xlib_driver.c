@@ -161,7 +161,6 @@ xlib_error_handler(Display *display, XErrorEvent *error)
 	char errormsg[256];
 	XGetErrorText(display, error->error_code, errormsg, 255);
 	ERROR("X11 error: %s\n", errormsg);
-
 	return 0;
 }
 
@@ -383,7 +382,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  if (have_shmem) {
 	    old_handler = XSetErrorHandler(xlib_error_handler);
 
-	    if ((S->shm[i] = malloc(sizeof(XShmSegmentInfo))) < 0) {
+	    if ((S->shm[i] = malloc(sizeof(XShmSegmentInfo))) == 0) {
 	      ERROR("AIEEEE!  Malloc failed!\n");
 	      return GFX_FATAL;
 	    }
