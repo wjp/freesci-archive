@@ -58,6 +58,10 @@ extern gfx_driver_t gfx_driver_sdl;
 #  ifdef HAVE_DIRECTFB
 extern gfx_driver_t gfx_driver_dfb;
 #  endif
+
+#  ifdef _DREAMCAST
+extern gfx_driver_t gfx_driver_dc;
+#  endif
 #endif
 
 static gfx_driver_t *gfx_drivers[] = {
@@ -76,6 +80,9 @@ static gfx_driver_t *gfx_drivers[] = {
 #  endif
 #  ifdef HAVE_LIBGGI
 	&gfx_driver_ggi,
+#  endif
+#  ifdef _DREAMCAST
+	&gfx_driver_dc,
 #  endif
 #endif
 	NULL

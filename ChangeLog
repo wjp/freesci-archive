@@ -1,3 +1,8 @@
+2002-10-10  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/drivers/dc_driver.c, src/gfx/drivers/gfx_drivers.c: Initial
+	revision of Dreamcast framebuffer gfx driver.
+
 2002-10-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/scriptdebug.c (c_viewinfo): Changed viewinfo to
