@@ -482,7 +482,11 @@ _vocab_build_gnf(parse_tree_branch_t *branches, int branches_nr, int verbose)
       ntseeker = ntseeker->next;
     }
 
-    tlist = _vocab_merge_rule_lists(tlist, new_tlist);
+    new_tlist = _vocab_merge_rule_lists(new_tlist, tlist);
+    if (tlist)
+      free(tlist);
+
+    tlist = new_tlist;
     new_tlist = new_new_tlist;
 
     termrules = _vocab_rule_list_length(new_new_tlist);
@@ -702,6 +706,7 @@ vocab_gnf_parse(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
     pos = 2;
 
     temp = _vbpt_append(nodes, &pos, 2, branch0->id);
+    //    _vbpt_write_subexpression(nodes, &pos, results[_vocab_rule_list_length(results)].rule, 0, temp);
     _vbpt_write_subexpression(nodes, &pos, results->rule, 0, temp);
   }
 

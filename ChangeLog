@@ -1,3 +1,8 @@
+2000-05-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/grammar.c (_vocab_build_gnf): Changed the list writing
+	order. This should make Parse() behave more like the original.
+
 2000-05-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/graphics/engine_graphics.c (graph_draw_control_control): Fixed
