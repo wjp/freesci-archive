@@ -1,0 +1,123 @@
+Internationalization aspects of SCI
+May 30th, 2002
+By Lars Skovlund
+
+1. Introduction
+
+This section describes the internationalization features of various
+versions of SCI. 
+
+2. The problem
+
+SCI0 does not support internationalization very well. The main
+problems with it are:
+
+* The parser is not 8-bit clean
+
+This means that ascii codes greater than 127 are not accepted, and it
+is a problem when translating to languages (such as my own native 
+tongue, Danish) that have special national characters. The problem can
+be worked around, but the solution is awkward and better alternatives
+should be sought.
+
+* There are no features to support a translation effort
+
+SCI0 is hardwired to run in one language, namely English. Even though
+translatable text is typically placed in TEXT resources, some text
+will unavoidably be placed in the script files. Therefore, the
+translator must know how to read and modify SCI source code.
+SCI0 is not able to support multiple languages and switch between them
+on the fly, which makes it more difficult for the translator to verify
+that a translation is correct in the context in which it is used
+(as non-English readers will know, this is a common problem in
+translated software)
+
+3. How does SCI01 solve this?
+
+SCI01 recognizes the above problems, and attempts to solve them. This
+is accomplished by these changes to the SCI system:
+
+* Language codes
+
+The Game class now includes the selectors printLang, parseLang and
+subtitleLang, which affect the language used in message display and
+parsing. They may be set at any time, and take effect
+immediately. The values contained in the selectors coincide with the
+international calling codes, as set forth by the ITU (former CCITT),
+though not all codes are supported by the SCI interpreters. Even the most
+useful ones recognize only six codes:
+
+Code		    | Language		     | Tag (see next section) !
+--------------------|------------------------|--------------------------
+1		    | English		     | none
+81		    | Japanese		     | #J or #j
+49		    | German		     | #G
+33		    | French		     | #F
+39		    | Italian		     | #I
+34		    | Spanish		     | #S
+351		    | Portuguese	     | #P
+
+! Some versions use the % (the percent character) instead of # in the
+tag, but this was discontinued because it clashes with the % used in
+Format().
+
+If subtitleLang is specified, it is shown below the text in the other
+language, separated from it by a dashed line.
+
+The interpreter recognizes and acts upon certain tags in all kinds of
+displayable text by picking the appropriate text fragment from the
+string. The tags, which are case-sensitive, are listed in
+the table above. An example of their use might be:
+
+Nothing is as it appears.%SNada es lo que parece.
+
+* Changes to the parser file format
+
+As outlined elsewhere, the data files required by the parser are the
+word table, suffix table, and grammar. The three data files are
+stored as VOCAB resources with predefined numbers. 
+
+In SCI0, a word in the word table would be terminated by having
+the high bit set in the last character. The SCI0 parser could not
+represent national characters, and thus, was not 8-bit clean. SCI01
+replaces this scheme with a standard null termination which is fully
+8-bit clean. In addition, the index table at the beginning of the file
+has been expanded to have 255 entries instead of the 26 entries it had
+in SCI0.
+
+In SCI01 the resource numbers are still predefined - but they have
+changed. SCI01 supports having two sets of data files and switching
+between them on the fly, as described in the section "Language codes"
+above. Though this is still a practical restriction - a game can
+only support English and one other language - it is far better than
+SCI0.
+
+The resource numbers are summarized in the following table:
+
+             | SCI0 | English SCI01 | Non-English SCI01
+--------------------------------------------------------
+Word table   | 000  | 900	    | 910
+Grammar	     | 900  | 901	    | 911
+Suffix table | 901  | 902	    | 912
+
+* Keyboard input aid
+
+Since programmer intervention was often necessary, despite the
+intention, and these programmers were often Americans sitting at a US
+keyboard, they needed a way to quickly and easily enter words in a
+foreign language with foreign characters. SCI01 interpreters
+substitutes certain character combinations with other characters or
+character combinations, as indicated by VOCAB.913 - for example, u"
+is converted to ü. There seems to be two major versions of this
+file, one with Japanese characters, and another with European ones
+(the one in SQ3/de covers French and Spanish as well, but not
+Portuguese). The file format is simple, it consists of pairs <source,
+replacement> of null-terminated strings. 
+
+4. Which problems remain unsolved?
+
+To be written.
+
+5. SCI1.1 and beyond
+
+To be written.
