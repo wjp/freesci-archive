@@ -132,10 +132,8 @@ a separate \fBnull\fR driver which does not produce visible output is also provi
 .BR "\-\-midiout \fIdriver\fR, \-\fBO\fR\fIdriver\fR"
 This is the output driver or interface to use. Currently, 
 \fIunixraw\fR,
-\fIalsaraw\fR, \fInull\fR, \fIossopl3\fR, \fIadlibemu\fR and \fIossseq\fR (an OSS sequencer
+\fIalsaraw\fR, \fInull\fR, \fIossopl3\fR, and \fIossseq\fR (an OSS sequencer
 driver) may be available on your system, ossseq being the default.
-\fIadlibemu\fR uses an OPL/2 emulator to run on top of a PCM device, which
-you may specify separately.
 
 .TP
 .BR "\-\-mididevice \fIdriver\fR, \-\fBM\fR\fIdriver\fR"
@@ -144,6 +142,8 @@ currently supports the Rolant MT\-32 (\fImt32\fR, the default), an Adlib
 device (\fIadlib\fR) and it also offers an MT\-32 to General MIDI translation 
 layer (\fImt32gm\fR). Alternatively, sound may be turned off by using the
 null driver (\fInull\fR).
+Finally, the \fIadlibemu\fR device uses an OPL/2 emulator to run on top of
+a PCM device, which may be specified separately.
 
 .TP
 .BR "\-\-sound\-server \fIserver\fR, \-\fBS\fR\fIserver\fR"

@@ -350,6 +350,7 @@ kStrCat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 
 	strcat((char *) s->heap + UPARAM(0), (char *) s->heap + UPARAM(1));
+	s->acc = UPARAM(0);
 }
 
 void

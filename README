@@ -465,21 +465,23 @@ are hoping to resolve these issues at least partially very soon.
 
 Successful builds for the 0.3.4a release were reported for the following
 platforms:
-- ia32/Red Hat 7.3/Linux/gcc			tested
-- mips/sgi/IRIX 6.5/gcc				tested
-- sparc/Sun/SunOS 5.7/gcc			tested
 - ppc/Debian GNU/Linux/gcc			tested
+- sh4/Dreamcast/unknown/gcc			tested
+- ia32/Red Hat 7.2/Linux/gcc			tested
+- sparc/Sun/SunOS 5.7/gcc			tested
+- alpha//FreeBSD 4.7/gcc			built
+- itanium 2/Debian GNU/Linux/gcc		built
+- hppa/HP/hp-ux11.11/cc				built
 
 Builds for 0.3.4 (without the a, and minus the xlib bug) were reported on
 these:
 
+- ia32/Red Hat 7.3/Linux/gcc			tested
+- mips/sgi/IRIX 6.5/gcc				tested
 - ia32/unknown/Linux/gcc			tested
-- sh4/Dreamcast/unknown/gcc			tested
-- ia32/Red Hat 7.2/Linux/gcc			tested
 - ia32/Sun/Solaris 2.8/gcc			tested
 - sparc/Sun/Solaris 2.8/gcc			tested
 - alpha/Red Hat 7.2/Linux/gcc			built
-- hppa/HP/hp-ux11.11/cc				built
 - alpha/Compaq/OSF5.1/ccc			built
 - ia32//FreeBSD 4.7/gcc				built
 - alpha//NetBSD 1.6/gcc				built
