@@ -606,8 +606,14 @@ read_config(char *game_name, config_entry_t **conf, int *conf_entries,
 	    sci_version_t *version)
 {
 	int i, conf_nr = 0;
+	char cur_dir[PATH_MAX+1];
+
+	/* config_init() changes cwd, so we restore it after the call */
+	getcwd(cur_dir, PATH_MAX);
 
 	*conf_entries = config_init(conf, commandline_config_file);
+
+	chdir(cur_dir);
 
 	for (i = 1; i < *conf_entries; i++)
 		if (game_name &&
@@ -909,7 +915,7 @@ guess_version()
 int
 main(int argc, char** argv)
 {
-	config_entry_t *active_conf;	/* Active configuration used */
+	config_entry_t *active_conf = NULL;	/* Active configuration used */
 	config_entry_t *confs = {0};	/* Configuration read from config file (if it exists) */
 	cl_options_t cl_options;		/* Command line options */
 	int conf_entries	= -1;		/* Number of config entries */
@@ -1053,10 +1059,8 @@ fprintf(stderr, "CONF # = %d\n", conf_nr);
 		game_name = (char *) gamestate->game_name;
 
 	/* If no game-specific configuration has been read, then read the non-specific config from file */
-	if (!active_conf) {
-		conf_nr = read_config(game_name, &confs, &conf_entries, &version);
+	if (!active_conf)
 		active_conf = confs + conf_nr;
-	}
 
 	/* gcc doesn't warn about (void *)s being typecast. If your compiler doesn't like these
 	** implicit casts, don't hesitate to typecast appropriately.  */

@@ -1,3 +1,8 @@
+2004-07-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/main.c: Restore cwd after calling	config_init(). Two small
+	bugfixes in main().
+
 2004-07-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/Makefile: Updated for recently added menu files.
