@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /Gm- /Gi- /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "HAVE_SDL" /D "NDEBUG" /D PACKAGE=\"FreeSCI\" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /Fr /FD /D VERSION=\"0.3.3-devel\" /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "HAVE_SDL" /D "NDEBUG" /D PACKAGE=\"FreeSCI\" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /Fr /FD /D VERSION=\"0.3.3-devel\" /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -68,7 +68,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm- /Gi- /GR /GX /ZI /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /GR /GX /ZI /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -94,7 +94,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
-# ADD CPP /nologo /MT /W3 /Gm- /Gi- /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MT /W3 /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -231,6 +231,10 @@ SOURCE=..\include\sbtree.h
 # Begin Source File
 
 SOURCE=..\include\sci_conf.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\sci_memory.h
 # End Source File
 # Begin Source File
 

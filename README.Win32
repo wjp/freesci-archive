@@ -1,4 +1,4 @@
-Last updated 16 December 2001 by Alex Angas <wgd@internode.on.net>
+Last updated 9 March 2002 by Alex Angas <wgd@internode.on.net>
 
 ABOUT
 -----
@@ -77,15 +77,25 @@ where x is the number of the device you wish to use.
 SOUND PROBLEMS
 --------------
 
-There are currently timing problems when playing sound in games. This should
-be fixed soon after the 0.3.3 release and will be available by CVS. These can
-magically sort themselves out if you leave the game running for a while.
+There are currently timing problems when playing sound in games. At the time
+of writing, the current sound implementation was soon to be overhauled and
+replaced with a song iterator. In the meantime, both the event and polled
+sound servers should be tested to see which one works best on your system.
 
-Until this is fixed, you can try changing the default sound server at the
-command line by adding either the -Ssdl or -Swin32e switches. The SDL sound
-server will probably give the same performance as the default (Win32 polled)
-server. The Win32 event server will only give good performance on 1GHz+
-machines but should have better timing on these fast machines.
+To use the event sound server, use the -Swin32e command line switch.
+To use the polled Win32 sound server, use the -Swin32p command line switch.
+To use the polled SDL sound server, use the -Ssdl command line switch.
+
+If you'd like a taste of the future, a sound server with accurate timing is
+available but is not yet ready for general game play. This can be used by
+specifying the -Swin32b -Owin32mci_stream command line switches.
+
+You can also alter the way this sound server behaves by changing the value for
+buffered_ticks in the midiout_win32mci_stream.c source file. This is the
+number of MIDI ticks to be buffered. Low values work better on fast computers
+and give better sound responsiveness. High values work better on slow
+computers but give lower sound responsiveness. The default value is 15. If you
+get choppy sound, use a higher value.
 
 
 CVS

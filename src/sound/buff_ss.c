@@ -24,10 +24,12 @@
  History:
 
    20020103 - based on event_ss.c
+            - largely temporary until new song iterator system is in place
                 -- Alex Angas
 
 ***************************************************************************/
 
+#include <engine.h>
 #include <sciresource.h>
 #include <stdarg.h>
 #include <sound.h>
@@ -37,11 +39,61 @@
 #include <midiout.h>
 #include <sys/types.h>
 
+static sound_server_state_t *sss;	/* used to support hacks */
+
+void
+do_end_of_track()
+{
+	/* HACK that will not be required for song iterator based sound system:
+	** directly copied from do_sound() in soundserver.c */
+			if ((--(sss->current_song->loops) != 0) && sss->current_song->loopmark)
+			{
+#ifdef DEBUG_SOUND_SERVER
+					fprintf(debug_stream, "Looping back from %d to %d on handle %04x\n",
+					        sss->current_song->pos, sss->current_song->loopmark, sss->current_song->handle);
+#endif
+				sss->current_song->pos = sss->current_song->loopmark;
+				global_sound_server->queue_event(
+					sss->current_song->handle, SOUND_SIGNAL_LOOP, sss->current_song->loops);
+
+#if 0
+				sss->current_song = song_lib_find(sss->songlib, sss->current_song->handle);
+				if (sss->current_song && sss->current_song->data)
+				{
+					int i = 1;
+					sss->current_song->status = SOUND_STATUS_PLAYING;
+
+					/* call sci_midi_command() continuously until entire song is
+					** dumped. */
+					while (i)
+					{
+						sleep(1);
+						i = do_sound(sss, 1);
+					}
+					midiout_win32mci_stream_write_event(NULL, 0, (guint32)-1);
+
+				} else {
+					fprintf(stderr, "No data to play\n");
+				}
+#endif
+			} else {
+#ifdef DEBUG_SOUND_SERVER
+					fprintf(debug_stream, "Reached end of track for handle %04x\n",
+					        sss->current_song->handle);
+#endif
+				sss->current_song->resetflag = 1;	/* reset song position */
+				stop_handle((word)sss->current_song->handle, sss);
+				global_sound_server->queue_event(
+					sss->current_song->handle, SOUND_SIGNAL_LOOP, -1);
+			}
+}
+
 void
 sci0_buff_ss(sound_server_state_t *ss_state)
 {
 	song_t *_songp = NULL;
 	sound_event_t *new_event = NULL;
+	sss = ss_state;
 
 	/*** initialisation ***/
 	ss_state->songlib = &_songp;	/* song library (the local song cache) */
@@ -50,6 +102,13 @@ sci0_buff_ss(sound_server_state_t *ss_state)
 	ss_state->sound_cue = 127;
 
 	fprintf(debug_stream, "Sound server initialized\n");
+	fprintf(stderr, "\nThis sound server and MCI stream driver is ALPHA code with these limitations:\n");
+	fprintf(stderr, " - current song must stop playing before you can move to a new scene or quit\n");
+	fprintf(stderr, " - songs can 'bank up' with their notes playing all at once\n");
+	fprintf(stderr, " - looping, fading, saving and restoring is not supported\n");
+	fprintf(stderr, " - doesn't work well or at all in some older SCI0 games (KQ4, HQ1)\n");
+	fprintf(stderr, "Please use the -Swin32b -Owin32mci_stream command line switches to invoke!\n");
+	fprintf(stderr, "\n");
 	fflush(debug_stream);
 
 
@@ -73,44 +132,34 @@ sci0_buff_ss(sound_server_state_t *ss_state)
 		switch (new_event->signal)
 		{
 		case SOUND_COMMAND_INIT_HANDLE:
-			fprintf(stderr, "This sound server and MCI stream driver is ALPHA code and should only\n");
-			fprintf(stderr, "be used to test the first song in a game and nothing further.\n");
 			init_handle((int)new_event->value, (word)new_event->handle, ss_state);
 			break;
 
 		case SOUND_COMMAND_PLAY_HANDLE: {
-			int i;
-			static int play_times = 0;
-
-			if (play_times)
+			ss_state->current_song = song_lib_find(ss_state->songlib, (word)new_event->handle);
+			if (ss_state->current_song && ss_state->current_song->data)
 			{
-				fprintf(stderr, "This hacked together sound server will only play one song for now - sorry!\n");
-			} else {
+				int i = 1;
+				ss_state->current_song->status = SOUND_STATUS_PLAYING;
 
-				ss_state->current_song = song_lib_find(ss_state->songlib, (word)new_event->handle);
-				if (ss_state->current_song && ss_state->current_song->data)
+				/* call sci_midi_command() continuously until entire song is
+				** dumped. */
+				while (i)
 				{
-					int i = 1;
-					ss_state->current_song->status = SOUND_STATUS_PLAYING;
-
-					/* call sci_midi_command() continuously until entire song is
-					** dumped. */
-					while (i)
-						i = do_sound(ss_state, 1);
-
-					midiout_flush(0);	/* actually play */
-					play_times++;
-
-				} else {
-					fprintf(stderr, "No data to play\n");
+					sleep(1);
+					i = do_sound(ss_state, 1);
 				}
+				midiout_win32mci_stream_write_event(NULL, 0, (guint32)-1);
+
+			} else {
+				fprintf(stderr, "No data to play\n");
 			}
+
 			global_sound_server->queue_event((word)new_event->handle, SOUND_SIGNAL_PLAYING, 0);
 			break;
 		}
 
 		case SOUND_COMMAND_STOP_HANDLE:
-			//midiout_flush(1);	/* clear any waiting buffers */
 			stop_handle((word)new_event->handle, ss_state);
 			break;
 
@@ -127,9 +176,8 @@ sci0_buff_ss(sound_server_state_t *ss_state)
 			break;
 
 		case SOUND_COMMAND_FADE_HANDLE:
-			midiout_flush(1);	/* clear any waiting buffers */
 			fade_handle((int)new_event->value, (word)new_event->handle, ss_state);
-			fprintf(stderr, "fade needs fixing!\n");
+			fprintf(stderr, "Fade is unsupported\n");
 			break;
 
 		case SOUND_COMMAND_LOOP_HANDLE:

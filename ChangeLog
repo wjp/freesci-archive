@@ -1,3 +1,15 @@
+2002-03-09  Alexander R Angas <wgd@internode.on.net>
+
+        * src/sound/buff_ss.c:
+        * src/sound/midiout_win32mci_stream.c:
+        * src/include/sound.h: Added double-buffering and ability to play more
+        than one song to MCI streaming.
+
+	* ./README.Win32: Added some information about the above server/driver.
+	
+	* src/win32/sciunpack.dsp: Updated compiler options to match other
+	projects, however does not compile.
+
 2002-03-08  Rainer Canavan <rainer@canavan.de>
 	* src/sound/Makefile.am
         * src/sound/midiout.c

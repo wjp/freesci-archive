@@ -43,40 +43,33 @@
 #include <sci_memory.h>
 #include <engine.h>
 
-#define NUMBER_OF_SONG_BUFFERS 1000
-#define PLAY_BUFFER		0
-#define CONTINUE_BUFFER	1
+//#define CHECK_MIDI_DATA
 
-//static HANDLE midi_canplay_event;	/* if MIDI allowed to play then signalled */
+#define DECLARE_MIDIEVENT(x)\
+	typedef struct {\
+		DWORD dwDeltaTime;\
+		DWORD dwStreamID;\
+		DWORD dwEvent;\
+		DWORD dwParms[x];\
+	} MIDIEVENT##x
+
+DECLARE_MIDIEVENT(0);
+
+static HANDLE midi_canplay_event;	/* if MIDI allowed to play then signalled */
 static MIDIHDR midiOutHdr;			/* currently used device header */
 static HMIDISTRM midiStream;		/* currently playing stream */
 static int midiDeviceNum = -1;
 
-static unsigned int ticks_in_buffer = 15;	/* number of ticks to store in a buffer */
+static unsigned int buffered_ticks = 15;	/* number of ticks to store in a buffer */
 
 struct song_buffer {
 	LPDWORD data;		/* the buffer */
-	unsigned int pos;	/* location in buffer of where next MCI event will go
-						** (doubles as size of buffer when completed a buffer) */
+	unsigned int size;	/* location in buffer of where next MCI event will go
+						** (doubles as size of buffer) */
 };
 
-static struct song_buffer buffered_song[NUMBER_OF_SONG_BUFFERS];
-/* array of song buffers */
-
-static unsigned int buffi = 0;
-/* total number of actual song buffers stored in buffered_song[] */
-
-static unsigned int unbuffered = 0;
-/* most recent point in song that is unbuffered */
-
-static unsigned int next_flush_buff = 0;
-/* next buffer to send to MCI */
-
-static word current_handle = 0;
-/* local copy of handle for MIDI data currently playing (0 if not associated with song) */
-
-static sound_server_state_t *sss = 0;
-/* local copy of sound server state */
+static struct song_buffer *waiting_buffer, *playing_buffer;
+/* the two song buffers */
 
 
 void CALLBACK _streamCallback(HMIDIOUT hmo, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
@@ -103,10 +96,6 @@ midiout_win32mci_stream_set_parameter(struct _midiout_driver *drv, char *attribu
 	{
 		midiDeviceNum = ((int)*value) - 48;
 	}
-	else if (!strcasecmp(attribute, "ticks_in_buffer"))
-	{
-		ticks_in_buffer = ((int)*value) - 48;
-	}
 	else
 	{
 		sciprintf("Unknown win32mci_stream option '%s'!\n", attribute);
@@ -120,9 +109,8 @@ int midiout_win32mci_stream_open()
 	UINT numdevs;				/* total number of MIDIout devices */
 	MMRESULT ret;				/* return value of MCI calls */
 	MIDIOUTCAPS devicecaps;		/* device capabilities structure */
-	MIDIPROPTIMEDIV prop;
-	UINT loop;
-	int *device_scores;
+	UINT loop;					/* temporary */
+	int *device_scores;			/* array to score each device based on MIDI capabilities */
 
 	numdevs = midiOutGetNumDevs();
 	if (numdevs == 0)
@@ -250,31 +238,25 @@ int midiout_win32mci_stream_open()
     }
 	else
 	{
-		fprintf(stderr, "Successfully opened for MCI MIDI device #%02d\n", midiDeviceNum);
+		fprintf(stderr, "Successfully opened for MCI MIDI device #%02d and buffering %i ticks\n", midiDeviceNum, buffered_ticks);
 	}
 
-	/* Set the stream device's Time Division to 96 PPQN */
-#if 0
-	prop.cbStruct = sizeof(MIDIPROPTIMEDIV);
-	prop.dwTimeDiv = 96;
-	ret = midiStreamProperty(midiStream, (LPBYTE)&prop, MIDIPROP_SET | MIDIPROP_TIMEDIV);
-    if (ret != MMSYSERR_NOERROR)
-    {
-        fprintf(stderr, "midiStreamOpen: ");
-        _win32mci_stream_print_error(ret);
-		return -1;
-    }
-#endif
-	buffered_song[0].data = (LPDWORD)sci_malloc(3 * sizeof(DWORD));
+	/* Set up the two buffers */
+	waiting_buffer = sci_malloc(sizeof(struct song_buffer));
+	waiting_buffer->data = NULL;
+	waiting_buffer->size = 0;
 
-#if 0
+	playing_buffer = sci_malloc(sizeof(struct song_buffer));
+	playing_buffer->data = NULL;
+	playing_buffer->size = 0;
+
 	/* set up midi_canplay_event */
 	midi_canplay_event = CreateEvent(NULL, FALSE, TRUE, NULL);
 	if (midi_canplay_event == NULL)
 	{
         fprintf(stderr, "midiout_win32mci_stream_open(): CreateEvent failed\n");
+		return -1;
 	}
-#endif
 
 	return 0;
 }
@@ -291,144 +273,222 @@ int midiout_win32mci_stream_close()
 		_win32mci_stream_print_error(ret);
 	}
 
-	/* TODO: free buffer memory */
+	/* Free buffer memory */
+	if (waiting_buffer->data)
+		sci_free(waiting_buffer->data);
+	if (playing_buffer->data)
+		sci_free(playing_buffer->data);
+	sci_free(waiting_buffer);
+	sci_free(playing_buffer);
 
 	return 0;
 }
 
-int midiout_win32mci_stream_write_event(guint8 *buffer, unsigned int count, guint32 other_data)
+/*
+	addToBuffer():
+	Add the given delta time to length of latest buffer
+	If delta time exceeds given, then play latest buffer
+*/
+int add_to_buffer(void *me)
 {
-	/* Puts buffer into format required by MCI (both long and short messages) */
-
-	static guint8 running_status;	/* last encountered MIDI msg */
 	static unsigned int ticks_so_far;		/* ticks in this buffer so far */
-	guint8 delta_time;	/* time before status is sent to device */
+	unsigned int old_size = waiting_buffer->size;
 
-	guint8 status;		/* MIDI status byte */
-	guint8 data1;		/* data byte 1 (if it exists) */
-	guint8 data2;		/* data byte 2 (if it exists) */
-	guint8 num_params;	/* number of parameters for this MIDI status */
-
-	/* Unpack buffer (for short messages only) */
-	status = *buffer;	/* get status byte */
-
-	if (MIDI_RUNNING_STATUS_BYTE(status))
+	/* HACK that will not be required for song iterator based sound system:
+	** check for end of track and if need to flush waiting ticks that are < buffered_ticks */
+	if (!me)
 	{
-		/* set first data byte when in running status mode */
-		data1 = status;
-		status = running_status;		/* set status byte to running status byte */
-		buffer++;	/* now lined up to next parameter or a new status */
+		if (waiting_buffer->size == 0)
+			return 0;
+		ticks_so_far = (unsigned int)-1;	/* make check below always true */
+		do_end_of_track();	/* premature but oh well */
 	}
 	else
-	{
-		/* set first data byte when not in running status mode */
-		buffer++;
-		data1 = *buffer;
-		buffer++;
+	{	/* REQUIRED for song iterator based system */
+		/* Add this buffer's ticks to ticks_so_far */
+		ticks_so_far += ((MIDIEVENT*)me)->dwDeltaTime;
+
+		/* realloc waiting_buffer and copy over contents of MIDIEVENT */
+		waiting_buffer->size += sizeof(MIDIEVENT0)/sizeof(DWORD);
+		waiting_buffer->data = sci_realloc(waiting_buffer->data, waiting_buffer->size * sizeof(DWORD));
+		memmove(waiting_buffer->data + old_size, me, sizeof(MIDIEVENT0));
 	}
 
-	/* set number of parameters for status byte */
-	num_params = (MIDI_PARAMETERS_ONE_BYTE(status) ? 1 : 2);
-
-	if (num_params > 1)
-		data2 = *buffer;	/* set second parameter if there is one */
-
-	delta_time = other_data;
-//fprintf(stderr, "%i\n", delta_time);
-
-	/* Finished preparing data, now pack it up for MCI */
-
-	/* first DWORD in MCI event - number of ticks */
-	buffered_song[buffi].data[
-		buffered_song[buffi].pos++
-		] = delta_time;
-	ticks_so_far += delta_time;	/* increment ticks that have been stored so far stored in buffer */
-
-	/* see if need a new buffer */
-	if (ticks_so_far > ticks_in_buffer)
+	/* time to play? */
+	if (ticks_so_far > buffered_ticks)
 	{
-#if 0
-		buffi++;	/* move to next buffer in buffered_song[] */
+		MMRESULT ret;
 
-		/* make sure not over number of buffers */
-		if (buffi >= NUMBER_OF_SONG_BUFFERS)
+		if (WaitForSingleObject(midi_canplay_event, 0) == WAIT_OBJECT_0)
 		{
-			fprintf(stderr, "midiout_win32mci_stream_write_event(): Out of song buffers, please increase NUMBER_OF_SONG_BUFFERS\n");
+			fprintf(debug_stream, "Warning: MIDI buffers not in sync\n");
+		}
+		else
+		{
+			/* wait until midi_canplay */
+			if (WaitForSingleObject(midi_canplay_event, INFINITE) != WAIT_OBJECT_0)
+			{
+				fprintf(debug_stream, "add_to_buffer(): WaitForSingleObject() failed, GetLastError() returned %u\n", GetLastError());
+				return -1;
+			}
+		}
+
+		/* don't allow to play */
+		if (ResetEvent(midi_canplay_event) == 0)
+		{
+			fprintf(debug_stream, "add_to_buffer(): ResetEvent() failed, GetLastError() returned %u\n", GetLastError());
 			return -1;
 		}
 
-		/* make room for a MIDI event in the new buffer */
-		buffered_song[buffi].data = (LPDWORD)sci_malloc(3 * sizeof(DWORD));
+		/* realloc playing buffer to match size of waiting_buffer, then copy */
+		playing_buffer->size = waiting_buffer->size;
+		playing_buffer->data = sci_realloc(playing_buffer->data, playing_buffer->size * sizeof(DWORD));
+		memmove(playing_buffer->data, waiting_buffer->data, playing_buffer->size * sizeof(DWORD));
 
-		/* copy the last byte of data from the previous buffer to the new
-		** buffer (time code for the first MIDI event of the new buffer) */
-		buffered_song[buffi].data[
-			buffered_song[buffi].pos
-			] = buffered_song[buffi - 1].data[buffered_song[buffi - 1].pos - 1];
-		ticks_so_far = buffered_song[buffi].data[
-			buffered_song[buffi].pos++
-			];		/* reset number of ticks counter */
+		/* Set up and play buffer */
+		memset(&midiOutHdr, 0, sizeof(MIDIHDR));
+		midiOutHdr.lpData = (LPBYTE)playing_buffer->data;
+		midiOutHdr.dwBufferLength = playing_buffer->size * sizeof(DWORD);
+		midiOutHdr.dwBytesRecorded = playing_buffer->size * sizeof(DWORD);
 
-		/* realloc() to remove that byte from the previous buffer */
-		buffered_song[buffi - 1].data =
-			(LPDWORD)sci_realloc(buffered_song[buffi - 1].data,
-				(buffered_song[buffi - 1].pos - 1) * sizeof(DWORD));
-
-		buffered_song[buffi - 1].pos--;	/* set old pos to be size of old buffer */
-#endif
-#if 0
+		ret = midiOutPrepareHeader((HMIDIOUT)midiStream,
+			&midiOutHdr,
+			sizeof(MIDIHDR));
+		if (ret != MMSYSERR_NOERROR)
 		{
-			unsigned int i;
-			for (i = 0; i < buffered_song[buffi - 1].pos; i++)
-fprintf(stderr, "buffi - 1: %03d  code: %08x\n", buffi - 1, buffered_song[buffi - 1].data[i]);
+			fprintf(stderr, "midiOutPrepareHeader: ");
+			_win32mci_stream_print_error(ret);
+			return -1;
 		}
+
+		/* play */
+		ret = midiStreamOut(midiStream,
+			&midiOutHdr,
+			sizeof(MIDIHDR));
+		if (ret != MMSYSERR_NOERROR)
+		{
+			fprintf(stderr, "midiStreamOut: ");
+			_win32mci_stream_print_error(ret);
+			return -1;
+		}
+
+		ret = midiStreamRestart(midiStream);
+		if (ret != MMSYSERR_NOERROR)
+		{
+			fprintf(stderr, "midiStreamRestart: ");
+			_win32mci_stream_print_error(ret);
+			return -1;
+		}
+
+		/* Reset waiting_buffer */
+		//waiting_buffer->data = sci_realloc(waiting_buffer->data, 1);
+		waiting_buffer->size = 0;
+		ticks_so_far = 0;
+	}
+
+	return 0;
+}
+
+/*
+	!Set status_code
+	!If received a short msg:
+	!	Set dwEvent to MEVT_F_SHORT
+	!	If running status mode, offset = 0
+	!	Else, offset = 8
+	!	If params(status_code) > 0:
+	!		Or dwEvent with (next << (0 + offset))
+	!	If params(status_code) > 1:
+	!		Or dwEvent with (next << (8 + offset))
+	!	Or dwEvent with MEVT_SHORTMSG
+	Else if received a long msg:
+		Set dwEvent to MEVT_F_LONG
+		Or with MEVT_LONGMSG (check)
+		Or with length of buffer minus msg id
+		Malloc dwParms to be same length
+		Memcpy parms into dwParms and pad to the next 4 bytes
+	!End if
+	!Call addToBuffer(meptr *MIDIEVENT);
+*/
+
+/* Puts buffer into format required by MCI (both long and short messages) */
+int midiout_win32mci_stream_write_event(guint8 *buffer, unsigned int count, guint32 other_data)
+{
+	MIDIEVENT this_me;	/* this MIDI event */
+	static guint8 running_status;	/* last encountered MIDI msg */
+	guint8 status_code;	/* MIDI status byte */
+	guint8 offset;		/* Bit offset for packing parameters */
+
+	/* HACK that will not be required for song iterator based sound system:
+	** check for end of track */
+	if (other_data == (guint32)-1)
+	{
+		add_to_buffer(NULL);
+		return 0;
+	}
+
+	/* Store delta time value in dwDeltaTime */
+	this_me.dwDeltaTime = other_data;
+
+	/* Set dwStreamID to 0 */
+	this_me.dwStreamID = 0;
+
+	/* Save copy of status byte and set parameter offset for bit packing */
+	status_code = *buffer;
+	if (!MIDI_RUNNING_STATUS_BYTE(status_code))
+	{
+		running_status = status_code;
+		offset = 8;
+		this_me.dwEvent = status_code | MEVT_F_SHORT | MEVT_SHORTMSG;
+		buffer++;	/* Move along */
+	} else {
+		status_code = running_status;
+		offset = 0;
+		this_me.dwEvent = MEVT_F_SHORT | MEVT_SHORTMSG;
+	}
+
+	/* Process short message */
+	if (!MIDI_SYSTEM_BYTE(status_code))
+	{
+#ifdef CHECK_MIDI_DATA
+		/* Check contents of buffer */
+		if (status_code < 0xE0)
+			if (! ( (*buffer >=0) && (*buffer <= 127) ) )
+			{
+				fprintf(stderr, "MIDI parameter %04x out of range\n", *buffer);
+				return -1;
+			}
 #endif
+
+		/* Add parameters */
+		this_me.dwEvent |= (*buffer) << (0 + offset);
+		buffer++;
+		if (MIDI_PARAMETERS_TWO_BYTE(status_code))
+		{
+#ifdef CHECK_MIDI_DATA
+			/* Check contents of buffer */
+			if (status_code < 0xE0)
+				if (! ( (*buffer >=0) && (*buffer <= 127) ) )
+				{
+					fprintf(stderr, "MIDI parameter %04x out of range\n", *buffer);
+					return -1;
+				}
+#endif
+
+			this_me.dwEvent |= (*buffer) << (8 + offset);
+			buffer++;
+		}
 	}
-
-	buffered_song[buffi].data[
-		buffered_song[buffi].pos++
-		] = 0;		/* required to be 0 by MCI */
-
-	buffered_song[buffi].data[
-		buffered_song[buffi].pos
-		] = MEVT_SHORTMSG << 24;	/* high word, high byte */
-
-	if (!(MIDI_RUNNING_STATUS_BYTE(status)))
+	else
+	/* Process long message */
 	{
-		buffered_song[buffi].data[
-			buffered_song[buffi].pos
-			] |= status;	/* low word, low byte */
-
-		buffered_song[buffi].data[
-			buffered_song[buffi].pos
-			] |= (data1 << 8);	/* low word, high byte */
-
-		if (num_params >= 2)
-			buffered_song[buffi].data[
-				buffered_song[buffi].pos
-				] |= (data2 << 16);	/* high word, low byte */
-	}
-	else	/* running status mode */
-	{
-		buffered_song[buffi].data[
-			buffered_song[buffi].pos
-			] |= data1;			/* low word, low byte */
-
-		if (num_params >= 2)
-			buffered_song[buffi].data[
-				buffered_song[buffi].pos
-				] |= (data2 << 8);	/* high word, low byte */
+		fprintf(stderr, "Ignore long message\n");
+		return count;
 	}
 
-	buffered_song[buffi].data[
-		buffered_song[buffi].pos++
-		] |= MEVT_F_SHORT;
+//	fprintf(stderr, "%04x ", MEVT_EVENTTYPE(this_me.dwEvent));
+//	fprintf(stderr, "%08x\n", MEVT_EVENTPARM(this_me.dwEvent));
 
-//fprintf(stderr, "buffi: %03d  time: %08x  zero: %08x  evnt: %08x\n", buffi, buffered_song[buffi].data[buffered_song[buffi].pos - 3], buffered_song[buffi].data[buffered_song[buffi].pos - 2], buffered_song[buffi].data[buffered_song[buffi].pos - 1]);
-
-	/* resize to make room for next command */
-	buffered_song[buffi].data = sci_realloc(
-		buffered_song[buffi].data, (buffered_song[buffi].pos + 3) * sizeof(DWORD));
+	add_to_buffer(&this_me);
 
 	return count;
 }
@@ -440,8 +500,7 @@ void CALLBACK _streamCallback(HMIDIOUT hmo, UINT wMsg, DWORD dwInstance, DWORD d
 	switch (wMsg)
 	{
 	case MOM_DONE:
-		fprintf(stderr, "_streamCallback(): MOM_DONE received\n");
-
+		/* Finished this buffer */
 		ret = midiOutUnprepareHeader((HMIDIOUT)midiStream, &midiOutHdr, sizeof(midiOutHdr));
 		if (ret != MMSYSERR_NOERROR)
 		{
@@ -449,24 +508,20 @@ void CALLBACK _streamCallback(HMIDIOUT hmo, UINT wMsg, DWORD dwInstance, DWORD d
             _win32mci_stream_print_error(ret);
         }
 
-#if 0
+		/* Ready for a new one */
 		if (SetEvent(midi_canplay_event) == 0)
 		{
 			fprintf(stderr, "_streamCallback(): SetEvent failed\n");
 		}
-#endif
-
-//		next_flush_buff++;
-//		midiout_win32mci_stream_flush(CONTINUE_BUFFER);	/* play next buffer */
 
 		break;
 
 	case MOM_OPEN:
-		fprintf(stderr, "_streamCallback(): MOM_OPEN received\n");
+		fprintf(stderr, "Opened MIDI device\n");
 		break;
 
 	case MOM_CLOSE:
-		fprintf(stderr, "_streamCallback(): MOM_CLOSE received\n");
+		fprintf(stderr, "Closed MIDI device\n");
 		break;
     }
 }
@@ -499,28 +554,10 @@ int _clear_buffered_song()
 
 int midiout_win32mci_stream_flush(guint8 code)
 {
-    MMRESULT ret;	/* stores return values from MCI functions */
-	static unsigned int play_times = 0;
+//    MMRESULT ret;	/* stores return values from MCI functions */
 
 //fprintf(stderr, "midiout_win32mci_stream_flush(): code %i\n", code);
 
-	if (play_times)
-	{
-		printf("Sorry, can't play any more\n");
-		return -1;
-	}
-
-	if (code == PLAY_BUFFER)
-	{
-		/* buffers should not be empty */
-		if (buffered_song[0].pos == 0)
-		{
-			fprintf(stderr, "midiout_win32mci_stream_flush(): Cannot play empty buffer\n");
-			return -1;
-		}
-
-		next_flush_buff = 0;	/* start from first buffer */
-	}
 #if 0
 	else if (code == CONTINUE_BUFFER)
 	{
@@ -540,61 +577,6 @@ int midiout_win32mci_stream_flush(guint8 code)
 		/* else play next buffer as indicated by next_flush_buff */
 	}
 #endif
-
-#if 0
-	if (WaitForSingleObject(midi_canplay_event, INFINITE) != WAIT_OBJECT_0)
-	{
-		fprintf(stderr, "midiout_win32mci_stream_write_event(): WFSO failed\n");
-		return -1;
-	}
-#endif
-
-	/* set up MIDIHDR struct */
-	memset(&midiOutHdr, 0, sizeof(MIDIHDR));
-	midiOutHdr.lpData = (LPBYTE)buffered_song[next_flush_buff].data;
-	midiOutHdr.dwBufferLength =
-		buffered_song[next_flush_buff].pos * sizeof(DWORD);
-	midiOutHdr.dwBytesRecorded =
-		buffered_song[next_flush_buff].pos * sizeof(DWORD);
-
-#if 0
-	{
-		unsigned int i;
-		for (i = 0; i < buffered_song[next_flush_buff].pos; i++)
-		{
-			fprintf(stderr, "next_flush_buff: %03d  code: %08x\n", next_flush_buff, buffered_song[next_flush_buff].data[i]);
-		}
-	}
-#endif
-
-	ret = midiOutPrepareHeader((HMIDIOUT)midiStream,
-		&midiOutHdr,
-		sizeof(MIDIHDR));
-	if (ret != MMSYSERR_NOERROR)
-	{
-		fprintf(stderr, "midiOutPrepareHeader: ");
-		_win32mci_stream_print_error(ret);
-		return -1;
-	}
-
-	/* play */
-	ret = midiStreamOut(midiStream,
-		&midiOutHdr,
-		sizeof(MIDIHDR));
-	if (ret != MMSYSERR_NOERROR)
-	{
-		fprintf(stderr, "midiStreamOut: ");
-		_win32mci_stream_print_error(ret);
-		return -1;
-	}
-
-	ret = midiStreamRestart(midiStream);
-	if (ret != MMSYSERR_NOERROR)
-	{
-		fprintf(stderr, "midiStreamRestart: ");
-		_win32mci_stream_print_error(ret);
-		return -1;
-	}
 
 	return 0;
 }

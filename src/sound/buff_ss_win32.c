@@ -359,7 +359,6 @@ sound_win32buff_get_command(GTimeVal *wait_tvp)
 
 	MSG msg; /* incoming message */
 	int i;
-	BOOL bRet;
 
 	new_command_event->signal = UNRECOGNISED_SOUND_SIGNAL;
 
