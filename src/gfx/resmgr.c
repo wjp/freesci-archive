@@ -399,7 +399,6 @@ _gfxr_unscale_pixmap_index_data(gfx_pixmap_t *pxm, gfx_mode_t *mode)
 	pxm->index_xl /= mode->xfact;
 	pxm->index_yl /= mode->yfact;
 	pxm->flags &= ~GFX_PIXMAP_FLAG_SCALED_INDEX;
-	fprintf(stderr, "Unscaled to %dx%d\n", pxm->index_xl, pxm->index_yl);
 }
 
 
