@@ -38,8 +38,6 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
 {
 	gfx_state_t *state;
 	gfxw_list_t *list;
-	fprintf(stderr,"SETTING STATUS BAR!\n");
-	SCI_MEMTEST;
 
 	if (!status_bar->visual) {
 		GFXERROR("Attempt to change title bar without visual!\n");

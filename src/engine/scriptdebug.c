@@ -1206,51 +1206,6 @@ c_gfx_print_dynviews(state_t *s)
 	return 0;
 }
 
-c_gfx_print_picviews(state_t *s)
-{
-	if (!_debugstate_valid) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
-
-	if (!s->pic_views)
-		sciprintf("No picview list active.\n");
-	else
-		s->pic_views->print(GFXW(s->pic_views), 0);
-
-	return 0;
-}
-
-c_gfx_print_bgwidgets(state_t *s)
-{
-	if (!_debugstate_valid) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
-
-	if (!s->bg_widgets)
-		sciprintf("No bgview list active.\n");
-	else
-		s->bg_widgets->print(GFXW(s->bg_widgets), 0);
-
-	return 0;
-}
-
-c_gfx_print_fgwidgets(state_t *s)
-{
-	if (!_debugstate_valid) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
-
-	if (!s->bg_widgets)
-		sciprintf("No fgview list active.\n");
-	else
-		s->bg_widgets->print(GFXW(s->fg_widgets), 0);
-
-	return 0;
-}
-
 c_gfx_drawpic(state_t *s)
 {
 	int flags = 1, default_palette = 0;
@@ -2128,9 +2083,6 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 " or the current port\n  if no port was specified.");
 			con_hook_command(c_gfx_print_visual, "gfx_print_visual", "", "Displays all information about the\n  current widget state");
 			con_hook_command(c_gfx_print_dynviews, "gfx_print_dynviews", "", "Shows the dynview list");
-			con_hook_command(c_gfx_print_picviews, "gfx_print_picviews", "", "Shows the picview list");
-			con_hook_command(c_gfx_print_bgwidgets, "gfx_print_bgwidgets", "", "Shows the background widget list");
-			con_hook_command(c_gfx_print_fgwidgets, "gfx_print_fgwidgets", "", "Shows the foreground widget list");
 			con_hook_command(c_gfx_drawpic, "gfx_drawpic", "ii*", "Draws a pic resource\n\nUSAGE\n  gfx_drawpic <nr> [<pal> [<fl>]]\n"
 					 "  where <nr> is the number of the pic resource\n  to draw\n  <pal> is the optional default\n  palette for the pic (0 is"
 					 "\n  assumed if not specified)\n  <fl> are any pic draw flags (default\n  is 1)");

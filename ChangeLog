@@ -1,3 +1,14 @@
+2000-12-31  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c: Considerably simplified the use of widgets
+	in kgraphics.c
+
+	* src/gfx/widgets.c (_gfxwop_port_free): Fixed port freeing to update
+	the visual appropriately.
+
+	* src/gfx/gfx_test.c (sciprintf): Fixed gfx_test's compiles with the
+	updated headers
+
 2000-12-31  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/vm.c (script_instantiate): Squashed another old interpreter bug.

@@ -77,10 +77,6 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   CHECK_THIS_KERNEL_FUNCTION;
 
-  if (!s->titlebar_port->font_nr) {
-    SCIkwarn(SCIkERROR, "No titlebar font is set: %d\n", s->titlebar_port->font_nr);
-  }
-
 WARNING( fixme!)
 #if 0
   if (PARAM(0))

@@ -406,7 +406,7 @@ _gfxwop_basic_tag(gfxw_widget_t *widget)
 static int
 _gfxwop_basic_compare_to(gfxw_widget_t *widget, gfxw_widget_t *other)
 {
-	return -1;
+	return 1;
 }
 
 
@@ -620,24 +620,22 @@ static int
 _gfxwop_line_draw(gfxw_widget_t *widget, point_t pos)
 {
 	gfxw_primitive_t *line = (gfxw_primitive_t *) widget;
-	DRAW_ASSERT(widget, GFXW_LINE);
-	/*
-	gfxop_set_clip_zone(line->visual->gfx_state, gfx_rect(0,0,320,200));
-	fprintf(stderr, "drawline pos =%d,%d\n", pos.x, pos.y);
-	fprintf(stderr,"    drawline ofs=%d,%d  %d,%d\n", line->bounds.x, line->bounds.y,
-		line->bounds.xl, line->bounds.yl);
-	fprintf(stderr,"     clip=%d, %d, %d, %d\n",
-		line->visual->gfx_state->clip_zone.x,
-		line->visual->gfx_state->clip_zone.y,
-		line->visual->gfx_state->clip_zone.xl,
-		line->visual->gfx_state->clip_zone.yl);
-	*/
-	GFX_ASSERT(gfxop_draw_line(line->visual->gfx_state, _move_rect(line->bounds, pos),
+	rect_t linepos = widget->bounds;
+
+	linepos.xl--;
+	linepos.yl--;
+
+	if (widget->type == GFXW_INVERSE_LINE) {
+		linepos.x + linepos.xl;
+		linepos.xl = -linepos.xl;
+	} else {
+		DRAW_ASSERT(widget, GFXW_LINE);
+	}
+
+
+	GFX_ASSERT(gfxop_draw_line(line->visual->gfx_state, _move_rect(linepos, pos),
 				   line->color, line->line_mode, line->line_style));
-	/*
-	gfxop_update(line->visual->gfx_state);
-	gfxop_usleep(line->visual->gfx_state, 100000);
-	*/
+
 	return 0;
 }
 
@@ -645,14 +643,36 @@ static int
 _gfxwop_line_print(gfxw_widget_t *widget, int indentation)
 {
 	_gfxw_print_widget(widget, indentation);
-	sciprintf("LINE");
+	if (widget->type == GFXW_INVERSE_LINE)
+		sciprintf("INVERSE-LINE");
+	else
+		sciprintf("LINE");
 	return 0;
 }
 
 gfxw_primitive_t *
 gfxw_new_line(rect_t line, gfx_color_t color, gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
-	gfxw_primitive_t *prim = _gfxw_new_primitive(line, color, line_mode, line_style, GFXW_LINE);
+	gfxw_primitive_t *prim;
+	byte inverse = 0;
+
+	if (line.xl < 0) {
+		line.x += line.xl;
+		line.y += line.yl;
+		line.xl = -line.xl;
+		line.yl = -line.yl;
+	}
+
+	if (line.yl < 0) {
+		inverse = 1;
+		line.x += line.xl;
+		line.xl = -line.xl;
+	}
+
+	line.xl++;
+	line.yl++;
+
+	prim = _gfxw_new_primitive(line, color, line_mode, line_style, inverse? GFXW_INVERSE_LINE : GFXW_LINE);
 
 	_gfxw_set_ops(GFXW(prim), _gfxwop_line_draw,
 		      _gfxwop_basic_free,
@@ -1009,7 +1029,6 @@ _gfxwop_text_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 	if (!gfx_rect_equals(wtext->bounds, otext->bounds))
 		return 0;
 
-	/*
 	if (wtext->halign != otext->halign
 	    || wtext->valign != otext->valign)
 		return 0;
@@ -1017,6 +1036,10 @@ _gfxwop_text_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 	if (wtext->text_flags != otext->text_flags)
 		return 0;
 
+	if (wtext->font_nr != otext->font_nr)
+		return 0;
+
+	/*
 	if (!(_color_equals(wtext->color1, otext->color1)
 	      && _color_equals(wtext->color2, otext->color2)
 	      && _color_equals(wtext->bgcolor, otext->bgcolor)))
@@ -1517,6 +1540,9 @@ _gfxwop_list_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 	wlist = (gfxw_list_t *) widget;
 	olist = (gfxw_list_t *) other;
 
+	if (memcmp(&(wlist->bounds), &(olist->bounds), sizeof(rect_t)))
+		return 0;
+
 	widget = wlist->contents;
 	other = olist->contents;
 
@@ -1778,6 +1804,22 @@ _gfxwop_port_free(gfxw_widget_t *widget)
 {
 	gfxw_port_t *port = (gfxw_port_t *) widget;
 
+	if (port->visual) {
+		gfxw_visual_t *visual = port->visual;
+		int ID = port->ID;
+
+		if (ID < 0 || ID >= visual->port_refs_nr) {
+			GFXWARN("Attempt to free port #%d; allowed: [0..%d]!\n", ID, visual->port_refs_nr);
+			return GFX_ERROR;
+		}
+
+		if (visual->port_refs[ID] != port) {
+			GFXWARN("While freeing port %d: Port is at %p, but port list indicates %p!\n",
+				ID, port, visual->port_refs[ID]);
+	} else visual->port_refs[ID] = NULL;
+
+	}
+
 	if (port->decorations)
 		port->decorations->free(GFXW(port->decorations));
 
@@ -1878,7 +1920,7 @@ gfxw_new_port(gfxw_visual_t *visual, gfxw_port_t *predecessor, rect_t area, gfx_
 				_gfxwop_container_free_tagged,
 				_gfxwop_container_free_contents,
 				_gfxwop_port_add_dirty,
-				_gfxwop_container_add);
+				_gfxwop_sorted_list_add);
 
 	return widget;
 }
@@ -1887,7 +1929,6 @@ gfxw_new_port(gfxw_visual_t *visual, gfxw_port_t *predecessor, rect_t area, gfx_
 gfxw_port_t *
 gfxw_remove_port(gfxw_visual_t *visual, gfxw_port_t *port)
 {
-	int ID;
 	gfxw_port_t *parent;
 	VERIFY_WIDGET(visual);
 	VERIFY_WIDGET(port);
@@ -1897,23 +1938,12 @@ gfxw_remove_port(gfxw_visual_t *visual, gfxw_port_t *port)
 		return NULL;
 	}
 
-	ID = port->ID;
-
 	parent = (gfxw_port_t *) port->parent;
-	port->free(GFXW(port));
+	if (port->free(GFXW(port)))
+		return parent;
 
 	while (parent && !GFXW_IS_PORT(parent))
 		parent = (gfxw_port_t *) parent->parent; /* Ascend through ancestors */
-
-	if (ID < 0 || ID >= visual->port_refs_nr) {
-		GFXWARN("Attempt to free port #%d; allowed: [0..%d]!\n", ID, visual->port_refs_nr);
-		return parent;
-	}
-
-	if (visual->port_refs[ID] != port) {
-		GFXWARN("While freeing port %d: Port is at %p, but port list indicates %p!\n",
-			ID, port, visual->port_refs[ID]);
-	} else visual->port_refs[ID] = NULL;
 
 	return parent;
 }

@@ -52,6 +52,7 @@ typedef enum {
 	GFXW_BOX,
 	GFXW_RECT,
 	GFXW_LINE,
+	GFXW_INVERSE_LINE,
 	GFXW_VIEW,
 	GFXW_STATIC_VIEW,
 	GFXW_DYN_VIEW,
@@ -113,7 +114,7 @@ typedef struct {
 } gfxw_box_t;
 
 
-#define GFXW_IS_PRIMITIVE(widget) ((widget)->type == GFXW_RECT || (widget)->type == GFXW_LINE)
+#define GFXW_IS_PRIMITIVE(widget) ((widget)->type == GFXW_RECT || (widget)->type == GFXW_LINE || (widget->type == GFXW_INVERSE_LINE))
 typedef struct {
 	WIDGET_COMMON;
 	gfx_color_t color;

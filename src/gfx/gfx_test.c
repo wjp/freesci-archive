@@ -42,13 +42,14 @@
 #include <gfx_tools.h>
 #include <gfx_operations.h>
 
-void
+int
 sciprintf(char *fmt, ...)
 {
 	va_list argp;
 	va_start(argp, fmt);
 	vprintf(fmt, argp);
 	va_end(argp);
+	return 0;
 }
 
 void

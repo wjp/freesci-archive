@@ -144,9 +144,7 @@ typedef struct _state
 	int pic_animate; /* The animation used by Animate() to display the picture */
 
 	gfxw_port_t *dyn_view_port; /* Port the dyn_views are valid for */
-	gfxw_list_t *pic_views, *dyn_views; /* Pointers to pic and dynamic view lists */
-	gfxw_list_t *bg_widgets; /* Nameless background views */
-	gfxw_list_t *fg_widgets; /* Nameless foreground widgets (e.g. text) */
+	gfxw_list_t *dyn_views; /* Pointers to pic and dynamic view lists */
 
 	int animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */
 

@@ -144,8 +144,7 @@ _reset_graphics_input(state_t *s)
   s->pic_not_valid = 1; /* Picture is invalid */
   s->pic_is_new = 0;
   s->pic_visible_map = 0; /* Other values only make sense for debugging */
-  s->pic_views = NULL; s->dyn_views = NULL; /* No PicViews, no DynViews */
-  s->bg_widgets = s->fg_widgets = NULL; /* And no bg or fg widgets either */
+  s->dyn_views = NULL; /* no DynViews */
 
   s->priority_first = 42; /* Priority zone 0 ends here */
   s->priority_last = 200; /* The highest priority zone (15) starts here */
@@ -161,6 +160,7 @@ _reset_graphics_input(state_t *s)
   }
 
   s->visual = gfxw_new_visual(s->gfx_state, font_nr);
+
   s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
   s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), s->ega_colors[0], transparent);
   s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
@@ -169,8 +169,6 @@ _reset_graphics_input(state_t *s)
   s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
   s->visual->add(GFXWC(s->visual), GFXW(s->titlebar_port));
   /* Add ports to visual */
-
-  s->visual->print(GFXW(s->visual), 0);
 
   s->port = s->wm_port; /* Currently using the window manager port */
 
@@ -191,8 +189,6 @@ _free_graphics_input(state_t *s)
 
   s->visual = NULL;
   s->dyn_views = NULL;
-  s->pic_views = NULL;
-  s->bg_widgets = NULL;
   s->port = NULL;
 }
 

@@ -54,7 +54,7 @@
   if (s->port) \
        s->port->add(GFXWC(s->port), GFXW(widget)); \
   else \
-       s->visual->add(GFXWC(s->visual), GFXW(widget));
+       s->wm_port->add(GFXWC(s->visual), GFXW(widget));
 
 #define ADD_TO_CURRENT_PICTURE_PORT(widget) \
   if (s->port) \
@@ -63,13 +63,10 @@
        s->picture_port->add(GFXWC(s->picture_port), GFXW(widget));
 
 #define ADD_TO_CURRENT_FG_WIDGETS(widget) \
-       s->fg_widgets->add(GFXWC(s->fg_widgets), GFXW(widget));
+  ADD_TO_CURRENT_PICTURE_PORT(widget)
 
 #define ADD_TO_CURRENT_BG_WIDGETS(widget) \
-  if (!s->port || s->port == s->wm_port) \
-       s->bg_widgets->add(GFXWC(s->bg_widgets), GFXW(widget)); \
-  else \
-       s->port->add(GFXWC(s->port), GFXW(widget));
+  ADD_TO_CURRENT_PICTURE_PORT(widget)
 
 #define FULL_REDRAW()\
   if (s->visual) \
@@ -115,37 +112,19 @@ assert_primary_widget_lists(state_t *s)
 	if (!s->dyn_views) {
 		rect_t bounds = s->picture_port->bounds;
 
-		if (!s->pic_views) {
-			s->pic_views = gfxw_new_list(bounds, 0);
-			ADD_TO_CURRENT_PICTURE_PORT(s->pic_views);
-		}
-
-		ASSERT(!s->bg_widgets);
-		ASSERT(!s->fg_widgets);
-
-		s->bg_widgets = gfxw_new_list(s->picture_port->bounds, 0);
-		ADD_TO_CURRENT_PICTURE_PORT(s->bg_widgets);
-
-		s->fg_widgets = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED);
-		ADD_TO_CURRENT_PICTURE_PORT(s->fg_widgets);
-
 		s->dyn_views = gfxw_new_list(bounds, GFXW_LIST_SORTED);
 		ADD_TO_CURRENT_PICTURE_PORT(s->dyn_views);
 	}
 }
 
-void
+static void
 reparentize_primary_widget_lists(state_t *s, gfxw_port_t *newport)
 {
 	if (!newport)
 		newport = s->picture_port;
 
-	gfxw_remove_widget_from_container(s->pic_views->parent, GFXW(s->pic_views));
 	gfxw_remove_widget_from_container(s->dyn_views->parent, GFXW(s->dyn_views));
-	gfxw_remove_widget_from_container(s->fg_widgets->parent, GFXW(s->fg_widgets));
 
-	newport->add(GFXWC(newport), GFXW(s->fg_widgets));
-	newport->add(GFXWC(newport), GFXW(s->pic_views));
 	newport->add(GFXWC(newport), GFXW(s->dyn_views));
 }
 
@@ -159,6 +138,7 @@ graph_save_box(state_t *s, rect_t area)
 
 	return handle;
 }
+
 
 void
 graph_restore_box(state_t *s, int handle)
@@ -179,6 +159,7 @@ graph_restore_box(state_t *s, int handle)
 		reparentize_primary_widget_lists(s, (gfxw_port_t *) parent);
 	}
 
+
 	if (!ptr) {
 		SCIkwarn(SCIkERROR, "Attempt to restore invalid snaphot with handle %04x!\n", handle);
 		return;
@@ -195,15 +176,9 @@ static gfx_color_t
 graph_map_ega_color(state_t *s, int color, int priority, int control)
 {
 	gfx_color_t retval = s->ega_colors[(color >=0 && color < 16)? color : 0];
-	retval.priority = priority;
-	retval.control = control;
 
-	if (color == -1)
-		retval.alpha = 255;
-
-	retval.mask = ((color >=0)? GFX_MASK_VISUAL : 0)
-		| ((priority >= 0)? GFX_MASK_PRIORITY : 0)
-		| ((control >= 0)? GFX_MASK_CONTROL : 0);
+	gfxop_set_color(s->gfx_state, &retval, (color < 0)? -1 : retval.visual.r, retval.visual.g, retval.visual.b,
+			(color == -1)? 255 : 0, priority, control);
 
 	return retval;
 }
@@ -307,17 +282,7 @@ _k_graph_rebuild_port_with_color(state_t *s, gfx_color_t newbgcolor)
 		while (parent && !(found |= (GFXW(parent) == GFXW(port))))
 			parent->parent;
 
-		s->dyn_views = s->pic_views = s->fg_widgets = NULL;
-	}
-
-	if (s->bg_widgets) {
-		int found = 0;
-		gfxw_container_t *parent = s->bg_widgets->parent;
-
-		while (parent && !(found |= (GFXW(parent) == GFXW(port))))
-			parent->parent;
-
-		s->bg_widgets = NULL;
+		s->dyn_views = NULL;
 	}
 
 	port->parent->add(GFXWC(port->parent), GFXW(newport));
@@ -346,19 +311,18 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->acc = (sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
 		break;
   
-	case K_GRAPH_DRAW_LINE: {
+	case K_GRAPH_DRAW_LINE:
 
-		gfx_color_t color = graph_map_ega_color(s, PARAM(5) & 0xf, PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1));
+		gfxcolor = graph_map_ega_color(s, PARAM(5) & 0xf, PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1));
 
 		SCIkdebug(SCIkGRAPHICS, "draw_line((%d, %d), (%d, %d), col=%d, p=%d, c=%d, mask=%d)\n",
 			  PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(5), PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1),
-			  color.mask);
+			  gfxcolor.mask);
 
 		redraw_port = 1;
-		ADD_TO_CURRENT_BG_WIDGETS(GFXW(gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL)));
+		ADD_TO_CURRENT_BG_WIDGETS(GFXW(gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
 		
 		break;
-	}
 
 	case K_GRAPH_SAVE_BOX:
 
@@ -988,7 +952,6 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int add_to_pic = 1;
 	CHECK_THIS_KERNEL_FUNCTION;
 
-
 	if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
 		if (!PARAM_OR_ALT(2, 0))
 			add_to_pic = 0;
@@ -1002,13 +965,21 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->old_screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
 
 	if (add_to_pic) {
-		if (s->picture_port->contents) {
-			s->picture_port->free_contents(GFXWC(s->picture_port));
-			s->picture_port->contents = NULL;
-			s->dyn_views = s->pic_views = s->bg_widgets = s->fg_widgets = NULL;
-		}
 		GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
 	} else {
+		gfx_color_t transparent = s->wm_port->bgcolor;
+
+		s->wm_port->free(GFXW(s->wm_port));
+		s->picture_port->free(GFXW(s->picture_port));
+
+		s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
+		s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
+
+		s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
+		s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
+
+		s->port = s->wm_port;
+
 		GFX_ASSERT(gfxop_new_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
 	}
 
@@ -1017,19 +988,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (argc > 1)
 		s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
 
-	if (s->dyn_views)
-		s->dyn_views->free(GFXW(s->dyn_views));
-
-	if (s->pic_views)
-		s->pic_views->free(GFXW(s->pic_views));
-
-	if (s->bg_widgets)
-		s->bg_widgets->free(GFXW(s->bg_widgets));
-
-	if (s->fg_widgets)
-		s->fg_widgets->free(GFXW(s->fg_widgets));
-
-	s->dyn_views = s->pic_views = s->bg_widgets = s->fg_widgets = NULL;
+	s->dyn_views = NULL;
 
 	s->priority_first = 42;
 	s->priority_last = 180;
@@ -1362,15 +1321,15 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	case K_CONTROL_BUTTON:
 
 		SCIkdebug(SCIkGRAPHICS, "drawing button %04x to %d,%d\n", obj, x, y);
-		ADD_TO_CURRENT_PORT(sciw_new_button_control(s->port, obj, area, text, font_nr,
-                                                            state & CONTROL_STATE_FRAMED,
-                                                            inverse, state & CONTROL_STATE_GRAY));
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_button_control(s->port, obj, area, text, font_nr,
+								  state & CONTROL_STATE_FRAMED,
+								  inverse, state & CONTROL_STATE_GRAY));
 		break;
 
 	case K_CONTROL_TEXT:
 
 		SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d\n", obj, x, y);
-		ADD_TO_CURRENT_PORT(sciw_new_text_control(s->port, obj, area, text, font_nr,
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_text_control(s->port, obj, area, text, font_nr,
 							  (s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)
 							  ? ALIGN_LEFT : ALIGN_CENTER, state & CONTROL_STATE_DITHER_FRAMED,
 							  inverse));
@@ -1380,14 +1339,14 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		SCIkdebug(SCIkGRAPHICS, "drawing edit control %04x to %d,%d\n", obj, x, y);
 
 		cursor = GET_SELECTOR(obj, cursor);
-		ADD_TO_CURRENT_PORT(sciw_new_edit_control(s->port, obj, area, text, font_nr, cursor, inverse));
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr, cursor, inverse));
 		break;
 
 	case K_CONTROL_ICON:
 
 		SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y -1);
 
-		ADD_TO_CURRENT_PORT(sciw_new_icon_control(s->port, obj, area, view, loop, cel,
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_icon_control(s->port, obj, area, view, loop, cel,
 							  state & CONTROL_STATE_FRAMED, inverse));
 		break;
 
@@ -1423,7 +1382,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 			}
 		}
 
-		ADD_TO_CURRENT_PORT(sciw_new_list_control(s->port, obj, area, font_nr, entries_list, entries_nr,
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_list_control(s->port, obj, area, font_nr, entries_list, entries_nr,
 							  list_top, selection, inverse));
 		if (entries_nr)
 			free(entries_list);
@@ -1471,16 +1430,17 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 					SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
 						 " a delete funcselector\n", widget->ID);
 
-				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with %d&&%d\n", widget->ID, !!(widget->flags & GFXW_FLAG_VISIBLE), !!s->bg_widgets);
+				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with %d\n", widget->ID, !!(widget->flags & GFXW_FLAG_VISIBLE));
 
 				if (!(gfxw_remove_id(list, widget->ID) == GFXW(widget))) {
 					SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
 					BREAKPOINT();
 				}
-				if ((widget->flags & GFXW_FLAG_VISIBLE) && s->bg_widgets) {
-					widget->draw_bounds.y += s->dyn_views->bounds.y - s->bg_widgets->bounds.y;
-					widget->draw_bounds.x += s->dyn_views->bounds.x - s->bg_widgets->bounds.x;
-					s->bg_widgets->add(GFXWC(s->bg_widgets), GFXW(gfxw_set_id(GFXW(widget), GFXW_NO_ID)));
+				if (widget->flags & GFXW_FLAG_VISIBLE) {
+					ADD_TO_CURRENT_PICTURE_PORT(gfxw_set_id(GFXW(widget), GFXW_NO_ID));
+
+					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
+					widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
 				}
 				else widget->free(GFXW(widget));
 			}
@@ -1676,7 +1636,7 @@ _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int optio
 
 				assert_primary_widget_lists(s);
 
-				s->bg_widgets->add(GFXWC(s->bg_widgets), GFXW(box));
+				ADD_TO_CURRENT_PICTURE_PORT(box);
 			}
 		}
 
@@ -1790,6 +1750,7 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 void
 kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+	gfxw_list_t *pic_views = gfxw_new_list(s->picture_port->bounds, 0);
 	heap_ptr list = PARAM(0);
 	CHECK_THIS_KERNEL_FUNCTION;
 
@@ -1800,11 +1761,12 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	} else {
 
 		SCIkdebug(SCIkGRAPHICS, "Preparing picview list...\n");
-		_k_make_view_list(s, s->pic_views, list, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
+		_k_make_view_list(s, pic_views, list, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
 		/* Store pic views for later re-use */
 
 		SCIkdebug(SCIkGRAPHICS, "Drawing picview list...\n");
-		_k_draw_view_list(s, s->pic_views, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_DISPOSEABLE);
+		ADD_TO_CURRENT_PICTURE_PORT(pic_views);
+		_k_draw_view_list(s, pic_views, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_DISPOSEABLE);
 		/* Draw relative to the bottom center */
 		SCIkdebug(SCIkGRAPHICS, "Returning.\n");
 	}
@@ -1849,7 +1811,6 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int priority = PARAM_OR_ALT(5, -1);
 	gfxw_view_t *new_view;
 
-
 	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (!view) {
@@ -1868,7 +1829,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	new_view = gfxw_new_view(s->gfx_state, gfx_point(x, y), view, loop, cel, priority, -1,
 				 ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET);
 
-	ADD_TO_CURRENT_FG_WIDGETS(new_view);
+	ADD_TO_CURRENT_BG_WIDGETS(new_view);
 	FULL_REDRAW();
 }
 
@@ -2027,8 +1988,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}*/
 
 		SCIkdebug(SCIkGRAPHICS, "Handling PicViews:\n");
-		if (s->pic_not_valid)
-			_k_draw_view_list(s, s->pic_views, 0); /* Step 10 */
+		/*		if (s->pic_not_valid)
+				_k_draw_view_list(s, s->pic_views, 0);*/ /* Step 10 */
 		SCIkdebug(SCIkGRAPHICS, "Handling Dyn:\n");
 
 		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_DISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL);
