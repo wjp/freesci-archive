@@ -106,8 +106,6 @@ typedef struct _state
   int last_pointer_size_x, last_pointer_size_y; /* Mouse pointer size as last used */
   mouse_pointer_t *mouse_pointer; /* The current mouse pointer, or NULL if disabled */
 
-  int buckybits; /* Bitmask of all pressed bucky-keys */
-
   int view_port; /* The currently active view port */
   port_t *ports[MAX_PORTS]; /* A list of all available ports */
 

@@ -1550,9 +1550,8 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
         PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
         s->acc=1;
         PUT_SELECTOR(obj, message, e.data);
-        PUT_SELECTOR(obj, modifiers, s->buckybits);
-
-	if ((s->buckybits & SCI_EVM_LSHIFT) && (s->buckybits & SCI_EVM_RSHIFT)
+        PUT_SELECTOR(obj, modifiers, e.buckybits);
+	if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)
 	    && (e.data == '-'))
 	  script_debug_flag = 1; /* Enter debug mode */
 
@@ -1579,7 +1578,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	      }
 	    PUT_SELECTOR(obj, type, e.type);
 	    PUT_SELECTOR(obj, message, 1);
-	    PUT_SELECTOR(obj, modifiers, s->buckybits|extra_bits);
+	    PUT_SELECTOR(obj, modifiers, e.buckybits|extra_bits);
 	    s->acc=1;
 	  }
 	  return;

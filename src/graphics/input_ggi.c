@@ -53,6 +53,8 @@ ggi_visual_t _sci_ggi_last_visual;
   ((later.tv_sec == earlier.tv_sec)? (later.tv_usec >= earlier.tv_usec) \
     : (later.tv_sec >= earlier.tv_sec))
 
+static int buckybits;
+
 sci_event_t _sci_ggi_input_handler(state_t *s)
 {
   sci_event_t event_redraw, event_loop;
@@ -76,18 +78,18 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
         retval.data=-1;
         switch(event.key.label)
 	  {
-	  case GIIK_ShiftL: s->buckybits^=SCI_EVM_LSHIFT; break;
-	  case GIIK_ShiftR: s->buckybits^=SCI_EVM_RSHIFT; break;
+	  case GIIK_ShiftL: buckybits^=SCI_EVM_LSHIFT; break;
+	  case GIIK_ShiftR: buckybits^=SCI_EVM_RSHIFT; break;
 	  case GIIK_CtrlR:
-	  case GIIK_CtrlL: s->buckybits^=SCI_EVM_CTRL; break;
+	  case GIIK_CtrlL: buckybits^=SCI_EVM_CTRL; break;
 	  case GIIK_AltL:
 	  case GIIK_AltR:
 	  case GIIK_MetaL:
-	  case GIIK_MetaR: s->buckybits^=SCI_EVM_ALT; break;
-	  case GIIK_CapsLock: s->buckybits^=SCI_EVM_CAPSLOCK; break;
-	  case GIIK_NumLock: s->buckybits^=SCI_EVM_NUMLOCK; break;
-	  case GIIK_ScrollLock: s->buckybits^=SCI_EVM_SCRLOCK; break;
-	  case GIIK_Insert: s->buckybits^=SCI_EVM_INSERT; break;
+	  case GIIK_MetaR: buckybits^=SCI_EVM_ALT; break;
+	  case GIIK_CapsLock: buckybits^=SCI_EVM_CAPSLOCK; break;
+	  case GIIK_NumLock: buckybits^=SCI_EVM_NUMLOCK; break;
+	  case GIIK_ScrollLock: buckybits^=SCI_EVM_SCRLOCK; break;
+	  case GIIK_Insert: buckybits^=SCI_EVM_INSERT; break;
 	  case GIIK_Enter: retval.data='\r'; break;
 	  case GIIUC_Tab: retval.data='\t'; break;
 	  case GIIK_Left: retval.data=SCI_K_LEFT;; break;
@@ -110,16 +112,19 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	    }
 	  }
         if(retval.data==-1) continue;
+        retval.buckybits=buckybits;
         return retval;
 	
       case evPtrButtonPress:
         retval.type = SCI_EVT_MOUSE_PRESS;
         retval.data = event.pbutton.button;
+        retval.buckybits=buckybits;
         return retval;
 	
       case evPtrButtonRelease:
         retval.type = SCI_EVT_MOUSE_RELEASE;
         retval.data = event.pbutton.button;
+        retval.buckybits=buckybits;
         return retval; 
       
       case evPtrAbsolute:
@@ -189,6 +194,7 @@ void initInputGGI()
 {
   gettimeofday(&_sci_ggi_redraw_loopt, NULL);
   _sci_ggi_loopt = _sci_ggi_redraw_loopt;
+  buckybits=0;
   /* reset timers, leave them at current time to send redraw events ASAP */
 
 }
@@ -234,18 +240,18 @@ sci_event_t _sci_gii_input_handler(state_t* s)
         retval.data=-1;
         switch(event.key.label)
 	  {
-	  case GIIK_ShiftL: s->buckybits^=SCI_EVM_LSHIFT; break;
-	  case GIIK_ShiftR: s->buckybits^=SCI_EVM_RSHIFT; break;
+	  case GIIK_ShiftL: buckybits^=SCI_EVM_LSHIFT; break;
+	  case GIIK_ShiftR: buckybits^=SCI_EVM_RSHIFT; break;
 	  case GIIK_CtrlR:
-	  case GIIK_CtrlL: s->buckybits^=SCI_EVM_CTRL; break;
+	  case GIIK_CtrlL: buckybits^=SCI_EVM_CTRL; break;
 	  case GIIK_AltL:
 	  case GIIK_AltR:
 	  case GIIK_MetaL:
-	  case GIIK_MetaR: s->buckybits^=SCI_EVM_ALT; break;
-	  case GIIK_CapsLock: s->buckybits^=SCI_EVM_CAPSLOCK; break;
-	  case GIIK_NumLock: s->buckybits^=SCI_EVM_NUMLOCK; break;
-	  case GIIK_ScrollLock: s->buckybits^=SCI_EVM_SCRLOCK; break;
-	  case GIIK_Insert: s->buckybits^=SCI_EVM_INSERT; break;
+	  case GIIK_MetaR: buckybits^=SCI_EVM_ALT; break;
+	  case GIIK_CapsLock: buckybits^=SCI_EVM_CAPSLOCK; break;
+	  case GIIK_NumLock: buckybits^=SCI_EVM_NUMLOCK; break;
+	  case GIIK_ScrollLock: buckybits^=SCI_EVM_SCRLOCK; break;
+	  case GIIK_Insert: buckybits^=SCI_EVM_INSERT; break;
 	  case GIIK_Enter: retval.data='\r'; break;
 	  case GIIUC_Tab: retval.data='\t'; break;
 	  case GIIK_Left: retval.data=75;
@@ -262,15 +268,18 @@ sci_event_t _sci_gii_input_handler(state_t* s)
 	    }
 	  }
         if(retval.data==-1) continue;
+        retval.buckybits=buckybits;
         return retval;
 	
       case evPtrButtonPress:
         retval.type = SCI_EVT_MOUSE_PRESS;
+        retval.buckybits=buckybits;
         retval.data = event.pbutton.button;
         return retval;
 	
       case evPtrButtonRelease:
         retval.type = SCI_EVT_MOUSE_RELEASE;
+        retval.buckybits=buckybits;
         retval.data = event.pbutton.button;
         return retval; 
       

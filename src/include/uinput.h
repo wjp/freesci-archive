@@ -41,19 +41,11 @@ struct _state;
 #define SCI_INPUT_DEFAULT_CLOCKTIME 100000
 #define SCI_INPUT_DEFAULT_REDRAWTIME 30000
 
-/*Values for buckybits in gamestate_t*/
-#define SCI_EVM_RSHIFT          (1<<0)
-#define SCI_EVM_LSHIFT          (1<<1)
-#define SCI_EVM_CTRL            (1<<2)
-#define SCI_EVM_ALT             (1<<3)
-#define SCI_EVM_SCRLOCK         (1<<4)
-#define SCI_EVM_NUMLOCK         (1<<5)
-#define SCI_EVM_CAPSLOCK        (1<<6)
-#define SCI_EVM_INSERT          (1<<7)
 
 typedef struct {
   int type;
   int data;
+  int buckybits;
 } sci_event_t;
 
 /*Values for type*/
@@ -90,6 +82,17 @@ typedef struct {
 #define SCI_K_F8 66
 #define SCI_K_F9 67
 #define SCI_K_F10 68
+
+/*Values for buckybits */
+#define SCI_EVM_RSHIFT          (1<<0)
+#define SCI_EVM_LSHIFT          (1<<1)
+#define SCI_EVM_CTRL            (1<<2)
+#define SCI_EVM_ALT             (1<<3)
+#define SCI_EVM_SCRLOCK         (1<<4)
+#define SCI_EVM_NUMLOCK         (1<<5)
+#define SCI_EVM_CAPSLOCK        (1<<6)
+#define SCI_EVM_INSERT          (1<<7)
+
 
 /*extern sci_event_t (*_sci_input_handler)(void);*/
 /* The input handler for the main window */
