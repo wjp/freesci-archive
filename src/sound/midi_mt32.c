@@ -37,6 +37,7 @@ int midi_mt32_sysex_delay();
 int midi_mt32_volume(guint8 volume);
 int midi_mt32_reverb(short param);
 int midi_mt32_event(guint8 command, guint8 note, guint8 velocity);
+int midi_mt32_allstop(void);
 
 static guint8 *data;
 static unsigned int length;

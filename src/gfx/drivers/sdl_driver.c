@@ -355,11 +355,9 @@ static void lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
   int pixx, pixy;
   int x,y;
   int dx,dy;
-  int ax,ay;
   int sx,sy;
   int swaptmp;
   Uint8 *pixel;
-  Uint8 *colorptr;
 
   dx = x2 - x1;
   dy = y2 - y1;
@@ -840,7 +838,6 @@ static SDL_Cursor
 
 static int sdl_set_pointer (struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 {
-  SDL_Cursor *cursor;
   int i;
   
   if (pointer == NULL)

@@ -279,9 +279,9 @@ kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 _k_redraw_box(state_t *s, int x1, int y1, int x2, int y2)
 {
-	int i;
 WARNING( "_k_redraw_box: Fixme!")
 #if 0
+	int i;
 
   view_object_t *list = s->dyn_views;
 

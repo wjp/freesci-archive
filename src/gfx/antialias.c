@@ -33,7 +33,6 @@
 static void
 antialiase_simple(gfx_pixmap_t *pixmap, int mask[], int shift_const, gfx_mode_t *mode)
 {
-	int i;
 	int x, y, c;
 	int bytespp = mode->bytespp;
 	int line_size = bytespp * pixmap->xl;
@@ -53,7 +52,6 @@ antialiase_simple(gfx_pixmap_t *pixmap, int mask[], int shift_const, gfx_mode_t 
 
 		for (x = 0; x < pixmap->xl; x++) {
 			unsigned long result = 0;
-			unsigned long data[3][3];
 
 			if (x == 1)
 				visimode++;

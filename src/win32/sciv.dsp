@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Zi /I "..\include" /I "..\include\win32" /D VERSION=\"0.3.3-BETA\" /D "HAVE_SDL" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D "HAVE_STRING_H" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /FR /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /Gi /GX /Zi /Gf /I "..\include" /I "..\include\win32" /D "HAVE_SDL" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_STRING_H" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /FR /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 release/freesci.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib ..\..\..\SDL-1.2.0\VisualC\SDL\Release\SDL.lib /nologo /subsystem:console /incremental:yes /debug /machine:I386 /FIXED:NO
+# ADD LINK32 release/freesci.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib winmm.lib ..\..\..\SDL-1.2.0\VisualC\SDL\Release\SDL.lib /nologo /subsystem:console /incremental:yes /debug /machine:I386 /FIXED:NO
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "..\..\..\SDL-1.2.0\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe

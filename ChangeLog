@@ -1,3 +1,29 @@
+2001-05-15  Matt Hargett  <matt@use.net>
+
+        * kgraphics.c: Get rid of unused variables.
+
+        * vm.c: Ditto.
+
+        * antialias.c: Ditto.
+
+        * gfx_pixmap_scale.c: Ditto.
+
+        * widgets.c: Ditto.
+
+        * sdl_driver.c: Ditto.
+
+        * midi_mt32gm.c: Ditto.
+
+        * soundserver.c: Ditto.
+
+        * tools.c: Add include for windows.h.
+
+        * midi_mt32.c: Add prototype for midi_mt32_all_stop().
+
+        * sciv.dsp: Fix debug build. VERSION is now __TIMESTAMP__.
+
+        * freesci.dsp: Ditto. Build changed to multi-threaded DLL.
+
 2001-05-14  Solomon Peachy <pizza@shaftnet.org>
 	* src/config.l:  added a plugin_dir option
 

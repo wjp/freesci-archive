@@ -1459,7 +1459,6 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 void
 script_uninstantiate(state_t *s, int script_nr)
 {
-	int i;
 	heap_ptr handle = s->scripttable[script_nr].heappos;
 #if 0
 	heap_ptr pos;

@@ -62,7 +62,6 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 		for (x = 0; x < pxm->index_xl; x++) {
 			int isalpha;
-                        byte temp[sizeof(SIZETYPE)*2];
 			SIZETYPE col = result_colors[isalpha = *src++] << (EXTRA_BYTE_OFFSET * 8);
 			isalpha = (isalpha == 255) && using_alpha;
 
@@ -213,7 +212,6 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 			int otherline[4]; /* the above line or the line below */
 			int ctexel[4]; /* Current texel */
 			int subx, suby;
-			int j;
 			int line_valuator = line_step? 128 - (line_step >> 1) : 256;
 			byte *wrpos, *alpha_wrpos;
 			byte *sublinepos = linepos;
@@ -416,7 +414,6 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 			for (yc = 0; yc < yc_count; yc++) {
 			        unsigned int color[4];
 				int delta[4];
-				int j;
 				byte *yc_dest_backup = dest;
 				byte *yc_alpha_dest_backup = alpha_dest;
 
@@ -426,7 +423,6 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 				for (xc = 0; xc < xc_count; xc++) {
 					SIZETYPE wrcolor;
-					unsigned int intensity;
 					int i;
 					wrcolor = 0;
 

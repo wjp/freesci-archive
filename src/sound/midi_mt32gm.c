@@ -36,8 +36,6 @@ static int mt32gm_channel_map[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 /* gm mapping of mt-32 */
 int midi_mt32gm_open(guint8 *data_ptr, unsigned int data_length)
 {
-	int i;
-
 	if (midiout_open() < 0)
 		return -1;
 	return midi_mt32_allstop();

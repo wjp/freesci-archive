@@ -1750,7 +1750,6 @@ _gfxwop_ordered_add(gfxw_container_t *container, gfxw_widget_t *widget, int comp
 
 		if (widget->equals(GFXW(widget), GFXW(*seekerp))) {
 			if (compare_all) {
-				int xxx;
 				if ((*seekerp)->visual)
 					(*seekerp)->widfree(GFXW(*seekerp)); /* If it's a fresh widget */
 				else

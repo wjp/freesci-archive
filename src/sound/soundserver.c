@@ -228,8 +228,8 @@ sci0_soundserver()
 	switch (event.signal) {
 
 	case SOUND_COMMAND_INIT_SONG: {
-	  byte *data, *datptr;
-	  int size, totalsize = 0;
+	  byte *data;
+	  int totalsize = 0;
 
 	  if (debugging)
 	    fprintf(ds, "Receiving song for handle %04x: ", event.handle);
