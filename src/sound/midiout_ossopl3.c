@@ -569,7 +569,7 @@ void do_buf()
 /*         printf("bend\n"); */
        if (bufp < 3) break;
        value = ((buf[2] & 0x7f) << 7) | (buf[1] & 0x7f);
-/*         pitch_bender(ch, value); */
+       pitch_bender(ch, value);
        bufp=1;
        break;
        

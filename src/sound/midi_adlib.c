@@ -18,8 +18,6 @@
 ***************************************************************************/
 
 /* TODO: 
-          Global volume.
-	  Pitch bend.
 	  Timing issues.
 	  ALSA?
 */
@@ -84,7 +82,6 @@ typedef struct _sci_adlib_def {
 
 static sbi_instr_data adlib_sbi[96];
 static guint8 instr[MIDI_CHANNELS];
-static guint8 pitch[MIDI_CHANNELS];
 static int polyphony[MIDI_CHANNELS];
 static int dev;
 static int free_voices = ADLIB_VOICES;
@@ -254,7 +251,6 @@ void adlib_start_note(int chn, int note, int velocity)
   free_voices--;
   
   SEQ_SET_PATCH(dev, free, instr[chn]);
-  //XXXX  SEQ_PITCHBEND(dev, free, pitch[chn]);
   SEQ_START_NOTE(dev, free, note, velocity);
   SEQ_DUMPBUF();
 }
@@ -278,7 +274,6 @@ int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
       make_sbi((adlib_def *)(data_ptr+2+(28 * i)), adlib_sbi[i]);
 
   memset(instr, 0, sizeof(instr));
-  memset(pitch, 0, sizeof(pitch));
  
   if ((seqfd=open("/dev/sequencer", O_WRONLY, 0))==-1) {
     perror("/dev/sequencer");
@@ -328,9 +323,11 @@ int midi_adlib_close()
 
 int midi_adlib_volume(guint8 volume)
 {
+  int i;
   volume &= 0x7f; /* (make sure it's not over 127) */
-
-  printf("volume NYI %02x \n", volume);
+  for (i = 0; i < MIDI_CHANNELS ; i++)
+    SEQ_CONTROL(dev, i, CTRL_MAIN_VOLUME, volume);
+  SEQ_DUMPBUF();    
   return 0;
 
 }
@@ -352,18 +349,6 @@ int midi_adlib_reverb(short param)
   return 0;
 }
 
-int midi_adlib_noteoff(guint8 channel, guint8 note, guint8 velocity)
-{
-  adlib_stop_note(channel, note, velocity);
-  return 0;
-}
-
-int midi_adlib_noteon(guint8 channel, guint8 note, guint8 velocity)
-{
-  adlib_start_note(channel,note,velocity);
-  return 0;
-}
-
 int midi_adlib_event(guint8 command, guint8 note, guint8 velocity)
 {
   guint8 channel, oper;
@@ -373,10 +358,14 @@ int midi_adlib_event(guint8 command, guint8 note, guint8 velocity)
 
   switch (oper) {    
   case 0x80:
-    return midi_adlib_noteoff(channel, note, velocity);
+    adlib_stop_note(channel, note, velocity);
+    return 0;
   case 0x90:  
-    return midi_adlib_noteon(channel, note, velocity);
-  case 0xe0:    /* Pitch bend NYI */
+    adlib_start_note(channel,note,velocity);
+    return 0;
+  case 0xe0:    /* Pitch bend needs scaling? */
+    SEQ_BENDER(dev, channel, ((note << 8) & velocity));
+    SEQ_DUMPBUF();
     break;
   case 0xb0:    /* CC changes.  we ignore. */
     return 0;
