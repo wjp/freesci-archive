@@ -66,6 +66,7 @@ cygwin*)
 	;;
 
 darwin*)
+	AC_DEFINE(MACOSX)
 	CFLAGS="-no-cpp-precomp $CFLAGS"
 	# Disable Apple's broken preprocessor
 	;;

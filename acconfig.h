@@ -13,4 +13,5 @@
 #undef HAVE_SDL
 #undef MALLOC_DEBUG
 #undef UNCHECKED_MALLOCS
+#undef MACOSX
 

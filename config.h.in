@@ -28,6 +28,7 @@
 #undef HAVE_SDL
 #undef MALLOC_DEBUG
 #undef UNCHECKED_MALLOCS
+#undef MACOSX
 
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
