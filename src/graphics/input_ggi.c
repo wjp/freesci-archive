@@ -100,6 +100,7 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	  case GIIK_End: retval.data=SCI_K_END; break;
 	  case GIIK_PageUp: retval.data=SCI_K_PGUP; break;
 	  case GIIK_PageDown: retval.data=SCI_K_PGDOWN; break;
+	  case GIIUC_BackSpace: retval.data=SCI_K_BACKSPACE; break;
 	    /*FIXME: Add all special keys in a sane way*/
 	  default:
 	    {
