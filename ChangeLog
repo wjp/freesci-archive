@@ -5,6 +5,14 @@
 
 	* src/gfx/gfx_test.c:  compilation fixes.
 
+2001-07-17  Alex Angas  <wgd@adelaide.on.net>
+
+        * src/win32/fsci_dll.dsp: Changed optimizations in release build back
+        to 'Minimize Size'.
+        Fixed up file list so everything can be found and compiled.
+
+        * src/win32/sciv.dsp: As for fsci_dll.dsp.
+
 2001-07-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/midi_adlib.c: Patched to cooperate with Rune's patch

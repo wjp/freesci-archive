@@ -1005,7 +1005,6 @@ gfxop_draw_line(gfx_state_t *state, rect_t line, gfx_color_t color, gfx_line_mod
 	int xfact, yfact;
 
 	BASIC_CHECKS(GFX_FATAL);
-
 	_gfxop_add_dirty_x(state, line);
 
 	xfact = state->driver->mode->xfact;

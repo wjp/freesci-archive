@@ -250,7 +250,7 @@ kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr list = UPARAM(0);
 
 	if (list&&!sane_listp(s, list))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
 
 	if (list)
 		s->acc = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
@@ -267,7 +267,7 @@ kEmptyList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (!sane_listp(s, list))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
 
 	if (list)
 		s->acc = !(GET_HEAP(UPARAM(0) + LIST_FIRST_NODE));
@@ -284,7 +284,7 @@ kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (!sane_listp(s, list))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
 
 	SCIkdebug(SCIkWARNING, "Warning: AddAfter() was invoked with %d parameters\n", argc);
 
@@ -338,7 +338,7 @@ kPrevNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 
 	if (!sane_nodep(s, UPARAM(0)))
-	  SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
+		SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
 
 	s->acc = UGET_HEAP(UPARAM(0) + LIST_PREVIOUS_NODE);
 }
@@ -349,7 +349,7 @@ kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 
 	if (!sane_nodep(s, UPARAM(0)))
-	  SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
+		SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
 
 	s->acc = UGET_HEAP(UPARAM(0) + LIST_NEXT_NODE);
 }

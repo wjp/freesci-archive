@@ -38,12 +38,12 @@ RSC=rc.exe
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
-# PROP Intermediate_Dir "Release"
+# PROP Intermediate_Dir "sciv_Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /Gi /GX /Zi /Gf /I "..\include" /I "..\include\win32" /D "HAVE_SDL" /D "NDEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_DDRAW" /FR /FD /GZ /c
-# SUBTRACT CPP /YX
+# ADD CPP /nologo /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL-1.2.1\include" /I "..\include" /I "..\include\win32" /D "HAVE_SDL" /D "NDEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_DDRAW" /FD /c
+# SUBTRACT CPP /Gy /Fr
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -51,8 +51,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 release/freesci.lib ..\..\..\SDL-1.2.1\VisualC\SDL\Release\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ddraw.lib /nologo /subsystem:console /incremental:yes /debug /machine:I386 /out:"..\..\bin\sciv.exe" /pdbtype:con /FIXED:NO
-# SUBTRACT LINK32 /pdb:none
+# ADD LINK32 Release\fsci.lib ..\..\..\SDL-1.2.1\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ddraw.lib /nologo /subsystem:console /machine:I386 /out:"..\..\bin\freesci.exe" /FIXED:NO
+# SUBTRACT LINK32 /pdb:none /debug
 
 !ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
 
@@ -68,15 +68,16 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "..\..\..\SDL-1.2.0\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\SDL-1.2.1\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
-# ADD RSC /l 0x419 /d "_DEBUG"
+# ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ddraw.lib odbc32.lib odbccp32.lib debug/freesci.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /debug /machine:I386 /nodefaultlib:"LIBC" /pdbtype:sept
+# ADD LINK32 ddraw.lib winmm.lib Debug\fsci.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /debug /machine:I386 /nodefaultlib:"LIBC" /out:"Debug\freesci.exe"
+# SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
 
@@ -109,10 +110,6 @@ SOURCE=.\usleep.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=D:\VStudio\VC98\Include\BASETSD.H
-# End Source File
-# Begin Source File
-
 SOURCE=..\include\console.h
 # End Source File
 # Begin Source File
@@ -122,6 +119,46 @@ SOURCE=..\include\engine.h
 # Begin Source File
 
 SOURCE=..\include\event.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\win32\getopt.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_driver.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_operations.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_options.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_resmgr.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_state_internal.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_system.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_tools.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_widgets.h
 # End Source File
 # Begin Source File
 
@@ -145,11 +182,31 @@ SOURCE=..\include\menubar.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\midi_device.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\midiout.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\resource.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\sbtree.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\sci_conf.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\sciresource.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\scitypes.h
 # End Source File
 # Begin Source File
 
@@ -158,6 +215,10 @@ SOURCE=..\include\script.h
 # Begin Source File
 
 SOURCE=..\include\sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\soundserver.h
 # End Source File
 # Begin Source File
 
