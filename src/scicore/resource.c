@@ -44,7 +44,7 @@
 #endif
 
 #undef SCI_REQUIRE_RESOURCE_FILES
-#define SCI_VERBOSE_RESMGR 1
+/* #define SCI_VERBOSE_RESMGR 1 */
 
 
 const char* sci_version_types[] = {

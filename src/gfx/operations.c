@@ -665,7 +665,6 @@ gfxop_scan_bitmask(gfx_state_t *state, rect_t area, gfx_map_mask_t map)
 
 	if (map & GFX_MASK_PRIORITY)
 		retval |= _gfxop_scan_one_bitmask(pic->priority_map, area);
-
 	if (map & GFX_MASK_CONTROL)
 		retval |= _gfxop_scan_one_bitmask(state->control_map, area);
 

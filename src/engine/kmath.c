@@ -54,8 +54,12 @@ get_angle(int xrel, int yrel)
 {
 	if ((xrel == 0) && (yrel == 0))
 		return 0;
-	else
-		return (int) (180.0/PI * atan2(xrel, -yrel) + 0.5);
+	else {
+		int val = (int) (180.0/PI * atan2(xrel, -yrel) + 0.5);
+		if (val < 0)
+			val += 360;
+		return val;
+	}
 }
 
 void

@@ -114,7 +114,7 @@ typedef struct _state
 	byte have_mouse_flag;  /* Do we have a hardware pointing device? */
 
 	byte pic_not_valid; /* Is 0 if the background picture is "valid" */
-	byte pic_is_new;    /* Set to 1 if a picture has just been loaded */
+	byte pic_is_new; /* New pic was loaded or port was opened */
 	byte onscreen_console;  /* Use the onscreen console for debugging */
 	byte *osc_backup; /* Backup of the pre-onscreen console screen data */
 

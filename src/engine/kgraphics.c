@@ -1747,6 +1747,11 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 				SCIkdebug(SCIkGRAPHICS, "  invoking %04x::doit()\n", obj);
 				invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
 
+				if (s->pic_is_new) {
+					SCIkwarn(SCIkWARNING, "Warning: new pic"
+						 " or port used within Animate()!\n");
+					return;
+				}
 			}
 		}
 
@@ -2171,6 +2176,10 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	x = PARAM(1);
 	yl = PARAM(2) - y;
 	xl = PARAM(3) - x;
+
+	s->pic_is_new = 1; /* Well, it's different, at any rate... */
+	/* This is for Animate(), to inform it if one of its doit()s is responsible
+	** for the window being opened- in this case, we restart Animate().  */
 
 	y += s->wm_port->bounds.y - 1;
 
@@ -2675,7 +2684,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 		if (s->pic_is_new) { /* Happens if DrawPic() is executed by a dynview (yes, that happens) */
-			kAnimate(s, funct_nr, argc, argp);
+			kAnimate(s, funct_nr, argc, argp); /* Tail-recurse */
 			return;
 		}
 

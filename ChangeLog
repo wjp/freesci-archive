@@ -1,4 +1,13 @@
+2001-09-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kmath.c (get_angle): No longer returns negative
+	angles.
+
 2001-09-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kNewWindow): Creating a new window
+	now sets "pic_is_new" to inform Animate() that it should
+	abort building the dynview list and restart completely.
 
 	* src/engine/game.c (script_init_engine): Savegame directory is
 	now preserved during restart.

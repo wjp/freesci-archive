@@ -74,7 +74,7 @@
 #include <resource.h>
 
 #ifdef _WIN32
-#  undef inline /* just to be sure it is not defined */
+#  undef scim_inline /* just to be sure it is not defined */
 #  define scim_inline __inline
 #elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199900L
 #  define scim_inline
