@@ -451,6 +451,13 @@ script_map_kernel(struct _state *s);
 */
 
 
+void 
+script_detect_early_versions(struct _state *s);
+/* Detects early SCI versions by their different script header
+** Parameters: (state_t *) s: The state to operate on
+** Returns   : (void)
+*/
+
 int
 kalloc(struct _state *s, int type, int space);
 /* Allocates "kernel" memory and returns a handle suitable to be passed on to SCI scripts

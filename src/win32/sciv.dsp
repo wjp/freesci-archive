@@ -91,10 +91,6 @@ SOURCE=..\core\cfsml.pl
 # End Source File
 # Begin Source File
 
-SOURCE=..\console\commands.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\graphics\con_font.c
 # End Source File
 # Begin Source File
@@ -108,37 +104,6 @@ SOURCE=..\config.c
 # Begin Source File
 
 SOURCE=..\config.l
-
-!IF  "$(CFG)" == "sciv - Win32 Release"
-
-# Begin Custom Build
-ProjDir=.
-InputPath=..\config.l
-InputName=config
-
-"..\config.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(ProjDir) 
-	cd .. 
-	flex -o$(InputName).c $(InputName).l 
-	
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
-
-# Begin Custom Build
-ProjDir=.
-InputPath=..\config.l
-InputName=config
-
-"..\config.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(ProjDir) 
-	cd .. 
-	flex -o$(InputName).c $(InputName).l 
-	
-# End Custom Build
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -159,6 +124,10 @@ SOURCE=..\graphics\engine_graphics.c
 # Begin Source File
 
 SOURCE=..\graphics\font.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\core\game.c
 # End Source File
 # Begin Source File
 
@@ -257,39 +226,7 @@ SOURCE=..\core\savegame.c
 # Begin Source File
 
 SOURCE=..\core\savegame.cfsml
-
-!IF  "$(CFG)" == "sciv - Win32 Release"
-
 USERDEP__SAVEG="..\core\cfsml.pl"	
-# Begin Custom Build
-ProjDir=.
-InputPath=..\core\savegame.cfsml
-InputName=savegame
-
-"savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(ProjDir) 
-	cd ..\core 
-	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
-	
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
-
-USERDEP__SAVEG="..\core\cfsml.pl"	
-# Begin Custom Build
-ProjDir=.
-InputPath=..\core\savegame.cfsml
-InputName=savegame
-
-"savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(ProjDir) 
-	cd ..\core 
-	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
-	
-# End Custom Build
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -302,6 +239,14 @@ SOURCE=..\core\scriptdebug.c
 # Begin Source File
 
 SOURCE=..\sound\sound.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\core\state.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\core\tools.c
 # End Source File
 # Begin Source File
 

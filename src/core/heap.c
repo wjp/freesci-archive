@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <resource.h>
 #include <heap.h>
+#include <console.h>
 
 #define assert_in_range(pos) assert(pos>=1000 && pos<=0xffff);
 

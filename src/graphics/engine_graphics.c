@@ -457,7 +457,11 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
   graph_fill_box_custom(s, port->xmin+x+1, port->ymin+y + 11, xl-2, yl - 22, port->bgcolor, -1, -1, 1);
 
   if (fontheight == 1) {
+#ifdef __GNUC__
     sciprintf("%s, %s(L%d): No font set while attempting to draw\n", __FILE__, __FUNCTION__, __LINE__);
+#else
+    sciprintf("%s (L%d): No font set while attempting to draw\n", __FILE__, __LINE__);
+#endif
     return;
   }
 

@@ -1,8 +1,14 @@
+2000-04-12  Dmitry Jemerov  <yole@nnz.ru>
+
+	* The usual bunch of build problem fixes.
+	* Updated project files according to latest changes in source code
+        structure.
+
 2000-04-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kgraphics.c (_k_draw_control): Frames are now drawn around
 	all edit controls.
-	
+
 	* src/core/kgraphics.c (kCanBeHere): dynviews with IGNORE_ACTOR
 	or DONT_RESTORE don't just actively ignore moving objects, they
 	also are passively ignored now.
@@ -119,7 +125,7 @@
 
 	* src/sound/soundserver_null.c: Fixed a bug in the cumulative cue
  	system (also fixed soundserver_dos).
-	
+
 
 2000-01-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
@@ -935,7 +941,7 @@
 	* src/tools/console.c: Added a text-based command console. It doesn't
 	work the way it's supposed to, though- libgii(stdin) appears to
 	deliver events in a different fashion than libggi does.
-	
+
 	* src/console/console.c: A number of commands has been added to the
 	command console in the last few days. While the command console
 	doesn't beat the bash (yet ;-), it's in a state where working with it
@@ -1074,5 +1080,5 @@
 1999-04-03  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
 
 	* First public release.
-	
+
 

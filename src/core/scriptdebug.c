@@ -309,6 +309,7 @@ c_restart_game(state_t *s)
   s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
   script_abort_flag = 1;
   _debugstate_valid = 0;
+  return 0;
 }
 
 
@@ -933,6 +934,7 @@ c_mem_info(state_t *s)
 
   heap_meminfo(s->_heap);
   sciprintf("Heap: Free:%04x  Max:%04x\n", heap_meminfo(s->_heap) & 0xffff, heap_largest(s->_heap) & 0xffff);
+  return 0;
 }
 
 

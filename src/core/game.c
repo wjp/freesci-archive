@@ -294,7 +294,7 @@ script_init_engine(state_t *s, sci_version_t version)
   for (i = 0; i < 1000; i++)
     s->scripttable[i].heappos = 0; /* Mark all scripts as 'not installed' */
   if (!script_instantiate(s, 0)) {
-    sciprintf("%s(): Could not instantiate script 0\n", __FUNCTION__);
+    sciprintf("script_init_engine(): Could not instantiate script 0\n");
     return 1;
   }
 
@@ -400,12 +400,12 @@ game_init(state_t *s)
     send_calls = g_new(calls_struct_t, send_calls_allocated = 16);
 
   if (!stack_handle) {
-    sciprintf("%s(): Insufficient heap space for stack\n", __FUNCTION__);
+    sciprintf("game_init(): Insufficient heap space for stack\n");
     return 1;
   }
 
   if (!parser_handle) {
-    sciprintf("%s(): Insufficient heap space for parser word error block\n", __FUNCTION__);
+    sciprintf("game_init(): Insufficient heap space for parser word error block\n");
     return 1;
   }
 
@@ -446,7 +446,7 @@ game_init(state_t *s)
         game_obj -= 2; /* Adjust for alternative header */
 
   if (GET_HEAP(game_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    sciprintf("%s(): Game object is not at 0x%x\n", __FUNCTION__, game_obj);
+    sciprintf("game_init(): Game object is not at 0x%x\n", game_obj);
     return 1;
   }
 

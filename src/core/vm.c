@@ -32,7 +32,10 @@
 #include <engine.h>
 #include <versions.h>
 #include <kdebug.h>
+
+#ifndef _WIN32
 #include <sys/resource.h>
+#endif
 
 /*#define VM_DEBUG_SEND*/
 
