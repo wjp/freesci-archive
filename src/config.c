@@ -9,7 +9,8 @@
 #define YY_FLEX_MINOR_VERSION 5
 
 #include <stdio.h>
-#include <errno.h>
+#include <unistd.h>
+
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
 #ifdef c_plusplus
@@ -818,7 +819,7 @@ standard_option standard_options[] = {
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
         OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
         OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
-        OPT_INT("pcmout_stereo", pcmout_rate, 0, 1),
+        OPT_INT("pcmout_stereo", pcmout_stereo, 0, 1),
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
@@ -836,7 +837,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 840 "lex.yy.c"
+#line 838 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -936,20 +937,9 @@ YY_MALLOC_DECL
 			YY_FATAL_ERROR( "input in flex scanner failed" ); \
 		result = n; \
 		} \
-	else \
-		{ \
-		errno=0; \
-		while ( (result = fread(buf, 1, max_size, yyin))==0 && ferror(yyin)) \
-			{ \
-			if( errno != EINTR) \
-				{ \
-				YY_FATAL_ERROR( "input in flex scanner failed" ); \
-				break; \
-				} \
-			errno=0; \
-			clearerr(yyin); \
-			} \
-		}
+	else if ( ((result = fread( buf, 1, max_size, yyin )) == 0) \
+		  && ferror( yyin ) ) \
+		YY_FATAL_ERROR( "input in flex scanner failed" );
 #endif
 
 /* No semi-colon after return; correct usage is to write "yyterminate();" -
@@ -995,13 +985,13 @@ YY_MALLOC_DECL
 YY_DECL
 	{
 	register yy_state_type yy_current_state;
-	register char *yy_cp, *yy_bp;
+	register char *yy_cp = NULL, *yy_bp = NULL;
 	register int yy_act;
 
 #line 270 "config.l"
 
 
-#line 1005 "lex.yy.c"
+#line 992 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -1253,7 +1243,7 @@ YY_RULE_SETUP
 #line 409 "config.l"
 ECHO;
 	YY_BREAK
-#line 1257 "lex.yy.c"
+#line 1244 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
