@@ -38,6 +38,8 @@
 
 SDL_Thread *child;
 SDL_mutex *out_mutex;
+SDL_mutex *in_mutex;
+SDL_cond *in_cond;
 
 sfx_driver_t sound_sdl;
 
@@ -72,6 +74,8 @@ sound_sdl_init(state_t *s)
   /* spawn thread */
 
   out_mutex = SDL_CreateMutex();
+  in_mutex = SDL_CreateMutex();
+  in_cond = SDL_CreateCond();
 
   child = SDL_CreateThread( &sdl_soundserver_init, s);
 
@@ -108,6 +112,37 @@ sound_sdl_queue_event(int handle, int signal, int value)
   SDL_UnlockMutex(out_mutex);
 }
 
+void 
+sound_sdl_queue_command(state_t *s, int handle, int signal, int value)
+{
+  SDL_LockMutex(in_mutex);
+
+  sound_eq_queue_event(&inqueue, handle, signal, value);
+  
+  SDL_UnlockMutex(in_mutex);
+  SDL_CondSignal(in_cond);
+}
+
+sound_event_t *
+sound_sdl_get_command(GTimeVal *wait_tvp)
+{
+  sound_event_t *event = NULL;
+
+  /*  if (wait_tvp == NULL)
+    SDL_CondWait(in_cond, in_mutex);
+  else */
+    SDL_LockMutex(in_mutex);
+
+  event = sound_eq_retreive_event(&inqueue);
+
+  SDL_UnlockMutex(in_mutex);
+
+  /*  if (wait_tvp != NULL)
+    usleep(wait_tvp->tv_usec);
+  */
+  return event;
+}
+
 sfx_driver_t sound_sdl = {
 	"sdl",
 	&sound_sdl_init,
@@ -115,6 +150,8 @@ sfx_driver_t sound_sdl = {
 	&sound_exit,
 	&sound_sdl_get_event,
 	&sound_sdl_queue_event,
+	&sound_sdl_get_command,
+	&sound_sdl_queue_command,
 	&sound_save,
 	&sound_restore,
 	&sound_command,

@@ -36,6 +36,7 @@
 #include <script.h>
 #include <vocabulary.h>
 #include <sound.h>
+#include <soundserver.h>
 #include <uinput.h>
 #include <console.h>
 #include <vm.h>

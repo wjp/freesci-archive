@@ -145,6 +145,7 @@ typedef struct {
 extern sound_event_t sound_eq_eoq_event; /* An "end of queue" event */
 
 extern sound_eq_t queue; /* The event queue */
+extern sound_eq_t inqueue; /* The event input queue */
 
 int
 sound_init_pipes(struct _state *s);
@@ -338,5 +339,99 @@ void sci_midi_command(song_t *song, guint8 command, guint8 param,
                       guint8 param2, 
 		      int *ccc, FILE *ds);
 /* performs a regular midi event in the song. */
+
+
+typedef struct {
+
+  char *name; /* Name of this particular driver */
+
+  int (*init)(struct _state *s);
+  /* Initializes the sounnd driver
+  ** Parameters: (state_t *) s: The state that we're going to play on
+  ** Returns   : (int) 0 if successful, 1 if failed
+  */
+
+  int (*configure)(struct _state *s, char *option, char *value);
+  /* Set a particular configuration option
+  ** Parameters: (state_t *) s: The state_t to operate on
+  **             (char *) option: The option to set
+  **             (char *) value: The value to set it to
+  ** Returns   : (int) 0 if "option" could be interpreted by the driver, regardless
+  **                   of whether value was correct, or 1 if the option does not apply
+  **                   to this particular driver.
+  */
+
+  void (*exit)(struct _state *s);
+  /* Stops playing sound, uninitializes the sound driver, and frees all associated memory.
+  ** Parameters: (state_t *) s: The state_t to operate on
+  ** Returns   : (void)
+  */
+
+  sound_event_t* (*get_event)(struct _state *s);
+  /* Synchronizes the sound driver with the rest of the world.
+  ** Parameters: (state_t *) s: The state_t to operate on (it's getting boring)
+  ** Returns   : (sound_event_t *) Pointer to a dynamically allocated sound_event_t structure
+  **                               containing the next event, or NULL if none is available
+  ** This function should be called at least 60 times per second. It will return finish, loop,
+  ** and cue events, which can be written directly to the sound objects.
+  */
+
+void (*queue_event)(int handle, int signal, int value);
+/* XXX write me */
+
+  sound_event_t* (*get_command)(struct timeval *wait_tvp);
+void (*queue_command)(struct _state *s, int handle, int signal, int value);
+/* XXX write me */
+
+  int (*save)(struct _state *s, char *name);
+  /* Saves the sound system state to the directory /name/.
+  ** Parameters: (state_t *) s: The current state
+  **             (char *) name: The directory name of the directory to write to (must exist)
+  ** Returns   : (int) 0 on success, 1 otherwise
+  */
+
+  int (*restore)(struct _state *s, char *name);
+  /* Restores the sound system state from the directory with the specified name.
+  ** Parameters: (state_t *) s: The current state
+  **             (char *) name: The name of the directory to read from
+  ** Returns   : (int) 0 on success, 1 otherwise
+  */
+
+  int (*command)(struct _state *s, int command, int handle, int parameter);
+  /* Executes a sound command (one of SOUND_COMMAND_xxx).
+  ** Parameters: (state_t *) s: The current state
+  **             (int) command: The command to execute
+  **             (int) handle: The handle to execute it on, if available
+  **             (int) parameter: The function parameter
+  */
+
+  void (*suspend)(struct _state *s);
+  /* Suspends the sound subsystem
+  ** Parameters: (state_t *) s: The current state
+  ** Only resume, shutdown, save and restore commands need to be handled in suspended mode.
+  */
+
+  void (*resume)(struct _state *s);
+  /* Resumes the sound subsystem
+  ** Parameters: (state_t *) s: The current state
+  */
+
+  void (*poll)();
+  /* This will poll the current sound driver */
+
+} sfx_driver_t;
+
+extern DLLEXTERN sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-terminated */
+
+extern sfx_driver_t *soundserver; /* current soundserver */
+
+void 
+sound_queue_event(int handle, int signal, int value);
+
+void 
+sound_queue_command(struct _state *s, int handle, int signal, int value);
+
+sound_event_t * 
+sound_get_command(struct timeval *wait_tvp);
 
 #endif /* !_SCI_SOUND_SERVER_H_ */

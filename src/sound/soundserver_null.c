@@ -45,6 +45,8 @@
 
 sfx_driver_t sound_null;
 
+int x_fd_in, x_fd_out, x_fd_events, x_fd_debug;
+
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
 
@@ -100,6 +102,10 @@ sound_null_init(state_t *s)
 		close(fd_debug[0]); /* Close pipes at the other end */
 
 		signal(SIGPIPE, &_sound_server_sigpipe_handler); /* Die on sigpipe */
+		x_fd_in = fd_in[0];
+		x_fd_out = fd_out[1];
+		x_fd_events = fd_events[1];
+		x_fd_debug = fd_debug[1];
 
 		sound_null_server(fd_in[0], fd_out[1], fd_events[1], fd_debug[1]); /* Run the sound server */
 	}
@@ -185,6 +191,41 @@ sound_null_get_event(state_t *s)
 	}
 
 }
+void 
+sound_null_queue_command(state_t *s, int handle, int signal, int value)
+{
+  sound_event_t event;
+
+  event.handle = handle;
+  event.signal = signal;
+  event.value = value;
+  /*
+  printf("writing %04x %d %d\n", event.handle, event.signal, event.value);
+  */
+  write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+
+}
+
+sound_event_t *
+sound_null_get_command(struct timeval *wait_tvp)
+{
+  fd_set input_fds;
+  sound_event_t *event = NULL;
+
+  FD_ZERO(&input_fds);
+  FD_SET(x_fd_in, &input_fds);
+  
+  if(select(x_fd_in + 1, &input_fds, NULL, NULL, wait_tvp)) {
+    event = xalloc(sizeof(sound_event_t));
+    if (read(x_fd_in, event, sizeof(sound_event_t)) != sizeof(sound_event_t)) {
+      free(event);
+      event = NULL;
+    }
+  }
+  /*  if (event)
+      printf("reading %04x %d %d\n", event->handle, event->signal, event->value); */
+  return event;
+}
 
 sfx_driver_t sound_null = {
 	"null",
@@ -193,6 +234,8 @@ sfx_driver_t sound_null = {
 	&sound_exit,
 	&sound_null_get_event,
 	&sound_null_queue_event,
+	&sound_null_get_command,
+	&sound_null_queue_command,
 	&sound_save,
 	&sound_restore,
 	&sound_command,
@@ -246,13 +289,15 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	int ppid = getppid(); /* Get parent PID */
 
 	sound_eq_init(&queue);
+	sound_eq_init(&inqueue);
 
 	gettimeofday((struct timeval *)&last_played, NULL);
 
 	fprintf(ds, "NULL Sound server initialized\n");
 
 	while (1) {
-		GTimeVal wait_tv;
+	  sound_event_t *event_temp;
+	  GTimeVal wait_tv;
 		int ticks = 0; /* Ticks to next command */
 		int fadeticks = 0;		
 		int old_songpos;
@@ -301,8 +346,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 		newsong = song;
 
 		if (ticks) do {
-			GTimeVal *wait_tvp;
-			int got_input;
+			struct timeval *wait_tvp;
 
 			if (!suspended) {
 				wakeup_time = song_next_wakeup_time(&last_played, ticks);
@@ -317,17 +361,15 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 			}
 
-			FD_ZERO(&input_fds);
-			FD_SET(fd_in, &input_fds);
-
+			event_temp = sound_get_command(wait_tvp);
 			/* Wait for input: */
-			got_input = select(fd_in + 1, &input_fds, NULL, NULL, (struct timeval *)wait_tvp);
 
-			if (got_input) { /* We've got mail! */
-				sound_event_t event;
+			if (event_temp) { /* We've got mail! */
+				sound_event_t event = *event_temp;
+				song_t *modsong;
+				free(event_temp);
 
-				if (read(fd_in, &event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
-					song_t *modsong = song_lib_find(songlib, event.handle);
+					modsong = song_lib_find(songlib, event.handle);
 
 
 					switch (event.signal) {
@@ -727,7 +769,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						fprintf(ds, "Received invalid signal: %d\n", event.signal);
 
 					}
-				}
 			}
 
 			if (verify_pid(ppid)) {

@@ -127,10 +127,13 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   int red_shift, green_shift, blue_shift, alpha_shift;
   int xsize = xfact * 320;
   int ysize = yfact * 200;
+
   int i;
   
   if (!S)
     S = malloc(sizeof(struct _sdl_state));
+  if (!S)
+    return GFX_FATAL;
     
   if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
     ERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
@@ -142,6 +145,9 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
   if (flags & SCI_SDL_FULLSCREEN) {
     i |= SDL_FULLSCREEN;
+#ifdef _MSC_VER
+    ysize = yfact * 240;
+#endif
   }
 
   S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, i);

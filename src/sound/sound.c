@@ -73,11 +73,12 @@ sfx_driver_t *soundserver;
 
 sound_event_t sound_eq_eoq_event = {0, SOUND_SIGNAL_END_OF_QUEUE, 0};
 sound_eq_t queue; /* The event queue */
+sound_eq_t inqueue; /* The in-event queue */
 
 int soundserver_dead = 0;
 
 sfx_driver_t *sfx_drivers[] = {
-#ifdef HAVE_SDL
+#ifdef HAVE_SDL2
   &sound_sdl,
 #endif
 #ifdef HAVE_FORK
@@ -238,7 +239,8 @@ sound_command(state_t *s, int command, int handle, int parameter)
 		}
 
 		len = song->length;
-		write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+		sound_queue_command(s, event.handle, event.signal, event.value);
+
 		write(s->sound_pipe_in[1], &len, sizeof(int)); /* Write song length */
 
 		xfer_buf = song->data;
@@ -309,7 +311,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	case SOUND_COMMAND_STOP_ALL:
 	case SOUND_COMMAND_GET_NEXT_EVENT:
 	case SOUND_COMMAND_FADE_HANDLE:
-		write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+	  sound_queue_command(s, event.handle, event.signal, event.value);
 		return 0;
 
 		/* set the sound volume. */
@@ -318,7 +320,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 			s->sound_mute = parameter;
 		} else {
 			s->sound_volume = parameter;
-			write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+			sound_queue_command(s, event.handle, event.signal, event.value);
 		}
 		/* deliberate fallthrough */
 	case SOUND_COMMAND_GET_VOLUME:
@@ -340,7 +342,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 		/* let's send a volume change across the wire */
 		event.signal = SOUND_COMMAND_SET_VOLUME;
 		event.value = s->sound_volume;
-		write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+		sound_queue_command(s, event.handle, event.signal, event.value);
 		/* deliberate fallthrough */
 		/* return the mute status */
 	case SOUND_COMMAND_GET_MUTE:
@@ -354,7 +356,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 		GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
 		int dummy, success;
 
-		write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+		sound_queue_command(s, event.handle, event.signal, event.value);
 
 		FD_ZERO(&fds);
 		FD_SET(s->sound_pipe_out[0], &fds);
@@ -766,5 +768,13 @@ sound_queue_event(int handle, int signal, int value) {
   soundserver->queue_event(handle, signal, value);
 }
 
+void 
+sound_queue_command(state_t *s, int handle, int signal, int value) {
+  soundserver->queue_command(s, handle, signal, value);
+}
 
 
+sound_event_t *
+sound_get_command(struct timeval *wait_tvp) {
+  return soundserver->get_command(wait_tvp);
+}
