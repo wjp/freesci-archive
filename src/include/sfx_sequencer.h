@@ -83,6 +83,12 @@ typedef struct _sfx_sequencer {
 	** Parameters: (int) ticks: Number of 60 Hz ticks to delay
 	** Returns   : SFX_OK on success, SFX_ERROR otherwise
 	*/
+
+	int (*reset_timer)(); /* OPTIONAL -- may be NULL, but highly recommended in combination with delay() */
+	/* Resets the timer associated with the 'delay()' function
+	** Returns   : SFX_OK on success, SFX_ERROR otherwise
+	*/
+
 	int (*allstop)(); /* OPTIONAL -- may be NULL */
 	/* Stops playing everything in the sequencer queue
 	** Returns   : SFX_OK on success, SFX_ERROR otherwise

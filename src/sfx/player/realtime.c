@@ -178,6 +178,9 @@ rt_set_iterator(song_iterator_t *it, GTimeVal start_time)
 		return SFX_ERROR;
 	}
 
+	if (seq->reset_timer) /* Restart timer counting if possible */
+		seq->reset_timer();
+
 	SIMSG_SEND(it, SIMSG_SET_PLAYMASK(seq->playmask));
 	SIMSG_SEND(it, SIMSG_SET_RHYTHM(seq->play_rhythm));
 

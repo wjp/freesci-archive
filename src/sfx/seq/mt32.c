@@ -54,6 +54,10 @@ static guint8 sysex_buffer[266] = {0xF0, 0x41, 0x10, 0x16, 0x12};
 static guint8 default_reverb;
 static char shutdown_msg[20];
 
+static long mt32_init_sec, mt32_init_usec; /* Time at initialisation */
+static int mt32_init_delay = 0; /* Used to count the number of ticks (1/60s of a second) we should
+				** wait before initialisation has been completed  */
+
 static gint8 patch_map[128] = {
 	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
 	16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
@@ -154,6 +158,8 @@ static struct {
 static int
 midiout_write_block(byte *buf, int len, int delta)
 {
+	int retval;
+
 	if (delta)
 		midi_writer->delay(midi_writer, delta);
 
@@ -161,12 +167,20 @@ midiout_write_block(byte *buf, int len, int delta)
 }
 
 /* The following is the result of some experimenting, trying to approach the MT32's processing speed */
-#define MAGIC_MIDIOUT_DELAY 20
+#define MAGIC_MIDIOUT_DELAY 40
 
 static int
 midiout_write_delayed_block(byte *buf, int len)
+     /* Only used for initial programming */
 {
-	return midiout_write_block(buf, len, len * MAGIC_MIDIOUT_DELAY);
+	int rv = midiout_write_block(buf, len, 0);
+	int delay = 1 + (len / MAGIC_MIDIOUT_DELAY);
+
+	midi_writer->delay(midi_writer, delay);
+
+	mt32_init_delay += delay; /* Keep track of delay times */
+
+	return rv;
 }
 
 /* send default rhythm map and reserve */
@@ -205,6 +219,8 @@ int midi_mt32_open(int length, byte *data, void *dev)
 		fprintf(stderr, "Attempt to use MT-32 sequencer without device\n");
 		return SFX_ERROR;
 	}
+
+	sci_gettime(&mt32_init_sec, &mt32_init_usec);
 
 	midi_writer = (midi_writer_t *) dev;
 
@@ -375,7 +391,8 @@ midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)
 	sysex_buffer[count + 9] = 0xF7;
 
 	midiout_write_delayed_block(sysex_buffer, count + 10);
-	midi_writer->flush(midi_writer);
+	if (midi_writer->flush)
+		midi_writer->flush(midi_writer);
 	midi_mt32_sysex_delay();
 
 	return count + 10;
@@ -404,7 +421,8 @@ midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
 	sysex_buffer[count1 + count2 + 9] = 0xF7;
 
 	midiout_write_delayed_block(sysex_buffer, count1 + count2 + 10);
-	midi_writer->flush(midi_writer);
+	if (midi_writer->flush)
+		midi_writer->flush(midi_writer);
 	midi_mt32_sysex_delay();
 	return count1 + count2 + 10;
 }
@@ -520,7 +538,48 @@ midi_mt32_event(byte command, int argc, byte *argv)
 
 	buf[0] = command;
 	memcpy(buf + 1, argv, argc);
+
 	midiout_write_block(buf, argc + 1, delta);
+	delta = 0;
+
+	return SFX_OK;
+}
+
+
+static void
+delay_init()
+{/* Wait for MT-32 initialisation to complete */
+	long endsec = mt32_init_sec, uendsec = mt32_init_usec;
+	long sec, usec;
+	int loopcount = 0;
+
+	uendsec += (mt32_init_delay * 100000) / 6;  /* mt32_init_delay is in ticks (1/60th seconds), uendsecs in microseconds */
+	endsec += uendsec / 1000000;
+	uendsec %= 1000000;
+
+
+	do {
+		if (loopcount == 1)
+			sciprintf("Waiting for MT-32 programming to complete...\n");
+
+		sci_gettime(&sec, &usec);
+		sleep(1); /* Idle a bit */
+		++loopcount;
+	} while ((sec < endsec) || ((sec == endsec) && (usec < uendsec)));
+
+}
+
+static int
+midi_mt32_reset_timer()
+{
+	if (mt32_init_delay) { /* We might still have to wait for initialisation to complete */
+		delay_init();
+		mt32_init_delay = 0;
+	}
+
+
+	midi_writer->reset_timer(midi_writer);
+	return SFX_OK;
 }
 
 
@@ -548,6 +607,7 @@ sfx_sequencer_t sfx_sequencer_mt32 = {
 	&midi_mt32_close,
 	&midi_mt32_event,
 	&midi_mt32_delay,
+	&midi_mt32_reset_timer,
 	&midi_mt32_allstop,
 	&midi_mt32_volume,
 	&midi_mt32_reverb,

@@ -113,24 +113,23 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 			memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
 
 		gfxr_draw_pic1(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id);
-	} else
-	{
-	if (need_unscaled)
-		gfxr_draw_pic0(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id);
+	} else {
+		if (need_unscaled)
+			gfxr_draw_pic0(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id);
 
-	if (scaled_pic && scaled_pic->undithered_buffer)
-		memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
+		if (scaled_pic && scaled_pic->undithered_buffer)
+			memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
 
-	gfxr_draw_pic0(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id);
-	if (need_unscaled)
-		gfxr_remove_artifacts_pic0(scaled_pic, unscaled_pic);
+		gfxr_draw_pic0(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id);
+		if (need_unscaled)
+			gfxr_remove_artifacts_pic0(scaled_pic, unscaled_pic);
 
-	if (!scaled_pic->undithered_buffer)
-		scaled_pic->undithered_buffer = sci_malloc(scaled_pic->undithered_buffer_size);
+		if (!scaled_pic->undithered_buffer)
+			scaled_pic->undithered_buffer = sci_malloc(scaled_pic->undithered_buffer_size);
 
-	memcpy(scaled_pic->undithered_buffer, scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer_size);
+		memcpy(scaled_pic->undithered_buffer, scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer_size);
 
-	gfxr_dither_pic0(scaled_pic, state->options->pic0_dither_mode, state->options->pic0_dither_pattern);
+		gfxr_dither_pic0(scaled_pic, state->options->pic0_dither_mode, state->options->pic0_dither_pattern);
 	}
 
 	/* Mark default palettes */

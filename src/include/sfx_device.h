@@ -82,9 +82,17 @@ typedef struct _midi_writer {
 	** Parameters: (int) ticks: Number of 60 Hz ticks to sleep
 	*/
 
-	void (*flush)(struct _midi_writer *self);
+	void (*flush)(struct _midi_writer *self); /* May be NULL */
 	/* Flushes the MIDI file descriptor
 	** Parameters: (midi_writer_t *) self: Self reference
+	*/
+
+	void (*reset_timer)(struct _midi_writer *self);
+	/* Resets the timer associated with this device
+	** Parameters: (midi_writer_t *) self: Self reference
+	** This function makes sure that a subsequent write would have effect
+	** immediately, and any delay() would be relative to the point in time
+	** this function was invoked at.
 	*/
 
 	void (*close)(struct _midi_writer *self);

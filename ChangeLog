@@ -1,3 +1,15 @@
+2003-07-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/player/realtime.c (rt_set_iterator): Reset the output
+	driver's timer when starting songs
+
+	* src/sfx/seq/mt32.c (delay_init): Pause program execution if an
+	attached MT-32 still needs programming
+
+	* src/include/sfx_sequencer.h: Added sfx_sequencer_t::reset_timer()
+
+	* src/include/sfx_device.h: Added midi_writer_t::reset_timer()
+
 2003-07-26  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/include/hashmap.h: Build fixes for gcc 3.3

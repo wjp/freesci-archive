@@ -45,7 +45,7 @@ static void
 _set_tempo()
 {
 	int resolution = 60;
-	int tempo = 60;
+	int tempo = 1;
 	snd_seq_queue_tempo_t *queue_tempo;
 
 	snd_seq_queue_tempo_malloc(&queue_tempo);
@@ -142,10 +142,23 @@ amwrite(midi_writer_t *self, unsigned char *buf, int len)
 	snd_seq_ev_set_subs(&evt); /* Broadcast to all subscribers */
 
 	snd_midi_event_encode(parser, buf, len, &evt);
-	snd_seq_ev_schedule_tick(&evt, queue,  1, delta);
-	delta = 0;
+	snd_seq_ev_schedule_tick(&evt, queue, 0, delta);
 
 	snd_seq_event_output_direct(seq, &evt);
+
+#if 0
+	{
+		snd_seq_queue_status_t *status;
+		snd_seq_queue_status_malloc(&status);
+
+		snd_seq_get_queue_status(seq, queue, status);
+		//snd_seq_tick_time_t snd_seq_queue_status_get_tick_time(const snd_seq_queue_status_t *info);
+		fprintf(stderr, "Queue at %d/%d\n", delta, snd_seq_queue_status_get_tick_time(status));
+
+		snd_seq_queue_status_free(status);
+	}
+#endif
+
 
 	return SFX_OK;
 }
@@ -157,9 +170,27 @@ amdelay(midi_writer_t *self, int ticks)
 }
 
 static void
-amflush(midi_writer_t *self)
+amreset_timer(midi_writer_t *self)
 {
 	snd_seq_drain_output(seq);
+	snd_seq_stop_queue(seq, queue, NULL);
+
+
+	{
+		snd_seq_event_t evt;
+		snd_seq_ev_clear(&evt);
+		snd_seq_ev_set_source(&evt, port_out);
+		snd_seq_ev_set_subs(&evt); /* Broadcast to all subscribers */
+
+		snd_seq_ev_set_queue_pos_tick(&evt, queue, 0);
+
+		snd_seq_event_output_direct(seq, &evt);
+	}
+	delta = 0;
+
+
+
+	snd_seq_start_queue(seq, queue, NULL);
 }
 
 static void
@@ -176,7 +207,8 @@ midi_writer_t sfx_device_midi_alsa = {
 	amsetopt,
 	amwrite,
 	amdelay,
-	amflush,
+	NULL,
+	amreset_timer,
 	amclose,
 };
 
