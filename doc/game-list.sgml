@@ -21,6 +21,7 @@
 			<row><entry>Hoyle's Book of Games 1</entry><entry>cardGames</entry><entry>0.000.530</entry><entry>?</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
 			<row><entry>Hero's Quest 1</entry><entry>HQ</entry><entry>0.000.566</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
 			<row><entry>Leisure Suit Larry 3</entry><entry>LSL3</entry><entry>0.000.572</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
+			<row><entry>Hoyle's Book of Games 2</entry><entry>solitare</entry><entry>0.000.572</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
 			<row><entry>Quest for Glory 1</entry><entry>Glory</entry><entry>0.000.629</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
 			<row><entry>The Colonel's Bequest</entry><entry>CB1</entry><entry>0.000.631</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
 			<row><entry>Codename: Iceman</entry><entry>iceMan</entry><entry>0.000.668</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
@@ -140,8 +141,14 @@
 			<tbody>
 			<row><entry>Eco Quest 1 demo</entry><entry>?</entry><entry>x.yyy.zzz</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
 			<row><entry>Laura Bow 2 demo</entry><entry>?</entry><entry>x.yyy.zzz</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
+			<row><entry>Hoyle's Book of Games 3</entry><entry>?</entry><entry>x.yyy.zzz</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
 			<row><entry>Quest for Glory 3 demo</entry><entry>?</entry><entry>1.001.021</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
 			<row><entry>LSL: Crazy Nick's Budget Picks</entry><entry>?</entry><entry>1.001.029</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
+			<row><entry>Robin Hood's Games of Skill and Chance</entry><entry>?</entry><entry>1.001.029</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
+			<row><entry>Parlor Games with Laura Bow</entry><entry>?</entry><entry>1.001.029</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
+			<row><entry>King Graham's Board Game Challenge</entry><entry>?</entry><entry>1.001.029</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
+			<row><entry>Leisure Suit Larry's Casino</entry><entry>?</entry><entry>1.001.029</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
+			<row><entry>Roger Wilco's Spaced Out Game Pack</entry><entry>?</entry><entry>1.001.029</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
 			<row><entry>Police Quest 1</entry><entry>?</entry><entry>1.001.029</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
 			<row><entry>Quest for Glory 1 demo</entry><entry>?</entry><entry>1.001.029</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
 			<row><entry>Quest for Glory 3</entry><entry>?</entry><entry>1.001.050</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>

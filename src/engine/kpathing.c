@@ -73,6 +73,7 @@ kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int starty = SKPV(1);
 
 	switch (argc) {
+
 	case 3 :
 	{
 		reg_t polygon = argv[2];
@@ -80,7 +81,7 @@ kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 		SCIkwarn(SCIkWARNING, "Fix me: Inside-polygon test needed!\n");
 		return NULL_REG; /* Is (startx,starty) inside the polygon? */
 		break;
-	}		
+	}
 	case 6 :
 	case 7 :
 	{
@@ -106,5 +107,11 @@ kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		return output; /* Memory is freed by explicit calls to Memory */
 	}
+
+	default:
+		SCIkwarn(SCIkWARNING, "Unknown AvoidPath subfunction %d\n",
+			 argc);
+		return NULL_REG;
+		break;
 	}
 }

@@ -1,3 +1,16 @@
+2004-02-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci.sgml: Added game information contributed by Jonathan
+	Gray
+
+	* src/scicore/vocab.c (vocab_get_words_sci1): Added more error
+	checking to avoid out-of-bounds reads
+
+	* src/engine/kpathing.c (kAvoidPath): Added default handler
+
+	* src/sfx/mixer/soft.c: Added 'additional_frames' write-ahead
+	indicator variable
+
 2004-02-05  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/iterator.c (_sci1_handle_message): memcpy'd cloned PCM

@@ -37,7 +37,8 @@
 #define SIPFX __FILE__" : "
 
 
-static const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
+static const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0,
+				    2, 2, 2, 2, 1, 1, 2, 0};
 
 #define PLAYMASK_NONE 0xffff
 
@@ -519,6 +520,7 @@ _sci1_sample_init(sci1_song_iterator_t *self, int offset)
 	int length;
 	int begin;
 	int end;
+SCI_MEMTEST;
 
 	CHECK_FOR_END_ABSOLUTE(offset + 10);
 	if (self->data[offset + 1] != 0)
@@ -549,6 +551,7 @@ _sci1_sample_init(sci1_song_iterator_t *self, int offset)
 
 	sample->next = *seekerp;
 	*seekerp = sample;
+SCI_MEMTEST;
 
 	return 0; /* Everything's fine */
 }
@@ -559,6 +562,7 @@ _sci1_song_init(sci1_song_iterator_t *self)
 	sci1_sample_t *seeker;
 	int last_time;
 
+SCI_MEMTEST;
 	self->channels_nr = 0;
 	self->offset = 0;
 	self->next_sample = 0;
@@ -656,6 +660,7 @@ _sci1_song_init(sci1_song_iterator_t *self)
 
 	_sci1_resume_all_channels_from_waiting_to_loop(self);
 
+SCI_MEMTEST;
 	return 0; /* Success */
 }
 
@@ -790,6 +795,7 @@ _sci1_get_pcm(sci1_song_iterator_t *self,
 		sci_free(sample);
 
 		self->state = SI_STATE_DELTA_TIME;
+SCI_MEMTEST;
 		return retval;
 	} else
 		return NULL;
@@ -933,10 +939,12 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 /* 			fprintf(stderr, "Cloning %p -> %p (%d,n*%d)\n", self, mem, sizeof(sci1_song_iterator_t), sizeof(sci1_sample_t)); */
 
 			memcpy(mem, self, sizeof(sci1_song_iterator_t));
+SCI_MEMTEST;
 			samplep = &(mem->next_sample);
 
 			mem->data = sci_malloc(mem->size);
 			memcpy(mem->data, self->data, self->size);
+SCI_MEMTEST;
 
 /* 			{ */
 /* 				sci1_sample_t *seeker = self->next_sample; */
@@ -956,6 +964,7 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 				*samplep = newsample;
 				samplep = &(newsample->next);
 			}
+SCI_MEMTEST;
 
 			return (struct _song_iterator *) mem; /* Assume caller has another copy of this */
 		}

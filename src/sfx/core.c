@@ -282,8 +282,8 @@ sfx_init(sfx_state_t *self, resource_mgr_t *resmgr)
 	/*-------------------*/
 
 	if (player->init(resmgr, timer? timer->delay_ms : 0)) {
-		player = NULL;
 		sciprintf("[SFX] Song player '%s' reported error, disabled\n", player->name);
+		player = NULL;
 	}
 
 	if (!player)

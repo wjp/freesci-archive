@@ -73,67 +73,69 @@ _vocab_cmp_words(const void *word1, const void *word2)
 word_t **
 vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 {
-  int counter = 0;
-  unsigned int seeker;
-  word_t **words;
+	int counter = 0;
+	unsigned int seeker;
+	word_t **words;
 
-  char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
-  int currentwordpos = 0;
+	char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
+	int currentwordpos = 0;
 
-  resource_t *resource = scir_find_resource(resmgr, sci_vocab,
-					    VOCAB_RESOURCE_SCI1_MAIN_VOCAB, 0);
-  vocab_version = 1;
+	resource_t *resource = scir_find_resource(resmgr, sci_vocab,
+						  VOCAB_RESOURCE_SCI1_MAIN_VOCAB, 0);
+	vocab_version = 1;
 
-  if (!resource) {
-    fprintf(stderr,"SCI1: Could not find a main vocabulary!\n");
-    return NULL; /* NOT critical: SCI1 games and some demos don't have one! */
-  }
+	if (!resource) {
+		fprintf(stderr,"SCI1: Could not find a main vocabulary!\n");
+		return NULL; /* NOT critical: SCI1 games and some demos don't have one! */
+	}
 
-  seeker = 0x1fe; /* vocab.900 starts with 255 16-bit pointers which we don't use */
+	seeker = 0x1fe; /* vocab.900 starts with 255 16-bit pointers which we don't use */
 
-  if (resource->size < 510) {
-    fprintf(stderr, "Invalid main vocabulary encountered: Too small\n");
-    return NULL;
-    /* Now this ought to be critical, but it'll just cause parse() and said() not to work */
-  }
+	if (resource->size < 510) {
+		fprintf(stderr, "Invalid main vocabulary encountered: Too small\n");
+		return NULL;
+		/* Now this ought to be critical, but it'll just cause parse() and said() not to work */
+	}
 
-  words = sci_malloc(sizeof(word_t *));
+	words = sci_malloc(sizeof(word_t *));
 
-  while (seeker < resource->size) {
-    byte c;
+	while (seeker < resource->size) {
+		byte c;
 
-    words = sci_realloc(words, (counter + 1) * sizeof(word_t *));
+		words = sci_realloc(words, (counter + 1) * sizeof(word_t *));
 
-    currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
+		currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
 
-    do {
-      c = resource->data[seeker++];
-      currentword[currentwordpos++] = c;
-    } while (c);
+		do {
+			c = resource->data[seeker++];
+			currentword[currentwordpos++] = c;
+		} while (seeker < resource->size
+			 && currentwordpos < 255
+			 && c);
 
-    currentword[currentwordpos] = 0;
+		currentword[currentwordpos] = 0;
 
-    words[counter] = sci_malloc(sizeof(word_t) + currentwordpos);
-    /* Allocate more memory, so that the word fits into the structure */
+		words[counter] = sci_malloc(sizeof(word_t) + currentwordpos);
+		/* Allocate more memory, so that the word fits into the structure */
 
-    strcpy(&(words[counter]->word[0]), &(currentword[0])); /* Copy the word */
+		strcpy(&(words[counter]->word[0]), &(currentword[0])); /* Copy the word */
 
-    /* Now decode class and group: */
-    c = resource->data[seeker + 1];
-    words[counter]->w_class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
-    words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
+		/* Now decode class and group: */
+		c = resource->data[seeker + 1];
+		words[counter]->w_class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
+		words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
 
-    ++counter;
+		++counter;
 
-    seeker += 3;
+		seeker += 3;
 
-  }
+	}
 
-  *word_counter = counter;
+	*word_counter = counter;
 
-  qsort(words, counter, sizeof(word_t *), _vocab_cmp_words); /* Sort entries */
+	qsort(words, counter, sizeof(word_t *), _vocab_cmp_words); /* Sort entries */
 
-  return words;
+	return words;
 }
 
 

@@ -281,6 +281,10 @@ gfxr_interpreter_get_palette(gfx_resstate_t *state, int version, int *colors_nr,
 	case SCI_VERSION_32 :
 		GFX_DEBUG("Palettes are not yet supported in this SCI version\n");
 		return NULL;
+
+	default:
+		BREAKPOINT();
+		return NULL;
 	}
 }
 

@@ -45,6 +45,7 @@
 #define MAX_DELTA_OBSERVATIONS 1000000 /* Number of times the mixer is called before we assume we truly understand timing */
 
 static int diagnosed_too_slow = 0;
+static int additional_frames = 1024; /* Additional frames to write ahead, into the queue */
 
 struct mixer_private {
 	byte *outbuf; /* Output buffer to write to the PCM device next time */
@@ -401,7 +402,7 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 	if (played_frames > P->max_delta)
 		P->max_delta = played_frames;
 
-	free_frames = self->dev->buf_size - played_frames;
+	free_frames = self->dev->buf_size - played_frames + additional_frames;
 
 	if (free_frames > self->dev->buf_size) {
 		if (!diagnosed_too_slow) {
