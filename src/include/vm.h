@@ -142,9 +142,11 @@ typedef struct
   int cue;
   int number;
 
-  int max, cursor, claimed; /* Used by EditControl */
+  int max, cursor; /* Used by EditControl */
 
   int wordFail, syntaxFail, semanticFail; /* Used by Parse() */
+
+  int claimed; /* Used generally by the event mechanism */
 
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 

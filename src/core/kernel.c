@@ -1072,6 +1072,7 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   SCIkdebug(SCIkSTUB,"stub\n");
+  
   s->acc = 0; /* Never true */
 }
 
@@ -1117,7 +1118,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (syntax_fail) {
 
       s->acc = 1;
-      PUT_SELECTOR(event, type, 0);
+      PUT_SELECTOR(event, claimed, 1);
       invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 2, s->parser_base, stringpos);
       /* Issue warning */
 
@@ -1131,7 +1132,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
   } else {
 
     s->acc = 0;
-    PUT_SELECTOR(event, type, 0);
+    PUT_SELECTOR(event, claimed, 1);
     if (error) {
 
       strcpy(s->heap + s->parser_base, error);
@@ -2086,7 +2087,8 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
   ** resource.
   */
 
-  strcpy(s->heap + (s->acc = UPARAM(2)), seeker); /* Copy the string and get return value */
+  s->acc = UPARAM(2);
+  strcpy(s->heap + UPARAM(2), seeker); /* Copy the string and get return value */
 }
 
 void
