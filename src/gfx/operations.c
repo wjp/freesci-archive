@@ -1680,20 +1680,23 @@ gfxop_get_event(gfx_state_t *state, unsigned int mask)
 	} else {
 		event.type = 0;
 
-		do {
-			if (event.type) {
-				*seekerp = sci_malloc(sizeof(gfx_input_event_t));
-				(*seekerp)->next = NULL;
-
-				event.data = (char) (event.data);
-				/* Clip illegal bits */
-
-				(*seekerp)->event = event;
-				seekerp = &((*seekerp)->next);
-			}
-			event = state->driver->get_event(state->driver);
-
-		} while (event.type && !(event.type & mask));
+		if (!(mask & SCI_EVT_NONBLOCK))
+		{
+			do {
+				if (event.type) {
+					*seekerp = sci_malloc(sizeof(gfx_input_event_t));
+					(*seekerp)->next = NULL;
+					
+					event.data = (char) (event.data);
+					/* Clip illegal bits */
+					
+					(*seekerp)->event = event;
+					seekerp = &((*seekerp)->next);
+				}
+				event = state->driver->get_event(state->driver);
+				
+			} while (event.type && !(event.type & mask));
+		}
 	}
 
 	if (_gfxop_full_pointer_refresh(state)) {

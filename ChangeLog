@@ -1,5 +1,8 @@
 2004-03-04  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/gfx/operations.c (gfxop_get_event): Add support for
+	SCI_EVT_NONBLOCK flag. 
+
 	* src/engine/kevent.c (kGetEvent): Fix bug so the 'se' command
 	also breaks on mouse clicks.
 
