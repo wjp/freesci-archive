@@ -110,6 +110,16 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	if (!IS_VALID_FD(fd))
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 
+	read(fd, &buf, 4);
+	if (buf[0] == 0x80 ||
+	    buf[1] % 3 == 0 ||
+	    buf[3] == 0x81)
+	{
+		close(fd);
+		return SCI_ERROR_INVALID_RESMAP_ENTRY;
+	}
+
+	lseek(fd, 0, SEEK_SET);
 	if ((fsize = sci_fd_size(fd)) < 0) {
 		perror("Error occured while trying to get filesize of resource.map");
 		return SCI_ERROR_RESMAP_NOT_FOUND;
@@ -225,10 +235,13 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	memset(types, 0, sizeof(int) * sci1_last_resource);
 
 	if (!(ofs=header_size=sci1_parse_header(fd, types)))
+	{
+		close(fd);
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
-
+	}
 	if ((fsize = sci_fd_size(fd)) < 0) {
 		perror("Error occured while trying to get filesize of resource.map");
+		close(fd);
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 	}
 

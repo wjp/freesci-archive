@@ -513,7 +513,6 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 	gfx_resource_t *res = NULL;
 	int hash;
 
-	nr = GFX_FONT_BUILTIN_6x10;
 	if (nr == GFX_FONT_BUILTIN_5x8)
 		return &gfxfont_5x8;
 	else if (nr == GFX_FONT_BUILTIN_6x10)
