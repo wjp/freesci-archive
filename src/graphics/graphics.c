@@ -90,7 +90,7 @@ gfx_driver_t *gfx_drivers[] =
   &gfx_driver_ddraw,
 #endif
 #ifdef HAVE_GLX
-  &gfx_driver_glx
+  &gfx_driver_glx,
 #endif
   NULL
 };

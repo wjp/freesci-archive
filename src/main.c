@@ -68,6 +68,8 @@ extern int _debugstate_valid;
 extern int _debug_seeking;
 extern int _debug_step_running;
 
+char *requested_gfx_driver = NULL;
+
 int
 c_quit(state_t *s)
 {
@@ -137,6 +139,7 @@ static struct option options[] = {
   {"run", no_argument, &script_debug_flag, 0 },
   {"debug", no_argument, &script_debug_flag, 1 },
   {"sci-version", required_argument, 0, 'V'},
+  {"graphics", required_argument, 0, 'g'},
   {"version", no_argument, 0, 'v'},
   {"help", no_argument, 0, 'h'},
   {0,0,0,0}
@@ -161,9 +164,9 @@ main(int argc, char** argv)
   getcwd(startdir, PATH_MAX);
 
 #ifdef HAVE_GETOPT_H
-  while ((c = getopt_long(argc, argv, "rd:v:", options, &optindex)) > -1)
+  while ((c = getopt_long(argc, argv, "rhd:V:g:", options, &optindex)) > -1)
 #else /* !HAVE_GETOPT_H */
-  while ((c = getopt(argc, argv, "rd:v:")) > -1)
+  while ((c = getopt(argc, argv, "rhd:V:g:")) > -1)
 #endif /* !HAVE_GETOPT_H */
   {
     switch (c)
@@ -189,6 +192,12 @@ main(int argc, char** argv)
       }
       break;
 
+    case 'g':
+      if (requested_gfx_driver)
+	free(requested_gfx_driver);
+      requested_gfx_driver = strdup(optarg);
+      break;
+
     case 0: /* getopt_long already did this for us */
     case '?':
       /* getopt_long already printed an error message. */
@@ -202,17 +211,32 @@ main(int argc, char** argv)
       printf("Usage: sciv [options] [game name]\n"
              "Run a Sierra SCI game.\n"
              "\n"
-             "  --gamedir dir	-ddir  read game resources from dir\n"
-             "  --run		-r     do not start the debugger\n"
-             "  --sci-version	-Vver  set the version of sciv to emulate\n"
-             "  --version	-v     display version information and exit\n"
-	     "  --debug                Start up with the debugger enabled\n"
-             "  --help	        -h     display this help text and exit\n"
+             "  --gamedir dir	-ddir	read game resources from dir\n"
+             "  --run		-r	do not start the debugger\n"
+             "  --sci-version	-Vver	set the version of sciv to emulate\n"
+             "  --version	-v	display version information and exit\n"
+	     "  --debug			Start up with the debugger enabled\n"
+             "  --help		-h	display this help text and exit\n"
+	     "  --graphics=gfx  -ggfx	Use the 'gfx' graphics driver\n"
 	     "\n"
 	     "The game name, if provided, must be equal to a game name as specified in the "
 	     "FreeSCI config file.\n"
 	     "It is overridden by --gamedir.\n"
+	     "\n"
+	     "This version of FreeSCI was compiled with support for the following graphics "
+	     "drivers:\n["
              );
+      i = 0;
+      while (gfx_drivers[i]) {
+	if (i != 0)
+	  printf(", ");
+
+	printf(gfx_drivers[i]->Name);
+
+	i++;
+      }
+      printf("]\n");
+
       return 0;
 
     default:
@@ -328,6 +352,23 @@ main(int argc, char** argv)
 
   sci_color_mode = conf[conf_nr].color_mode;
   gamestate->gfx_driver = conf[conf_nr].gfx_driver;
+
+  if (requested_gfx_driver) {
+    int i = 0, j = -1;
+
+    while ((j == -1) && gfx_drivers[i]) {
+      if (g_strcasecmp(gfx_drivers[i]->Name, requested_gfx_driver) == 0)
+	j = i;
+      i++;
+    }
+
+    if (i == -1) {
+      fprintf(stderr,"Unsupported graphics subsystem: %s\n", requested_gfx_driver);
+      return 1;
+    } 
+    else gamestate->gfx_driver = gfx_drivers[j];
+  }
+
   if (strlen (conf[conf_nr].debug_mode))
     set_debug_mode (gamestate, 1, conf[conf_nr].debug_mode);
 

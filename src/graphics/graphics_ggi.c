@@ -404,13 +404,9 @@ libggi_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
 int
 libggi_init(state_t *s, picture_t pic)
 {
-memtest("Before ggiInit()");
   ggiInit();
-memtest("After ggiInit()");
   s->graphics.ggi_visual = openVisual();
-memtest("After openVisual");
   memset(_null_rec, 0, NULL_REC_SIZE);
-memtest("After memset");
   return 0;
 }
 

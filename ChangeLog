@@ -1,5 +1,7 @@
 1999-11-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/core/kernel.c (kAddToPic): Now handles NULL lists.
+
 	* src/core/vm.c (run_vm): Changed behaviour of send-like functions
 	to accomodate for realloc() moving the execution stack.
 

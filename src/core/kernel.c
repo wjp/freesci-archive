@@ -2459,16 +2459,18 @@ void
 kNumLoops(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr obj = PARAM(0);
-  resource_t *viewres = findResource(sci_view, GET_SELECTOR(obj, view));
+  int view;
+  resource_t *viewres = findResource(sci_view, view = GET_SELECTOR(obj, view));
 
   CHECK_THIS_KERNEL_FUNCTION;
 
   if (!viewres) {
-    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
+    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", view, view);
     return;
   }
 
   s->acc = view0_loop_count(viewres->data);
+  SCIkdebug(SCIkGRAPHICS, "NumLoops(view.%d) = %d\n", view, s->acc);
 }
 
 
@@ -2488,6 +2490,7 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   s->acc = view0_cel_count(loop, viewres->data);
+  SCIkdebug(SCIkGRAPHICS, "NumCels(view.%d, %d) = %d\n", view, loop, s->acc);
 }
 
 void
@@ -3250,8 +3253,13 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr list = PARAM(0);
   CHECK_THIS_KERNEL_FUNCTION;
 
-  if (s->pic_views_nr)
+  if (s->pic_views_nr) {
     free(s->pic_views);
+    s->pic_views = NULL;
+  }
+
+  if (!list)
+    return;
 
   SCIkdebug(SCIkGRAPHICS, "Preparing list...\n");
   s->pic_views = _k_make_view_list(s, list, &(s->pic_views_nr), 0, funct_nr, argc, argp);
@@ -3275,6 +3283,10 @@ void
 kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   unsigned int newport = PARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  graph_update_port(s, s->ports[s->view_port]); /* Update the port we're leaving */
 
   if ((newport >= MAX_PORTS) || (s->ports[newport] == NULL)) {
     SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", newport);
@@ -3304,6 +3316,9 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", PARAM(0));
     return;
   }
+
+  SCIkdebug(SCIkGRAPHICS, "DrawCel((%d,%d), (view.%d, %d, %d), p=%d)\n", x, y, PARAM(0), loop,
+	    cel, priority);
 
   draw_view0(s->pic, s->ports[s->view_port], x, y, priority, loop, cel, 0, view->data);
 }
@@ -3351,6 +3366,8 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
     KERNEL_OOPS("Out of window/port handles in kNewWindow! Increase MAX_PORTS in engine.h\n");
     return;
   }
+
+  graph_update_port(s, s->ports[s->view_port]); /* Update the port we're leaving */
 
   wnd = calloc(sizeof(port_t), 1);
 

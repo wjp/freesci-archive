@@ -31,7 +31,7 @@ AC_PATH_PNG
 
 AC_ARG_WITH(efence,
 	[  --with-efence            link against libefence (for debugging)],
-	 [LIBS="$LIBS -lefence"],
+	[LIBS="$LIBS -lefence"],
 	[LIBS="$LIBS -lc"])
 
 AC_C_PARAMETRIZED_BIGENDIAN

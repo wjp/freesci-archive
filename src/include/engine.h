@@ -46,7 +46,7 @@
 #include <ggi/ggi.h>
 #endif
 #ifdef HAVE_GLX
-#include <X11/Xlib.h>
+#include <graphics_glx.h>
 #endif
 
 #ifdef _WIN32
@@ -78,6 +78,16 @@ typedef struct
   char *data;
 } hunk_block_t; /* Used to store dynamically allocated "far" memory */
 
+
+#ifdef HAVE_GLX
+typedef struct
+{
+  Display *glx_display;
+  Window glx_window;
+  GLXContext glx_context;
+} glx_state_t;
+#endif
+
 typedef struct _state
 {
   byte *game_name; /* Designation of the primary object (which inherits from Game) */
@@ -91,7 +101,7 @@ typedef struct _state
     ggi_visual_t ggi_visual; /* for libggi */
 #endif /* HAVE_LIBGGI */
 #ifdef HAVE_GLX
-    Display *glx_display;
+    glx_state_t *glx_state;
 #endif
     int _dummy;
   } graphics;

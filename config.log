@@ -14,25 +14,39 @@ configure:927: checking whether the C compiler (gcc  ) works
 configure:943: gcc -o conftest    conftest.c  1>&5
 configure:969: checking whether the C compiler (gcc  ) is a cross-compiler
 configure:974: checking whether we are using GNU C
+configure:983: gcc -E conftest.c
 configure:1002: checking whether gcc accepts -g
 configure:1036: checking for ranlib
 configure:1064: checking how to run the C preprocessor
+configure:1085: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1147: checking for sys/soundcard.h
+configure:1157: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1187: checking for obstack.h
+configure:1197: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1227: checking for dirent.h
+configure:1237: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1267: checking for unistd.h
+configure:1277: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1307: checking for readline/readline.h
+configure:1317: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1347: checking for readline/history.h
+configure:1357: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1387: checking for getopt.h
+configure:1397: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1426: checking for pipe
+configure:1454: gcc -o conftest -g -O2   conftest.c  1>&5
 configure:1426: checking for socketpair
+configure:1454: gcc -o conftest -g -O2   conftest.c  1>&5
 configure:1426: checking for fork
+configure:1454: gcc -o conftest -g -O2   conftest.c  1>&5
 configure:1426: checking for sched_yield
+configure:1454: gcc -o conftest -g -O2   conftest.c  1>&5
 configure:1426: checking for memfrob
+configure:1454: gcc -o conftest -g -O2   conftest.c  1>&5
 configure:1480: checking for ggi
 configure:1527: gcc -E   conftest.c >/dev/null 2>conftest.out
 configure:1569: gcc -o conftest -g -O2    -lgii -lgg   conftest.c  1>&5
-/tmp/cc9ZxwYb.o: In function `main':
+/tmp/ccqgcl4z.o: In function `main':
 /home/jameson/work/port/freesci/configure:1565: undefined reference to `ggiInit'
 collect2: ld returned 1 exit status
 configure: failed program was:
@@ -47,7 +61,7 @@ configure:1569: gcc -o conftest -g -O2  -lggi  -lgii -lgg   conftest.c  1>&5
 configure:1616: checking for (n)curses
 configure:1671: gcc -E   conftest.c >/dev/null 2>conftest.out
 configure:1712: gcc -o conftest -g -O2      conftest.c  1>&5
-/tmp/ccLq1XZj.o: In function `main':
+/tmp/ccrqIVTl.o: In function `main':
 /home/jameson/work/port/freesci/configure:1708: undefined reference to `initscr'
 collect2: ld returned 1 exit status
 configure: failed program was:
@@ -61,15 +75,17 @@ configure:1712: gcc -o conftest -g -O2  -lncurses    conftest.c  1>&5
 configure:1759: checking for flex
 configure:1792: checking for flex
 configure:1826: checking for yywrap in -lfl
+configure:1845: gcc -o conftest -g -O2   conftest.c -lfl   1>&5
 configure:1868: checking lex output file root
 configure:1889: checking whether yytext is a pointer
+configure:1908: gcc -o conftest -g -O2   conftest.c  -lfl 1>&5
 configure:1982: checking for glib-config
 configure:2017: checking for GLIB - version >= 1.2.0
 configure:2116: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
 configure:2209: checking for libpng
 configure:2256: gcc -E   conftest.c >/dev/null 2>conftest.out
 configure:2297: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include      -L/usr/local/lib -lglib conftest.c  1>&5
-/tmp/ccR9g1jh.o: In function `main':
+/tmp/ccvWsLpA.o: In function `main':
 /home/jameson/work/port/freesci/configure:2293: undefined reference to `png_info_init'
 collect2: ld returned 1 exit status
 configure: failed program was:
@@ -81,3 +97,21 @@ png_info_init((png_infop)0);
 ; return 0; }
 configure:2297: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  -lpng    -L/usr/local/lib -lglib conftest.c  1>&5
 configure:2361: checking whether byte ordering is bigendian
+configure:2379: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure:2394: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure: In function `main':
+configure:2389: `not' undeclared (first use in this function)
+configure:2389: (Each undeclared identifier is reported only once
+configure:2389: for each function it appears in.)
+configure:2389: parse error before `big'
+configure: failed program was:
+#line 2383 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/param.h>
+int main() {
+
+#if BYTE_ORDER != BIG_ENDIAN
+ not big endian
+#endif
+; return 0; }
