@@ -382,3 +382,9 @@ songit_free(song_iterator_t *it)
 		sci_free(it);
 	}
 }
+
+void
+songit_set_loops(song_iterator_t *it, int loops)
+{
+	it->loops = loops;
+}

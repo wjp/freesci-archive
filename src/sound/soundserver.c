@@ -207,39 +207,52 @@ imap_set(unsigned int action, int instr, int value)
 		return;
 	}
 
-	if (action == SOUND_COMMAND_IMAP_SET_INSTRUMENT) {
-			if ((value >= (0) && value <= (MIDI_mappings_nr - 1))
-			    || value == NOMAP
-			    || value == RHYTHM)
-				MIDI_mapping[instr].gm_instr = (char)value;
-			else
-				fprintf(debug_stream,
-					"imap_set(): Invalid instrument ID: %d\n", value);
+	switch (action) {
 
-	} else if (action == SOUND_COMMAND_IMAP_SET_KEYSHIFT) {
-			SOUNDSERVER_IMAP_CHANGE(keyshift, -128, 127,
-				"key shift");
-
-	} else if (action == SOUND_COMMAND_IMAP_SET_FINETUNE) {
-			SOUNDSERVER_IMAP_CHANGE(finetune, -32768, 32767,
-			    "finetune value");
-
-	} else if (action == SOUND_COMMAND_IMAP_SET_BENDER_RANGE) {
-			SOUNDSERVER_IMAP_CHANGE(bender_range, -128, 127,
-			    "bender range");
-
-	} else if (action == SOUND_COMMAND_IMAP_SET_PERCUSSION) {
-			SOUNDSERVER_IMAP_CHANGE(gm_rhythmkey, 0, 79,
-			    "percussion instrument");
-
-	} else if (action == SOUND_COMMAND_IMAP_SET_VOLUME) {
-			SOUNDSERVER_IMAP_CHANGE(volume, 0, 100,
-			    "instrument volume");
-
-	} else {
+	case SOUND_COMMAND_IMAP_SET_INSTRUMENT:
+		if ((value >= (0) && value <= (MIDI_mappings_nr - 1))
+		    || value == NOMAP
+		    || value == RHYTHM)
+			MIDI_mapping[instr].gm_instr = (char)value;
+		else
 			fprintf(debug_stream,
-				"imap_set(): Invalid instrument map sound command: %d\n",
-				action);
+				"imap_set(): Invalid instrument ID: %d\n", value);
+		break;
+
+
+	case SOUND_COMMAND_IMAP_SET_KEYSHIFT:
+		SOUNDSERVER_IMAP_CHANGE(keyshift, -128, 127,
+					"key shift");
+		break;
+
+
+	case SOUND_COMMAND_IMAP_SET_FINETUNE:
+		SOUNDSERVER_IMAP_CHANGE(finetune, -32768, 32767,
+					"finetune value");
+		break;
+
+
+	case SOUND_COMMAND_IMAP_SET_BENDER_RANGE:
+		SOUNDSERVER_IMAP_CHANGE(bender_range, -128, 127,
+					"bender range");
+		break;
+
+
+	case SOUND_COMMAND_IMAP_SET_PERCUSSION:
+		SOUNDSERVER_IMAP_CHANGE(gm_rhythmkey, 0, 79,
+					"percussion instrument");
+		break;
+
+
+	case SOUND_COMMAND_IMAP_SET_VOLUME:
+		SOUNDSERVER_IMAP_CHANGE(volume, 0, 100,
+					"instrument volume");
+		break;
+
+	default:
+		fprintf(debug_stream,
+			"imap_set(): Invalid instrument map sound command: %d\n",
+			action);
 	}
 }
 

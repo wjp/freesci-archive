@@ -90,7 +90,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 		if (ss_state->current_song)
 			if (ss_state->current_song->fading == 0) { /* Finished fading out the current song? */
 #ifdef DEBUG_SOUND_SERVER
-				printf("Song %04x faded out\n", ss_state->current_song->handle);
+				fprintf(debug_stream, "Song %04x faded out\n", ss_state->current_song->handle);
 #endif
 				ss_state->current_song->status = SOUND_STATUS_STOPPED;
 				global_sound_server->queue_command(ss_state->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
@@ -497,6 +497,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 		if (ss_state->current_song && ss_state->current_song->data) { /* If we have a current song */
 			int newcmd;
 			guint8 param, param2 = 0;
+			fprintf(stderr, "--NEW--[Handle %04x ---- pos = %04x]\n", ss_state->current_song->handle, ss_state->current_song->pos);
 
 			newcmd = ss_state->current_song->data[ss_state->current_song->pos]; /* Retreive MIDI command */
 
@@ -516,6 +517,9 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 
 				} else { /* Finished */
 
+#ifdef DEBUG_SOUND_SERVER
+					fprintf(debug_stream, "finishining handle %04d\n", ss_state->current_song->handle);
+#endif
 					global_sound_server->queue_command(ss_state->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
 					global_sound_server->queue_event(ss_state->current_song->handle, SOUND_SIGNAL_LOOP, -1);
 					ticks_to_wait = 1; /* Wait one tick, then continue with next song */

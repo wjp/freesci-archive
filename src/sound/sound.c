@@ -347,8 +347,8 @@ song_new(word handle, byte *data, int size, int priority)
 void
 song_lib_add(songlib_t songlib, song_t *song)
 {
-	song_t *seeker	= NULL;
-	int pri			= song->priority;
+	song_t *seeker = NULL;
+	int pri	= song->priority;
 
 	if (NULL == song)
 	{

@@ -400,7 +400,7 @@ sound_eq_peek_event(sound_eq_t *queue);
 */
 
 void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,
-		guint8 param2, int *ccc);
+		      guint8 param2, int *ccc);
 /* Performs a regular midi event in the song.
 ** Parameters: (FILE *) debugstream: The stream to write all debug information to
 **             (song_t *) song: The song to play the event from
@@ -593,23 +593,65 @@ sound_server_find_driver(char *name);
 */
 
 
-/*********************************/
-/*    Sound server operations    */
-/*********************************/
+/***********************************/
+/*-- Sound server core functions --*/
+/***********************************/
 
-void sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state);
-/* Starts the sci0 polled sound server.
-** Parameters: (int) reverse_stereo: Reverse stereo setting
-**             (sound_server_state_t *) ss_state: Sound server state
-** Returns   : (void)
+/* The following functions should be used directly by sound server
+** implementors, if possible- they implement processing commands
+** and doing 'regular' maintenance, i.e. playing notes at regular
+** intervals.
+*/
+
+sound_server_state_t *
+snd_new_server_state(void);
+/* Creates a new sound server state structure
+** Parameters: (void)
+** Returns   : (sound_server_state_t *)
 */
 
 void
-sci0_event_ss(sound_server_state_t *ss_state);
-/* Starts the sci0 event sound server.
-**             (sound_server_state_t *) ss_state: Sound server state
+snd_free_server_state(sound_server_state_t *state);
+/* Destroys a sound server state structure
+** Parameters: (sound_server_state_t *) state: The state to destroy
 ** Returns   : (void)
+** Typically only called during sound server shutdown.
 */
+
+#define SND_SRV_PLAY_INDEF -1
+
+gint32
+snd_srv_play(sound_server_t *s, sound_server_state_t *state);
+/* Determines whether a MIDI command should be processed and, if positive, does so
+** Parameters: (sound_server_t *) s: The sound server to operate with
+**             (sound_server_state_t *) state: Pointer to a structure storing
+**                                      internal state information
+** Returns   : (int32) The number of microseconds the server should wait before
+**                     calling this function again, or SND_SRV_PLAY_INDEF to wait
+**                     indefinitely.
+** snd_srv_play() MAY be called before the time has passed; it will then decide whether
+** to return without doing anything or to ignore the timing inaccuracy.
+** When SND_SRV_PLAY_INDEF is returned, the caller only needs to wait for incoming
+** commands and should call snd_srv_process() before even bothering with snd_srv_play().
+** s->queue_event() is called from here on occasion, to send back events.
+*/
+
+void
+snd_srv_process(sound_server_t *s, sound_server_state_t *state, sound_event_t cmd);
+/* Processes a sound server command
+** Parameters: (sound_server_t *) s: The sound server
+**             (sound_server_state_t *) state: Sound server state
+**             (sound_event_t) cmd: The sound command to process
+** Returns   : (void)
+** This function must be invoked with 'cmd' filled out whenever a command was
+** received. 
+** s->queue_event() is called from here on occasion, to send back events.
+** snd_srv_play() should be called immediately after snd_srv_process().
+*/
+
+/***********************************************/
+/*-- Operations utilized by the sound server --*/
+/***********************************************/
 
 void
 init_handle(int priority, word song_handle, sound_server_state_t *ss_state);
