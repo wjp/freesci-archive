@@ -3379,13 +3379,15 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 
 #endif
 #ifdef HAVE_FORK
-		if (commandstring[0] != '.') {
+		if (commandstring
+		    && commandstring[0] != '.') {
 			codebug_send_command(commandstring + skipfirst);
 			codebug_send_command("\n");
 		}
 #endif
-		if (commandstring[0] != ':')
-			con_parse(s, commandstring + skipfirst);
+		if (commandstring
+		    && commandstring[0] != ':')
+		  con_parse(s, commandstring + skipfirst);
 		sciprintf("\n");
 
 		/* Resume music playing */
