@@ -237,9 +237,9 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 /**** Controls ****/
 /*----------------*/
 static inline rect_t
-_move_and_extend_rect(rect_t rect, point_t point)
+_move_and_extend_rect(rect_t rect, point_t point, int yplus)
 {
-	return gfx_rect(rect.x + point.x, rect.y + point.y, rect.xl + 1, rect.yl + 1);
+	return gfx_rect(rect.x + point.x, rect.y + point.y, rect.xl + 1, rect.yl + yplus);
 }
 
 
@@ -312,7 +312,7 @@ gfxw_list_t *
 sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font,
 		      gfx_alignment_t align, char framed, char inverse)
 {
-	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 2), 0);
 
 	gfxw_set_id(GFXW(list), ID);
 
@@ -327,7 +327,7 @@ gfxw_list_t *
 sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, int cursor,
 		      char inverse)
 {
-	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 	gfxw_text_t *text_handle;
 	int draw_cursor;
 	int foo;

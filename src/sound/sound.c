@@ -135,7 +135,7 @@ sound_get_event(state_t *s)
 	int inplen;
 	int success;
 	GTimeVal waittime = {0, 0};
-	GTimeVal waittime2 = {1, 0};
+	GTimeVal waittime2 = {0, SOUND_SERVER_TIMEOUT};
 	char debug_buf[65];
 	sound_event_t *event = xalloc(sizeof(sound_event_t));
 
@@ -155,10 +155,10 @@ sound_get_event(state_t *s)
 
 	}
 
+	sound_command(s, SOUND_COMMAND_GET_NEXT_EVENT, 0, 0);
+
 	FD_ZERO(&inpfds);
 	FD_SET(s->sound_pipe_events[0], &inpfds);
-
-	sound_command(s, SOUND_COMMAND_GET_NEXT_EVENT, 0, 0);
 	success = select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2);
 
 	if (success && read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {

@@ -44,7 +44,6 @@ int midiout_alsaraw_open()
 	int err;
 	char devname[16];
 	sprintf(devname, "hw:%d,%d", card, device);
-	fprintf(stderr,"Opening new ALSA %s\n", devname);
 
 	if ((err = snd_rawmidi_open(NULL, &handle, devname, 0)) < 0) {
 		fprintf(stderr, "Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);

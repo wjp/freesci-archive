@@ -61,6 +61,8 @@ sound_null_init(state_t *s)
 	int child_pid;
 	pid_t ppid;
 	int fd_in[2], fd_out[2], fd_events[2], fd_debug[2];
+	resource_t *midi_patch;
+	 
 
 	sound_init_pipes(s);
 
@@ -70,10 +72,22 @@ sound_null_init(state_t *s)
 	memcpy(&fd_debug, &(s->sound_pipe_debug), sizeof(int)*2);
 
 	ppid = getpid(); /* Get process ID */
-	child_pid = fork();
+	midi_patch = findResource(9,midi_patchfile);
+
+	if (midi_patch == NULL) {
+		sciprintf("gack!  That patch (%03d) didn't load!\n", midi_patchfile);
+		if (midi_open(NULL, -1) < 0)
+			sciprintf("gack! The midi device failed to open cleanly!\n");
+		return -1;
+	} else if (midi_open(midi_patch->data, midi_patch->length) < 0) {
+		sciprintf("gack! The midi device failed to open cleanly!\n");
+		return -1;
+	}
 
 	s->sound_volume = 0xc;
 	s->sound_mute = 0;
+
+	child_pid = fork();
 
 	if (child_pid < 0) {
 		fprintf(stderr,"NULL Sound server init failed: fork() failed\n");
@@ -199,17 +213,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	int suspended = 0; /* Used to suspend the sound server */
 	GTimeVal suspend_time; /* Time at which the sound server was suspended */
 	int ppid = getppid(); /* Get parent PID */
-
-	resource_t *midi_patch;
-	 
-	midi_patch = findResource(9,midi_patchfile);
-
-	if (midi_patch == NULL) {
-		printf("gack!  That patch (%03d) didn't load!\n", midi_patchfile);
-		if (midi_open(NULL, -1) < 0)
-			printf("gack! The midi device failed to open cleanly!\n");
-	} else if (midi_open(midi_patch->data, midi_patch->length) < 0)
-		printf("gack! The midi device failed to open cleanly!\n");
 
 	sound_eq_init(&queue);
 

@@ -62,7 +62,7 @@
 /* Used for <gamename>.id files ("real" save games) */
 
 #define MAX_GAMEDIR_SIZE 32 /* Used for subdirectory inside of "~/.freesci/" */
-#define MAX_SAVEGAME_NR 16 /* Maximum number of savegames */
+#define MAX_SAVEGAME_NR 20 /* Maximum number of savegames */
 
 #define MAX_HUNK_BLOCKS 256 /* Used for SCI "far memory"; only used for sci_memory in FreeSCI */
 

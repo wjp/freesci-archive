@@ -1,4 +1,24 @@
+2001-03-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c: loop and cel selectors are now read
+	as signed bytes
+
 2001-03-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/engine.h (MAX_SAVEGAME_NR): Altered savegame limit
+	to 20, which is the number of savegames allowed in later versions
+	of SCI
+
+	* src/main.c (lookup_driver): Starting up with invalid midiout
+	drivers, midi devices, or graphics drivers now aborts with an
+	error message written in large, friendly letters
+
+	* src/engine/vm.c (lookup_selector): Looking for the superclass
+	now carries the result of a CLASS_ADDRESS() call for static
+	instantiations. This avoids the problem that this call may some-
+	times implicitly load the superclass, potentially overwriting
+	the memory area pointed to by technically invalid (but still
+	used) superclass pointers.
 
 	* src/sound/sound.c (sound_get_event): Made event getting a bit
 	more solid

@@ -1124,67 +1124,70 @@ run_vm(state_t *s, int restoring)
 
 
 int
-_lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
+_lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address, heap_ptr speciespos)
 {
-  int superclass; /* Possibly required for recursion */
-  word superclasspos;
-  int methodselectors = obj + GET_HEAP(obj + SCRIPT_FUNCTAREAPTR_OFFSET)
-    + SCRIPT_FUNCTAREAPTR_MAGIC;   /* First method selector */
-  int methodselector_nr = GET_HEAP(methodselectors - 2); /* Number of methods is stored there */
-  int i;
+	int superclass; /* Possibly required for recursion */
+	word superclasspos;
+	int methodselectors = obj + GET_HEAP(obj + SCRIPT_FUNCTAREAPTR_OFFSET)
+		+ SCRIPT_FUNCTAREAPTR_MAGIC;   /* First method selector */
+	int methodselector_nr = GET_HEAP(methodselectors - 2); /* Number of methods is stored there */
+	int i;
 
-  if (methodselectors < 800 || methodselectors > 0xffff || methodselector_nr > 0x1000) {
-    sciprintf("Lookup selector functions: Method selector offset %04x of object at %04x is invalid\n",
-	      methodselectors, obj);
-    script_debug_flag = script_error_flag = 1;
-    return -1;
-  }
+	if (methodselectors < 800 || methodselectors > 0xffff || methodselector_nr > 0x1000) {
+		sciprintf("Lookup selector functions: Method selector offset %04x of object at %04x is invalid\n",
+			  methodselectors, obj);
+		script_debug_flag = script_error_flag = 1;
+		return -1;
+	}
 
-  for (i = 0; i < methodselector_nr * 2; i += 2)
-    if (GET_HEAP(methodselectors + i) == selectorid) { /* Found it? */
-      if (address)
-	*address = GET_HEAP(methodselectors + i + 2 + (methodselector_nr * 2)); /* Get address */
-      return SELECTOR_METHOD;
-    }
+	for (i = 0; i < methodselector_nr * 2; i += 2)
+		if (GET_HEAP(methodselectors + i) == selectorid) { /* Found it? */
+			if (address)
+				*address = GET_HEAP(methodselectors + i + 2 + (methodselector_nr * 2)); /* Get address */
+			return SELECTOR_METHOD;
+		}
 
-  /* If we got here, we didn't find it. */
+	/* If we got here, we didn't find it. */
 
-  superclass = OBJ_SUPERCLASS(obj);
+	superclass = OBJ_SUPERCLASS(obj);
 
-  if (superclass == -1)
-    return SELECTOR_NONE; /* No success. Trust on calling function to report error. */
+	if (superclass == -1)
+		return SELECTOR_NONE; /* No success. Trust on calling function to report error. */
 
-  superclasspos = CLASS_ADDRESS(superclass);
-  /*fprintf(stderr,"superclass at %04x\n", superclasspos); */
+	superclasspos = (speciespos)? speciespos : (CLASS_ADDRESS(superclass));
 
-  return
-    _lookup_selector_functions(s, superclasspos, selectorid, address); /* Recurse to superclass */
+	return
+		_lookup_selector_functions(s, superclasspos, selectorid, address, 0); /* Recurse to superclass */
 }
 
 
 int
 lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 {
-  int species = OBJ_SPECIES(obj);
-  int heappos = CLASS_ADDRESS(species);
-  int varselector_nr = GET_HEAP(heappos + SCRIPT_SELECTORCTR_OFFSET);
-  /* Number of variable selectors */
+	int species = OBJ_SPECIES(obj);
+	int heappos = CLASS_ADDRESS(species);
+	int varselector_nr = GET_HEAP(heappos + SCRIPT_SELECTORCTR_OFFSET);
+	int speciespos = 0;
+	/* Number of variable selectors */
 
-  int i;
+	int i;
   
-  if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-    selectorid&=~1; /* Low bit in this case is read/write toggle */
-  for (i = 0; i < varselector_nr * 2; i += 2)
-    if (GET_HEAP(heappos + SCRIPT_SELECTOR_OFFSET + varselector_nr * 2 + i) == selectorid)
-      { /* Found it? */
-	if (address)
-	  *address = obj + SCRIPT_SELECTOR_OFFSET + i; /* Get object- relative address */
-	return SELECTOR_VARIABLE; /* report success */
-      }
+	if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+		selectorid&=~1; /* Low bit in this case is read/write toggle */
+	for (i = 0; i < varselector_nr * 2; i += 2)
+		if (GET_HEAP(heappos + SCRIPT_SELECTOR_OFFSET + varselector_nr * 2 + i) == selectorid)
+			{ /* Found it? */
+				if (address)
+					*address = obj + SCRIPT_SELECTOR_OFFSET + i; /* Get object- relative address */
+				return SELECTOR_VARIABLE; /* report success */
+			}
 
-  return
-    _lookup_selector_functions(s, obj, selectorid, address);
-  /* Call recursive function selector seeker */
+	if (species == OBJ_SPECIES(heappos)) /* Current object is a static instance */
+		speciespos = heappos; /* Make sure we pass the (possibly new) species address */
+
+	return
+		_lookup_selector_functions(s, obj, selectorid, address, speciespos);
+	/* Call recursive function selector seeker */
 }
 
 

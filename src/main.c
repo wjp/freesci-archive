@@ -252,6 +252,69 @@ get_gets_input(void)
 	return input;
 }
 
+
+
+
+static void
+list_graphics_drivers()
+{
+	int i = 0;
+	while (gfx_get_driver_name(i)) {
+		if (i != 0)
+			printf(", ");
+
+		printf(gfx_get_driver_name(i));
+
+		i++;
+	}
+	printf("\n");
+}
+
+
+static void
+list_sound_drivers()
+{
+	int i = 0;
+	while (sfx_drivers[i]) {
+		if (i != 0)
+			printf(", ");
+
+		printf(sfx_drivers[i]->name);
+
+		i++;
+	}
+	printf("\n");
+}
+
+
+static void
+list_midiout_drivers()
+{
+	int i = 0;
+	while (midiout_drivers[i]) {
+		if (i != 0)
+			printf(", ");
+		printf(midiout_drivers[i]->name);
+		i++;
+	}
+	printf("\n");
+}
+
+
+static void
+list_midi_devices()
+{
+	int i = 0;
+	while (midi_devices[i]) {
+		if (i != 0)
+			printf(", ");
+		printf(midi_devices[i]->name);
+		i++;
+	}
+	printf("\n");
+}
+
+
 /**********************************************************/
 /* Startup and config management                          */ 
 /**********************************************************/
@@ -377,46 +440,19 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 
 		case 'v':
 			printf("This is FreeSCI, version %s\n", VERSION);
+
 			printf("Supported graphics drivers: ");
+			list_graphics_drivers();
 
-			i = 0;
-			while (gfx_get_driver_name(i)) {
-				if (i != 0)
-					printf(", ");
-
-				printf(gfx_get_driver_name(i));
-
-				i++;
-			}
-			printf("\n");
 			printf("Supported sound drivers: ");
-			i = 0;
-			while (sfx_drivers[i]) {
-				if (i != 0)
-					printf(", ");
+			list_sound_drivers();
 
-				printf(sfx_drivers[i]->name);
-
-				i++;
-			}
-			printf("\n");
 			printf("Supported midiout drivers: ");
-			i = 0;
-			while (midiout_drivers[i]) {
-			  if (i != 0)
-			    printf(", ");
-			  printf(midiout_drivers[i]->name);
-			  i++;
-			}
-			printf("\n");
+			list_midiout_drivers();
+
 			printf("Supported midi 'devices': ");
-			i = 0;
-			while (midi_devices[i]) {
-			  if (i != 0)
-			    printf(", ");
-			  printf(midi_devices[i]->name);
-			  i++;
-			}
+			list_midi_devices();
+
 			printf("\n");
 			exit(0);
 
@@ -607,6 +643,23 @@ init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 }
 
 
+static void *
+lookup_driver(void *lookup_func(char *name), void explain_func(void),
+	      char *driver_class, char *driver_name)
+{
+	void *retval = lookup_func(driver_name);
+
+	if (!retval) {
+		sciprintf("The %s you requested, '%s', is not available.\n"
+			  "Please choose one among the following: ",
+			  driver_class, driver_name);
+		explain_func();
+		exit(1);
+	}
+
+	return retval;
+}
+
 
 int
 main(int argc, char** argv)
@@ -711,30 +764,21 @@ main(int argc, char** argv)
 	if (!conf) /* Unless the configuration has been read... */
 		conf_nr = read_config(game_name, &conf, &conf_entries, &version);
 
+
+	/* gcc doesn't warn about (void *)s being typecast. If your compiler doesn't like these
+	** implicit casts, don't hesitate to typecast appropriately.  */
 	if (cl_options.gfx_driver_name)
-		gfx_driver = gfx_find_driver(cl_options.gfx_driver_name);
+		gfx_driver = (gfx_driver_t *)
+			lookup_driver((void *)gfx_find_driver, list_graphics_drivers,
+				      "graphics driver", cl_options.gfx_driver_name);
 
 	if (cl_options.midiout_driver_name)
-		midiout_driver = midiout_find_driver(cl_options.midiout_driver_name);
-	if (!midiout_driver) {
-	  if (midiout_driver_name) {
-	    fprintf(stderr,"Failed to find midiout driver \"%s\"\n"
-		    "Please run 'sciv -v' to get a list of all "
-		    "available drivers.\n", midiout_driver_name);
-	    return 1;
-	  } 
-	}
-	if (cl_options.midi_device_name)
-	  midi_device = midi_find_device(cl_options.midi_device_name);
+		midiout_driver = lookup_driver((void *)midiout_find_driver, list_midiout_drivers,
+					       "midiout driver", cl_options.midiout_driver_name);
 
-	if (!midi_device) {
-	  if (midi_device_name) {
-	    fprintf(stderr,"Failed to find midi device \"%s\"\n"
-		    "Please run 'sciv -v' to get a list of all "
-		    "available devices.\n", midi_device_name);
-	    return 1;
-	  } 
-	}
+	if (cl_options.midi_device_name)
+		midi_device = lookup_driver((void *)midi_find_device, list_midi_devices,
+					    "MIDI device", cl_options.midi_device_name);
 
 	if (conf) {
 		memcpy(gfx_options, &(conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */

@@ -107,6 +107,16 @@ handle_gfx_error(int line, char *file)
 }
 
 
+static inline int
+sign_extend_byte(int value)
+{
+	if (value & 0x80)
+		return value - 256;
+	else
+		return value;
+}
+
+
 static void
 assert_primary_widget_lists(state_t *s)
 {
@@ -1115,8 +1125,8 @@ set_base(state_t *s, heap_ptr object)
 
 	ystep = GET_SELECTOR(object, yStep);
 	view = GET_SELECTOR(object, view);
-	loop = GET_SELECTOR(object, loop);
-	cel = GET_SELECTOR(object, cel);
+	loop = sign_extend_byte(GET_SELECTOR(object, loop));
+	cel = sign_extend_byte(GET_SELECTOR(object, cel));
 
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
 		xsize = ysize = xmod = ymod = 0;
@@ -1192,8 +1202,8 @@ void _k_set_now_seen(state_t *s, heap_ptr object)
 	y -= z; /* Subtract z offset */
 
 	view = GET_SELECTOR(object, view);
-	loop = GET_SELECTOR(object, loop);
-	cel = GET_SELECTOR(object, cel);
+	loop = sign_extend_byte(GET_SELECTOR(object, loop));
+	cel = sign_extend_byte(GET_SELECTOR(object, cel));
 
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
 		xsize = ysize = xmod = ymod = 0;
@@ -1404,8 +1414,8 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	int font_nr = GET_SELECTOR(obj, font);
 	char *text = s->heap + UGET_SELECTOR(obj, text);
 	int view = GET_SELECTOR(obj, view);
-	int cel = GET_SELECTOR(obj, cel);
-	int loop = GET_SELECTOR(obj, loop);
+	int cel = sign_extend_byte(GET_SELECTOR(obj, cel));
+	int loop = sign_extend_byte(GET_SELECTOR(obj, loop));
 
 	int type = GET_SELECTOR(obj, type);
 	int state = GET_SELECTOR(obj, state);
@@ -1500,7 +1510,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 
 static inline void
-draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, int funct_nr, int argc, int argp)
+draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, int base_set, int funct_nr, int argc, int argp)
 {
 	int priority = view->color.priority; 
 	int pri_top = PRIORITY_BAND_FIRST(priority);
@@ -1514,7 +1524,17 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 		bottom = GET_SELECTOR(obj, nsBottom);
 		left = GET_SELECTOR(obj, nsLeft);
 		right = GET_SELECTOR(obj, nsRight);
-	} else {
+
+		if (top < pri_top && pri_top_management)
+			top = pri_top;
+
+		if (bottom < top) {
+			int foo = top;
+			top = bottom;
+			bottom = foo;
+		}
+
+	} else if (!base_set) {
 		int width, height;
 		point_t offset;
 
@@ -1525,29 +1545,25 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 		right = left + width;
 		bottom = view->pos.y + offset.y + 1;
 		top = bottom - height;
-	}
-
-	if (top < pri_top && pri_top_management)
-		top = pri_top;
-
-	if (bottom < top) {
-		int foo = top;
-		top = bottom;
-		bottom = foo;
+	} else {
+		abs_rect_t abs_bounds = set_base(s, (heap_ptr) view->ID);
+		top = abs_bounds.x;
+		left = abs_bounds.y;
+		bottom = abs_bounds.xend;
+		right = abs_bounds.yend;
 	}
 
 	if (!(view->signalp && (GET_HEAP(view->signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
 		gfxw_box_t *box;
 		gfx_color_t color;
-		abs_rect_t abs_bounds = set_base(s, (heap_ptr) view->ID);
 
 		gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
 
 		SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", left, top,
 			  right, bottom);
 
-		box = gfxw_new_box(s->gfx_state, gfx_rect(abs_bounds.x, abs_bounds.y, abs_bounds.xend - abs_bounds.x + 1, abs_bounds.yend - abs_bounds.y + 1)
-/*gfx_rect(left, top, right - left + 1, bottom - top + 1)*/,
+		box = gfxw_new_box(s->gfx_state, 
+				   gfx_rect(left, top, right - left + 1, bottom - top + 1),
 				   color, color, GFX_BOX_SHADE_FLAT);
 
 		assert_primary_widget_lists(s);
@@ -1659,7 +1675,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 
 					s->drop_views->add(GFXWC(s->drop_views), GFXW(widget));
 
-					draw_to_control_map(s, widget, 0, funct_nr, argc, argp);
+					draw_to_control_map(s, widget, 0, funct_nr, 0, argc, argp);
 					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
 					widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
 					dropped = 1;
@@ -1708,8 +1724,8 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 
 	/* !-- nsRect used to be checked here! */
 
-	loop = oldloop = GET_SELECTOR(obj, loop);
-	cel = oldcel = GET_SELECTOR(obj, cel);
+	loop = oldloop = sign_extend_byte(GET_SELECTOR(obj, loop));
+	cel = oldcel = sign_extend_byte(GET_SELECTOR(obj, cel));
 
 	/* Clip loop and cel, write back if neccessary */
 	GFX_ASSERT(gfxop_check_cel(s->gfx_state, view_nr, &loop, &cel));
@@ -1850,7 +1866,7 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 			view->color.mask &= ~GFX_MASK_PRIORITY;
 		
 		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)
-			draw_to_control_map(s, view, 1, funct_nr, argc, argp);
+			draw_to_control_map(s, view, 1, funct_nr, 1, argc, argp);
 
 
 		/* Extreme Pattern Matching ugliness ahead... */
