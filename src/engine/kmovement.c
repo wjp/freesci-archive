@@ -215,14 +215,15 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
-	if (s->acc) /* Contains the return value */
+	if (s->acc) { /* Contains the return value */
 		s->acc = completed;
+	}
 	else {
 		word signal = UGET_SELECTOR(client, signal);
 
 		PUT_SELECTOR(client, x, oldx);
 		PUT_SELECTOR(client, y, oldy);
- 
+
 		PUT_SELECTOR(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
 
 		SCIkdebug(SCIkBRESEN, "Finished mover %04x by collision\n", mover);

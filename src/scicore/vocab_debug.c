@@ -171,7 +171,8 @@ char** vocabulary_get_snames(resource_mgr_t *resmgr, int* pcount, sci_version_t 
   if (!r) /* No such resource? */
     return NULL;
 
-  count=getInt(r->data);
+  /* adding 1 eliminates PQ2 AutoDoor invalid selector */
+  count=getInt(r->data) + 1;
 
   magic=((version==0) || (version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER))? 1 : 2;
 
