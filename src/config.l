@@ -73,6 +73,24 @@ struct {
 };
 
 
+typedef struct _file_stack {
+	char *name;
+	FILE *file;
+	struct _file_stack *next;
+} file_stack_t;
+
+file_stack_t *file_stack = NULL;
+
+char *yy_filename = NULL;
+
+static int
+push_file(char *name);
+
+static int
+pop_file();
+
+FILE *initial_file;
+
 static void
 set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_name,
 		       char *option, char *value);
@@ -272,6 +290,9 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
+char *
+purge_comments(char *comments);
+
 %}
 
 DIGIT [0-9]
@@ -359,7 +380,6 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 	strcpy (conf[cur_section].debug_mode, yytext);
 }
 
-
 [[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*({NUMPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]]* {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -410,6 +430,26 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
+(view|pic|cursor)[^_A-Za-z0-9"("]*"("([^";"]|"#"[^\n]*\n)*";" {
+	gfx_update_conf(&(conf[cur_section].gfx_options), purge_comments(yytext));
+}
+
+"%include"[^<\n]*<[^>\n]*> {
+	char *filename = strchr(yytext, '<');
+	char *end = strchr(filename, '>');
+
+	*end-- = 0;
+	while (isblank(*end))
+		*end-- = 0;
+
+	filename++;
+	while (*filename && isblank(*filename))
+		filename++;
+
+	push_file(filename);
+	YY_NEW_FILE;
+}
+
 
 "#".+$ /* Ignore comments */
 
@@ -427,7 +467,78 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 int
 yywrap()
 {
-        return 1; /* no further input */
+        return pop_file(); /* no further input */
+}
+
+static int
+push_file(char *name)
+{
+	file_stack_t *newfs;
+	file_stack_t *s;
+	FILE *newfile;
+
+	if (yy_filename && !strcmp(name, yy_filename)) {
+			fprintf(stderr, "[conf] Warning: Attempted immediate circular inclusion of config file '%s'\n",
+				name);
+		return 1;
+	}
+
+	s = file_stack;
+	while (s) {
+		if (!strcmp(name, s->name)) {
+			fprintf(stderr, "[conf] Warning: Attempted circular inclusion of config file '%s'\n",
+				name);
+			return 1;
+		}
+		s = s->next;
+	}
+
+	if (!(newfile = fopen(name, "r"))) {
+		fprintf(stderr, "[conf] Warning: Could not open configuration file '%s'\n", name);
+		return 1;
+	}
+
+	if (yyin) {
+		newfs = malloc(sizeof(struct _file_stack));
+		newfs->file = yyin;
+		newfs->name = yy_filename;
+
+		newfs->next = file_stack;
+		file_stack = newfs;
+	}
+
+	yy_filename = strdup(name);
+	yyin = newfile;
+
+	return 0;
+}
+
+static int
+pop_file()
+{
+	if (file_stack) {
+		void *goner = file_stack;
+
+		fclose(yyin);
+		yyin = file_stack->file;
+		free(yy_filename);
+		yy_filename = file_stack->name;
+		file_stack = file_stack->next;
+
+		free(goner);
+
+		return 0;
+	} else { 
+		if (yyin) {
+			fclose(yyin);
+			yyin = NULL;
+		}
+		if (yy_filename) {
+			free(yy_filename);
+			yy_filename = NULL;
+		}
+		return 1; /* Done */
+	}
 }
 
 
@@ -483,6 +594,10 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
+	for (i = 0; i < GFX_RESOURCE_TYPES_NR; i++) {
+		conf->gfx_options.res_conf.assign[i] = NULL;
+		conf->gfx_options.res_conf.mod[i] = NULL;
+	}
 
 	conf->gfx_driver_name = NULL;
 
@@ -568,7 +683,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	} /* !conffile */
 
 
-	if (!(yyin = fopen(conf_path, "r"))) {
+	if ((push_file(conf_path))) {
 		printf("No configuration file found; using defaults.\n");
 		*_conf = conf; /* Set the result variable */
 		sci_free(conf_path);
@@ -576,11 +691,11 @@ config_init(config_entry_t **_conf, char *conffile)
 		return 1;
 	}
 
-	printf("Parsing config file...\n");
+	printf("Reading configuration...\n");
 
 	yylex(); /* Parse the file */
 
-	fclose(yyin); /* Ignore error conditions- might be lex implementation dependant */
+	while (!pop_file());  /* Ignore error conditions- might be lex implementation dependant */
 	sci_free(conf_path);
 	sci_free(exported_conf_path);
 
@@ -866,6 +981,29 @@ copy_subsystem_options(config_entry_t *dest, config_entry_t *src)
 	int i;
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
 		dest->driver_options[i] = clone_subsystem_options(src->driver_options[i]);
+}
+
+
+char *
+purge_comments(char *comments)
+{
+	char *c = comments;
+	int overwrite = 0;
+	char ch;
+
+	/* Tear out all comments */
+	while ((ch = *c)) {
+		if (ch == '#')
+			overwrite = 1;
+		if (ch == '\n')
+			overwrite = 0;
+		if (overwrite)
+			*c = ' ';
+
+		c++;
+	}
+
+	return comments;
 }
 
 static void

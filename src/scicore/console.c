@@ -470,7 +470,7 @@ parse_reg_t(state_t *s, char *str, reg_t *dest, int addresses_only)
 				}
 
 				if (valid) {
-					char *objname = obj->base
+					char *objname = (char *) obj->base
 						+ obj->variables[SCRIPT_NAME_SELECTOR].offset;
 					if (!strcmp(objname, str_objname)) {
 						/* Found a match! */

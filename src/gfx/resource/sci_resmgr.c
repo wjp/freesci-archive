@@ -73,7 +73,7 @@ gfxr_interpreter_init_pic(int version, gfx_mode_t *mode, int ID, void *internal)
 {
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
 
-	return gfxr_init_pic(mode, GFXR_RES_NR(ID));
+	return gfxr_init_pic(mode, ID);
 }
 
 
@@ -133,6 +133,13 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 	gfxr_dither_pic0(scaled_pic, state->options->pic0_dither_mode, state->options->pic0_dither_pattern);
 	}
 
+	/* Mark default palettes */
+	if (scaled_pic)
+		scaled_pic->visual_map->loop = default_palette;
+
+	if (unscaled_pic)
+		unscaled_pic->visual_map->loop = default_palette;
+
 	return GFX_OK;
 }
 
@@ -143,6 +150,7 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
 	resource_t *res = scir_find_resource(resmgr, sci_view, nr, 0);
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
+	int resid = GFXR_RES_ID(GFX_RESOURCE_TYPE_VIEW, nr);
 
 	if (!res || !res->data)
 		return NULL;
@@ -150,8 +158,9 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 	if (state->version < SCI_VERSION_01) palette=-1;
 	
 	if (state->version < SCI_VERSION_01_VGA)
-		return gfxr_draw_view0(res->id, res->data, res->size, palette); else
-		return gfxr_draw_view1(res->id, res->data, res->size); 
+		return gfxr_draw_view0(resid, res->data, res->size, palette);
+	else
+		return gfxr_draw_view1(resid, res->data, res->size); 
 	
 }
 
@@ -176,6 +185,7 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr, void *internal)
 	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
 	resource_t *res = scir_find_resource(resmgr, sci_cursor, nr, 0);
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
+	int resid = GFXR_RES_ID(GFX_RESOURCE_TYPE_CURSOR, nr);
 
 	if (!res || !res->data)
 		return NULL;
@@ -186,9 +196,9 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr, void *internal)
 	}
 
 	if (state->version == SCI_VERSION_0)
-		return gfxr_draw_cursor0(res->id, res->data, res->size);
+		return gfxr_draw_cursor0(resid, res->data, res->size);
 	else
-		return gfxr_draw_cursor01(res->id, res->data, res->size);
+		return gfxr_draw_cursor01(resid, res->data, res->size);
 }
 
 

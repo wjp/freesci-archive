@@ -36,8 +36,8 @@ typedef int seg_id_t; /* Segment ID type */
 
 struct _state; /* engine.h */
 
-#if defined(S_SPLINT_S) || defined(_MSC_VER)
-/* Can't deal with packed notation */
+#if defined(S_SPLINT_S) || defined(_MSC_VER) || defined(__DECC)
+/* Can't deal with packed notation for these types */
 typedef struct {
 	guint16 segment;
 	guint16 offset;

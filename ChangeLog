@@ -1,3 +1,10 @@
+2003-06-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/config.l: Added '%include<>' option for config files
+
+	* src/include/gfx_res_options.h: Added initial implementation of
+	per-resource gfx configuration
+
 2003-04-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* configure.in: Added libfontconfig to Xft configuration whenever

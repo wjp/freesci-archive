@@ -241,14 +241,21 @@ gfxr_free_tagged_resources(gfx_driver_t *driver, gfx_resstate_t *state)
 #define XLATE_AS_APPROPRIATE(key, entry) \
 	if (maps & key) { \
 		if (res->unscaled_data.pic \
-                    && (force || !res->unscaled_data.pic->entry->data)) \
+                    && (force || !res->unscaled_data.pic->entry->data)) { \
+				if (key == GFX_MASK_VISUAL) \
+			        	gfx_get_res_config(options, res->unscaled_data.pic->entry); \
 			        gfx_xlate_pixmap(res->unscaled_data.pic->entry, mode, filter); \
-		if (scaled && res->scaled_data.pic \
-                    && (force || !res->scaled_data.pic->entry->data)) \
+		} if (scaled && res->scaled_data.pic \
+                    && (force || !res->scaled_data.pic->entry->data)) { \
+				if (key == GFX_MASK_VISUAL) \
+			        	gfx_get_res_config(options, res->scaled_data.pic->entry); \
 			        gfx_xlate_pixmap(res->scaled_data.pic->entry, mode, filter); \
+                } \
 	}
 static gfxr_pic_t *
-gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled, int force, gfx_mode_t *mode, int filter, int endianize)
+gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled,
+		      int force, gfx_mode_t *mode, int filter, int endianize,
+		      gfx_options_t *options)
 {
 	XLATE_AS_APPROPRIATE(GFX_MASK_VISUAL, visual_map);
 	XLATE_AS_APPROPRIATE(GFX_MASK_PRIORITY, priority_map);
@@ -352,9 +359,10 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	/* If the pic was only just drawn, we'll have to antialiase and endianness-adjust it now */
 
 	npic = gfxr_pic_xlate_common(res, maps,
-				    scaled || state->options->pic0_unscaled,
-				    0, state->driver->mode,
-				    state->options->pic_xlate_filter, 0);
+				     scaled || state->options->pic0_unscaled,
+				     0, state->driver->mode,
+				     state->options->pic_xlate_filter, 0,
+				     state->options);
 
 
 	if (must_post_process_pic) {
@@ -414,7 +422,9 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 
 	res->mode = MODE_INVALID; /* Invalidate */
 
-	pic = gfxr_pic_xlate_common(res, maps, scaled, 1, state->driver->mode, state->options->pic_xlate_filter, 1);
+	pic = gfxr_pic_xlate_common(res, maps, scaled, 1, state->driver->mode,
+				    state->options->pic_xlate_filter, 1,
+				    state->options);
 
 	if (scaled || state->options->pic0_unscaled && maps & GFX_MASK_VISUAL)
 		gfxr_antialiase(pic->visual_map, state->driver->mode,
@@ -484,6 +494,7 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel, int palette)
 	cel_data = loop_data->cels[*cel];
 
 	if (!cel_data->data) {
+		gfx_get_res_config(state->options, cel_data);
 		gfx_xlate_pixmap(cel_data, state->driver->mode, state->options->view_xlate_filter);
                 gfxr_endianness_adjust(cel_data, state->driver->mode);
         }
@@ -568,6 +579,7 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr)
 		} else {
 			gfx_free_pixmap(state->driver, res->unscaled_data.pointer);
 		}
+		gfx_get_res_config(state->options, cursor);
 		gfx_xlate_pixmap(cursor, state->driver->mode, state->options->cursor_xlate_filter);
                 gfxr_endianness_adjust(cursor, state->driver->mode);
 
