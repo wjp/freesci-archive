@@ -106,7 +106,7 @@ int heap_largest(heap_t* h)
 		current=next;
 	}
 
-	return best_pos;
+	return best_size;
 }
 
 heap_ptr heap_allocate(heap_t* h, int size)

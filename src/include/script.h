@@ -59,10 +59,12 @@ void freeObject(object*);
 typedef enum {
   Script_Invalid=-1,
   Script_None=0, 
-  Script_Byte, 
+  Script_Byte,
+  Script_SByte,
   Script_Word, 
   Script_SWord,
   Script_Variable,
+  Script_SVariable,
   Script_End
 } opcode_format;
 

@@ -291,8 +291,6 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (GET_HEAP(old_offs + SCRIPT_INFO_OFFSET) != SCRIPT_INFO_CLASS) {
     SCIkwarn("Attempt to clone something other than a class template at %04x\n", old_offs);
-    if (sci_version < SCI_VERSION_01)
-      return;
     SCIkwarn("Allowing clone process\n",0);
   }
 
@@ -1155,7 +1153,7 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
   seeker = textres->data;
 
   while (counter--)
-    while (*seeker++)
+    while (*seeker++);
   /* The second parameter (counter) determines the number of the string inside the text
   ** resource.
   */
@@ -1299,23 +1297,22 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
     xsize = ysize = 0; /* Invalid view/loop */
 
 
+  /*  if (xstep)
+      xsize = xstep;*/ /* FIXME */
+
+  if (ystep)
+    ysize = ystep;
+
   xbase = x - xsize / 2;
   ybase = y - ysize / 2;
 
-  /*  if (xstep) {
-    xend = xbase;
-    xbase += xstep;
-    } else*/ xend = xbase + xsize;
-
-  /*  if (ystep) {
-    yend = ybase;
-    ybase += ystep;
-    } else*/ yend = ybase + ysize;
+  xend = xbase + xsize;
+  yend = ybase + ysize;
 
   PUT_SELECTOR(object, brLeft, xbase);
   PUT_SELECTOR(object, brRight, xend);
   PUT_SELECTOR(object, brTop, ybase);
-  PUT_SELECTOR(object, brBottom, ybase);
+  PUT_SELECTOR(object, brBottom, yend);
 
   sciprintf("BaseSetter done.\n");
 

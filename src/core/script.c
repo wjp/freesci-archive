@@ -76,47 +76,47 @@ opcode_format formats[128][4]={
   /*10*/
   {Script_None}, {Script_None}, {Script_None}, {Script_None},
   /*14*/
-  {Script_None}, {Script_None}, {Script_None}, {Script_Variable, 0},
+  {Script_None}, {Script_None}, {Script_None}, {Script_SVariable, 0},
   /*18*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_None},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_None},
   /*1C*/
-  {Script_Variable, 0}, {Script_None}, {Script_None}, {Script_Variable, 0},
+  {Script_SVariable, 0}, {Script_None}, {Script_None}, {Script_Variable, 0},
   /*20*/
-  {Script_Variable, Script_Byte, 0}, {Script_Variable, Script_Byte, 0}, {Script_Variable, Script_Byte, 0}, {Script_Variable, Script_Variable, Script_Byte, 0},
+  {Script_SVariable, Script_SByte, 0}, {Script_SVariable, Script_SByte, 0}, {Script_SVariable, Script_SByte, 0}, {Script_Variable, Script_SVariable, Script_SByte, 0},
   /*24 (24=ret)*/
-  {Script_End}, {Script_Byte, 0}, {Script_Invalid}, {Script_Invalid},
+  {Script_End}, {Script_SByte, 0}, {Script_Invalid}, {Script_Invalid},
   /*28*/
-  {Script_Variable, 0}, {Script_Invalid}, {Script_Byte, 0}, {Script_Variable, Script_Byte, 0},
+  {Script_SVariable, 0}, {Script_Invalid}, {Script_SByte, 0}, {Script_SVariable, Script_SByte, 0},
   /*2C*/
-  {Script_Variable, 0}, {Script_Variable, Script_Variable, 0}, {Script_None}, {Script_Invalid},
+  {Script_SVariable, 0}, {Script_SVariable, Script_SVariable, 0}, {Script_None}, {Script_Invalid},
   /*30*/
-  {Script_None}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_None}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
   /*34*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
   /*38*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_None},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_None},
   /*3C*/
   {Script_None}, {Script_None}, {Script_None}, {Script_Invalid},
   /*40-4F*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
   /*50-5F*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
   /*60-6F*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
   /*70-7F*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}
 };
 
 static int add_object(object* obj)
@@ -192,11 +192,13 @@ static void printMethod(object* obj, int meth, int indent)
 						{
 							j=3;
 						} break;
+					        case Script_SByte:
 						case Script_Byte:
 						{
 							printf("%02X ", args[j]);
 						} break;
 						case Script_Word:
+					        case Script_SVariable:
 						case Script_Variable:
 						{
 							printf("%04X ", args[j]);
@@ -361,6 +363,7 @@ static script_method* decode_method(byte* data)
 		arg=4;
 	      } break;
 	    case Script_Byte: /*Just a one byte arg*/
+	    case Script_SByte:
 	      {
 		*args[arg]=data[pos++]; 
 	      } break;
@@ -377,6 +380,7 @@ static script_method* decode_method(byte* data)
 		pos+=2;
 	      } break;
 	    case Script_Variable: /*Size of arg depends on LSB in opcode*/
+            case Script_SVariable:
 	      {
 		if(size==1) *args[arg]=data[pos++];
 		else

@@ -190,6 +190,7 @@ disassemble(state_t *s, heap_ptr pos)
 
     case Script_Invalid: sciprintf("-Invalid operation-"); break;
 
+    case Script_SByte:
     case Script_Byte: sciprintf(" %02x", s->heap[retval++]); break;
 
     case Script_Word:
@@ -198,6 +199,7 @@ disassemble(state_t *s, heap_ptr pos)
       retval += 2;
       break;
 
+    case Script_SVariable:
     case Script_Variable:
       if (opsize)
 	param_value = s->heap[retval++];
@@ -239,43 +241,62 @@ disassemble(state_t *s, heap_ptr pos)
     } else
 
     if ((opcode == op_send) || (opcode == op_super) || (opcode == op_self)) {
-      int stackframe = s->heap[retval - 1] + (*_restadjust * 2);
+      int restmod = *_restadjust;
+      int stackframe = s->heap[retval - 1] + (restmod * 2);
       word selector;
+      heap_ptr selector_addr;
 
       while (stackframe > 0) {
 	int argc = getInt16(s->heap + *_sp - stackframe + 2);
 	heap_ptr nameaddress = 0;
-	heap_ptr name_meta_addr;
+	heap_ptr called_obj_addr;
 	char *name;
 
 	if (opcode == op_send)
-	  name_meta_addr = s->acc;
+	  called_obj_addr = s->acc;
 	else if (opcode == op_self)
-	  name_meta_addr = *_objp;
+	  called_obj_addr = *_objp;
 	else { /* op_super */
-	  name_meta_addr = getUInt16(s->heap + *_objp + SCRIPT_SUPERCLASS_OFFSET);
+	  called_obj_addr = s->heap[retval - 2];
 
-	  name_meta_addr = *(s->classtable[name_meta_addr].scriptposp)
-	    + s->classtable[name_meta_addr].class_offset;
+	  called_obj_addr = *(s->classtable[called_obj_addr].scriptposp)
+	    + s->classtable[called_obj_addr].class_offset;
 	}
 
 	selector = getInt16(s->heap + *_sp - stackframe);
       
-	if (getInt16(s->heap + name_meta_addr + SCRIPT_OBJECT_MAGIC_OFFSET)
-	    == SCRIPT_OBJECT_MAGIC_NUMBER)
-	  nameaddress = getUInt16(s->heap + name_meta_addr + SCRIPT_NAME_OFFSET);
+	if (called_obj_addr > 100) /* If we are in valid heap space */
+	  if (getInt16(s->heap + called_obj_addr + SCRIPT_OBJECT_MAGIC_OFFSET)
+	      == SCRIPT_OBJECT_MAGIC_NUMBER)
+	    nameaddress = getUInt16(s->heap + called_obj_addr + SCRIPT_NAME_OFFSET);
 
 	if (nameaddress)
 	  name = s->heap + nameaddress;
 	else
 	  name = "<invalid>";
 
-	sciprintf("  %s::%s(", name, (selector > s->selector_names_nr)
+	sciprintf("  %s::%s[", name, (selector > s->selector_names_nr)
 		  ? "<invalid>" : s->selector_names[selector]);
+
+	switch (lookup_selector(s, called_obj_addr, selector, &selector_addr)) {
+	case SELECTOR_METHOD:
+	  sciprintf("FUNCT");
+	  argc += restmod;
+	  restmod = 0;
+	  break;
+	case SELECTOR_VARIABLE:
+	  sciprintf("VAR");
+	  break;
+	case SELECTOR_NONE:
+	  sciprintf("INVALID");
+	  break;
+	}
+
+	sciprintf("](");
 
 	while (argc--) {
 
-	  sciprintf("%04x", 0xffff & getUInt16(s->heap + *_sp - stackframe));
+	  sciprintf("%04x", 0xffff & getUInt16(s->heap + *_sp - stackframe + 4));
 	  if (argc) sciprintf(", ");
 	  stackframe -= 2;
 

@@ -20,7 +20,7 @@
  Please contact the maintainer for bug reports or inquiries.
 
  Current Maintainer:
-vvv
+
     Christoph Reichenbach (CJR) [jameson@linuxgames.com]
 
 ***************************************************************************/
@@ -32,6 +32,8 @@ vvv
 #include <engine.h>
 #include <sys/time.h>
 
+
+/* #define VM_DEBUG_SEND */
 
 
 int script_debug_flag = 1; /* Defaulting to debug mode */
@@ -73,17 +75,22 @@ inline void putInt16(byte *addr, word value)
 #define POP() ((gint16)(getInt16(s->heap + (sp-=2))))
 
 /* Getting instruction parameters */
-#define GET_OP_BYTE() (s->heap[pc++])
-#define GET_OP_WORD() (getInt16(s->heap + (pc += 2) - 2))
+#define GET_OP_BYTE() ((guint8) s->heap[pc++])
+#define GET_OP_WORD() (getUInt16(s->heap + (pc += 2) - 2))
 #define GET_OP_FLEX() ((opcode & 1)? GET_OP_BYTE() : GET_OP_WORD())
 #define GET_OP_SIGNED_BYTE() ((gint8)(s->heap[pc++]))
-#define GET_OP_SIGNED_WORD() ((gint16)(getInt16(s->heap + (pc += 2) - 2)))
+#define GET_OP_SIGNED_WORD() ((getInt16(s->heap + (pc += 2) - 2)))
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
 #define GET_HEAP(address) ((((guint16)(address)) < 800)? \
 script_error(s, "Heap address space violation on read")  \
 : getInt16(s->heap + ((guint16)(address))))
 /* Reads a heap value if allowed */
+
+#define UGET_HEAP(address) ((((guint16)(address)) < 800)? \
+script_error(s, "Heap address space violation on read")   \
+: getUInt16(s->heap + ((guint16)(address))))
+/* Reads an unsigned heap value if allowed */
 
 #define PUT_HEAP(address, value) if (((guint16)(address)) < 800) \
 script_error(s, "Heap address space violation on write");        \
@@ -146,6 +153,9 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
   heap_ptr lookupresult;
   int selector;
   int argc;
+  int i;
+
+  framesize += restmod * 2;
 
   if (GET_HEAP(send_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
     sciprintf("Send: No object at %04x!\n", send_obj);
@@ -158,8 +168,16 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
     selector = GET_HEAP(argp);
 
     argp += 2;
-    argc = GET_HEAP(argp) + restmod;
-    restmod = 0; /* Only apply it to the first selector, hoping that this behaviour is right */
+    argc = GET_HEAP(argp);
+
+    if (argc > 512){ /* More arguments than the stack could possibly accomodate for */
+      script_error(s, "More than 512 arguments to function call\n");
+      return;
+    }
+
+#ifdef VM_DEBUG_SEND
+sciprintf("Send to selector %04x (%s):", selector, s->selector_names[selector]);
+#endif /* VM_DEBUG_SEND */
 
     switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
 
@@ -169,6 +187,15 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
       break;
 
     case SELECTOR_VARIABLE:
+
+#ifdef VM_DEBUG_SEND
+sciprintf("Varselector: ");
+if (argc)
+  sciprintf("Write %04x\n", UGET_HEAP(argp + 2));
+else
+  sciprintf("Read\n");
+#endif /* VM_DEBUG_SEND */
+
       switch (argc) {
       case 0: s->acc = GET_HEAP(lookupresult); break;
       case 1: { /* Argument is supplied -> Selector should be set */
@@ -182,6 +209,18 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
       break;
 
     case SELECTOR_METHOD:
+      argc += restmod;
+      restmod = 0; /* Take care that the rest modifier is used only once */
+
+#ifdef VM_DEBUG_SEND
+sciprintf("Funcselector(");
+ for (i = 0; i < argc; i++) {
+   sciprintf("%04x", UGET_HEAP(argp + 2 + 2*i));
+   if (i + 1 < argc)
+     sciprintf(", ");
+ }
+sciprintf(")\n");
+#endif /* VM_DEBUG_SEND */
       execute(s, lookupresult, sp, work_obj, argc, argp, selector);
       break;
     } /* switch(lookup_selector()) */
@@ -197,22 +236,23 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
 {
   gint16 temp, temp2, temp3;
   gint16 opparams[4]; /* Opcode parameters */
-  heap_ptr pp = sp;
+  heap_ptr fp = sp;
   int restadjust = 0; /* &rest adjusts the parameter count by this value */
   heap_ptr local_vars = getInt16(s->heap + objp + SCRIPT_LOCALVARPTR_OFFSET);
 
   heap_ptr variables[4] =
-  { s->global_vars, local_vars, pp, argp }; /* Offsets of global, local, temp, and param variables */
+  { s->global_vars, local_vars, fp, argp }; /* Offsets of global, local, temp, and param variables */
 
   heap_ptr selector_offset = objp + SCRIPT_SELECTOR_OFFSET;
 
+  PUT_HEAP(argp, argc); /* SCI code reads the zeroeth argument to determine argc */
 
   /* Start entering debug information into call stack debug blocks */
   ++script_exec_stackpos;
   script_exec_stack[script_exec_stackpos].objpp = &objp;
   script_exec_stack[script_exec_stackpos].pcp = &pc;
   script_exec_stack[script_exec_stackpos].spp = &sp;
-  script_exec_stack[script_exec_stackpos].ppp = &pp;
+  script_exec_stack[script_exec_stackpos].ppp = &fp;
   script_exec_stack[script_exec_stackpos].argcp = &argc;
   script_exec_stack[script_exec_stackpos].argpp = &argp;
   script_exec_stack[script_exec_stackpos].selector = selector;
@@ -229,7 +269,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       return; /* Emergency */
 
     if (script_debug_flag)
-      script_debug(s, &pc, &sp, &pp, &objp, &restadjust);
+      script_debug(s, &pc, &sp, &fp, &objp, &restadjust);
     /* Debug if this has been requested */
 
     opcode = GET_OP_BYTE(); /* Get opcode */
@@ -237,7 +277,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     if (sp < s->stack_base)
       script_error(s, "Absolute stack underflow");
 
-    if (sp < pp)
+    if (sp < fp)
       script_error(s, "Relative stack underflow");
 
     if (pc < 800)
@@ -249,11 +289,13 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       switch(formats[opnumber][temp]) {
 
       case Script_Byte: opparams[temp] = GET_OP_BYTE(); break;
+      case Script_SByte: opparams[temp] = GET_OP_SIGNED_BYTE(); break;
 
-      case Script_Word:
-      case Script_SWord: opparams[temp] = GET_OP_WORD(); break;
+      case Script_Word: opparams[temp] = GET_OP_WORD(); break;
+      case Script_SWord: opparams[temp] = GET_OP_SIGNED_WORD(); break;
 
       case Script_Variable: opparams[temp] = GET_OP_FLEX(); break;
+      case Script_SVariable: opparams[temp] = GET_OP_SIGNED_FLEX(); break;
 
       }
 
