@@ -101,6 +101,15 @@ gfx_new_pixmap(int xl, int yl, int resid, int loop, int cel);
 */
 
 gfx_pixmap_t *
+gfx_clone_pixmap(gfx_pixmap_t *pixmap, gfx_mode_t *mode);
+/* Clones a pixmap, minus its index data, palette and driver-specific handles
+** Parameters: (gfx_pixmap_t *) pixmap: The pixmap to clone
+**             (gfx_mode_t *) mode: The mode to be applied to the pixmap
+** Returns   : (gfx_pixmap_t *) The clone
+*/
+
+
+gfx_pixmap_t *
 gfx_pixmap_alloc_index_data(gfx_pixmap_t *pixmap);
 /* Allocates the index_data field of a pixmap
 ** Parameters: (gfx_pixmap_t *) pixmap: The pixmap to allocate for

@@ -98,6 +98,7 @@ typedef struct { /* gfx_mode_t: Graphics mode description */
 
 	unsigned int flags; /* GFX_MODE_FLAG_* Flags- see above */
 
+
 	gfx_palette_t *palette; /* Palette or NULL to indicate non-palette mode.
 				** Palette (color-index) mode is only supported
 				** for bytespp=1.  */
@@ -317,6 +318,7 @@ typedef struct { /* gfx_pixmap_t: Pixel map */
 
 	/*** Drawable data ***/
 	int xl, yl; /* width and height of the actual image */
+	int data_size; /* Amount of allocated memory */
 	byte *data; /* Drawable data, or NULL if not converted.  */
 
 	byte *alpha_map; /* Byte map with alpha values. It is used only if the

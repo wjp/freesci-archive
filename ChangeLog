@@ -1,3 +1,18 @@
+2002-09-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/sci_widgets.c (sciw_new_window): Made window title bar
+	slightly transparent
+
+	* src/gfx/gfx_tools.c (gfx_clone_pixmap): Implemented pixmap
+	cloning
+
+	* src/include/gfx_system.h: Added data_size to ease implementation
+	of pixmap cloning
+
+	* src/gfx/drivers/directfb_driver.c: Fixed transparency values not
+	being passed, moved back to two-layer model to take advantage of
+	double-buffering, fixed line scale bug
+
 2002-09-24  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/sound/pcmout.c, src/sound/midi_adlibemu.c:   Fix a buffer

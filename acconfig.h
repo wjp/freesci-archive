@@ -15,4 +15,5 @@
 #undef UNCHECKED_MALLOCS
 #undef MACOSX
 #undef HAVE_DIRECTFB
+#undef WANT_CONSOLE
 

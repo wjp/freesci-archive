@@ -126,6 +126,25 @@ gfx_copy_pixmap_box_i(gfx_pixmap_t *dest, gfx_pixmap_t *src, rect_t box)
 
 
 gfx_pixmap_t *
+gfx_clone_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode)
+{
+	gfx_pixmap_t *clone = malloc(sizeof(gfx_pixmap_t));
+	*clone = *pxm;
+	clone->index_data = NULL;
+	clone->colors = NULL;
+	clone->data = NULL;
+	gfx_pixmap_alloc_data(clone, mode);
+
+	memcpy(clone->data, pxm->data, clone->data_size);
+	if (clone->alpha_map) {
+		clone->alpha_map = malloc(clone->xl * clone->yl);
+		memcpy(clone->alpha_map, pxm->alpha_map, clone->xl * clone->yl);
+	}
+
+	return clone;
+}
+
+gfx_pixmap_t *
 gfx_new_pixmap(int xl, int yl, int resid, int loop, int cel)
 {
 	gfx_pixmap_t *pxm = sci_malloc(sizeof(gfx_pixmap_t));
@@ -252,7 +271,7 @@ gfx_pixmap_alloc_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 	if (!size)
 		size = 1;
 
-	pixmap->data = sci_malloc(size);
+	pixmap->data = sci_malloc(pixmap->data_size = size);
 	return pixmap;
 }
 

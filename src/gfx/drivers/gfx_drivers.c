@@ -62,9 +62,6 @@ extern gfx_driver_t gfx_driver_dfb;
 
 static gfx_driver_t *gfx_drivers[] = {
 #ifndef HAVE_DLOPEN
-#  ifdef HAVE_LIBGGI
-	&gfx_driver_ggi,
-#  endif
 #  ifndef X_DISPLAY_MISSING
 	&gfx_driver_xlib,
 #  endif
@@ -76,6 +73,9 @@ static gfx_driver_t *gfx_drivers[] = {
 #  endif
 #  ifdef HAVE_DIRECTFB
 	&gfx_driver_dfb,
+#  endif
+#  ifdef HAVE_LIBGGI
+	&gfx_driver_ggi,
 #  endif
 #endif
 	NULL

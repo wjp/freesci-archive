@@ -271,6 +271,12 @@ AC_ARG_WITH(E,
 	[CFLAGS="-E $CFLAGS"],
 	[])
 
+AC_ARG_WITH(console,
+	[  --with-console	  Allocate large startup buffer for console],
+	[WANT_CONSOLE=64
+	 AC_SUBST(WANT_CONSOLE)],
+	[])
+
 CFSML_FLAGS=""
 
 AM_WITH_DMALLOC

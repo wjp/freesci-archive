@@ -41,7 +41,7 @@
 #include <directfb/directfb.h>
 #include <unistd.h>
 
-#define SCIDFB_DRIVER_VERSION "0.1"
+#define SCIDFB_DRIVER_VERSION "0.3"
 
 typedef struct _event_queue_struct {
 	sci_event_t evt;
@@ -67,7 +67,8 @@ typedef struct _event_queue_struct {
 
 static IDirectFB *scidfb_framebuffer;		/* The global framebuffer */
 static IDirectFBDisplayLayer *scidfb_layer;	/* The layer we use for drawing */
-static IDirectFBSurface *scidfb_visuals[3];	/* The visual buffers */
+static IDirectFBSurface *scidfb_visual; /* Static visual buffer */
+static IDirectFBSurface *scidfb_static_visual; /* Static visual buffer */
 static gfx_pixmap_t *scidfb_static_priority = NULL;
 static gfx_pixmap_t *scidfb_back_priority = NULL;
 static int scidfb_internal_caps = 0;	/* Certain internal capabilities available to us */
@@ -283,11 +284,7 @@ _scidfb_init_gfx_mode(int width, int height, int bpp)
 							 modes[1].x, modes[1].y, modes[1].bpp));
 
 		SCIDFB_CHECKED(scidfb_layer->SetCooperativeLevel(scidfb_layer, DLSCL_EXCLUSIVE));
-		SCIDFB_CHECKED(scidfb_layer->GetConfiguration(scidfb_layer, &conf));
-		conf.buffermode = DLBM_FRONTONLY;
-		SCIDFB_CHECKED(scidfb_layer->SetConfiguration(scidfb_layer, &conf));
-		SCIDFB_CHECKED(scidfb_layer->GetSurface(scidfb_layer,
-							&(scidfb_visuals[GFX_BUFFER_FRONT])));
+		SCIDFB_CHECKED(scidfb_layer->GetSurface(scidfb_layer, &scidfb_visual));
 
 		return GFX_OK;
 	} else
@@ -313,6 +310,7 @@ scidfb_build_virtual_surface(IDirectFBSurface **result, int width, int height,
 	SCIDFB_CHECKED(prototype->GetPixelFormat(prototype, &(srf_desc.pixelformat)));
 	srf_desc.flags = (DSDESC_CAPS | DSDESC_WIDTH | DSDESC_HEIGHT | DSDESC_PIXELFORMAT);
 	SCIDFB_CHECKED(scidfb_framebuffer->CreateSurface(scidfb_framebuffer, &srf_desc, &surface));
+	SCIDFB_CHECKED(surface->Clear(surface, 0, 0, 0, 255));
 
 	*result = surface;
 
@@ -323,7 +321,6 @@ static int
 scidfb_deactivate_pointer()
 {
 		SCIDFB_CHECKED(scidfb_layer->EnableCursor(scidfb_layer, 0));
-
 		return 0;
 }
 
@@ -671,7 +668,6 @@ scidfb_init_specific(gfx_driver_t *drv, int xres, int yres, int bytespp)
 	char *foo = "";
 	int n = 1;
 
-	int i;
 	int width, height;
 	int red_mask, green_mask, blue_mask, alpha_mask;
 	int red_shift, green_shift, blue_shift, alpha_shift;
@@ -681,7 +677,7 @@ scidfb_init_specific(gfx_driver_t *drv, int xres, int yres, int bytespp)
 	p = &foo;
 	DirectFBInit(&n, &p);
 
-	//	SCIDFB_CHECKED(DirectFBSetOption("no-sighandler", "1"));
+	SCIDFB_CHECKED(DirectFBSetOption("no-sighandler", "1"));
 
 	SCIGFX_CHECKED(_scidfb_init_gfx_mode(xres, yres, (1 << bytespp) - 1));
 	SCIGFX_CHECKED(_scidfb_init_input(&keyboard, &mouse));
@@ -695,10 +691,12 @@ scidfb_init_specific(gfx_driver_t *drv, int xres, int yres, int bytespp)
 		drv->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
 	}
 
-	SCIDFB_CHECKED(scidfb_visuals[0]->GetSize(scidfb_visuals[0], &width, &height));
+	SCIDFB_CHECKED(scidfb_visual->GetSize(scidfb_visual, &width, &height));
 
 	scidfb_deactivate_pointer();
-	SCIDFB_CHECKED(scidfb_visuals[0]->Clear(scidfb_visuals[0], 0, 0, 0, 255));
+	SCIDFB_CHECKED(scidfb_visual->Clear(scidfb_visual, 0, 0, 0, 255));
+	SCIDFB_CHECKED(scidfb_visual->Flip(scidfb_visual, NULL, DSFLIP_BLIT));
+	
 
 	/* If neccessary, create a sub-surface */
 	if (width > xres * 320 || height > yres * 200) {
@@ -709,17 +707,27 @@ scidfb_init_specific(gfx_driver_t *drv, int xres, int yres, int bytespp)
 		region.x = (width - region.w) >> 1;
 		region.y = (height - region.h) >> 1;
 
-		SCIDFB_CHECKED(scidfb_visuals[0]->GetSubSurface(scidfb_visuals[0], &region, &subsurface));
+		SCIDFB_CHECKED(scidfb_visual->GetSubSurface(scidfb_visual, &region, &subsurface));
 
-		scidfb_visuals[0] = subsurface;
+		scidfb_visual = subsurface;
 	}
 
-	SCIDFB_CHECKED(scidfb_visuals[0]->GetPixelFormat(scidfb_visuals[0], &pixel_format));
+	scidfb_visual->SetDrawingFlags(scidfb_visual, DSDRAW_BLEND); /* Unchecked: It's just a
+								     ** feature  */
+	SCIDFB_CHECKED(scidfb_visual->GetPixelFormat(scidfb_visual, &pixel_format));
 
 	SCIGFX_CHECKED(_scidfb_decode_pixel_format(pixel_format,
 						   &red_mask, &green_mask, &blue_mask, &alpha_mask,
 						   &red_shift, &green_shift, &blue_shift, &alpha_shift,
-				    &bytespp_real));
+						   &bytespp_real));
+
+	fprintf(stderr, "Mode %08x -> (%x>>%d, %x>>%d, %x>>%d, %x>>%d) at %d bytespp\n",
+		pixel_format,
+		red_mask, red_shift,
+		green_mask, green_shift,
+		blue_mask, blue_shift,
+		alpha_mask, alpha_shift,
+		bytespp_real);
 
 	drv->mode = gfx_new_mode(xres, yres,
 				 bytespp_real,
@@ -728,14 +736,10 @@ scidfb_init_specific(gfx_driver_t *drv, int xres, int yres, int bytespp)
 				 0 /* not palette mode*/,
 				 0);
 
-	/* Build back and static visuals */
-	for (i = 1; i < 3; i++) {
-		SCIGFX_CHECKED(scidfb_build_virtual_surface(&scidfb_visuals[i],
-							    drv->mode->xfact * 320,
-							    drv->mode->yfact * 200,
-							    scidfb_visuals[0]));
-		SCIDFB_CHECKED(scidfb_visuals[1]->Clear(scidfb_visuals[1], 0, 0, 0, 255));
-	}
+	SCIGFX_CHECKED(scidfb_build_virtual_surface(&scidfb_static_visual,
+						    drv->mode->xfact * 320,
+						    drv->mode->yfact * 200,
+						    scidfb_visual));
 
 	scidfb_back_priority =
 		gfx_pixmap_alloc_index_data(gfx_new_pixmap(drv->mode->xfact * 320,
@@ -748,16 +752,16 @@ scidfb_init_specific(gfx_driver_t *drv, int xres, int yres, int bytespp)
 static int
 _scidfb_set_color(gfx_color_t *c)
 {
-	SCIDFB_CHECKED(scidfb_visuals[1]->SetColor(scidfb_visuals[1],
-						  c->visual.r, c->visual.g, c->visual.b,
-						  (c->mask & GFX_MASK_VISUAL)? c->alpha : 0));
+	SCIDFB_CHECKED(scidfb_visual->SetColor(scidfb_visual,
+					       c->visual.r, c->visual.g, c->visual.b,
+					       (c->mask & GFX_MASK_VISUAL)? (255 - c->alpha) : 0));
 	return GFX_OK;
 }
 
 static int
 scidfb_init(gfx_driver_t *drv)
 {
-	return scidfb_init_specific(drv, 2, 2, 8);
+	return scidfb_init_specific(drv, 2, 2, 1);
 }
 
 
@@ -776,13 +780,13 @@ scidfb_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
 	SCIGFX_CHECKED(_scidfb_set_color(&color));
 
 	if (line_mode == GFX_LINE_MODE_FINE) {
-		SCIDFB_CHECKED(scidfb_visuals[1]->DrawLine(scidfb_visuals[1],
-							  line.x, line.y,
-							  line.x + line.xl, line.y + line.yl));
+		SCIDFB_CHECKED(scidfb_visual->DrawLine(scidfb_visual,
+						       line.x, line.y,
+						       line.x + line.xl, line.y + line.yl));
 	} else /* "Correct" lines */
 		for (xc = 0; xc < drv->mode->xfact; xc++)
-			for (yc = 0; yc < drv->mode->xfact; yc++)
-				SCIDFB_CHECKED(scidfb_visuals[1]->DrawLine(scidfb_visuals[1],
+			for (yc = 0; yc < drv->mode->yfact; yc++)
+				SCIDFB_CHECKED(scidfb_visual->DrawLine(scidfb_visual,
 								       line.x + xc, line.y + yc,
 								       line.x + line.xl + xc,
 								       line.y + line.yl + yc));
@@ -796,7 +800,7 @@ scidfb_draw_filled_rect(gfx_driver_t *drv, rect_t rect,
 			gfx_rectangle_fill_t shade_mode)
 {
 	SCIGFX_CHECKED(_scidfb_set_color(&color1));
-	SCIDFB_CHECKED(scidfb_visuals[1]->FillRectangle(scidfb_visuals[1],
+	SCIDFB_CHECKED(scidfb_visual->FillRectangle(scidfb_visual,
 						    rect.x, rect.y,
 						    rect.xl, rect.yl));
 
@@ -824,19 +828,21 @@ scidfb_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 	void *_dest_data;
 	byte *dest_data;
 	int line_width;
+        IDirectFBSurface *visual = (buffer == GFX_BUFFER_STATIC)?
+		scidfb_static_visual : scidfb_visual;
+	gfx_pixmap_t *priority_map = (buffer == GFX_BUFFER_STATIC)?
+		scidfb_static_priority : scidfb_back_priority;
 
-	SCIDFB_CHECKED(scidfb_visuals[buffer]->Lock(scidfb_visuals[buffer], DSLF_WRITE | DSLF_READ,
-						    &_dest_data, &line_width));
+	SCIDFB_CHECKED(visual->Lock(visual, DSLF_WRITE | DSLF_READ,
+				    &_dest_data, &line_width));
 	dest_data = (byte *) _dest_data;
 
 	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest, dest_data,
 			     line_width,
-			     (buffer == GFX_BUFFER_BACK)?
-			     scidfb_back_priority->index_data : scidfb_static_priority->index_data,
-			     scidfb_back_priority->index_xl,
+			     priority_map->index_data, priority_map->index_xl,
 			     1, 0);
 
-	SCIDFB_CHECKED(scidfb_visuals[buffer]->Unlock(scidfb_visuals[buffer]));
+	SCIDFB_CHECKED(visual->Unlock(visual));
 }
 
 static int
@@ -857,8 +863,10 @@ scidfb_grab_pixmap(gfx_driver_t *drv, rect_t src, gfx_pixmap_t *pxm,
 		return GFX_FATAL;
 	}
 
-	SCIDFB_CHECKED(scidfb_visuals[1]->Lock(scidfb_visuals[1], DSLF_READ,
-					       &_src_data, &line_width));
+	SCIDFB_CHECKED(scidfb_visual->Lock(scidfb_visual, DSLF_READ | DSLF_WRITE,
+					   /* Must use DSLF_WRITE to choose the back buffer,
+					   ** otherwise the front buffer would be chosen */
+					   &_src_data, &line_width));
 	src_data = (byte *) _src_data;
 
 	src_data += (drv->mode->bytespp * src.x)
@@ -876,34 +884,42 @@ scidfb_grab_pixmap(gfx_driver_t *drv, rect_t src, gfx_pixmap_t *pxm,
 	}
 
 	
-	SCIDFB_CHECKED(scidfb_visuals[1]->Unlock(scidfb_visuals[1]));
+	SCIDFB_CHECKED(scidfb_visual->Unlock(scidfb_visual));
 }
 
 static int
 scidfb_update(gfx_driver_t *drv, rect_t src, point_t dest, gfx_buffer_t buffer)
 {
-	DFBRectangle dest_rect;
-
 	if (src.x != dest.x
 	    || src.y != dest.y) {
 		GFXERROR("DFB-GFX: Attempt to update from (%d,%d,%d,%d) to (%d,%d)\n",
 			 GFX_PRINT_RECT(src), dest.x, dest.y);
 	}
 
-	dest_rect.x = src.x;
-	dest_rect.y = src.y;
-	dest_rect.w = src.xl;
-	dest_rect.h = src.yl;
-	
-	SCIDFB_CHECKED(scidfb_visuals[buffer]->Blit(scidfb_visuals[buffer], 
-						   scidfb_visuals[buffer+1],
+	if (buffer == GFX_BUFFER_FRONT) {
+		DFBRegion region;
+		region.x1 = src.x;
+		region.y1 = src.y;
+		region.x2 = src.x + src.xl;
+		region.y2 = src.y + src.yl;
+
+		SCIDFB_CHECKED(scidfb_visual->Flip(scidfb_visual, &region, DSFLIP_BLIT));
+	} else { /* Back buffer update */
+		DFBRectangle dest_rect;
+		dest_rect.x = src.x;
+		dest_rect.y = src.y;
+		dest_rect.w = src.xl;
+		dest_rect.h = src.yl;
+
+		SCIDFB_CHECKED(scidfb_visual->Blit(scidfb_visual, 
+						   scidfb_static_visual,
 						   &dest_rect,
 						   dest.x, dest.y));
 
-	/* Now update the priority map: */
-	if (buffer == GFX_BUFFER_BACK
-	    && scidfb_static_priority) /* only if the buffers have been initialized */
-		gfx_copy_pixmap_box_i(scidfb_back_priority, scidfb_static_priority, src);
+		/* Now update the priority map: */
+		if (scidfb_static_priority) /* only if the buffers have been initialized */
+			gfx_copy_pixmap_box_i(scidfb_back_priority, scidfb_static_priority, src);
+	}
 
 	return GFX_OK;
 }
@@ -919,9 +935,8 @@ scidfb_set_static_buffer(gfx_driver_t *drv, gfx_pixmap_t *pic, gfx_pixmap_t *pri
 	int i;
 
 	scidfb_static_priority = priority;
-	SCIDFB_CHECKED(scidfb_visuals[GFX_BUFFER_STATIC]->Lock(scidfb_visuals[GFX_BUFFER_STATIC],
-							       DSLF_WRITE,
-							       &_dest, &line_width));
+	SCIDFB_CHECKED(scidfb_static_visual->Lock(scidfb_static_visual, DSLF_WRITE,
+						&_dest, &line_width));
 	dest = (byte *) _dest;
 	
 	for (i = 0; i < pic->yl; i++) {
@@ -930,7 +945,7 @@ scidfb_set_static_buffer(gfx_driver_t *drv, gfx_pixmap_t *pic, gfx_pixmap_t *pri
 		src += draw_width;
 	}
 
-	SCIDFB_CHECKED(scidfb_visuals[GFX_BUFFER_STATIC]->Unlock(scidfb_visuals[GFX_BUFFER_STATIC]));
+	SCIDFB_CHECKED(scidfb_static_visual->Unlock(scidfb_static_visual));
 
 	return GFX_OK;
 }
