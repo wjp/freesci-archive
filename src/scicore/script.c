@@ -155,6 +155,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(heading, "heading");
   FIND_SELECTOR(mode, "mode");
   FIND_SELECTOR(caller, "caller");
+  FIND_SELECTOR(moveDone, "moveDone");
 }
 
 int

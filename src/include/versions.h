@@ -86,8 +86,8 @@ struct _state;
 
 #define SCI_VERSION_FTU_2ND_ANGLES SCI_VERSION(0,000,572)
 /* Last version known not to use this: ?
-** Later versions assign 120 degrees to left & right , and 60 to up and down.
-** Earlier versions used an even 90 degree distribution.
+** Earlier versions assign 120 degrees to left & right , and 60 to up and down.
+** Later versions use an even 90 degree distribution.
 */
 
 #define SCI_VERSION_RESUME_SUSPENDED_SONG SCI_VERSION(0,000,490)

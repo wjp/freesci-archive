@@ -166,9 +166,12 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int x = GET_SELECTOR(client, x);
 	int y = GET_SELECTOR(client, y);
 	int oldx, oldy, destx, desty, dx, dy, bdi, bi1, bi2, movcnt, bdelta, axis;
-
+	word signal = GET_SELECTOR(client, signal);
 	int completed = 0;
 
+	if (SCI_VERSION_MAJOR(s->version)>0)
+	  signal&=~_K_VIEW_SIG_FLAG_HIT_OBSTACLE;
+	PUT_SELECTOR(client, signal, signal); /* This is a NOP for SCI0 */
 	oldx = x;
 	oldy = y;
 	destx = GET_SELECTOR(mover, x);
@@ -238,7 +241,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->acc = completed;
 	}
 	else {
-		word signal = UGET_SELECTOR(client, signal);
+		signal = UGET_SELECTOR(client, signal);
 
 		PUT_SELECTOR(client, x, oldx);
 		PUT_SELECTOR(client, y, oldy);
@@ -248,6 +251,9 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		SCIkdebug(SCIkBRESEN, "Finished mover %04x by collision\n", mover);
 		s->acc = completed = 1;
 	}
+
+	if (SCI_VERSION_MAJOR(s->version)>0)
+	  if (completed) invoke_selector(INV_SEL(mover, moveDone, 0), 0);
 
 }
 

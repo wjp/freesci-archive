@@ -1,3 +1,10 @@
+2002-04-02  Lars Skovlund  <lskovlun@image.dk>
+
+	* SCI01: Implicitly call moveDone when a Bresenham operation is
+	completed.
+	* src/include/versions.h: Fixed minor semantic error in the
+	description of one version constant.
+
 2002-03-26  Lars Skovlund  <lskovlun@image.dk>
 
 	* Fixed a minor bug in picdrawing related to SCI01
