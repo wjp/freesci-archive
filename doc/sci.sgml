@@ -1668,6 +1668,86 @@ KSetPort(temp);    /* Reactivate the old port */
  </sect2>
 </sect1>
 <sect1>
+  <title>The SCI font resource</title>
+  <para>
+    SCI font resources remained unchanged during the SCI revisions and were still
+    used in SCI32. Their format is relatively straightforward and completely
+    sufficient for any 8 or even 16 bit character table:
+  </para>
+  <para>
+    <table frame="all">
+      <tgroup cols="2">
+	<thead>
+	  <row>
+	    <entry>Offset</entry>
+	    <entry>Type</entry>
+	    <entry>Meaning</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>0</entry>
+	    <entry>16 bit integer, little endian encoding</entry>
+	    <entry>Always zero (?)</entry>
+	  </row>
+	  <row>
+	    <entry>2</entry>
+	    <entry>16 bit integer, little endian encoding</entry>
+	    <entry>NUMCHAR: Number of characters</entry>
+	  </row>
+	  <row>
+	    <entry>4</entry>
+	    <entry>16 bit integer, little endian encoding</entry>
+	    <entry>HEIGHT: Number of pixel lines per text line</entry>
+	  </row>
+	  <row>
+	    <entry>6 + NR * 2</entry>
+	    <entry>16 bit integer, little endian encoding</entry>
+	    <entry>Absolute offset of the character #NR, where 0 &lt;= NR &lt NUMCHAR</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </para>
+  <para>
+    HEIGHT does not affect the height of a character, though- it only tells the
+    interpreter how far to move downwards when displaying a line of text. The
+    characters referenced to starting at offset 6 are encoded as follows:
+    <table frame="all">
+      <tgroup cols="2">
+	<thead>
+	  <row>
+	    <entry>Offset</entry>
+	    <entry>Type</entry>
+	    <entry>Meaning</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>0</entry>
+	    <entry>unsigned 8 bit integer</entry>
+	    <entry>character HEIGHT</entry>
+	  </row>
+	  <row>
+	    <entry>1</entry>
+	    <entry>unsigned 8 bit integer</entry>
+	    <entry>character WIDTH</entry>
+	  </row>
+	  <row>
+	    <entry>2...</entry>
+	    <entry>bitmask, size HEIGHT * round_up(WIDTH / 8)</entry>
+	    <entry>Bitmask for the character</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+    The bitmap consists of HEIGHT lines of n bytes, where n equals the number
+    of bytes required for storing WIDTH bits. Data is stored with the MSB first,
+    in little-endian encoding (first byte describes the 8 leftmost pixels), where
+    a pixel is drawn iff the bit it corresponds to is set.
+  </para>
+</sect1>
+<sect1>
   <title>The SCI0 and SCI01 pic resource</title>
   <para>
     The pic (background picture) resource format used in SCI0 is rather complex in comparison

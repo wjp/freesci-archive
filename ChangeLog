@@ -1,3 +1,17 @@
+2001-10-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/kernel.h (SCI0_VIEW_PRIORITY): Augmented by one to test
+	a theory
+
+2001-10-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci.sgml (temp): Added docs for the font resource
+
+2001-10-16  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (_gfxwop_pic_view_draw): Update the real bounds,
+	not the 'draw bounds'
+
 2001-10-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/widgets.c (_gfxwop_container_draw_contents): Do not do

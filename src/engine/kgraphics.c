@@ -652,6 +652,11 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 	int y = GET_SELECTOR(other_obj, y);
 	abs_rect_t other_area;
 
+	if (other_obj == 0xb642) {
+		fprintf(stderr,"Door: p=%d, y=%d, real_p=%d\n",
+			other_priority, y, VIEW_PRIORITY(y));
+	}
+
 	if (use_nsrect) {
 #if 0
 		other_area.x = GET_SELECTOR(other_obj, nsLeft);
@@ -906,41 +911,6 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
 
-	/* Apparently invalid */ /*
-	if (s->dyn_views) {
-		gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) s->dyn_views->contents;
-		abs_rect_t rect;
-
-		rect.x = xstart;
-		rect.y = ystart;
-		rect.xend = xstart + xlen;
-		rect.yend = ystart + ylen;
-
-		while (view && !(s->acc & 0x8000))
-			if (collides_with(s, rect, view->ID, funct_nr, argc, argp)) {
-				sciprintf("  (%d,%d,%d,%d) collides with obj at %04x\n",
-					  rect.x, rect.y, rect.xend, rect.yend, view->ID);
-
-				s->acc |= 0x8000;
-			} else
-				view = (gfxw_dyn_view_t *) view->next;
-
-	}
-				 */
-
-	/*  { */
-/*  		int x, y; */
-/*  		fprintf(stderr,"Area %d,%d %dx%d returned %04x\n", xstart, ystart + 10, xlen, ylen, s->acc); */
-
-/*  		fprintf(stderr, "     /  %d\n", xstart - 1); */
-/*  		for (y = -1; y <= ylen+1; y++) { */
-/*  			fprintf(stderr," %3d : ", y + ystart + 10); */
-/*  			for (x = -1; x <= xlen+1; x++) */
-/*  				fprintf(stderr, "%1x ", ffs(gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart + x, ystart + 10 + y, */
-/*  												      1, 1), map)) - 1); */
-/*  			fprintf(stderr, "\n"); */
-/*  		} */
-/*  	} */
 }
 
 void
@@ -1812,7 +1782,8 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 	if (widget) {
 
 		widget = (gfxw_dyn_view_t *) gfxw_set_id(GFXW(widget), obj);
-		widget = gfxw_dyn_view_set_params(widget, under_bits, under_bitsp, signal, signalp);
+		widget = gfxw_dyn_view_set_params(widget, under_bits,
+						  under_bitsp, signal, signalp);
 		widget->flags |= GFXW_FLAG_IMMUNE_TO_SNAPSHOTS; /* Only works the first time 'round */
 
 		return widget;
