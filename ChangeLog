@@ -1,3 +1,7 @@
+2001-06-02  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/savegame.cfsml: Added saving of synonym data
+
 2001-05-31  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/sci_widgets.c (sciw_new_window): Fixed OB1 buglet in
