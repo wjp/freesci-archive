@@ -431,6 +431,7 @@ sci0_event_ss(sound_server_state_t *ss_state)
 
 	/*** shut down server ***/
 	fprintf(debug_stream, "Sound server: Received shutdown signal\n");
+	pcmout_close();
 	midi_close();
 	song_lib_free(ss_state->songlib);
 }
