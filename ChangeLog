@@ -1,3 +1,11 @@
+2000-06-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kCanBeHere): Slightly less restrictive
+	(like on_control())
+
+	* src/graphics/font.c (get_text_size): Switched back to old SCI be-
+	haviour
+
 2000-06-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_k_make_view_list): Picviews no longer leave

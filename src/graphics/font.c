@@ -140,7 +140,7 @@ get_text_size(char *text, byte *font, int max_allowed_width, int *width, int *he
 
 	if (last_breakpoint > maxwidth)
 	  maxwidth = last_breakpoint;
-	localmaxwidth = localmaxwidth - last_breakpoint - last_break_width;
+	localmaxwidth = localmaxwidth - last_breakpoint/* - last_break_width*/;
 
       }
 

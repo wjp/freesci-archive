@@ -597,9 +597,9 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		    other_x, other_y, other_xend, other_yend);
 
 
-	  if (((other_xend >= x) && (other_x <= xend)) /* [other_x, other_xend] intersects [x, xend]? */
+	  if (((other_xend > x) && (other_x <= xend)) /* [other_x, other_xend] intersects [x, xend]? */
 	      &&
-	      ((other_yend >= y) && (other_y <= yend))) /* [other_y, other_yend] intersects [y, yend]? */
+	      ((other_yend > y) && (other_y <= yend))) /* [other_y, other_yend] intersects [y, yend]? */
 	    return;
 
 	}
@@ -2438,7 +2438,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
   _k_dyn_view_list_accept_change(s);
 
   if ((!s->pic_not_valid)&&update_immediately) { /* Refresh if drawn to valid picture */
-    graph_update_box(s, port->xmin, port->ymin,
+    graph_update_box(s, port->xmin, port->ymin + 1,
 		     port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);
     SCIkdebug(SCIkGRAPHICS, "Refreshing display...\n");
   }
