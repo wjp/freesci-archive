@@ -35,7 +35,6 @@ int midi_adlibemu_reset(void);
 
 //#define DEBUG_ADLIB
 //#define ADLIB_MONO
-//#define ADLIB_PITCH_BEND
 
 /* portions shamelessly lifted from claudio's XMP */
 
@@ -64,28 +63,13 @@ static int ym3812_note[13] = {
     0x1e5, 0x202, 0x220, 0x241, 0x263, 0x287,
     0x2ae
 };
-
 static guint8 sci_adlib_vol_base[16] = {
   0x00, 0x11, 0x15, 0x19, 0x1D, 0x22, 0x26, 0x2A, 
   0x2E, 0x23, 0x37, 0x3B, 0x3F, 0x3F, 0x3F, 0x3F
 };
 static guint8 sci_adlib_vol_tables[16][64];
 
-
-/* logarithmic relationship between midi and FM volumes */
-static int my_midi_fm_vol_table[128] = {
-   0,  11, 16, 19, 22, 25, 27, 29, 32, 33, 35, 37, 39, 40, 42, 43,
-   45, 46, 48, 49, 50, 51, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,
-   64, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 75, 76, 77,
-   78, 79, 80, 80, 81, 82, 83, 83, 84, 85, 86, 86, 87, 88, 89, 89,
-   90, 91, 91, 92, 93, 93, 94, 95, 96, 96, 97, 97, 98, 99, 99, 100,
-   101, 101, 102, 103, 103, 104, 104, 105, 106, 106, 107, 107, 108,
-   109, 109, 110, 110, 111, 112, 112, 113, 113, 114, 114, 115, 115,
-   116, 117, 117, 118, 118, 119, 119, 120, 120, 121, 121, 122, 122,
-   123, 123, 124, 124, 125, 125, 126, 126, 127
-};
-
-static int my_midi_fm_vol_table2[64] = {
+static int my_midi_fm_vol_table[64] = {
    0,  8, 11, 13, 16, 17, 18, 21,
    22, 24, 25, 26, 27, 28, 29, 30,
    32, 32, 33, 34, 35, 36, 37, 38,
@@ -230,17 +214,19 @@ void synth_setnote (int voice, int note, int bend)
     int n, fre, oct, delta;
 
     delta = 0;
-#if defined(ADLIB_PITCH_BEND)
+
+    n = note % 12;
+
     if (bend > 8192) {
       // pitch bend up.
       bend -= 8192;
       delta = (ym3812_note[n+1] - ym3812_note[n]) * bend / 8192; 
     } else if (bend < 8192) {
       // bend down.
-      delta = (ym3812_note[n-1] - ym3812_note[n]) * bend / 8192;
+      delta = (ym3812_note[n-1] - ym3812_note[n]) -
+	((ym3812_note[n-1] - ym3812_note[n]) * bend / 8192);
     }
-#endif
-    n = note % 12;
+
     fre = ym3812_note[n] + delta;
 
     oct = note / 12 - 1;
@@ -347,8 +333,8 @@ int adlibemu_start_note(int chn, int note, int velocity)
 
   /* logarithmically scale */
 #if 1
-  volume_R = my_midi_fm_vol_table2[volume_R];
-  volume_L = my_midi_fm_vol_table2[volume_L];
+  volume_R = my_midi_fm_vol_table[volume_R];
+  volume_L = my_midi_fm_vol_table[volume_L];
 #else
   volume_R = sci_adlib_vol_tables[adlib_master][volume_R];
   volume_L = sci_adlib_vol_tables[adlib_master][volume_L];
@@ -497,7 +483,6 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 de
     return adlibemu_start_note(channel, note, velocity);
   case 0xe0:   /* Pitch bend */
     pitch[channel] = (note & 0x7f) | ((velocity & 0x7f) << 7);
-    printf("ADLIB:  Pitch bend %04x %02x %02x\n", pitch[channel], note, velocity);
     break;
   case 0xb0:    /* CC changes. */
     switch (note) {
