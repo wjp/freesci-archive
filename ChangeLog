@@ -1,3 +1,8 @@
+2003-01-22  Alexander Angas  <wgd@internode.on.net>
+
+	* src/gfx/drivers/dx_driver.cpp: Added support for graphics scaling
+	and switch for full screen mode. Minor optimisations and fixes.
+
 2003-01-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/console.c (sciprintf): Fixed fix for memory leak to pass
@@ -31,7 +36,7 @@
 	configuration.
 
 	* src/win32/sciv.dsp: Updated version number of FreeSCI.
-	
+
 2003-01-18  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/games.h (sci_games): Added SQ3 v1.0.

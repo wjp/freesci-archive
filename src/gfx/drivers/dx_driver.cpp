@@ -1,5 +1,5 @@
 /***************************************************************************
- dx_driver.cpp Copyright (C) 2002 Alexander R Angas,
+ dx_driver.cpp Copyright (C) 2002,2003 Alexander R Angas,
                Copyright (C) 1999 Dmitry Jemerov
 
  This program may be modified and copied freely according to the terms of
@@ -29,10 +29,9 @@
    20030115 - Fixed: memory leak in dx_grab_pixmap()
 			- Fixed: vertical line drawing
    20030116 - Fixed: all known memory leaks
-			- TODO: implement size factor
+   20030122 - Added: scaling and fullscreen
+            - Fixed: Rearrange of draw_filled_rect() and draw_line()
 			- TODO: implement mouse
-			- TODO: improve LockRect call for draw_filled_rect
-			        calling draw_line
             - TODO: allow setting of adapter
                 -- Alex Angas
 
@@ -110,6 +109,8 @@ struct PIXMAP_VERTEX
 #define BACK_PRI	0
 #define STATIC_PRI	1
 
+#define DXFLAGS_FULLSCREEN  1
+
 struct gfx_dx_struct_t
 {
 	LPDIRECT3D8 g_pD3D;				// D3D object
@@ -136,6 +137,8 @@ struct gfx_dx_struct_t
 	int queue_size, queue_first, queue_last;
 	sci_event_t *event_queue;
 };
+
+static int flags = 0;
 
 static int ProcessMessages(struct _gfx_driver *drv);
 
@@ -220,22 +223,24 @@ InitD3D(struct _gfx_driver *drv)
 
 	// Get device caps.
 	DODX((dx_state->g_pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &(dx_state->g_d3dcaps))), InitD3D);
-	if (dx_state->g_d3dcaps.Caps2 & D3DCAPS2_CANRENDERWINDOWED)
-		sciprintf("   Can render to window or full screen\n");
-	else
-		sciprintf("   Can render to full screen only\n");
-	if (dx_state->g_d3dcaps.DevCaps & D3DDEVCAPS_DRAWPRIMTLVERTEX)
-		sciprintf("   DrawPrimitive aware\n");
-	else
-		sciprintf("   NOT DrawPrimitive aware\n");
-	if (dx_state->g_d3dcaps.DevCaps &= D3DPTEXTURECAPS_SQUAREONLY)
-		sciprintf("   Square textures ONLY\n");
-	else
-		sciprintf("   Non-square textures allowed\n");
 
-	// Get current display mode.
+	// Get current display mode and optimise for this screen.
 	DODX((dx_state->g_pD3D->GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &dx_state->g_d3ddm )), InitD3D);
 	sciprintf("   Display %lu x %lu\n", dx_state->g_d3ddm.Width, dx_state->g_d3ddm.Height);
+	if (dx_state->xfact == 0)
+		dx_state->xfact = (int)(dx_state->g_d3ddm.Width / 320);
+	dx_state->yfact = dx_state->xfact;
+
+	return GFX_OK;
+}
+
+
+static gfx_return_value_t
+ConfigD3D(struct _gfx_driver *drv)
+{
+	HRESULT hr;
+
+	sciprintf("Configuring DirectX Graphics...\n");
 
 	// Set D3D behaviour.
 	ZeroMemory( &dx_state->g_d3dpp, sizeof(D3DPRESENT_PARAMETERS) );
@@ -247,10 +252,19 @@ InitD3D(struct _gfx_driver *drv)
 	dx_state->g_d3dpp.hDeviceWindow = dx_state->hWnd;
 	dx_state->g_d3dpp.Windowed = TRUE;
 
+	if (flags & DXFLAGS_FULLSCREEN)
+	{
+		if (dx_state->g_d3dcaps.Caps2 & D3DCAPS2_CANRENDERWINDOWED) {
+			dx_state->g_d3dpp.Windowed = FALSE;
+		} else {
+			sciprintf("Sorry, DirectX will not render in full screen with your video card\n");
+		}
+	}
+
 	// Create D3D device.
 	DODX((dx_state->g_pD3D->CreateDevice(
 		D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, dx_state->hWnd,
-		D3DCREATE_SOFTWARE_VERTEXPROCESSING,	// TODO: try changing this?
+		D3DCREATE_MIXED_VERTEXPROCESSING,
 		&dx_state->g_d3dpp, &dx_state->g_pd3dDevice)), InitD3D );
 
     // Set render states.
@@ -313,7 +327,16 @@ LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 static int
 dx_set_param(struct _gfx_driver *drv, char *attribute, char *value)
 {
-	//sciprintf("dx_set_param(): '%s' to '%s'\n", attribute, value);
+	if (!strncmp(attribute, "fullscreen", 11)) {
+		if (string_truep(value))
+			flags |= DXFLAGS_FULLSCREEN;
+		else
+			flags &= ~DXFLAGS_FULLSCREEN;
+
+		return GFX_OK;
+	}
+
+	sciprintf("Attempt to set DirectX parameter \"%s\" to \"%s\"\n", attribute, value);
 	return GFX_ERROR;
 }
 
@@ -322,19 +345,29 @@ dx_set_param(struct _gfx_driver *drv, char *attribute, char *value)
 static int
 dx_init_specific(struct _gfx_driver *drv,
 				 int xfact, int yfact,	/* horizontal and vertical scaling */
-				 int bytespp)			/* any of GFX_COLOR_MODE_* */
+				 int bytespp)			/* must be value 4 */
 {
 	int red_shift = 8, green_shift = 16, blue_shift = 24, alpha_shift = 32;
 	int alpha_mask = 0x00000000, red_mask = 0x00ff0000, green_mask = 0x0000ff00, blue_mask = 0x000000ff;
 	gfx_return_value_t d3dret;
 
 	drv->state = (struct gfx_dx_struct_t *) sci_malloc(sizeof(gfx_dx_struct_t));
+	ZeroMemory(drv->state, sizeof(gfx_dx_struct_t));
 
-	dx_state->xfact = xfact;
-	dx_state->yfact = yfact;
-	dx_state->xsize = xfact * 320;
-	dx_state->ysize = yfact * 200;
-	bytespp = 4;
+	// Check for scaling
+	if (xfact != 0)
+		dx_state->xfact = xfact;
+	if (yfact != 0)
+		dx_state->yfact = yfact;
+
+	// Set up Direct3D for this screen
+	d3dret = InitD3D(drv);
+	if (d3dret != GFX_OK)
+		return d3dret;
+
+	// Set factor according to command line here
+	dx_state->xsize = dx_state->xfact * 320;
+	dx_state->ysize = dx_state->yfact * 200;
 	dx_state->bpp = bytespp;
 
 	// Register the window class.
@@ -372,8 +405,8 @@ dx_init_specific(struct _gfx_driver *drv,
 		dx_state->priority_maps[i]->flags |= GFX_PIXMAP_FLAG_SCALED_INDEX;
 	}
 
-	// Initialise Direct3D stuff.
-	d3dret = InitD3D(drv);
+	// Configure Direct3D stuff.
+	d3dret = ConfigD3D(drv);
 	if (d3dret != GFX_OK)
 		return d3dret;
 
@@ -401,10 +434,10 @@ dx_init_specific(struct _gfx_driver *drv,
 	dx_state->event_queue = (sci_event_t *) sci_malloc (dx_state->queue_size * sizeof (sci_event_t));
 
 	// Set up graphics mode
-	drv->mode = gfx_new_mode(xfact, yfact, bytespp,
+	drv->mode = gfx_new_mode(dx_state->xfact, dx_state->yfact, dx_state->bpp,
 			   red_mask, green_mask, blue_mask, alpha_mask,
 			   red_shift, green_shift, blue_shift, alpha_shift,
-			   (bytespp == 1) ? 256 : 0, 0);
+			   (dx_state->bpp == 1) ? 256 : 0, 0);
 
 	return GFX_OK;
 }
@@ -414,8 +447,7 @@ dx_init_specific(struct _gfx_driver *drv,
 static int
 dx_init(struct _gfx_driver *drv)
 {
-	// TODO: optimise later
-	return dx_init_specific(drv, 1, 1, 1);
+	return dx_init_specific(drv, NULL, NULL, 4);
 }
 
 
@@ -452,22 +484,20 @@ dx_exit(struct _gfx_driver *drv)
 
 /*** Drawing operations. ***/
 
-/* Draws a single line to the back buffer. */
+/* Draws a single filled and possibly shaded rectangle to the back buffer. */
 static int
-dx_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
-		    gfx_line_mode_t line_mode, gfx_line_style_t line_style)
+dx_draw_filled_rect(struct _gfx_driver *drv, rect_t box,
+			   gfx_color_t color1, gfx_color_t color2,
+			   gfx_rectangle_fill_t shade_mode)
 {
-	HRESULT hr;
-	D3DLOCKED_RECT lockedRect;
-
-	if (color.mask & GFX_MASK_VISUAL) {
-		// Calculate line size
-		int xf = (line_mode == GFX_LINE_MODE_FINE) ? 1 : dx_state->xfact;
-		int yf = (line_mode == GFX_LINE_MODE_FINE) ? 1 : dx_state->yfact;
+	if (color1.mask & GFX_MASK_VISUAL)
+	{
+		HRESULT hr;
+		D3DLOCKED_RECT lockedRect;
 
 		// Calculate colour value for line pixel
-		UINT lineColor = (color.alpha << 24) | (color.visual.r << 16) | (color.visual.g << 8) | color.visual.b;
-		RECT r = { line.x, line.y, line.x + line.xl + xf, line.y + line.yl + yf };
+		UINT lineColor = (color1.alpha << 24) | (color1.visual.r << 16) | (color1.visual.g << 8) | color1.visual.b;
+		RECT r = { box.x, box.y, box.x + box.xl, box.y + box.yl };
 		RECT lr = r;
 
 		// Fix bounds
@@ -479,16 +509,17 @@ dx_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 			lr.right = r.right = dx_state->xsize;
 		if (r.bottom > dx_state->ysize)
 			lr.bottom = r.bottom = dx_state->ysize;
+
 //sciprintf("%08X  %i,%i -> %i,%i\n", lineColor, r.left, r.top, r.right, r.bottom);
 
-		DODX( (dx_state->visuals[BACK_VIS]->LockRect(0, &lockedRect, &r, 0)), dx_draw_line );
+		DODX( (dx_state->visuals[BACK_VIS]->LockRect(0, &lockedRect, &lr, 0)), dx_draw_line );
 		UINT *rectPtr = (UINT*)lockedRect.pBits;
 
 		// Going along x axis
-		for (int y_pixel = r.top; y_pixel < (r.bottom * yf); y_pixel++)
+		for (int y_pixel = r.top; y_pixel < r.bottom; y_pixel++)
 		{
 			UINT *startLine = rectPtr;
-			for (int x_pixel = r.left; x_pixel < (r.right * xf); x_pixel++)
+			for (int x_pixel = r.left; x_pixel < r.right; x_pixel++)
 			{
 				*rectPtr = lineColor;
 				rectPtr++;
@@ -498,6 +529,45 @@ dx_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 		}
 
 		DODX( (dx_state->visuals[BACK_VIS]->UnlockRect(0)), dx_draw_line );
+	}
+
+	if (color1.mask & GFX_MASK_PRIORITY)
+	{
+		byte *pri;
+		pri = dx_state->priority_maps[BACK_PRI]->index_data + box.x + box.y*(dx_state->xsize);
+		for(int i=0; i<box.yl; i++)
+		{
+			memset(pri,color1.priority,box.xl);
+			pri += dx_state->xsize;
+		}
+	}
+
+	return GFX_OK;
+}
+
+
+/* Draws a single line to the back buffer. */
+static int
+dx_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
+		    gfx_line_mode_t line_mode, gfx_line_style_t line_style)
+{
+	if (color.mask & GFX_MASK_VISUAL) {
+
+		// Calculate line thickness
+		int xf = (line_mode == GFX_LINE_MODE_FINE) ? 1 : dx_state->xfact;
+		int yf = (line_mode == GFX_LINE_MODE_FINE) ? 1 : dx_state->yfact;
+		
+		rect_t line_rect = { line.x, line.y, line.xl, line.yl };
+		if (line_rect.xl == 0)	// Line parallel to x axis
+			line_rect.xl += xf;
+		if (line_rect.yl == 0)	// Line parallel to y axis
+			line_rect.yl += yf;
+
+		// Make sure priorities are not updated in dx_draw_filled_rect()
+		gfx_color_t col = color;
+		col.mask = GFX_MASK_VISUAL;
+
+		dx_draw_filled_rect(drv, line_rect, col, col, GFX_SHADE_FLAT);
 	}
 
 	if (color.mask & GFX_MASK_PRIORITY) {
@@ -513,39 +583,6 @@ dx_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 				newline.y = line.y + yc;
 				gfx_draw_line_pixmap_i(dx_state->priority_maps[BACK_PRI], newline, color.priority);
 			}
-	}
-
-	return GFX_OK;
-}
-
-
-/* Draws a single filled and possibly shaded rectangle to the back buffer. */
-static int
-dx_draw_filled_rect(struct _gfx_driver *drv, rect_t box,
-			   gfx_color_t color1, gfx_color_t color2,
-			   gfx_rectangle_fill_t shade_mode)
-{
-	RECT rcDest;
-	byte *pri;
-
-	rcDest.left   = box.x;
-	rcDest.top    = box.y;
-	rcDest.right  = box.x+box.xl;
-	rcDest.bottom = box.y+box.yl;
-
-	if (color1.mask & GFX_MASK_VISUAL)
-	{
-		dx_draw_line(drv, box, color1, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
-	}
-
-	if (color1.mask & GFX_MASK_PRIORITY)
-	{
-		pri = dx_state->priority_maps[BACK_PRI]->index_data + box.x + box.y*(dx_state->xsize);
-		for(int i=0; i<box.yl; i++)
-		{
-			memset(pri,color1.priority,box.xl);
-			pri += dx_state->xsize;
-		}
 	}
 
 	return GFX_OK;
@@ -1079,7 +1116,7 @@ ProcessMessages(struct _gfx_driver *drv)
 extern "C"
 gfx_driver_t gfx_driver_dx = {
 	"directx",
-	"0.1",
+	"0.2",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,	/* mode */
