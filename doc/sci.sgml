@@ -3402,7 +3402,7 @@ to pressing LShift-RShift-PadMinus.
         <Title/Kernel function 0x62: GetCWD(HeapPtr)/
                 <funcsynopsis><funcprototype><funcdef>
                         kfunct 0x62: GetCWD
-                </funcdef><paramdef>HeapPtr/ address</paramdef></funcprototype></funcsynopsis>
+                </funcdef><paramdef>HeapPtr address</paramdef></funcprototype></funcsynopsis>
                 <para>
                    <simplelist>
                        <member><type/(HeapPtr)/ address: The address to write to</member>

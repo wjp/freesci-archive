@@ -10,6 +10,8 @@
 
 #define SCRIPT_MAX_EXEC_STACK 256
 /* Maximum number of calls residing on the stack */
+#define SCRIPT_MAX_CLASSTABLE_SIZE 256
+/* Maximum number of entries in the class table */
 
 
 #define SCRIPT_SELECTOR_OFFSET 8 -8

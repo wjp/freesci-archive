@@ -36,6 +36,9 @@
 #include <uinput.h>
 #include <console.h>
 #include <vm.h>
+#ifdef HAVE_LIBGGI
+#include <ggi/ggi.h>
+#endif
 
 #define MAX_HOMEDIR_SIZE 255
 
@@ -58,17 +61,33 @@ typedef struct _state
 
   /* Non-VM information */
 
+  void (*graphics_callback)(struct _state *s, int command, int x, int y, int xl, int yl);
+  /* Graphics callback function: Called with a special command (see graphics.h) */
+
+  union {
+#ifdef HAVE_LIBGGI
+    ggi_visual_t ggi_visual; /* for libggi */
+#endif    
+    int dummy;
+  } graphics;
+
   int restarting_flag; /* Flag used for restarting */
   int have_mouse_flag; /* Do we have a hardware pointing device? */
 
   int pic_not_valid; /* Is 0 if the background picture is "valid" */
 
+  int pic_layer; /* The picture layer (or "map") to be drawn */
+
   long game_time; /* Counted at 60 ticks per second, reset during start time */
 
   heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
 
-  int pounter_x, pointer_y; /* Mouse pointer coordinates */
-  byte* mouse_pointer; /* Pointer to the current mouse pointer or NULL if none has been selected */
+  heap_ptr sound_object; /* Some sort of object for sound management */
+
+  int pointer_x, pointer_y; /* Mouse pointer coordinates */
+  int last_pointer_x, last_pointer_y; /* Mouse pointer coordinates as last drawn */
+  int last_pointer_size_x, last_pointer_size_y; /* Mouse pointer size as last used */
+  mouse_pointer_t *mouse_pointer; /* The current mouse pointer, or NULL if disabled */
 
   port_t *view; /* The currently active view */
 

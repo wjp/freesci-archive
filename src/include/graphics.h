@@ -75,6 +75,34 @@ typedef struct {
 } window_t; /* Can be typecast safely to become a port_t */
 
 
+typedef struct {
+  int hot_x, hot_y; /* Hot spots */
+  int size_x, size_y; /* Bitmap size */
+  byte *bitmap; /* Actual bitmap data */
+  int color_key; /* The color used for transparency in the bitmap */
+} mouse_pointer_t;
+
+
+/****************************** GRAPHICS CALLBACK FUNCTION ******************************/
+/* The graphics callback function is used by some kernel functions to redraw all or part
+** of the screen. Its parameters are the current state, a command, two coordinates, and
+** two block sizes. Each graphics library implementation must provide such a callback
+** function, which is usually set automatically during graphics initialization.
+*/
+
+#define GRAPHICS_CALLBACK_REDRAW_ALL 0
+/* Callback command to redraw the entire screen */
+
+#define GRAPHICS_CALLBACK_REDRAW_BOX 1
+/* Callback command to redraw the specified part of the screen and the mouse pointer */
+
+#define GRAPHICS_CALLBACK_REDRAW_POINTER 2
+/* Callback command to update the mouse pointer */
+
+
+/****************************************************************************************/
+
+
 #define SCI_COLOR_DITHER 0
 /* Standard mode */
 #define SCI_COLOR_INTERPOLATE 1
@@ -107,6 +135,7 @@ typedef struct {
 
 
 #define SCI_SCREEN_WIDTH 320
+#define SCI_SCREEN_HEIGHT 200
 
 
 extern int sci_color_mode;
@@ -224,11 +253,44 @@ void drawTextCentered0(picture_t dest, port_t *port, int x, int y, char *text, c
 
 
 void drawMouseCursor(picture_t target, int x, int y, guint8 *cursor);
-/* Draws a mouse cursor
+/* DEPRECATED
+** Draws a mouse cursor
 ** Parameters: target: The picture_t to draw to
 **             (x,y): The coordinates to draw to (are clipped to valid values)
 **             cursor: The cursor data to draw
 ** This function currently uses SCI0 cursor drawing for everything.
+*/
+
+
+mouse_pointer_t *
+calc_mouse_cursor(byte *data);
+/* Calculates mouse cursor data
+** Parameters: (byte *) data: The resource data from which it should be calculated
+** Returns   : (mouse_pointer_t *) A pointer to a valid mouse_pointer_t structure
+** The mouse_pointer structure is allocated with malloc(). To unallocate it, free_mouse_cursor()
+** below can be used.
+*/
+
+void
+free_mouse_cursor(mouse_pointer_t *pointer);
+/* Frees space allocated by a mouse_pointer_t structure
+** Parameters: (mouse_pointer_t *) pointer: The pointer to deallocate
+** Returns   : (void)
+** A simple function to free all memory allocated with the specified pointer.
+*/
+
+int
+open_visual_ggi(struct _state *s);
+/* Opens a ggi visual and sets all callbacks to ggi-specific functions
+** Parameter: (state_t *) s: Pointer to the affected state_t
+** Returns  : (int) 0 on success, 1 otherwise
+*/
+
+void
+close_visual_ggi(struct _state *s);
+/* Closes a ggi visual on a state_t
+** Parameter: (state_t *) s: Pointer to the affected state_t
+** Returns  : (void)
 */
 
 #endif

@@ -35,6 +35,7 @@
 
 #include <graphics_ggi.h>
 #include <uinput.h>
+#include <engine.h>
 
 #ifdef SCI_GRAPHICS_ALLOW_256
 ggi_pixel egacol[256];
@@ -114,6 +115,8 @@ void initColors(ggi_visual_t visual)
 
 
 
+
+
 ggi_visual_t openVisual()
 {
   ggi_mode mode = {
@@ -143,6 +146,7 @@ ggi_visual_t openVisual()
 
   return _sci_ggi_last_visual = retval;
 }
+
 
 
 ggi_visual_t openDoubleVisual()
@@ -175,11 +179,162 @@ ggi_visual_t openDoubleVisual()
   return _sci_ggi_last_visual = retval;
 }
 
+
 void closeVisual(ggi_visual_t visual)
 {
   ggiClose(visual);
 
   /* Nothing more ATM... */
+}
+
+
+void
+graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
+			 int x, int y, int xl, int yl,
+			 mouse_pointer_t *pointer, int pointer_x, int pointer_y)
+{
+  int xc, yc, pos = 0;
+  ggi_mode mode;
+  int bytelen;
+  int index, counter;
+  int xend, yend;
+  int pointer_end_x, pointer_end_y;
+  int pointer_x_affected = 0; /* set to 1 if the pointer has to be drawn at all */
+
+  ggiGetMode(vis, &mode);
+
+  if (mode.visible.x >= 640) { /* double sized? */
+    /* FIXME */
+    /*    graphics_draw_region_ggi_double(vis, data, x, y, xl, yl, pointer, pointer_x, pointer_y); */
+    return;
+  }
+  
+  bytelen = GT_SIZE(mode.graphtype) >> 3; /* min of 8 bpp */
+
+  if (x < 0) {
+    xl += x;
+    x = 0;
+  }
+
+  if (y < 0) {
+    yl += y;
+    y = 0;
+  }
+
+  xend = x + xl + 1;
+  yend = y + yl + 1;
+
+  if (xend > SCI_SCREEN_WIDTH)
+    xend = SCI_SCREEN_WIDTH;
+
+  if (yend > SCI_SCREEN_HEIGHT)
+    yend = SCI_SCREEN_HEIGHT;
+
+  if (pointer) {
+    pointer_x -= pointer->hot_x;
+    pointer_y -= pointer->hot_y; /* Adjust hot spot */
+    pointer_end_x = pointer_x + pointer->size_x;
+    pointer_end_y = pointer_y + pointer->size_y;
+
+    if ((pointer_x >= x) && (pointer_x < xend))
+      pointer_x_affected = 1; /* Pointer might have to be drawn */
+
+    if ((pointer_end_x >= x) && (pointer_end_x < xend))
+      pointer_x_affected = 1; /* Pointer might have to be drawn */
+  } /* if (pointer) */
+
+  for (yc = y; yc < yend; yc++) {
+    int pointer_row;
+    counter = yc * SCI_SCREEN_WIDTH + x; /* Screen Position */
+    index = -bytelen;
+
+    if ((yc < pointer_y) || (yc >= pointer_end_y))
+      pointer_row = -1;
+    else if (pointer) pointer_row = (yc - pointer_y) * pointer->size_y;
+
+    if ((!pointer_x_affected) || (pointer_row == -1))
+      for (xc=x; xc<xend; xc++)
+	*(uint32 *)&(_sci_xfer[index += bytelen]) = *(uint32 *)&(egacol[data[counter++]]);
+    else { /* Check for mouse pointer */
+
+      xc = x;
+      for (; xc < pointer_x; xc++)
+	*(uint32 *)&(_sci_xfer[index += bytelen]) = *(uint32 *)&(egacol[data[counter++]]);
+      
+      for (; (xc < pointer_end_x) && (xc < xend); xc++) {
+	int colval = pointer->bitmap[pointer_row + xc - pointer_x];
+	if (colval == pointer->color_key)
+	  colval = data[counter];
+
+	*(uint32 *)&(_sci_xfer[index += bytelen]) = *(uint32 *)&(egacol[colval]);
+
+	counter++;
+      }
+
+      for (; xc < xend; xc++)
+	*(uint32 *)&(_sci_xfer[index += bytelen]) = *(uint32 *)&(egacol[data[counter++]]);
+      
+    }
+
+    ggiPutHLine(vis, x, yc, xl, _sci_xfer);
+  } /* for (yc... ) */
+
+}
+
+void
+graphics_callback_ggi(struct _state *s, int command, int x, int y, int xl, int yl)
+{
+  ggi_visual_t vis = s->graphics.ggi_visual;
+  int mp_x, mp_y, mp_size_x, mp_size_y;
+
+  if (s->mouse_pointer) {
+    mp_x = s->pointer_x - s->mouse_pointer->hot_x;
+    mp_y = s->pointer_y - s->mouse_pointer->hot_y;
+    mp_size_x = s->mouse_pointer->size_x;
+    mp_size_y = s->mouse_pointer->size_y;
+  } else { /* No mouse pointer */
+    mp_x = s->pointer_x;
+    mp_y = s->pointer_y;
+    mp_size_x = mp_size_y = 0;
+  }
+
+
+  switch (command) {
+  case GRAPHICS_CALLBACK_REDRAW_ALL:
+    graphics_draw_region_ggi(vis, s->pic[s->pic_layer],
+			     0, 0, 319, 199,
+			     s->mouse_pointer, s->pointer_x, s->pointer_y);
+    break;
+  case GRAPHICS_CALLBACK_REDRAW_BOX:
+    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Draw new pointer */
+			     mp_x, mp_y, mp_size_x, mp_size_y,
+			     s->mouse_pointer, s->pointer_x, s->pointer_y);
+    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Draw box */
+			     x, y, xl, yl,
+			     s->mouse_pointer, s->pointer_x, s->pointer_y);
+    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Remove old pointer */
+			     s->last_pointer_x, s->last_pointer_y,
+			     s->last_pointer_size_x, s->last_pointer_size_y,
+			     s->mouse_pointer, s->pointer_x, s->pointer_y);
+    break;
+  case GRAPHICS_CALLBACK_REDRAW_POINTER:
+    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Draw new pointer */
+			     mp_x, mp_y, mp_size_x, mp_size_y,
+			     s->mouse_pointer, s->pointer_x, s->pointer_y);
+    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Remove old pointer */
+			     s->last_pointer_x,s->last_pointer_y,
+			     s->last_pointer_size_x, s->last_pointer_size_y,
+			     s->mouse_pointer, s->pointer_x, s->pointer_y);
+    break;
+  default:
+    fprintf(stderr,"graphics_callback_ggi: Invalid command %d\n", command);
+  }
+
+  s->last_pointer_size_x = mp_size_x;
+  s->last_pointer_size_y = mp_size_y;
+  s->last_pointer_x = mp_x;
+  s->last_pointer_y = mp_y; /* Update mouse pointer status */
+
 }
 
 
@@ -239,6 +394,18 @@ void displayPictureDouble(ggi_visual_t visual, picture_t pic, short layer)
   }
 }
 
+int
+open_visual_ggi(state_t *s)
+{
+  s->graphics.ggi_visual = openVisual();
+  return (!(s->graphics_callback = graphics_callback_ggi));
+}
+
+void
+close_visual_ggi(state_t *s)
+{
+  ggiClose(s->graphics.ggi_visual);
+}
   
 
 #endif /* HAVE_LIBGGI */

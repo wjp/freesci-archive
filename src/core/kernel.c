@@ -108,6 +108,15 @@ else { s->heap[(guint16) address] = (value) &0xff;               \
 /* Sets a heap value if allowed */
 
 
+#define CHECK_THIS_KERNEL_FUNCTION {\
+  int i;\
+  sciprintf("Kernel CHECK: %s[%x](", s->kernel_names[funct_nr], funct_nr); \
+  for (i = 0; i < argc; i++) { \
+    sciprintf("%04x", 0xffff & PARAM(i)); \
+    if (i+1 < argc) sciprintf(", "); \
+  } \
+  sciprintf(")\n"); \
+} \
 
 
 /*Here comes implementations of some kernel functions. I haven't found any
@@ -271,6 +280,7 @@ void
 kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr listbase = heap_allocate(s->_heap, 4);
+  CHECK_THIS_KERNEL_FUNCTION;
 
   listbase += 2; /* Jump over heap header */
 
@@ -286,12 +296,14 @@ kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr nodebase = heap_allocate(s->_heap, 8);
   /*  SCIkdebug("argc=%d; args = (%04x %04x)\n", argc, PARAM(0), PARAM(1)); */
+  CHECK_THIS_KERNEL_FUNCTION;
 
   nodebase += 2; /* Jump over heap header */
 
   PUT_HEAP(nodebase + LIST_PREVIOUS_NODE, 0);
   PUT_HEAP(nodebase + LIST_NEXT_NODE, 0);
   PUT_HEAP(nodebase + LIST_NODE_KEY, PARAM(0));
+  PUT_HEAP(nodebase + LIST_NODE_VALUE, PARAM(1));
 
   s->acc = nodebase; /* Return node base address */
 }
@@ -303,6 +315,7 @@ kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr listbase = UPARAM(0);
   heap_ptr nodebase = UPARAM(1);
   heap_ptr old_lastnode = GET_HEAP(listbase + LIST_LAST_NODE);
+  CHECK_THIS_KERNEL_FUNCTION;
 
   if (old_lastnode)
     PUT_HEAP(old_lastnode + LIST_NEXT_NODE, nodebase);
@@ -323,6 +336,7 @@ kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr listbase = UPARAM(0);
   heap_ptr nodebase = UPARAM(1);
   heap_ptr old_firstnode = GET_HEAP(listbase + LIST_FIRST_NODE);
+  CHECK_THIS_KERNEL_FUNCTION;
 
   if (old_firstnode)
     PUT_HEAP(old_firstnode + LIST_PREVIOUS_NODE, nodebase);
@@ -342,6 +356,7 @@ kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr node;
   word key = UPARAM(1);
+  CHECK_THIS_KERNEL_FUNCTION;
 
   /*  SCIkdebug("argc=%d; args = (%04x %04x %04x)\n", argc, PARAM(0), PARAM(1), PARAM(2)); */
 
@@ -352,6 +367,46 @@ kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
   /* Aborts if either the list ends (node == 0) or the key is found */
 
   s->acc = node;
+}
+
+
+void
+kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  s->acc = GET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+}
+
+
+void
+kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  s->acc = GET_HEAP(UPARAM(0) + LIST_LAST_NODE);
+}
+
+
+void
+kPrevNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  s->acc = GET_HEAP(UPARAM(0) + LIST_PREVIOUS_NODE);
+}
+
+
+void
+kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  s->acc = GET_HEAP(UPARAM(0) + LIST_NEXT_NODE);
+}
+
+
+void
+kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  s->acc = GET_HEAP(UPARAM(0) + LIST_NODE_VALUE);
 }
 
 
@@ -447,17 +502,31 @@ kGetSaveDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  if (PARAM(1))
-    s->mouse_pointer = findResource(sci_cursor, PARAM(0))->data;
-  else
-    s->mouse_pointer = 0;
+  CHECK_THIS_KERNEL_FUNCTION;
+  free_mouse_cursor(s->mouse_pointer);
+
+  if (PARAM(1)) {
+    byte *data = findResource(sci_cursor, PARAM(0))->data;
+    if (data)
+      s->mouse_pointer = calc_mouse_cursor(data);
+    else s->mouse_pointer = NULL;
+
+  } else
+    s->mouse_pointer = NULL;
+
+  if (argc > 2) {
+    s->pointer_x = PARAM(2);
+    s->pointer_y = PARAM(3) + 10; /* FIXME: Adjust to current port */
+  } 
+
+  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0); /* Update mouse pointer */
 }
 
 
 void
 kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-    s->pic_not_valid = 2;
+  s->pic_not_valid = 2;
 }
 
 
@@ -514,6 +583,29 @@ kGetDistance(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+void
+kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  sciprintf("kDoSound: Stub\n");
+
+  switch (PARAM(0)) {
+  case 0x0: s->sound_object = PARAM(1); break; /* Initialize and set sound object? */
+  case 0x8: s->acc = 0xc; break; /* Determine sound type? */
+  case 0xb: s->acc = 1; break; /* Check for sound? */
+  }
+}
+
+kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  sciprintf("kGraph: Stub\n");
+
+  switch(PARAM(0)) {
+  case 0x2: s->acc = 0x10; /* Whatever */
+  }
+}
+
 
 /********************* Graphics ********************/
 
@@ -558,7 +650,7 @@ kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
   sciprintf("Stub: %s[%x](", s->kernel_names[funct_nr], funct_nr);
 
   for (i = 0; i < argc; i++) {
-    sciprintf("%04x", PARAM(i));
+    sciprintf("%04x", 0xffff & PARAM(i));
     if (i+1 < argc) sciprintf(", ");
   }
   sciprintf(")\n");
@@ -589,6 +681,13 @@ struct {
   {"HaveMouse", kHaveMouse },
   {"GetAngle", kGetAngle },
   {"GetDistance", kGetDistance },
+  {"LastNode", kLastNode },
+  {"FirstNode", kFirstNode },
+  {"NextNode", kNextNode },
+  {"PrevNode", kPrevNode },
+  {"NodeValue", kNodeValue },
+  {"DoSound", kDoSound },
+  {"Graph", kGraph },
   {0,0} /* Terminator */
 };
 

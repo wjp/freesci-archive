@@ -81,6 +81,8 @@ main(int argc, char** argv)
 	 "or any later version, at your option.\n"
 	 "It comes with ABSOLUTELY NO WARRANTY.\n");
 
+  ggiInit();
+
   sci_color_mode = 0;
 
   if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
@@ -106,15 +108,28 @@ main(int argc, char** argv)
   _debug_get_input = get_readline_input; /* Use readline for debugging input */
 
 
-  script_init_state(&gamestate); /* Initialize game state */
+  if (script_init_state(&gamestate)) { /* Initialize game state */
+    fprintf(stderr,"Initialization failed. Aborting...\n");
+    return 1;
+  }
   gamestate.have_mouse_flag = 0; /* Assume that no pointing device is present */
 
+  if (open_visual_ggi(&gamestate)) { /* initialize graphics */
+    fprintf(stderr,"GGI initialization failed. Aborting...\n");
+    exit(1);
+  };
+
   script_run(&gamestate); /* Run the game */
+
+  close_visual_ggi(&gamestate); /* Close graphics */
 
   script_free_state(&gamestate); /* Uninitialize game state */
 
   clear_history();
 
   freeResources();
+
+  ggiExit();
+
   return 0;
 }

@@ -216,6 +216,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
 
   while (1) {
     heap_ptr old_pc = pc;
+    heap_ptr old_sp = sp;
     byte opcode, opnumber;
     int var_number; /* See description below */
 
@@ -280,11 +281,11 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x06: /* shr */
-      s->acc = POP() >> s->acc;
+      s->acc = ((guint16) POP()) >> s->acc;
       break;
 
     case 0x07: /* shl */
-      s->acc = POP() << s->acc;
+      s->acc = ((guint16) POP()) << s->acc;
       break;
 
     case 0x08: /* xor */
@@ -740,6 +741,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       _debug_step_running = 0; /* Stop multiple execution */
       _debug_seeking = 0; /* Stop special seeks */
       pc = old_pc;
+      sp = old_sp;
     }
     else script_step_counter++;
 
@@ -840,6 +842,20 @@ script_init_state(state_t *s)
 	  seeker -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Adjust position; script home is base +8 bytes */
 
 	  classnr = getInt16(script->data + seeker + 4 + SCRIPT_SPECIES_OFFSET);
+	  if (classnr >= s->classtable_size) {
+
+	    if (classnr >= SCRIPT_MAX_CLASSTABLE_SIZE) {
+	      fprintf(stderr,"Invalid class number 0x%x in script.%d(0x%x), offset %04x\n",
+		      classnr, scriptnr, scriptnr, seeker);
+	      return 1;
+	    }
+
+	    s->classtable = realloc(s->classtable, sizeof(class_t) * (classnr + 1));
+	    memset(&(s->classtable[s->classtable_size]), 0,
+		   sizeof(class_t) * (1 + classnr - s->classtable_size)); /* Clear after resize */
+
+	    s->classtable_size = classnr + 1; /* Adjust maximum number of entries */
+	  }
 
 	  s->classtable[classnr].class_offset = seeker + 4;
 	  s->classtable[classnr].script = scriptnr;
@@ -1090,10 +1106,17 @@ script_run(state_t *s)
   s->game_time = 0;
 
   s->mouse_pointer = NULL; /* No mouse pointer */
+  s->pointer_x = (320 / 2); /* With centered x coordinate */
+  s->pointer_y = 150; /* And an y coordinate somewhere down the screen */
+  s->last_pointer_x = 0;
+  s->last_pointer_y = 0;
+  s->last_pointer_size_x = 0;
+  s->last_pointer_size_y = 0; /* No previous pointer */
 
   s->bgpic = allocEmptyPicture();
   s->pic = allocEmptyPicture();
   s->pic_not_valid = 0; /* Picture is valid (cough) */
+  s->pic_layer = 0; /* Other values only make sense for debugging */
 
   memset(s->hunk, sizeof(s->hunk), 0); /* Sets hunk to be unused */
 
