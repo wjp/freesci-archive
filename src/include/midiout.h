@@ -49,6 +49,10 @@ extern midiout_driver_t midiout_driver_unixraw;
 extern midiout_driver_t midiout_driver_alsaraw;
 #endif
 
+#ifdef HAVE_DMEDIA_MIDI_H
+extern midiout_driver_t midiout_driver_sgimd;
+#endif
+
 #ifdef HAVE_SYS_SOUNDCARD_H
 extern midiout_driver_t midiout_driver_ossseq;
 extern midiout_driver_t midiout_driver_ossopl3;

@@ -84,12 +84,11 @@ AC_SUBST(SCIV_LDFLAGS)
 
 AC_CHECK_HEADERS(dmedia/midi.h)
 
-if test "${ac_cv_header_dmedia_audio_h}" = "yes"; then
+if test "${ac_cv_header_dmedia_midi_h}" = "yes"; then
     case ${host_os} in
     irix*)
-       found_sound=yes
        AC_DEFINE(HAVE_DMEDIA_MIDI_H)
-	LIBS="-lmd $LIBS"
+       LIBS="-lmd $LIBS"
     esac
  fi
 
