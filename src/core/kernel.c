@@ -979,8 +979,10 @@ kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int length;
 
+  CHECK_THIS_KERNEL_FUNCTION;
+
   if (argc > 2)
-    strncpy(s->heap + (s->acc = PARAM(0)), s->heap + PARAM(1), PARAM(2));
+    strncpy(s->heap + (s->acc = PARAM(0)), s->heap + PARAM(1), UPARAM(2));
   else
     strcpy(s->heap + (s->acc = PARAM(0)), s->heap + PARAM(1));
 
@@ -1045,7 +1047,11 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
       return;
     }
 
-    source = resource->data + index;
+    source = resource->data /* + index */;
+
+    while (index--)
+      while (*source++); /* Skip the first [index] entries */
+
     startarg = 3; /* First parameter to use for formatting */
 
   } else  { /* position >= 1000 */
@@ -1604,6 +1610,8 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   wnd->color = PARAM_OR_ALT(7, 0);
   wnd->bgcolor = PARAM_OR_ALT(8, 15);
   wnd->font = s->titlebar_port.font; /* Default to 'system' font */
+
+  wnd->alignment = ALIGN_TEXT_CENTER; /* FIXME?? */
 
   s->ports[window] = wnd;
 

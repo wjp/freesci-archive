@@ -1081,6 +1081,12 @@ script_uninstantiate(state_t *s, int script_nr)
 
   objlength = 0;
 
+  sciprintf("Unlocking script.0x%x\n", script_nr);
+  if (s->scripttable[script_nr].lockers == 0)
+    return; /* This can happen during recursion */
+
+  --(s->scripttable[script_nr].lockers); /* One less locker */
+
   do {
     pos += objlength; /* Step over the last checked object */
 
@@ -1092,9 +1098,18 @@ script_uninstantiate(state_t *s, int script_nr)
     if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
       int superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
 
-      if (superclass >= 0)
-	script_uninstantiate(s, s->classtable[superclass].script);
-      /* Recurse to assure that the superclass lockers number gets decreased */
+      fprintf(stderr, "SuperClass = %04x from pos %04x\n", superclass, pos);
+
+      if (superclass >= 0) {
+	int superclass_script = s->classtable[superclass].script;
+
+	if (superclass_script == script_nr) {
+	  if (s->scripttable[script_nr].lockers)
+	    --(s->scripttable[script_nr].lockers); /* Decrease lockers if this is us ourselves */
+	} else
+	  script_uninstantiate(s, superclass_script);
+	/* Recurse to assure that the superclass lockers number gets decreased */
+      }
       
     } /* if object or class */
 
@@ -1102,10 +1117,10 @@ script_uninstantiate(state_t *s, int script_nr)
     
   } while (objtype != 0);
 
-  if (--(s->scripttable[script_nr].lockers)) /* One less locker */
+  if (s->scripttable[script_nr].lockers)
     return; /* if xxx.lockers > 0 */
 
-  /* Otherwise we completely unload it */
+  /* Otherwise unload it completely */
 
   s->scripttable[script_nr].heappos = 0;
   s->scripttable[script_nr].localvar_offset = 0;

@@ -82,11 +82,11 @@ draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, cha
     } else {
 
       *(dest[0]+pos) = color;
-      *(dest[0]+pos+xl) = color;
+      *(dest[0]+pos+xl-1) = color;
 
       if (priority >= 0) {
 	*(dest[1]+pos) = priority;
-	*(dest[1]+pos+xl) = priority;
+	*(dest[1]+pos+xl-1) = priority;
       }
 
     }

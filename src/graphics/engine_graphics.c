@@ -177,6 +177,11 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
 			   char *text, byte *font)
 {
   graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font);
+
+  if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
+    draw_frame(s->bgpic, port->xmin + x, port->ymin + y,
+	       xl - 1, yl - 1, port->color, port->priority);
+
 }
 
 
@@ -191,18 +196,15 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
   memcpy(&oldport, port, sizeof(oldport)); /* Backup old port data */
 
   port->x = x;
-  port->y = y + 2; /* +2 to get the frame nicely */
+  port->y = y;
   port->font = font;
   port->gray_text = state & SELECTOR_STATE_DISABLED;
-  port->alignment = ALIGN_TEXT_CENTER;
 
   text_draw(s->bgpic, port, text, xl);
 
   if (state & SELECTOR_STATE_FRAMED)
-    draw_frame(s->bgpic, x, y, xl, yl, port->color, port->priority);
-
-  if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
-    draw_frame(s->bgpic, x + 1, y + 1, xl - 2, yl - 2, port->color, port->priority);
+    draw_frame(s->bgpic, port->xmin + x-1, port->ymin + y-1,
+	       xl + 1, yl + 1, port->color, port->priority);
 
   memcpy(port, &oldport, sizeof(oldport)); /* Restore old port data */
 }
