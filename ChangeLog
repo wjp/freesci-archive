@@ -1,5 +1,10 @@
 2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* Makefile.am, src/Makefile.am, src/gfx/drivers/Makefile.am,
+	src/sound/Makefile.am: Added Dreamcast files to `dist'.
+
+2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/dc/dc_save.c: Removed reference to dc_save.h.
 
 2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
