@@ -31,15 +31,14 @@
 /* shamelessly lifted from claudio's XMP */
 
 static int register_base[11] = {
-    0x20, 0x20, 0x40, 0x40,
-    0x60, 0x60, 0x80, 0x80,
-    0xe0, 0xe0, 0xc0
+    0x20, 0x23, 0x40, 0x43,
+    0x60, 0x63, 0x80, 0x83,
+    0xe0, 0xe3, 0xc0
 };
 
-static int register_offset[2][9] = {
+static int register_offset[9] = {
     /* Channel           1     2     3     4     5     6     7     8     9 */
-    /* Operator 1 */ { 0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12 },
-    /* Operator 2 */ { 0x03, 0x04, 0x05, 0x0B, 0x0C, 0x0D, 0x13, 0x14, 0x15 }
+    /* Operator 1 */   0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12
 }; 
 
 static int ym3812_note[13] = {
@@ -92,29 +91,38 @@ void adlibemu_init_lists()
 
 /* more shamelessly lifted from xmp and adplug.  And altered.  :) */
 
-static inline int opl_write (FM_OPL *opl, int a, int v)
+static inline int opl_write (int a, int v)
 {
   adlib_reg[a] = v;
-  OPLWrite (opl, 0x388, a);
-  return OPLWrite (opl, 0x389, v);
+  OPLWrite (ym3812, 0x388, a);
+  return OPLWrite (ym3812, 0x389, v);
 }
 
-static inline guint8 opl_read (FM_OPL *opl, int a)
+static inline guint8 opl_read (int a)
 {
-  OPLWrite (opl, 0x388, a);
-  return OPLRead (opl, 0x389);
+  OPLWrite (ym3812, 0x388, a);
+  return OPLRead (ym3812, 0x389);
 }
 
 void synth_setpatch (int voice, guint8 *data)
 {
   int i, x;
+
+  opl_write(0xBD, 0);
   
-  for (i = 0; i < 10; i++)
-    opl_write (ym3812, register_base[i] + register_offset[i % 2][voice], data[i]); 
-  opl_write (ym3812, register_base[10] + voice, data[10]);
+  for (i = 0; i < 10; i++) {
+    printf("a %02x d %02x\n", register_base[i] + register_offset[voice], 
+	   data[i]);
+    opl_write(register_base[i] + register_offset[voice], data[i]); 
+  }
+  opl_write (register_base[10] + voice, data[10]);
 
   /* mute voice after patch change */
-  opl_write (ym3812, 0xb0 + voice, adlib_reg[0xb0+voice] & 0xdf);
+  opl_write (0xb0 + voice, adlib_reg[0xb0+voice] & 0xdf);
+
+  for (i = 0; i < 10; i++)
+    printf("%02x ", adlib_reg[register_base[i]+register_offset[voice]]);
+
 }
 
 void synth_setvolume (int voice, int volume)
@@ -123,13 +131,13 @@ void synth_setvolume (int voice, int volume)
   
   /* algorithm-dependent; we may need to set both operators. */
   if (adlib_reg[register_base[10]+voice] & 1)
-    opl_write(ym3812, register_base[2]+register_offset[0][voice], 
+    opl_write(register_base[2]+register_offset[voice], 
 	      ((63-volume) | 
-	       (adlib_reg[register_base[2]+register_offset[0][voice]]&0xc0)));
+	       (adlib_reg[register_base[2]+register_offset[voice]]&0xc0)));
   
-  opl_write(ym3812, register_base[3]+register_offset[1][voice],
+  opl_write(register_base[3]+register_offset[voice],
 	    ((63-volume) |
-	     (adlib_reg[register_base[3]+register_offset[1][voice]]&0xc0)));
+	     (adlib_reg[register_base[3]+register_offset[voice]]&0xc0)));
 
 }
 
@@ -144,9 +152,13 @@ void synth_setnote (int voice, int note, int bend)
     if (oct < 0)
         oct = 0;
 
-    opl_write (ym3812, 0xa0 + voice, fre & 0xff);
-    opl_write (ym3812, 0xb0 + voice,
+    opl_write (0xa0 + voice, fre & 0xff);
+    opl_write (0xb0 + voice,
         0x20 | ((oct << 2) & 0x1c) | ((fre >> 8) & 0x03));
+
+    printf("-- %02x %02x\n", 
+	   adlib_reg[0xa0+voice],
+	   adlib_reg[0xb0+voice]);
 }
 
 
@@ -167,7 +179,7 @@ int adlibemu_stop_note(int chn, int note, int velocity)
     return -1; /* that note isn't playing.. */
   }
 
-  opl_write(ym3812, 0xb0+op,(adlib_reg[0xb0+op] & 0xdf)
+  opl_write(0xb0+op,(adlib_reg[0xb0+op] & 0xdf)
 );
 
   /*   synth_setnote(op, note, pitch[chn]);  */
@@ -201,20 +213,36 @@ int adlibemu_start_note(int chn, int note, int velocity)
   volume = velocity * vol[chn] / 128; /* Scale channel volume */
   volume = my_midi_fm_vol_table[volume];
 
-  synth_setpatch(op, &(instr[chn]));
+  synth_setpatch(op, adlib_sbi[instr[chn]]);
   synth_setvolume(op, volume);
   synth_setnote(op, note, pitch[chn]); 
-
-  printf("play operator %d/%d:  C%02x N%02x V%02x (%02x/%02x)\n", op, free_voices, chn, note, velocity, 
-	 adlib_reg[register_base[2]+register_offset[0][op]],
-	 adlib_reg[register_base[3]+register_offset[1][op]]);
 
   oper_chn[op] = chn;
   oper_note[op] = note;
   free_voices--;
-  
+
+  printf("play voice %d/%d:  C%02x N%02x V%02x (%02x/%02x)\n", op+1, free_voices, chn, note, velocity, 
+	 adlib_reg[register_base[2]+register_offset[op]] & 0x3f,
+	 adlib_reg[register_base[3]+register_offset[op]] & 0x3f);
 
   return;
+}
+
+int test_adlib () {
+  opl_write(0x20, 0x25);
+  opl_write(0x23, 0x21);
+  opl_write(0x40, 0x48);
+  opl_write(0x43, 0x48);
+  opl_write(0x60, 0xf0);
+  opl_write(0x63, 0xF2);
+  opl_write(0x80, 0xf0);
+  opl_write(0x83, 0xa5);
+  opl_write(0xe0, 0x00);
+  opl_write(0xe3, 0x00);
+
+  /* note on, test things out. */
+    opl_write(0xA0, 0xb0);
+    opl_write(0xB0, 0x35);
 }
 
 int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
@@ -264,8 +292,10 @@ int midi_adlibemu_reset(void) {
 
   adlibemu_init_lists();
   OPLResetChip (ym3812);
-  opl_write(ym3812, 0x01, 0x20);
-  opl_write(ym3812, 0xBD, 0xc0);
+  opl_write(0x01, 0x20);
+  opl_write(0xBD, 0xc0);
+
+  test_adlib();
   return 0;
 }
 
