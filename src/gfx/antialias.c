@@ -39,7 +39,7 @@ antialiase_simple(gfx_pixmap_t *pixmap, int mask[], int shift_const, gfx_mode_t 
 	int line_size = bytespp * pixmap->xl;
 	char *lastline[2];
 	char *lastline_p = NULL;
-	char *data_p = pixmap->data;
+	char *data_p = (char *) pixmap->data;
 
 	lastline[0] = malloc(line_size);
 	lastline[1] = malloc(line_size);

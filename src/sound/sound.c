@@ -43,31 +43,49 @@
 #endif /* !HAVE_UNISTD_H */
 
 #ifdef HAVE_FORK
-extern sfx_driver_t sound_null;
+extern sound_server_t sound_server_unix;
 #endif
 
 #ifdef HAVE_SDL
-extern sfx_driver_t sound_sdl;
+extern sound_server_t sound_server_sdl;
 #endif
 
 #ifdef _DOS
-extern sfx_driver_t sound_dos;
+extern sound_server_t sound_server_dos;
 #endif
 
-sfx_driver_t *sfx_drivers[] = {
+sound_server_t *sound_servers[] = {
 #ifdef HAVE_SDL
-  &sound_sdl,
+  &sound_server_sdl,
 #endif
+
 #ifdef HAVE_FORK
   /* Assume that sound_null works on any box that has fork() */
-  &sound_null,
+  &sound_server_unix,
 #endif /* HAVE_FORK */
 
 #ifdef _DOS
-  &sound_dos,
+  &sound_server_dos,
 #endif
   NULL
 };
+
+sound_server_t *
+sound_server_find_driver(char *name)
+{
+	sound_server_t **drv = sound_servers;
+
+	if (!name)
+		return sound_servers[0];
+
+	while (*drv) {
+		if (!strcmp((*drv)->name, name))
+			return *drv;
+		drv++;
+	}
+
+	return NULL;
+}
 
 void
 sound_suspend(state_t *s)

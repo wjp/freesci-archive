@@ -103,7 +103,7 @@ typedef struct _state
 	gfx_state_t *gfx_state; /* Graphics state and driver */
 	gfx_pixmap_t *old_screen; /* Old screen content: Stored during kDrawPic() for kAnimate() */
 
-	sfx_driver_t *sfx_driver; /* Sound driver */
+	sound_server_t *sound_server; /* Sound server */
 
 	int sound_volume; /* 0x0 -> 0xf Current volume of sound system */
  	int sound_mute; /* 0 = not, else == saved value */

@@ -2385,8 +2385,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		_debug_step_running--;
 
 	/* Suspend music playing */
-	if (s->sfx_driver)
-		(s->sfx_driver->suspend)(s);
+	if (s->sound_server)
+		(s->sound_server->suspend)(s);
 
 WARNING(fixme!)
 #if 0
@@ -2440,8 +2440,8 @@ WARNING(fixme!)
 		}
 #endif
 /* Resume music playing */
-	if (s->sfx_driver)
-		(s->sfx_driver->resume)(s);
+	if (s->sound_server)
+		(s->sound_server->resume)(s);
 }
 
 

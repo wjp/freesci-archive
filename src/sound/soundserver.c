@@ -37,7 +37,7 @@
 #	include <winsock2.h>
 #endif
 
-sfx_driver_t *soundserver;
+sound_server_t *global_sound_server = NULL;
 
 void
 sci0_soundserver()
@@ -557,25 +557,25 @@ sci0_soundserver()
 
 void 
 sound_queue_event(int handle, int signal, int value) {
-  soundserver->queue_event(handle, signal, value);
+  global_sound_server->queue_event(handle, signal, value);
 }
 
 void 
 sound_queue_command(int handle, int signal, int value) {
-  soundserver->queue_command(handle, signal, value);
+  global_sound_server->queue_command(handle, signal, value);
 }
 
 sound_event_t *
 sound_get_command(GTimeVal *wait_tvp) {
-  return soundserver->get_command(wait_tvp);
+  return global_sound_server->get_command(wait_tvp);
 }
 
 int sound_send_data(byte *data_ptr, int maxsend) {
-  return soundserver->send_data(data_ptr, maxsend);
+  return global_sound_server->send_data(data_ptr, maxsend);
 }
 
 int sound_get_data(byte **data_ptr, int *size, int maxlen){
-  return soundserver->get_data(data_ptr, size, maxlen);
+  return global_sound_server->get_data(data_ptr, size, maxlen);
 }
 
 

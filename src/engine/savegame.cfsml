@@ -117,6 +117,8 @@ write_pixmap_color(FILE *fh, gfx_pixmap_color_t *color);
 int
 read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line, int *hiteof);
 
+void
+write_hunk_block(FILE *fh, hunk_block_t *foo);
 
 %CFSML
 
@@ -999,8 +1001,8 @@ gamestate_save(state_t *s, char *dirname)
 	}
 	sci_finish_find(&dir);
 
-	if (s->sfx_driver) {
-		if ((s->sfx_driver->save)(s, dirname)) {
+	if (s->sound_server) {
+		if ((s->sound_server->save)(s, dirname)) {
 			sciprintf("Saving failed for the sound subsystem\n");
 			chdir ("..");
 			return 1;
@@ -1041,8 +1043,8 @@ gamestate_restore(state_t *s, char *dirname)
 		return NULL;
 	}
 
-	if (s->sfx_driver) {
-		if ((s->sfx_driver->restore)(s, dirname)) {
+	if (s->sound_server) {
+		if ((s->sound_server->restore)(s, dirname)) {
 			sciprintf("Restoring failed for the sound subsystem\n");
 			return NULL;
 		}
@@ -1154,7 +1156,7 @@ gamestate_restore(state_t *s, char *dirname)
 	}
 
 	/* Sound state: */
-	retval->sfx_driver = s->sfx_driver;
+	retval->sound_server = s->sound_server;
 /*
 	memcpy(&(retval->sound_pipe_in[0]), &(s->sound_pipe_in[0]), sizeof(int[2]));
 	memcpy(&(retval->sound_pipe_out[0]), &(s->sound_pipe_out[0]), sizeof(int[2]));

@@ -749,6 +749,7 @@ standard_option standard_options[] = {
 	OPT_STATICREF("gfx_driver", gfx_driver, parse_gfx_driver),
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
+	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
 	OPT_END
 };
 
@@ -756,7 +757,7 @@ standard_option standard_options[] = {
 static void
 parse_option(char *option, int optlen, char *value);
 
-#line 760 "lex.yy.c"
+#line 761 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -907,10 +908,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 247 "config.l"
+#line 248 "config.l"
 
 
-#line 914 "lex.yy.c"
+#line 915 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -995,7 +996,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 249 "config.l"
+#line 250 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1042,7 +1043,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 294 "config.l"
+#line 295 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1055,7 +1056,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 304 "config.l"
+#line 305 "config.l"
 {
 	yytext = strchr (yytext, '=') + 1;
 
@@ -1070,7 +1071,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 316 "config.l"
+#line 317 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1083,7 +1084,7 @@ if (cur_section) {
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 327 "config.l"
+#line 328 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1095,7 +1096,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 337 "config.l"
+#line 338 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1134,7 +1135,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 374 "config.l"
+#line 375 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1156,16 +1157,16 @@ case 8:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 392 "config.l"
+#line 393 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 394 "config.l"
+#line 395 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 396 "config.l"
+#line 397 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1173,15 +1174,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 401 "config.l"
+#line 402 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 403 "config.l"
+#line 404 "config.l"
 ECHO;
 	YY_BREAK
-#line 1185 "lex.yy.c"
+#line 1186 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2065,7 +2066,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 403 "config.l"
+#line 404 "config.l"
 
 
 int
@@ -2102,6 +2103,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_driver = gfx_find_driver(NULL);
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
+	conf->sound_server = sound_server_find_driver(NULL);
 
 	conf->mouse = 1;
 
@@ -2271,6 +2273,19 @@ parse_gfx_driver(char *driver_name)
 	/* not found - return default */
 
 	printf ("Unknown graphics driver %s\n", driver_name);
+	return (void *) conf->gfx_driver;
+}
+
+void *
+parse_sound_server(char *driver_name)
+{
+	sound_server_t *retval = sound_server_find_driver(driver_name);
+
+	if (retval)
+		return (void *) retval;
+	/* not found - return default */
+
+	printf ("Unknown sound server %s\n", driver_name);
 	return (void *) conf->gfx_driver;
 }
 

@@ -55,7 +55,8 @@ AC_SUBST(ev6_cpu)
 
 
 if test x"x_libraries" != x; then
-	x_libraries="-L$x_libraries -lX11 -lXi"
+	x_libraries="-L$x_libraries"
+	X_LIBS="$X_LIBS -lXi -lX11"
 fi
 AC_SUBST(x_libraries)
 

@@ -1,5 +1,5 @@
 /***************************************************************************
- sounderver_null.c Copyright (C) 1999 Christoph Reichenbach
+ sounderver_unix.c Copyright (C) 1999 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -24,7 +24,7 @@
     Christoph Reichenbach (CJR) [jameson@linuxgames.com]
 
 ***************************************************************************/
-/* Sound server without sound output- just takes care of the events */
+/* Sound server using standard UNIX IPC */
 
 
 #include <engine.h>
@@ -57,10 +57,8 @@
 
 #endif /* HAVE_SOCKETPAIR */
 
-sfx_driver_t sound_null;
-
-int x_fd_in, x_fd_out = 0;
-int x_fd_events, x_fd_debug = 0;
+int x_fd_in = 0, x_fd_out = 0;
+int x_fd_events = 0, x_fd_debug = 0;
 
 int soundserver_dead = 0;
 
@@ -95,6 +93,8 @@ _make_pipe(int fildes[2])
 
 #endif /* HAVE_FORK */
 
+extern sound_server_t sound_server_unix;
+
 void
 _sound_confirm_death(int signal)
 {
@@ -109,13 +109,13 @@ _sound_server_sigpipe_handler(int signal)
 }
 
 int
-sound_null_init(state_t *s)
+sound_unix_init(state_t *s)
 {
 	int child_pid;
 	pid_t ppid;
 	int fd_in[2], fd_out[2], fd_events[2], fd_debug[2];
 
-	soundserver = &sound_null;
+	global_sound_server = &sound_server_unix;
 
 	if (_make_pipe(fd_in)
 	    || _make_pipe(fd_out)
@@ -137,7 +137,7 @@ sound_null_init(state_t *s)
 	child_pid = fork();
 
 	if (child_pid < 0) {
-		fprintf(stderr,"NULL Sound server init failed: fork() failed\n");
+		fprintf(stderr,"UNIX Sound server init failed: fork() failed\n");
 		/* If you get this message twice, something funny has happened :-> */
 
 		return 1; /* Forking failed */
@@ -178,13 +178,13 @@ sound_null_init(state_t *s)
 }
 
 int
-sound_null_configure(state_t *s, char *option, char *value)
+sound_unix_configure(state_t *s, char *option, char *value)
 {
 	return 1; /* No options apply to this driver */
 }
 
 void 
-sound_null_queue_event(int handle, int signal, int value)
+sound_unix_queue_event(int handle, int signal, int value)
 {
   sound_event_t event;
 
@@ -199,7 +199,7 @@ sound_null_queue_event(int handle, int signal, int value)
 static int get_event_error_counter = 0;
 
 sound_event_t *
-sound_null_get_event(state_t *s)
+sound_unix_get_event(state_t *s)
 {
   fd_set inpfds;
   int inplen;
@@ -243,7 +243,7 @@ sound_null_get_event(state_t *s)
 }
 
 void 
-sound_null_queue_command(int handle, int signal, int value)
+sound_unix_queue_command(int handle, int signal, int value)
 {
   sound_event_t event;
 
@@ -258,7 +258,7 @@ sound_null_queue_command(int handle, int signal, int value)
 }
 
 sound_event_t *
-sound_null_get_command(GTimeVal *wait_tvp)
+sound_unix_get_command(GTimeVal *wait_tvp)
 {
   fd_set input_fds;
   sound_event_t *event = NULL;
@@ -278,8 +278,8 @@ sound_null_get_command(GTimeVal *wait_tvp)
   return event;
 }
 
-void
-sound_null_get_data(byte **data_ptr, int *size, int maxlen)
+int
+sound_unix_get_data(byte **data_ptr, int *size, int maxlen)
 {
   int len = 0;
   fd_set fds;
@@ -309,8 +309,8 @@ sound_null_get_data(byte **data_ptr, int *size, int maxlen)
   fflush(stdout);
 }
 
-void
-sound_null_send_data(byte *data_ptr, int maxsend) 
+int
+sound_unix_send_data(byte *data_ptr, int maxsend) 
 {
   int len;
   int fd = x_fd_out;
@@ -322,37 +322,45 @@ sound_null_send_data(byte *data_ptr, int maxsend)
   printf("%d wrote of %d\n", len, maxsend);  
   fflush(stdout);
 }
+
 void
-
-sound_null_exit(state_t *s)
+sound_unix_exit(state_t *s)
 {
-  signal(SIGPIPE, SIG_IGN); /* Ignore SIGPIPEs */
-  signal(SIGCHLD, &_sound_confirm_death);
+	signal(SIGPIPE, SIG_IGN); /* Ignore SIGPIPEs */
+	signal(SIGCHLD, &_sound_confirm_death);
 
-  sound_command(s, SOUND_COMMAND_SHUTDOWN, 0, 0); /* Kill server */
+	sound_command(s, SOUND_COMMAND_SHUTDOWN, 0, 0); /* Kill server */
 
-  close(x_fd_in);
-  close(x_fd_out);
-  close(x_fd_debug);
-  close(x_fd_events);  /* Close all pipe file descriptors */
+	close(x_fd_in);
+	close(x_fd_out);
+	close(x_fd_debug);
+	close(x_fd_events);  /* Close all pipe file descriptors */
 }
 
-sfx_driver_t sound_null = {
-	"null",
-	&sound_null_init,
-	&sound_null_configure,
-	&sound_null_exit,
-	&sound_null_get_event,
-	&sound_null_queue_event,
-	&sound_null_get_command,
-	&sound_null_queue_command,
-	&sound_null_get_data,
-	&sound_null_send_data,
+
+void
+sound_unix_poll()
+{
+}
+
+sound_server_t sound_server_unix = {
+	"unix",
+	"0.1",
+	&sound_unix_init,
+	&sound_unix_configure,
+	&sound_unix_exit,
+	&sound_unix_get_event,
+	&sound_unix_queue_event,
+	&sound_unix_get_command,
+	&sound_unix_queue_command,
+	&sound_unix_get_data,
+	&sound_unix_send_data,
 	&sound_save,
 	&sound_restore,
 	&sound_command,
 	&sound_suspend,
-	&sound_resume
+	&sound_resume,
+	&sound_unix_poll
 };
 
 /************************/

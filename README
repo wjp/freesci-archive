@@ -239,6 +239,13 @@ time, the configuration file may contain:
   Finally, you can use 'ossseq', which uses the OSS /dev/sequencer.
   Which is the default.  :)
 
+- sound_server:  FreeSCI has different ways to handle the concurrent processing
+  of sound output. They are:
+  * sdl: A threaded SDL sound server
+  * unix: A forked-off sound server
+  Generally, the sdl sound server (default) should provide better performance,
+  if available.
+
 
 2.1 Driver-specific options
 ---------------------------

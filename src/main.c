@@ -299,22 +299,6 @@ list_graphics_drivers()
 
 
 static void
-list_sound_drivers()
-{
-	int i = 0;
-	while (sfx_drivers[i]) {
-		if (i != 0)
-			printf(", ");
-
-		printf(sfx_drivers[i]->name);
-
-		i++;
-	}
-	printf("\n");
-}
-
-
-static void
 list_midiout_drivers()
 {
 	int i = 0;
@@ -341,6 +325,19 @@ list_midi_devices()
 	printf("\n");
 }
 
+static void
+list_sound_servers()
+{
+	int i = 0;
+	while (sound_servers[i]) {
+		if (i != 0)
+			printf(", ");
+		printf(sound_servers[i]->name);
+		i++;
+	}
+	printf("\n");
+}
+
 
 /**********************************************************/
 /* Startup and config management                          */
@@ -355,6 +352,7 @@ typedef struct {
 	char *gamedir;
         char *midiout_driver_name;
         char *midi_device_name;
+	char *sound_server_name;
 } cl_options_t;
 
 #define ON 1
@@ -395,12 +393,13 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->gamedir = NULL;
 	cl_options->midiout_driver_name = NULL;
 	cl_options->midi_device_name = NULL;
+	cl_options->sound_server_name = NULL;
 	cl_options->mouse = ON;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:S:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:")) > -1) {
+	while ((c = getopt(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:S:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
@@ -443,6 +442,11 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		            free(cl_options->midi_device_name);
 		        cl_options->midi_device_name = strdup(optarg);
 		        break;
+		case 'S':
+		        if (cl_options->sound_server_name)
+		            free(cl_options->sound_server_name);
+		        cl_options->sound_server_name = strdup(optarg);
+		        break;
 		case '?':
 			/* getopt_long already printed an error message. */
 			exit(1);
@@ -472,8 +476,8 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			printf("Supported graphics drivers: ");
 			list_graphics_drivers();
 
-			printf("Supported sound drivers: ");
-			list_sound_drivers();
+			printf("Supported sound servers: ");
+			list_sound_servers();
 
 			printf("Supported midiout drivers: ");
 			list_midiout_drivers();
@@ -746,6 +750,7 @@ main(int argc, char** argv)
 	char *savegame_name;
 	sci_version_t version = 0;
 	gfx_driver_t *gfx_driver = NULL;
+	sound_server_t *sound_server = NULL;
 
 	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
 
@@ -846,23 +851,32 @@ main(int argc, char** argv)
 				      "graphics driver", cl_options.gfx_driver_name);
 
 	if (cl_options.midiout_driver_name)
-		midiout_driver = lookup_driver((lookup_funct_t *)midiout_find_driver, list_midiout_drivers,
+		midiout_driver = lookup_driver((lookup_funct_t *)midiout_find_driver,
+					       list_midiout_drivers,
 					       "midiout driver", cl_options.midiout_driver_name);
 
 	if (cl_options.midi_device_name)
 		midi_device = lookup_driver((lookup_funct_t *)midi_find_device, list_midi_devices,
 					    "MIDI device", cl_options.midi_device_name);
 
+	if (cl_options.sound_server_name)
+		sound_server = lookup_driver((lookup_funct_t *)sound_server_find_driver,
+					     list_sound_servers,
+					     "sound server", cl_options.sound_server_name);
+
 	if (conf) {
 		memcpy(gfx_options, &(conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
 		if (!gfx_driver)
 			gfx_driver = conf[conf_nr].gfx_driver;
 
+		if (!sound_server)
+			sound_server = conf[conf_nr].sound_server;
+
 		/* make sure we have sound drivers */
 		if (!midiout_driver)
-		  midiout_driver = conf[conf_nr].midiout_driver;
+			midiout_driver = conf[conf_nr].midiout_driver;
 		if (!midi_device)
-		  midi_device = conf[conf_nr].midi_device;
+			midi_device = conf[conf_nr].midi_device;
 	}
 
 	if (!gfx_driver) {
@@ -957,14 +971,17 @@ main(int argc, char** argv)
 		return 1;
 	}
 
-	gamestate->sfx_driver = sfx_drivers[0];
+	if (!sound_server)
+		sound_server = sound_server_find_driver(NULL);
 
-	if (gamestate->sfx_driver) {
-		gamestate->sfx_driver->init(gamestate);
+	gamestate->sound_server = sound_server;
+
+	if (gamestate->sound_server) {
+		gamestate->sound_server->init(gamestate);
 		sched_yield(); /* Specified by POSIX 1b. If it doesn't work on your
 			       ** system, make up an #ifdef'd version of it above.
 			       */
-		gamestate->sfx_driver->get_event(gamestate); /* Get init message */
+		gamestate->sound_server->get_event(gamestate); /* Get init message */
 	}
 
 	if (conf[conf_nr].console_log)
@@ -978,6 +995,18 @@ main(int argc, char** argv)
 	       SCI_VERSION_MINOR(gamestate->version),
 	       SCI_VERSION_PATCHLEVEL(gamestate->version));
 
+	printf("Graphics: Using the %s driver %s\n",
+	       gfx_driver->name, gfx_driver->version);
+	printf("MIDI-out: Using the %s driver %s\n",
+	       midiout_driver->name, midiout_driver->version);
+	printf("MIDI-device: Using the %s driver %s\n",
+	       midi_device->name, midi_device->version);
+	if (sound_server)
+		printf("Sound server: Using the %s sound server %s\n",
+		       sound_server->name, sound_server->version);
+	else
+		printf("Sound server: Disabled.\n");
+
 	gamestate->have_mouse_flag = (cl_options.mouse == DONTCARE)?
 		conf[conf_nr].mouse : cl_options.mouse;
 
@@ -987,8 +1016,8 @@ main(int argc, char** argv)
 	else
 		game_run(&gamestate); /* Run the game */
 
-	if (gamestate->sfx_driver)
-		gamestate->sfx_driver->exit(gamestate); /* Shutdown sound daemon first */
+	if (gamestate->sound_server)
+		gamestate->sound_server->exit(gamestate); /* Shutdown sound daemon first */
 
 	game_exit(gamestate);
 

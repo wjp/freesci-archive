@@ -165,7 +165,7 @@ sound_map_instruments(struct _state *s);
 
 int
 sound_command(struct _state *s, int command, int handle, int parameter);
-/* Default implementation for command from the sfx_driver_t structure. */
+/* Default implementation for command from the sound_server_t structure. */
 
 int
 sound_save(struct _state *s, char *dir);
@@ -341,94 +341,102 @@ void sci_midi_command(song_t *song, guint8 command, guint8 param,
 
 typedef struct {
 
-  char *name; /* Name of this particular driver */
+	char *name; /* Name of this particular driver */
+	char *version; /* Driver's version number */
 
-  int (*init)(struct _state *s);
-  /* Initializes the sounnd driver
-  ** Parameters: (state_t *) s: The state that we're going to play on
-  ** Returns   : (int) 0 if successful, 1 if failed
-  */
+	int (*init)(struct _state *s);
+	/* Initializes the sounnd driver
+	** Parameters: (state_t *) s: The state that we're going to play on
+	** Returns   : (int) 0 if successful, 1 if failed
+	*/
 
-  int (*configure)(struct _state *s, char *option, char *value);
-  /* Set a particular configuration option
-  ** Parameters: (state_t *) s: The state_t to operate on
-  **             (char *) option: The option to set
-  **             (char *) value: The value to set it to
-  ** Returns   : (int) 0 if "option" could be interpreted by the driver, regardless
-  **                   of whether value was correct, or 1 if the option does not apply
-  **                   to this particular driver.
-  */
+	int (*configure)(struct _state *s, char *option, char *value);
+	/* Set a particular configuration option
+	** Parameters: (state_t *) s: The state_t to operate on
+	**             (char *) option: The option to set
+	**             (char *) value: The value to set it to
+	** Returns   : (int) 0 if "option" could be interpreted by the driver, regardless
+	**                   of whether value was correct, or 1 if the option does not apply
+	**                   to this particular driver.
+	*/
 
-  void (*exit)(struct _state *s);
-  /* Stops playing sound, uninitializes the sound driver, and frees all associated memory.
-  ** Parameters: (state_t *) s: The state_t to operate on
-  ** Returns   : (void)
-  */
+	void (*exit)(struct _state *s);
+	/* Stops playing sound, uninitializes the sound driver, and frees all associated memory.
+	** Parameters: (state_t *) s: The state_t to operate on
+	** Returns   : (void)
+	*/
 
-  sound_event_t* (*get_event)();
-  /* Synchronizes the sound driver with the rest of the world.
-  ** Parameters: none
-  ** Returns   : (sound_event_t *) Pointer to a dynamically allocated sound_event_t structure
-  **                               containing the next event, or NULL if none is available
-  ** This function should be called at least 60 times per second. It will return finish, loop,
-  ** and cue events, which can be written directly to the sound objects.
-  */
+	sound_event_t* (*get_event)();
+	/* Synchronizes the sound driver with the rest of the world.
+	** Parameters: none
+	** Returns   : (sound_event_t *) Pointer to a dynamically allocated sound_event_t structure
+	**                               containing the next event, or NULL if none is available
+	** This function should be called at least 60 times per second. It will return finish, loop,
+	** and cue events, which can be written directly to the sound objects.
+	*/
 
-void (*queue_event)(int handle, int signal, int value);
-/* XXX write me */
+	void (*queue_event)(int handle, int signal, int value);
+	/* XXX write me */
 
-sound_event_t* (*get_command)(GTimeVal *wait_tvp);
-/* XXX write me */
+	sound_event_t* (*get_command)(GTimeVal *wait_tvp);
+	/* XXX write me */
 
-void (*queue_command)(int handle, int signal, int value);
-/* XXX write me */
+	void (*queue_command)(int handle, int signal, int value);
+	/* XXX write me */
 
-int (*get_data)(byte **data_ptr, int *size, int maxlen);
-/* XXX write me */
+	int (*get_data)(byte **data_ptr, int *size, int maxlen);
+	/* XXX write me */
 
-int (*send_data)(byte *data_ptr, int maxsend);
-/* XXX write me */
+	int (*send_data)(byte *data_ptr, int maxsend);
+	/* XXX write me */
 
-  int (*save)(struct _state *s, char *name);
-  /* Saves the sound system state to the directory /name/.
-  ** Parameters: (state_t *) s: The current state
-  **             (char *) name: The directory name of the directory to write to (must exist)
-  ** Returns   : (int) 0 on success, 1 otherwise
-  */
+	int (*save)(struct _state *s, char *name);
+	/* Saves the sound system state to the directory /name/.
+	** Parameters: (state_t *) s: The current state
+	**             (char *) name: The directory name of the directory to write to (must exist)
+	** Returns   : (int) 0 on success, 1 otherwise
+	*/
 
-  int (*restore)(struct _state *s, char *name);
-  /* Restores the sound system state from the directory with the specified name.
-  ** Parameters: (state_t *) s: The current state
-  **             (char *) name: The name of the directory to read from
-  ** Returns   : (int) 0 on success, 1 otherwise
-  */
+	int (*restore)(struct _state *s, char *name);
+	/* Restores the sound system state from the directory with the specified name.
+	** Parameters: (state_t *) s: The current state
+	**             (char *) name: The name of the directory to read from
+	** Returns   : (int) 0 on success, 1 otherwise
+	*/
 
-  int (*command)(struct _state *s, int command, int handle, int parameter);
-  /* Executes a sound command (one of SOUND_COMMAND_xxx).
-  ** Parameters: (int) command: The command to execute
-  **             (int) handle: The handle to execute it on, if available
-  **             (int) parameter: The function parameter
-  */
+	int (*command)(struct _state *s, int command, int handle, int parameter);
+	/* Executes a sound command (one of SOUND_COMMAND_xxx).
+	** Parameters: (int) command: The command to execute
+	**             (int) handle: The handle to execute it on, if available
+	**             (int) parameter: The function parameter
+	*/
 
-  void (*suspend)(struct _state *s);
-  /* Suspends the sound subsystem
-  ** Parameters: (state_t *) s: The current state
-  ** Only resume, shutdown, save and restore commands need to be handled in suspended mode.
-  */
+	void (*suspend)(struct _state *s);
+	/* Suspends the sound subsystem
+	** Parameters: (state_t *) s: The current state
+	** Only resume, shutdown, save and restore commands need to be handled in suspended mode.
+	*/
 
-  void (*resume)(struct _state *s);
-  /* Resumes the sound subsystem
-  ** Parameters: (state_t *) s: The current state
-  */
+	void (*resume)(struct _state *s);
+	/* Resumes the sound subsystem
+	** Parameters: (state_t *) s: The current state
+	*/
 
-  void (*poll)();
-  /* This will poll the current sound driver */
+	void (*poll)();
+	/* This will poll the current sound driver */
 
-} sfx_driver_t;
+} sound_server_t;
 
-extern DLLEXTERN sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-terminated */
+extern DLLEXTERN sound_server_t *sound_servers[]; /* All available sound fx drivers, NULL-terminated */
 
-extern sfx_driver_t *soundserver; /* current soundserver */
+extern sound_server_t *global_sound_server; /* current soundserver */
+
+sound_server_t *
+sound_server_find_driver(char *name);
+/* Searches for a sound server
+** Parameters: (char *) name: Name of the sound server to look for, or NULL for the default
+** Returns   : (sound_server_t *): A pointer to the first matching driver
+*/
 
 void 
 sound_queue_event(int handle, int signal, int value);

@@ -227,6 +227,7 @@ standard_option standard_options[] = {
 	OPT_STATICREF("gfx_driver", gfx_driver, parse_gfx_driver),
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
+	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
 	OPT_END
 };
 
@@ -436,6 +437,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_driver = gfx_find_driver(NULL);
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
+	conf->sound_server = sound_server_find_driver(NULL);
 
 	conf->mouse = 1;
 
@@ -605,6 +607,19 @@ parse_gfx_driver(char *driver_name)
 	/* not found - return default */
 
 	printf ("Unknown graphics driver %s\n", driver_name);
+	return (void *) conf->gfx_driver;
+}
+
+void *
+parse_sound_server(char *driver_name)
+{
+	sound_server_t *retval = sound_server_find_driver(driver_name);
+
+	if (retval)
+		return (void *) retval;
+	/* not found - return default */
+
+	printf ("Unknown sound server %s\n", driver_name);
 	return (void *) conf->gfx_driver;
 }
 

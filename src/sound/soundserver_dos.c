@@ -1,5 +1,5 @@
 /***************************************************************************
- soundserver_dos.c Copyright (C) 1999, 2000 Rink Springer
+ Soundserver_dos.c Copyright (C) 1999, 2000 Rink Springer
 
 
  This program may be modified and copied freely according to the terms of
@@ -79,8 +79,9 @@ sound_dos_configure(state_t *s, char *option, char *value) {
 
 void sound_dos_poll();
 
-sfx_driver_t sound_dos = {
+sfx_driver_t sound_server_dos = {
   "dos",
+  "0.1",
   &sound_dos_init,
   &sound_dos_configure,
 

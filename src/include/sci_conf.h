@@ -73,6 +73,7 @@ typedef struct {
 
 	midiout_driver_t *midiout_driver ; /* the midiout method to use */
 	midi_device_t *midi_device; /* the midi device to use */
+	sound_server_t *sound_server; /* The sound server */
 
 } config_entry_t;
 
@@ -117,6 +118,13 @@ parse_midi_device(char *driver_name);
 /* Parses a string and looks up an appropriate driver structure
 ** Parameters: (char *) driver_name: Name of the driver to look up
 ** Returns   : (void *) A matching driver, or NULL on failure
+*/
+
+void *
+parse_sound_server(char *driver_name);
+/* Parses a string and looks up an appropriate driver structure
+** Parameters: (char *) driver_name: Name of the driver to look up
+** Returns   : (void *) A matching sound server, or NULL on failure
 */
 
 driver_option_t *

@@ -46,10 +46,10 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 {
 	sound_event_t *event = NULL;
 
-	if (s->sfx_driver == NULL)
+	if (s->sound_server == NULL)
 		return;
 
-	while ((event = s->sfx_driver->get_event(s))) {
+	while ((event = s->sound_server->get_event(s))) {
 		heap_ptr obj = event->handle;
 
 		if (is_object(s, obj))
@@ -155,16 +155,16 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 
-	if (s->sfx_driver)
+	if (s->sound_server)
 		switch (command) {
 		case _K_SOUND_INIT:
-			s->sfx_driver->command(s, SOUND_COMMAND_INIT_SONG, obj, GET_SELECTOR(obj, number));
+			s->sound_server->command(s, SOUND_COMMAND_INIT_SONG, obj, GET_SELECTOR(obj, number));
 			break;
 
 		case _K_SOUND_PLAY:
 
-			s->sfx_driver->command(s, SOUND_COMMAND_PLAY_HANDLE, obj, 0);
-			s->sfx_driver->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
+			s->sound_server->command(s, SOUND_COMMAND_PLAY_HANDLE, obj, 0);
+			s->sound_server->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
 			break;
 
 		case _K_SOUND_NOP:
@@ -173,22 +173,22 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		case _K_SOUND_DISPOSE:
 
-			s->sfx_driver->command(s, SOUND_COMMAND_DISPOSE_HANDLE, obj, 0);
+			s->sound_server->command(s, SOUND_COMMAND_DISPOSE_HANDLE, obj, 0);
 			break;
 
 		case _K_SOUND_STOP:
 
-			s->sfx_driver->command(s, SOUND_COMMAND_STOP_HANDLE, obj, 0);
+			s->sound_server->command(s, SOUND_COMMAND_STOP_HANDLE, obj, 0);
 			break;
 
 		case _K_SOUND_SUSPEND:
 
-			s->sfx_driver->command(s, SOUND_COMMAND_SUSPEND_HANDLE, obj, 0);
+			s->sound_server->command(s, SOUND_COMMAND_SUSPEND_HANDLE, obj, 0);
 			break;
 
 		case _K_SOUND_RESUME:
 
-			s->sfx_driver->command(s, SOUND_COMMAND_RESUME_HANDLE, obj, 0);
+			s->sound_server->command(s, SOUND_COMMAND_RESUME_HANDLE, obj, 0);
 			break;
 
 		case _K_SOUND_MUTE: {
@@ -197,9 +197,9 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		  int param = UPARAM_OR_ALT(1,-1);
 
 		  if (param != -1)
-		    s->acc = s->sfx_driver->command(s, SOUND_COMMAND_SET_MUTE, obj, param);
+		    s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_MUTE, obj, param);
 		  else
-		    s->acc = s->sfx_driver->command(s, SOUND_COMMAND_GET_MUTE, obj, 0);
+		    s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_MUTE, obj, 0);
 
 		}
 		break;
@@ -211,31 +211,31 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		        obj = UPARAM_OR_ALT(1, -1);
 
 		   if (param != -1)
-		        s->acc = s->sfx_driver->command(s, SOUND_COMMAND_SET_VOLUME, 0, obj);
+		        s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_VOLUME, 0, obj);
 		   else
-		        s->acc = s->sfx_driver->command(s, SOUND_COMMAND_GET_VOLUME, 0, 0);
+		        s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_VOLUME, 0, 0);
 		}
 		 break;
 
 		case _K_SOUND_UPDATE:
 
-			s->sfx_driver->command(s, SOUND_COMMAND_RENICE_HANDLE, obj, GET_SELECTOR(obj, priority));
-			s->sfx_driver->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
+			s->sound_server->command(s, SOUND_COMMAND_RENICE_HANDLE, obj, GET_SELECTOR(obj, priority));
+			s->sound_server->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
 			break;
 
 		case _K_SOUND_FADE:
 
-			s->sfx_driver->command(s, SOUND_COMMAND_FADE_HANDLE, obj, 120); /* Fade out in 2 secs */
+			s->sound_server->command(s, SOUND_COMMAND_FADE_HANDLE, obj, 120); /* Fade out in 2 secs */
 			break;
 
 		case _K_SOUND_CHECK_DRIVER:
 		  
-			s->acc = s->sfx_driver->command(s, SOUND_COMMAND_TEST, 0, 0);
+			s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);
 			break;
 
 		case _K_SOUND_STOP_ALL:
 
-			s->acc = s->sfx_driver->command(s, SOUND_COMMAND_STOP_ALL, 0, 0);
+			s->acc = s->sound_server->command(s, SOUND_COMMAND_STOP_ALL, 0, 0);
 			break;
 
 		default:

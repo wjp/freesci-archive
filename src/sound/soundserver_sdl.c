@@ -46,7 +46,7 @@ SDL_mutex *data_mutex;
 SDL_cond *datain_cond;
 SDL_cond *dataout_cond;
 
-sfx_driver_t sound_sdl;
+extern sound_server_t sound_server_sdl;
 
 sound_eq_t inqueue; /* The in-event queue */
 sound_eq_t queue; /* The event queue */
@@ -62,7 +62,7 @@ int sdl_soundserver_init(void *args) {
 int
 sound_sdl_init(state_t *s)
 {
-  soundserver = &sound_sdl;
+  global_sound_server = &sound_server_sdl;
 
   master = SDL_ThreadID();
 
@@ -228,16 +228,17 @@ sound_sdl_save(state_t *s, char *dir)
   /* we ignore the dir */
 
   sound_command(s, SOUND_COMMAND_SAVE_STATE, 0, 2);
-  sound_send_data(".", 2);
+  sound_send_data((byte *) ".", 2);
 
-  sound_get_data(&success, &size, sizeof(int));
+  sound_get_data((byte **) &success, &size, sizeof(int));
   retval = *success;
   free(success);
   return retval;
 }
 
-sfx_driver_t sound_sdl = {
+sound_server_t sound_server_sdl = {
 	"sdl",
+	"0.1",
 	&sound_sdl_init,
 	&sound_sdl_configure,
 	&sound_sdl_exit,
