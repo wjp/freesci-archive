@@ -121,6 +121,7 @@ typedef struct
   int canBeHere; /* Funcselector: Checks for movement validity */
   int client; /* The object that wants to be moved */
   int dx, dy; /* Deltas */
+  int edgeHit;
   int b_movCnt, b_i1, b_i2, b_di, b_xAxis, b_incr; /* Various Bresenham vars */
   int completed;
 

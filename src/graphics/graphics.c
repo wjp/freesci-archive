@@ -600,12 +600,14 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
     y = yp;
 
     if (y < 0) { /* clipping the ceiling */
+      maxy += y;
       blindtop = (-y)*maxx;
       y = 0;
     } else blindtop = 0;
 
     maxx += x;
     maxy += y;
+
     if (maxy > clipmaxy + 1) maxy = clipmaxy + 1;
 
     if (maxx < 0) return 0;

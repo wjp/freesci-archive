@@ -46,6 +46,9 @@
 extern int _kdebug_cheap_event_hack;
 extern int _kdebug_cheap_soundcue_hack;
 
+extern int _debug_seeking;
+extern int _debug_step_running;
+
 /*** Portability kludges ***/
 
 #ifdef _WIN32
@@ -1593,14 +1596,19 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
     {
     case SCI_EVT_KEYBOARD:
       {
-        PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
-        s->acc=1;
-        PUT_SELECTOR(obj, message, e.data);
-        PUT_SELECTOR(obj, modifiers, e.buckybits);
 	if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)
-	    && (e.data == '-'))
+	    && (e.data == '-')) {
+	  sciprintf("Debug mode activated\n");
+
 	  script_debug_flag = 1; /* Enter debug mode */
-	
+	  _debug_seeking = _debug_step_running = 0;
+	} else {
+
+	  PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
+	  s->acc=1;
+	  PUT_SELECTOR(obj, message, e.data);
+	  PUT_SELECTOR(obj, modifiers, e.buckybits);
+	}
       } break;
     case SCI_EVT_CLOCK:
       {
@@ -2122,13 +2130,8 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
     deltax_step = numsteps? deltax / numsteps : deltax;
   }
 
-  PUT_SELECTOR(mover, b_movCnt, 0);
-  PUT_SELECTOR(mover, completed, 0);
-
-  PUT_SELECTOR(mover, dx, deltax_step);
-  PUT_SELECTOR(mover, dy, deltay_step);
-
-  if (abs(deltax) > abs(deltay)) { /* Bresenham on y */
+  /*  if (abs(deltax) > abs(deltay)) {*/ /* Bresenham on y */
+  if (numsteps_y < numsteps_x) {
 
     PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_Y);
     PUT_SELECTOR(mover, b_incr, (deltay < 0)? -1 : 1);
@@ -2143,6 +2146,12 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
     bdi = -abs(deltay);
 
   }
+
+  PUT_SELECTOR(mover, b_movCnt, 0);
+  PUT_SELECTOR(mover, completed, 0);
+
+  PUT_SELECTOR(mover, dx, deltax_step);
+  PUT_SELECTOR(mover, dy, deltay_step);
 
   SCIkdebug(SCIkBRESEN, "Init bresen for mover %04x: d=(%d,%d)\n", mover, deltax, deltay);
   SCIkdebug(SCIkBRESEN, "    steps=%d, mv=(%d, %d), i1= %d, i2=%d\n",
@@ -2236,11 +2245,14 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int yend = GET_SELECTOR(obj, brBottom);
   int xl = xend - x + 1;
   int yl = yend - y + 1;
+  word edgehit;
 
   signal = GET_SELECTOR(obj, signal);
 
+  /*fprintf(stderr,"CanBeHere: %04x vs. illegal=%04x\n", graph_on_control(s, x, y + 10, xl, yl, SCI_MAP_CONTROL), ((word)GET_SELECTOR(obj, illegalBits)));
+   */
   s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
-	     & graph_on_control(s, x, y + 10, xl, yl, SCI_MAP_CONTROL));
+	     & (edgehit = graph_on_control(s, x, y + 10, xl, yl, SCI_MAP_CONTROL)));
 
   if (s->acc == 0)
     return; /* Can'tBeHere */
@@ -2335,7 +2347,8 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr obj = PARAM(0);
   int loop = GET_SELECTOR(obj, loop);
-  resource_t *viewres = findResource(sci_view, GET_SELECTOR(obj, view));
+  int view;
+  resource_t *viewres = findResource(sci_view, view = GET_SELECTOR(obj, view));
 
   CHECK_THIS_KERNEL_FUNCTION;
 
@@ -2354,6 +2367,8 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int map, xstart, ystart;
   int xlen = 1, ylen = 1;
 
+  CHECK_THIS_KERNEL_FUNCTION;
+
   if (argc == 2 || argc == 4)
     map = 4;
   else {
@@ -2361,14 +2376,13 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
     map = PARAM(0);
   }
 
-  xstart = PARAM(arg+1);
-  ystart = PARAM(arg);
+  ystart = PARAM(arg+1);
+  xstart = PARAM(arg);
 
   if (argc > 3) {
-    xlen = PARAM(arg+3) - xstart + 1;
-    ylen = PARAM(arg+2) - ystart + 1;
+    ylen = PARAM(arg+3) - ystart + 1;
+    xlen = PARAM(arg+2) - xstart + 1;
   }
-
   s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
 
 }
@@ -2452,6 +2466,7 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_SELECTOR(object, brRight, xend);
   PUT_SELECTOR(object, brTop, ybase);
   PUT_SELECTOR(object, brBottom, yend);
+
 
   if (s->debug_mode & (1 << SCIkBASESETTER_NR)) {
     graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(y));

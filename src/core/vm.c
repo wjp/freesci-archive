@@ -910,7 +910,7 @@ script_detect_early_versions(state_t *s)
 
       int id = getInt16(script->data);
 
-      if ((id == 0) || (id > 15)) {
+      if (id > 15) {
 	version_require_earlier_than(s, SCI_VERSION_FTU_NEW_SCRIPT_HEADER);
 	return;
       }

@@ -1,5 +1,5 @@
 /***************************************************************************
- input_ggi.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ input_ggi.c Copyright (C) 1999 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -110,15 +110,20 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	  case GIIK_PageDown: retval.data=0; pending=SCI_K_PGDOWN; break;
 	  case GIIK_P5: retval.data=SCI_K_CENTER; break;
 
-	  case GIIK_ShiftL: buckybits^=SCI_EVM_LSHIFT; break;
-	  case GIIK_ShiftR: buckybits^=SCI_EVM_RSHIFT; break;
+	  case GIIUC_Minus:
+	  case GIIK_PMinus: retval.data = '-'; break;
+	  case GIIUC_Plus:
+	  case GIIK_PPlus: retval.data = '+'; break;
+
+	  case GIIK_ShiftL: buckybits |= SCI_EVM_LSHIFT; break;
+	  case GIIK_ShiftR: buckybits |= SCI_EVM_RSHIFT; break;
 	  case GIIK_CtrlR:
-	  case GIIK_CtrlL: buckybits^=SCI_EVM_CTRL; break;
+	  case GIIK_CtrlL: buckybits |= SCI_EVM_CTRL; break;
 	  case GIIK_AltL:
 	  case GIIK_AltR:
 	  case GIIK_MetaL:
-	  case GIIK_MetaR: buckybits^=SCI_EVM_ALT; break;
-	  case GIIK_CapsLock: buckybits^=SCI_EVM_CAPSLOCK; break;
+	  case GIIK_MetaR: buckybits |= SCI_EVM_ALT; break;
+	  case GIIK_CapsLock: buckybits |= SCI_EVM_CAPSLOCK; break;
 	  case GIIK_NumLock: buckybits^=SCI_EVM_NUMLOCK; break;
 	  case GIIK_ScrollLock: buckybits^=SCI_EVM_SCRLOCK; break;
 	  case GIIK_Insert: buckybits^=SCI_EVM_INSERT; break;
@@ -127,6 +132,7 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	  case GIIUC_Tab: retval.data='\t'; break;
 	  case GIIUC_Space: retval.data=' '; break;
 	  case GIIUC_BackSpace: retval.data=SCI_K_BACKSPACE; break;
+
 
 	    /*FIXME: Add all special keys in a sane way*/
 	  default:
@@ -142,6 +148,20 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
         if(retval.data==-1) continue;
         retval.buckybits=buckybits;
         return retval;
+
+      case evKeyRelease:
+        switch(event.key.label)
+	  {
+	  case GIIK_ShiftL: buckybits &= ~SCI_EVM_LSHIFT; break;
+	  case GIIK_ShiftR: buckybits &= ~SCI_EVM_RSHIFT; break;
+	  case GIIK_CtrlR:
+	  case GIIK_CtrlL: buckybits &= ~SCI_EVM_CTRL; break;
+	  case GIIK_AltL:
+	  case GIIK_AltR:
+	  case GIIK_MetaL:
+	  case GIIK_MetaR: buckybits &= ~SCI_EVM_ALT; break;
+	  }
+	continue;
 	
       case evPtrButtonPress:
         retval.type = SCI_EVT_MOUSE_PRESS;

@@ -184,7 +184,7 @@ void draw_window(picture_t dest, port_t *port, char color, char priority,
       draw_window(dest, &headerport, 0x88, priority, NULL, NULL,
 		 flags & (WINDOW_FLAG_TRANSPARENT | WINDOW_FLAG_NOFRAME)); /* Draw header */
 
-      draw_text0_centered(dest, &headerport, 0, 0, title, titlefont, 0xff); /* Draw header text */
+      draw_text0_centered(dest, &headerport, 0, 1, title, titlefont, 0xff); /* Draw header text */
 
     }
 

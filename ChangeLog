@@ -1,3 +1,7 @@
+1999-09-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c: Fixed numerous bugs
+
 1999-08-31  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vocab.c: Implemented basic support for the standard and

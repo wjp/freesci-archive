@@ -331,7 +331,6 @@ libggi_init(state_t *s, picture_t pic)
 {
   ggiInit();
   s->graphics.ggi_visual = openVisual();
-  printf("init, vis=%p\n", s->graphics.ggi_visual);
   return 0;
 }
 

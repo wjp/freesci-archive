@@ -75,6 +75,9 @@ graph_fill_box_custom(struct _state *s, int x, int y, int xl, int yl,
   int pos = 0;
   int i, _yl = yl;
 
+  if (priority < 0)
+    priority = 16;
+
   if (x < 0) {
     xl += x;
     x = 0;
@@ -444,9 +447,9 @@ graph_on_control(state_t *s, int x, int y, int xl, int yl, int _map)
     y = port->ymin;
   }
   if (x + xl > port->xmax)
-    xl = port->xmin - x + 1;
+    xl = port->xmax + 1 - x;
   if (y + yl > port->ymax)
-    yl = port->ymin - y + 1;
+    yl = port->ymax + 1 - y;
 
   if ((xl <= 0) || (yl <= 0))
     return 0;

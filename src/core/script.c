@@ -817,6 +817,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(max, "max");
   FIND_SELECTOR(cursor, "cursor");
   FIND_SELECTOR(claimed, "claimed");
+  FIND_SELECTOR(edgeHit, "edgeHit");
 }
 
 int
