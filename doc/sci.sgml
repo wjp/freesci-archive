@@ -83,7 +83,7 @@
 
     <Abstract><Para>
       This book describes the Sierra Creative Interpreter, versions 0.xxx, 1.xxx,
-      2.xxx  and SCI32/SCIWin to the extent known to the general public, as well as the
+      and 2.xxx to the extent known to the general public, as well as the
       FreeSCI interpreter for those games.
       Please contact the author if you find that anything is being described
       incorrectly or missing.
@@ -97,7 +97,7 @@
 
     <LegalNotice>
      <Para>
-     Copyright (C) 1999 by the authors
+     Copyright (C) 1999, 2000 by the authors
      </Para>
      <Para>
    Permission is hereby granted, free of charge, to any person obtaining a
@@ -4445,8 +4445,21 @@ The last node of the list, or 0 if the list is empty
     </para>
 </sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x37: EmptyList(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x37: EmptyList(DblList)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x37: EmptyList
+		</funcdef><paramdef>DblList list</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(DblList)/ list: The list to check</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(int)</type>
+                        1 if <parameter/list/ is an empty list, 0 if it isn't.
+		</para><para>
+		</para>
+	</sect3>
 
 
 <sect3><Title/Kernel function 0x38: NextNode(Node)/<para></para>
@@ -4510,8 +4523,24 @@ The value associated with the specified node
     </para>
 </sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x3b: AddAfter(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x3b: AddAfter(DblList, Node, Node)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x3b: AddAfter
+		</funcdef><paramdef>DblList list, Node ref_node, Node new_node</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(DblList)/ list: The list to insert into</member>
+                       <member><type/(Node)/ ref_node: The node in <parameter/list/ to insert after</member>
+                       <member><type/(Node)/ new_node: The node to insert</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+                       This function inserts <parameter/new_node/ into <parameter/list/ as the
+                       immediate successor of <parameter/ref_node/.
+		</para>
+	</sect3>
 
 
 <sect3><Title/Kernel function 0x3c: AddToFront(DblList, Node)/<para></para>
@@ -4883,8 +4912,8 @@ The length of the specified string.
 
 
 
-<sect3><Title/Kernel function 0x4b: StrCpy(HeapPtr, HeapPtr[, word])/<para></para>
-    <funcsynopsis><funcprototype><funcdef>
+	<sect3><Title/Kernel function 0x4b: StrCpy(HeapPtr, HeapPtr[, word])/<para></para>
+	    <funcsynopsis><funcprototype><funcdef>
 kfunct 0x4b: StrCpy
     </funcdef><paramdef>
 HeapPtr dest, HeapPtr src[, word length]</paramdef>
@@ -5058,8 +5087,33 @@ Numbers beginning with a '$' are interpreted as hexadecimal numbers.
 		</para>
 	</sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x51: CanBeHere(?)/<para></para></sect3>
+	<sect3><Title/Kernel function 0x51: CanBeHere(HeapPtr [, DblList])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x51: CanBeHere
+		</funcdef><paramdef>HeapPtr obj [, DblList clip_list]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ obj: The object to test</member>
+                       <member><type/(DblList)/ clip_list: An optional list of objects to test <parameter/obj/ against</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(int)</type>
+                        1 if <parameter/obj/ can be where it is, 0 if not.
+		</para><para>
+			This function first retreives <parameter/obj/'s signal and illegalBits
+			selectors, plus its brRect (boundary rectangle, consisting of brTop, brBottom,
+			brLeft and brRight). If either of the DONT_RESTORE or IGNORE_ACTOR flags is set,
+			the function returns 1, otherwise it proceeds with verifying that
+                       <simplelist>
+                           <member>illegalBits bitwise-AND the disjunction of all elements of { 2<superscript/n/ |
+					&exist; a pixel with the color value n inside the control map zone
+					delimited by obj's brRect} equals 0</member>
+			   <member>&not;&exist;pic,pic&isin;clip_list. (pic::signal &amp; (DONT_RESTORE | IGNORE_ACTOR)) = 0
+					&and; pic::brRect &cap; obj::brRect &ne; &empty;</member>
+                       </simplelist>
+			If both conditions are met, 1 is returned. Otherwise, 0 is returned.
+		</para>
+	</sect3>
 
 
   <sect3 ID="KONCONTROL">
@@ -5085,14 +5139,74 @@ kfunct 0x52: OnControl
        </para>
      </sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x53: InitBresen(?)/<para></para></sect3>
+        <sect3>
+        <Title/Kernel function 0x53: InitBresen(HeapPtr [, word])/
+                <funcsynopsis><funcprototype><funcdef>
+                        kfunct 0x53: InitBresen
+                </funcdef><paramdef>HeapPtr mover, word step_factor</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ mover: The mover object to initialize</member>
+                       <member><type/(word)/ step_factor: A factor to multiply the step size with (defaults to 1)</member>
+                   </simplelist></para>
+                <para>
+                        Returns: <type>(void)</type>
+                </para><para>
+		  Initializes a mover object for bresenham movement from the object's client's coordinates to the coordinates
+		  specified by its own pair of (x,y) selectors. To do this, it retreives the
+		  mover's client, and calculates the result values according to the algorithm
+		  for determining the initial values for iterative line drawing according to the Bresenham line algorithm:
+<programlisting>
+        client := mover::client
+        &delta;x := mover::x - client::x
+        &delta;y := mover::y - client::y
+
+        vx<subscript/max/ := client::xStep * step_factor
+        vy<subscript/max/ := client::yStep * step_factor
+
+        numsteps<subscript/x/ := |&delta;x / vx<subscript/max/|
+        numsteps<subscript/y/ := |&delta;y / vy<subscript/max/|
+
+        IF numsteps<subscript/x/ > numsteps<subscript/y/ THEN
+                mover::numsteps := numsteps<subscript/x/
+                mover::b_xAxis := 1
+                &delta;<subscript/0/ := &delta;x
+                &delta;<subscript/1/ := &delta;y
+                s := client::yStep
+        ELSE
+                mover::numsteps := numsteps<subscript/y/
+                mover::b_xAxis := 0
+                &delta;<subscript/1/ := &delta;x
+                &delta;<subscript/0/ := &delta;y
+                s := client::xStep
+        FI
+
+        mover::dx := &delta;x / mover::numsteps
+        mover::dy := &delta;y / mover::numsteps
+
+        mover::b_di := - |&delta;<subscript/0/|
+        mover::b_i1 := 2 * (|&delta;<subscript/1/| - |s * numsteps|) * |&delta;<subscript/0/|
+        mover::b_incr := &delta;<subscript/1/ / |&delta;<subscript/1/|
+        mover::b_i2 := mover::b_d1 * 2
+</programlisting>
+                </para>
+        </sect3>
 
 <!-- fixme -->
 <sect3><Title/Kernel function 0x54: DoBresen(?)/<para></para></sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x55: DoAvoider(?)/<para></para></sect3>
+        <sect3>
+        <title/Kernel function 0x55: DoAvoider()/
+                <funcsynopsis><funcprototype><funcdef>
+                        kfunct 0x55: DoAvoider
+                </funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+                <para>
+                        Returns: <type>(void)</type>
+                </para><para>
+                        This function is a no-op.
+                </para>
+        </sect3>
+
 
 <!-- fixme -->
 <sect3><Title/Kernel function 0x56: SetJump(?)/<para></para></sect3>
@@ -5612,17 +5726,17 @@ class masks, see later. Only one bit is actually tested by the interpreter.
 If a word class equals to 0xff ("anyword"), the word is excluded (allowing for
 parser'ese). The values go like this:
 <simplelist>
-<member/1 - preposition/
-<member/2 - article/
-<member/4 - qualifying adjective/
-<member/8 - relative pronoun/
-<member/16 - noun/
-<member/32 - indicative verb (such as "is", "went" as opposed to _do_ this or
+<member/0x001 - preposition/
+<member/0x002 - article/
+<member/0x004 - qualifying adjective/
+<member/0x008 - relative pronoun/
+<member/0x010 - noun/
+<member/0x020 - indicative verb (such as "is", "went" as opposed to _do_ this or
 that, which is imperative)/
-<member/64 - adverb/
-<member/128 - imperative verb/
-<member/256 - number (not found in the vocabulary, set internally)/
-<member/2048 - ??? (used in the suffix vocabulary)/
+<member/0x040 - adverb/
+<member/0x080 - imperative verb/
+<member/0x100 - number (not found in the vocabulary, set internally)/
+<member/0x800 - ??? (used in the suffix vocabulary)/
 </simplelist>
 </para><para>
 The group number is used to implement synonyms (words with the same
@@ -5813,8 +5927,8 @@ all pertinent data is kept in the interpreter.
 </para><para>
 The Said kernel function is called for each command which the game might 
 respond to at any given time. Its only parameter is a pointer to a said 
-information block which resides in script space. This block has already been
-described by Dark Minister (see <XREF LINKEND="DMSaidBlock">).
+information block which resides in script space. This block is described below
+(see <XREF LINKEND="CRSaidSpec">).
 </para><para>
 The Said function first does some sanity checking on the event pointer which
 Parse stored earlier. It must be a said event (type property), and it must
@@ -5823,119 +5937,482 @@ not have been handled by an earlier call to Said (claimed property).
 It then word-extends the passed said block into a temporary buffer
 (command codes are byte-sized, remember?). This is supposedly just for
 convenience/speed, and not really needed.
-    </para>
+</para>
    </sect2>
-   <sect2 ID="DMSaidBlock"><Title/Parameter block of the Said() function/
-      <para>By <author><firstname/Dark/<surname/Minister/</author>
-</para><para>
- When the interpreter analyses the parameters of the function 'said',
-it reads the information byte by byte, if the byte is greater or equal
-to F0h then this is a modifier, else it is a word that refers to a word
-group number.
-<example><title/Example:/<para>
-<informaltable frame="none">
-   <tgroup cols="2">
-     <tbody>
-       <row>
-        <entry//
-        <entry/F2 03 F3 F0 06 87/
-       </row>
-       <row>
-        <entry/equals/
-        <entry/F2 03F3 F0 0687/
-       </row>
-      </tbody>
-    </tgroup>
-</informaltable>
-</para></example>
-</para>
+	<sect2><Title/The Parse tree/
+		<para>
+			<note><para/This and the two following sections borrow some ideas and structures from abstract
+			language theory. Readers might want to consider related literature./
+			  <para>Most of the information explained here was gathered by Lars Skovlund, and, before that, Dark Minister.</para></note>
+		</para>
+		<para>
+		  After tokenizing, looking up, and finally aliasing the data found in the
+		  parsed input string, the interpreter proceeds to build a parse tree T<subscript/&Pi;/
+		  from the input tokens
+		  <blockquote><para>
+		    I := w<subscript/0/, w<subscript/1/, w<subscript/2/ ... w<subscript/n-1/
+		  </para></blockquote>
+		  where
+		  <blockquote><para>
+		    w<subscript>j</subscript> &isin; W
+		    &gamma;<subscript>j</subscript> &isin; &Gamma;
+		    &mu;<subscript>j</subscript> &isin; 2<superscript>C</superscript>
+		    w<subscript>j</subscript> := (&gamma;<subscript>j</subscript>, &mu;<subscript>j</subscript>)
+		  </para></blockquote>
+		  with W being the set of all words, &Gamma being the set of all word groups, C being the set of all class masks {1, 2, 4, 8, 10, 20, 40, 80, 100},
+		  &gamma;<subscript>j</subscript> being the word group w<subscript>j</subscript> belongs to, and
+		  &mu;<subscript>j</subscript> being its class mask, as described above.
+		</para>
+		<para>
+		  For the following sections, we will define
+		  <blockquote><para>
+		    group: W &rarr; &Gamma;
+		    	group((&gamma;, &mu;)) := &gamma;
 
-<sect3><Title/The modifiers/
-<para>
-<simplelist>
-<member/F0h : ||/
+		    classes: W &rarr; C
+		    	classes((&gamma;, &mu;)) := &mu;
 
-<member/F2h : ~/
-<member/F3h : (/
-<member/F4h : )/
-<member/F5h : [/
-<member/F6h : ]/
+		    C<subscript>x</subscript> := { w | w &isin; W. x &isin; class(w) }
+		  </para></blockquote>
+			To do that, it uses the class masks M as input for a pushdown automaton (PDA) A
+			built from a parser grammar; if M was accepted by A, the parse tree T<subscript/&Pi;/ will
+			be built from the matching syntax tree to represent the semantics.
+		</para>
+		<para>
+			The PDA is defined by a grammar G=(V, &Sigma, P, s), most of which, along with its semantics, is
+			stored in vocab.900. This resource contains a parser rule at every 20 bytes, starting with a
+			non-terminal symbol v (one word) and a null-terminated list of up to five tuples (&sigma;<subscript/i/, m<subscript/i/), both of which
+			are words. In these tuples, m<subscript/i/ is a terminal or non-terminal symbol (determined by &sigma;<subscript/i/), and
+			&sigma;<subscript/i/ is the meaning of m<subscript/i/:
+			<informaltable frame="all">
+				<tgroup cols="2">
+					<thead>
+						<row>
+							<entry>&sigma;<subscript/i/</entry>
+							<entry/Type/
+							<entry/Meaning/
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry/0x141/
+							<entry/Non-terminal/
+							<entry/Predicate part: This identifies the first part of a sentence/
+						</row>
+						<row>
+							<entry/0x142/
+							<entry/Non-terminal/
+							<entry/Subject part: This identifies the second part of a sentence/
+						</row>
+						<row>
+							<entry/0x143/
+							<entry/Non-terminal/
+							<entry/Suffix part: This identifies the third and last part of a sentence/
+						</row>
+						<row>
+							<entry/0x144/
+							<entry/Non-terminal/
+							<entry/Reference part: This identifies words that reference another word in the same sentence part/
+						</row>
+						<row>
+							<entry/0x146/
+							<entry/Terminal/
+							<entry>Match on class mask: Matches if (m<subscript/i/ &isin; classes(w<subscript/j/))</entry>
+						</row>
+						<row>
+							<entry/0x14d/
+							<entry/Terminal/
+							<entry>Match on word group: Matches if (m<subscript/i/ = group(w<subscript/j/))</entry>
+						</row>
+						<row>
+							<entry/0x154/
+							<entry/Terminal/
+							<entry/"Force storage": Apparently, this was only used for debugging./
+						</row>
+					</tbody>
+				</tgroup>
+			</informaltable>
+			With the notable exception of the first rule, these rules constitute P.  V := { x | &exist;R, R &isin; P. x &isin; R }; typically,
+			V := {0x12f ... 0x13f}. s := m<subscript/0/ of the first rule encountered; in all games observed, it was set to 0x13c. &Sigma contains
+			all word groups and class masks. For the sake of simplicity, we will consider rules matching composite class masks to be several rules.
+			Here is a simplified example of what such a grammar might look like (the hexadecimal prefix '0x' is omitted for brevity):
+			<example>
+			  <title>Parse grammar example</title>
+			  <blockquote><para>
+	    G := ({12f ... 13e}, {C<subscript/1/, C<subscript/2/, C<subscript/4/ ... C<subscript/100/}, P, 13c)
+	    P := {
+	  	13c &rarr; 13b 134
+	  	13c &rarr; 13b 13d 133
+	  	13c &rarr; 13b 13d
+	  	13c &rarr; 13b
+	  	13c &rarr; 13b 13d 13b 13d
+	    	13b &rarr; 131 134
+	    	13b &rarr; 131 13d 13d
+		13b &rarr; 131
+		13d &rarr; 134
+	    	131 &rarr; C<subscript/80/
+	    	133 &rarr; C<subscript/20/
+	    	134 &rarr; C<subscript/10/
+	    }
+			  </para></blockquote>
+			</example>
+			In addition to this grammar, each right-hand non-terminal m<subscript/i/ carries its semantic value &rho;<subscript>i</subscript>, which is
+			not relevant for constructing a syntax tree, but must be considered for the semantic tree T<subscript>&Pi;</subscript>. These values were omitted
+			in the example above.
+			As in the example above, the grammar is a context-free (type 2) grammar, almost in Chomsky Normal Form (<acronym>CNF</acronym>) in SCI; constructing a
+			grammar with CNF rules from it would be trivial.
+			<footnote><para>FreeSCI constructs a <acronym>GNF</acronym> (Greibach Normal Form) representation from these rules for parsing.</para></footnote>
+			<example><title>Parser example</title>
+			  <para>
+			    Parse is called with "open door".
+			    <blockquote><para>
+	      "open" &isin; (842, {C<subscript>80</subscript>}) (an imperative word of the word group 0x842)
+	      "door" &isin; (917, {C<subscript>10</subscript>}) (a substantive of the word group 0x917)
 
-<member/F8h : &amp;&amp;/
-<member/F9h : .../
-
-<member/FFh : &lt;end of paramaters&gt;/
-</simplelist>
-</para>
-<para>
-The modifier "~" (F2h) is used to mean that one word or more
-is preceding.
-</para><para>
-The modifier "..." (F9h) is used to mean that one word or more
-is succeeding.
-</para><para>
-The modifier pair "[" and "]" (F5h and F6h) is used to
-indicate that the word(s) between the pair is(are) optional.
-</para><para>
-The other modifiers are implicite.
-<footnote><para/The difference between "foo &amp;&amp; bar" and "foo bar" is that "foo bar" requests
-the sequence "foo bar", while "foo &amp;&amp; bar" would allow for "foo" and "bar" in any order./
-</footnote>
-<note>
-<para>
-The modifier symbols are not the ones used by Sierra, they are of my
-own. I hope they will be taken as a standard.
-<footnote><para/Two of the symbols have been changed: AND became &amp;&amp;, OR became ||./</footnote>
-    </para></note>
-</para>
-</sect3>
+	      I := (842, {C<subscript>80</subscript>}), (917, (C<subscript>10</subscript>)
+			    </para></blockquote>
+			    I is clearly accepted by automatons based on the grammar described above. Here are two possible derivations:
+			    <blockquote><para>
+	      D<subscript>0</subscript>:
+	      13c
+			      (13c &rarr; 13b 134)
+	      |- 13b 134
+			      (13b &rarr; 131)
+	      |- 131 134
+			      (131 &rarr; C<subscript>80</subscript>)
+	      |- C<subscript>80</subscript> 134
+			      (134 &rarr; C<subscript>10</subscript>)
+	      |- C<subscript>80</subscript> C<subscript>10</subscript>
 
 
-<sect3><Title/Examples/
-<example><Title/Example :/
-<para>
-"look bed" could be something like :
-<programlisting>
-if (said("look bed") {
-</programlisting>
-but this will not accept something like : "look the red bed",
-for this sentence to work, you need to do something like :
-<programlisting>
-if (said("look ...") && said("~ bed")) {
-</programlisting>
-but a more efficient way to use this is like that :
-<programlisting>
-if (said("look ...")) {
+	      D<subscript>1</subscript>:
+	      13c
+			      (13c &rarr; 13b)
+	      |- 13b
+			      (13b &rarr; 131 134)
+	      |- 131 134
+			      (131 &rarr; C<subscript>80</subscript>)
+	      |- C<subscript>80</subscript> 134
+			      (134 &rarr; C<subscript>10</subscript>)
+	      |- C<subscript>80</subscript> C<subscript>10</subscript>
+			    </para></blockquote>
+			  </para>
+			</example>
+			Obviously, G is an ambiguous grammar. In SCI, rule precedence is implied by rule order, so the resulting left derivation tree is well-defined
+			(in the example, it would be defined by D<subscript>0</subscript>)
+			<footnote><para>In FreeSCI, you can use the "parse" console command to retreive all possible left derivation trees</para></footnote>.
+			</para>
+			<sect3>
+			  <title>Semantics</title>
+			  <para>
+			    This is important, since the parser does much more than just accept or discard input. Using the semantic tags applied to each non-terminal
+			    on the right-hand side of a rule, it constructs what I will call the semantic parse tree T<subscript>&Pi;</subscript>, which attempts to
+			    describe what the input means. For each non-terminal rule
+			    <blockquote><para>
+			      r := v<subscript>0</subscript> &rarr; v<subscript>1</subscript> v<subscript>2</subscript> ... v<subscript>n</subscript>
+			    </para></blockquote>
+			    there are semantic tags &sigma;<subscript>r,1</subscript>, &sigma;<subscript>r,2</subscript> ... &sigma;<subscript>r,n</subscript> &isin; S, as explained above.
+			    T<subscript>&Pi;</subscript> is now constructed from the resulting derivation and the semantic tags assiociated with each non-terminal of the rule used. The construction
+			    algorithm is explained below with T<subscript>&Pi;</subscript> being constructed from nodes, which have the following structure:
+			    <blockquote><para>
+			      Nodes := {&diams;} &cup; S × V × (Nodes &cup; &Gamma;)&lowast;
+			    </para></blockquote>
+			    Where S is the set of possible semantic values, and V is the set of non-terminals as defined in the grammar. We will also use the sequence
+			    &gamma;<subscript>0</subscript>, &gamma;<subscript>1</subscript>, &gamma;<subscript>2</subscript> ... &gamma;<subscript>k-1</subscript>, which will represent the word groups the input tokens
+			    belonged to (in the exact order they were accepted), and the sequence r<subscript>0</subscript>, r<subscript>1</subscript>, r<subscript>2</subscript> ... r<subscript>l-1</subscript>,
+			    which will be the list of rules used to create the left derivation tree as described in the previous section.
+			    <programlisting>
+	      Helper function sci_said_recursive: S × V × (V &cup; &Sigma;)&lowast &rarr; Node
+	      Parameters: s &isin S, Rule r &isin; V × (V &cup; &Sigma;): v<subscript>0</subscript> &rarr; v<subscript>1</subscript> v<subscript>2</subscript> ... v<subscript>i</subscript>
+	      cn<subscript>mr</subscript> = cn<subscript>r</subscript>
+	      Node n := s, v<subscript/0/
+	      FOR j := 1 TO i
+	      		IF (v<subscript/j/ &isin; &Sigma;) THEN
+	      			n := n, &gamma;<subscript>cn<subscript>&gamma;</subscript></subscript>
+	      			cn<subscript>&gamma;</subscript> := cn<subscript>&gamma;</subscript> + 1
+	      		ELSE
+	      			cn<subscript>oldr</subscript> := cn<subscript>r</subscript>
+	      			cn<subscript>r</subscript> := cn<subscript>r</subscript> + 1
+	      			n := n, sci_said_recursive(&sigma;<subscript>r<subscript>mr</subscript>,j</subscript>, r<subscript>cn<subscript>oldr</subscript></subscript>)
+	      		FI
+	      ROF
+	      RETURN (n)
 
-   if (said("~ bed")) { print("This is a bed"); }
-   if (said("~ lamp")) { print("This is a lamp."); }
 
-   /* etc */
-}
-</programlisting>
-</para></example>
+	      Helper function get_children: Node &rarr; Nodes&lowast;
+			      get_children((s, v, n<subscript>0</subscript>, n<subscript>1</subscript> ... n<subscript>m</subscript>)) := n<subscript>0</subscript>, n<subscript>1</subscript> ... n<subscript>m</subscript>
 
-<example><title/Another example :/
-<para>
-"wear clothes" and "put on clothes" can be put in the same parameters :
-<programlisting>
-if (said("wear || ( put && on ) clothes") {
-</programlisting>
-</para></example>
 
-<example><title/Yet another example :/
-<para>
-If you want to accept either "look drawer" or "look at drawer" you
-can use something like :
+	      Algorithm SCI-SAID-TREE
+	      cn<subscript>&gamma;</subscript> := 0;
+	      cn<subscript>r</subscript> := 1;
+	      n<subscript>temp</subscript> := n<subscript>temp</subscript>, SCI-SAID-RECURSIVE(0, r<subscript>0</subscript>)
+	      root(T<subscript>&Pi;</subscript>) := (141, 13f, get_children(n<subscript>temp</subscript>))
+			    </programlisting>
+			    Here is an example, based on the previous one:
+			    <example><title/Semantic tree example/<blockquote><para>
+	      k = 2:
+	      &gamma;<subscript>0</subscript> = 842, &gamma;<subscript>1</subscript> = 917
 
-<programlisting>
-if (said("look [ && at ] ~ drawer")) {
-</programlisting>
-</para>
+	      l = 4
+	      r<subscript>0</subscript> = 13c &rarr; 13b 134
+	      &sigma;<subscript>r<subscript/0/,1</subscript> = 141, &sigma;<subscript>r<subscript/0/,2</subscript> = 142
+	      r<subscript>1</subscript> = 13b &rarr; 131
+	      &sigma;<subscript>r<subscript/1/,1</subscript> = 141
+	      r<subscript>2</subscript> = 131 &rarr; C<subscript>80</subscript>
+	      r<subscript>3</subscript> = 134 &rarr; C<subscript>10</subscript>
 
-</example>
-</sect3>
-  </sect2>
+	      The resulting tree would look like this:
+
+	      	(141 13f
+	      		(141 13b
+	      			(141 131 842)
+	      		)
+	      		(142 134 917)
+	      	)
+			    </para></blockquote></example>
+			  </para>
+			</sect3>
+	</sect2>
+	<sect2 ID="CRSaidSpec"><Title/Said specs/
+		<para>
+		  To test what the player wanted to say, SCI compares T<subscript>&Pi;</subscript> with a second tree, T<subscript>&Sigma;</subscript>, which is built
+		  from a so-called Said spec. A Said spec is a variable-sized block in SCI memory which consists of a set of byte-sized operators and special tokens
+		  (stored in the range 0xf0 to 0xf9) and word groups (in big-endian notation, so that they don't conflict with the operators); it is terminated by
+		  the speial token 0xff. The meanings of the operators and special tokens are as follows:
+		  <informaltable frame="all">
+		    <tgroup cols="3">
+		      <thead>
+			<row>
+			  <entry>Operator</entry>
+			  <entry>Byte representation</entry>
+			  <entry>Meaning</entry>
+			</row>
+		      </thead>
+		      <tbody>
+			<row>
+			  <entry>,</entry>
+			  <entry>f0</entry>
+			  <entry>"OR". Used to specify alternatives to words, such as "take , get".</entry>
+			</row>
+			<row>
+			  <entry>&amp;</entry>
+			  <entry>f1</entry>
+			  <entry>Unknown. Probably used for debugging.</entry>
+			</row>
+			<row>
+			  <entry>/</entry>
+			  <entry>f2</entry>
+			  <entry>Sentence part separator. Only two of these tokens may be used, since sentences are split into a maximum of three parts.</entry>
+			</row>
+			<row>
+			  <entry>(</entry>
+			  <entry>f3</entry>
+			  <entry>Used together with ')' for grouping</entry>
+			</row>
+			<row>
+			  <entry>)</entry>
+			  <entry>f4</entry>
+			  <entry>See '('</entry>
+			</row>
+			<row>
+			  <entry>[</entry>
+			  <entry>f5</entry>
+			  <entry>Used together with '[' for optional grouping. "[ a ]" means "either a or nothing"</entry>
+			</row>
+			<row>
+			  <entry>]</entry>
+			  <entry>f6</entry>
+			  <entry>See '['.</entry>
+			</row>
+			<row>
+			  <entry>#</entry>
+			  <entry>f7</entry>
+			  <entry>Unknown. Assumed to have been used exclusively for debugging, if at all.</entry>
+			</row>
+			<row>
+			  <entry>&lt;</entry>
+			  <entry>f8</entry>
+			  <entry>Semantic reference operator (as in "get < up").</entry>
+			</row>
+			<row>
+			  <entry>&gt;</entry>
+			  <entry>f9</entry>
+			  <entry>Instructs Said() not to claim the event passed to the previous Parse() call on a match. Used for successive matching.</entry>
+			</row>
+		      </tbody>
+		    </tgroup>
+		  </informaltable>
+		</para>
+		<para>
+		  This sequence of operators and word groups is now used to build the Said tree T<subscript>&Sigma;</subscript>.
+		  I will describe the algorithm used to generate T<subscript>&Sigma</subscript> by providing a grammar G<subscript>&Sigma;</subscript>, with
+		  L(G<subscript>&Sigma;</subscript>) containing all valid Said specs. The semantics will be provided under each rule with a double arrow:
+		  <programlisting>
+	G<subscript>&Sigma;</subscript> = ({saidspec, optcont, leftspec, midspec, rightspec, word, cwordset, wordset, expr, cwordrefset, wordrefset, recref}, &Gamma;, P, saidspec)
+
+	P := {
+	  saidspec &rarr;	 leftspec optcont
+				&rArr; (141 13f leftspec optcont)
+			| leftspec midspec optcont
+				&rArr; (141 13f leftspec midspec optcont)
+			| leftspec midspec rightspec optcont
+				&rArr; (141 13f leftspec midspec rightspec optcont)
+
+
+
+	  optcont &rarr;	e
+				&rArr;
+			| >
+				&rArr; (14b f900 f900)
+
+
+
+	  leftspec &rarr;	e
+				&rArr;
+			| expr
+				&rArr; (141 149 expr)
+
+
+
+	  midspec &rarr;	 / expr
+				&rArr; (142 14a expr)
+			| [ / expr ]
+				&rArr; (152 142 (142 14a expr))
+			| /
+				&rArr;
+
+
+
+	  rightspec &rarr;	 / expr
+				&rArr; (143 14a expr)
+			| [ / expr ]
+				&rArr; (152 143 (143 14a expr))
+			| /
+				&rArr;
+
+
+	  word &rarr;	 &gamma; &isin; &Gamma;
+				&rArr; (141 153 &gamma)
+
+
+	  cwordset &rarr;	 wordset
+				&rArr; (141 14f wordset)
+			| [ wordset ]
+				&rArr; (141 14f (152 14c (141 14f wordset)))
+
+
+	  wordset &rarr;	 word
+				&rArr; word
+			| ( expr )
+				&rArr; (141 14c expr)
+			| wordset , wordset
+				&rArr; wordset wordset
+			| wordset , [ wordset ]
+				&rArr; wordset wordset
+
+
+	  expr &rarr;		 cwordset cwordrefset
+				&rArr; cwordset cwordrefset
+			| cwordset
+				&rArr; cwordset
+			| cwordrefset
+				&rArr; cwordrefset
+	
+
+	  cwordrefset &rarr;	 wordrefset
+				&rArr; wordrefset
+			| [ wordrefset ]
+				&rArr; (152 144 wordrefset)
+
+
+	  wordrefset &rarr;	< wordset recref
+				&rArr; (144 14f word) recref
+			| < wordset
+				&rArr; (144 14f word)
+
+
+	  recref &rarr;	< wordset recref
+				&rArr; (141 144 (144 14f wordset) recref)
+			| < wordset
+				&rArr; (141 144 (144 14f wordset))
+	}
+		  </programlisting>
+		</para>
+	</sect2>
+	<sect2><title/Matching the trees/
+		<para>
+		  The exact algorithm used to compare T<subscript>&Pi;</subscript> to T<subscript>&Sigma;</subscript> is not known yet. The one described here is based
+		  on the approximation used in FreeSCI, which is very similar to the original SCI one.
+		</para>
+		<para>
+		  First, we need to describe a set of functions for traversing the nodes of T<subscript>&Sigma;</subscript> and T<subscript>&Pi;</subscript>, and doing
+		  some work. They will be
+		  operating on the sets N := { 0, i | (i - 1) &isin N } (all non-negative integral numbers), B := {tt, ff} (the boolean lattice with two elements), and
+		  Nodes (which we defined earlier).
+		  <blockquote><para>
+	first: Node &rarr; S
+		    first((s, v, n<subscript>0</subscript>, n<subscript/1/ ... n<subscript/i/)) := s
+
+	second : Node &rarr; V
+		    second((s, v, n<subscript>0</subscript>, n<subscript/1/ ... n<subscript/i/)) := v
+
+	word : Node &rarr; &Gamma;
+		    word((s, v, &gamma)) := &gamma;
+
+	children : Node &rarr; Node&lowast;
+		    children((s, v, n<subscript>0</subscript>, n<subscript/1/ ... n<subscript/i/)) := { m | &forall;m.m&isin;{ n<subscript>0</subscript>, n<subscript>1</subscript> ... n<subscript>i</subscript> } &and; m&isin;Node }
+
+	all_children : Node &rarr; Node&lowast;
+		    all_children(n) := children(n) &cup; { m | &exist;l.l&isin;all_children(n).m&isin;l }
+
+	is_word : Node &rarr; B
+		    is_word((s, v, n<subscript>0</subscript>, n<subscript/1/ ... n<subscript/i/) = tt &hArr; (i = 0) &and; n<subscript>0</subscript> &isin; &Gamma;
+
+	contains_word : Node × S × &Gamma; &rarr; B
+		    contains_word(n, s, &gamma;) = tt &hArr; &exist;m.m&isin;all_children(n).(s = second(m)) &and (is_word(m) &and; (word(m) = &gamma))
+
+	verify_sentence_part_elements : Node × Node &rarr; B
+		    verify_sentence_part_elements(n<subscript/p/, n<subscript/s/) = tt &hArr;
+		    	(first(n<subscript/s/ = 152)
+				&and; ((&forall;m.m &isin; Node.verify_sentence_part_elements(m, n<subscript/s/) &hArr; { w | &exist;t.t &isin; all_children(m).w = word(t)} = &empty;)
+		    			&or; &exist;m &isin; children(n<subscript/s/).verify_sentence_part_elements(m, n<subscript/s/))
+		    	) &or; ((second(n<subscript/s/) = 153)
+				&and; (&exist;m.m &isin; children(n<subscript/s/).(&exist;o &isin; all_children(n<subscript/s/).(first(o) = first(n<subscript/p/)) &and word(o) = word(m)))
+			) &or; ((second(n<subscript/s/) &isin; {144, 14c})
+				&and; (&exist;m.m &isin; children(n<subscript/s/).verify_sentence_part(m, n<subscript/s/)))
+
+	verify_sentence_part : Node × Node &rarr; B
+		    verify_sentence_part(n<subscript/p/, n<subscript/s/) = tt &hArr; &forall;n.n &isin; children(n<subscript/s/):&exist;m.m&isin;children(n<subscript/p/).(first(m) = first(n)) &and; verify_sentence_part_elements(n, m)
+
+	verify_sentence_part_brackets : Node × Node &rarr; B
+		    verify_sentence_part_brackets(n<subscript/p/, n<subscript/s/) = tt &hArr;
+				(first(n<subscript/p/) = 152 &and;
+					 (&forall;m.m&isin;Node.(first(m) = first(n<subscript/s/)) &and (second(m) = second(n<subscript/s/)).
+						verify_sentence_part(n<subscript/p/, m) &hArr; { w | &exist;t.t &isin; all_children(m).w = word(t)} = &empty;))
+				&or; ((first(n<subscript/p/) &isin; {141, 142, 143}) &and; verify_sentence_part(n<subscript/p/, n<subscript/s/))
+
+		  </para></blockquote>
+		  With these functions, we can now define an algorithm for augmenting T<subscript>&Pi;</subscript> and T<subscript>&Sigma;</subscript>:
+		  <blockquote><para>
+	Algorithm SCI-AUGMENT
+
+	matched := tt
+	claim_on_match := tt
+
+	FOREACH n &isin; root(T<subscript>&Sigma</subscript>)
+		IF ((first(n) = 14b) &and; (second(n) = f900)) THEN claim_on_match := ff
+		ELSE IF &not;verify_sentence_part_brackets(n, root(T<subscript>&Pi;</subscript>)) THEN
+			matched := ff
+	HCAEROF
+
+		  </para></blockquote>
+		  Augmenting succeeded if matched = tt; in this case, T<subscript>&Pi;</subscript> is one of the trees accepted by the description provided by T<subscript>&Sigma</subscript>.
+		  In this case, Said() will return 1. It will also claim the event previously provided to Parse(), unless claim_on_match = ff.
+		</para>
+	</sect2>
+
+
   </sect1>
   <sect1 ID="LarsAnim"><title/Views and animation in SCI/
     <para>by <author><firstname/Lars/<surname/Skovlund/</author>
@@ -6186,6 +6663,11 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                   Deletes a breakpoint from the specified index of the list of active breakpoints.
                 </para>
               </sect3>
+	      <sect3><title>bpe (script, index)</title>
+	      <para>
+		Add a breakpoint terminating when the specified exported function of a script is called
+	      </para>
+	      </sect3>
               <sect3><title/bplist/
                 <para>
                   Lists all active breakpoints.
@@ -6238,11 +6720,17 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                      <member/M: Menu system/
                      <member/p: The command parser/
                      <member/s: Base setter: Draws the bases of each actor as colored rectangles/
+		     <member/S: Said specs/
                      <member/u: Unimplemented functionality/
                      <member/*: Everything at once. Use with care./
                    </simplelist>
                 </para>
               </sect3>
+	      <sect3><title/die/
+		<para>
+		  Exits the interpreter ungracefully.
+		</para>
+	      </sect3>
               <sect3><Title/disasm (address) [number]/
                 <para>
                    The debugger is able to disassemble code parts on the fly. Just give it an
@@ -6252,11 +6740,32 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    resolution if it is disassembling the PC.
                 </para>
               </sect3>
+	      <sect3><title/dissectscript (script))/
+		<para>
+		  Dumps a script resource (with the specified number) and examines it. Lists classes,
+		  static objects, relocation tables, and all the other stuff contained in scripts.
+		</para>
+	      </sect3>
+	      <sect3><title/dump (restype, resnr)/
+		<para>
+		  Displays a hex dump of the specified resource.
+		</para>
+	      </sect3>
               <sect3><title/dumpnodes (index)/
                 <para>
                   Lists up to <parameter/index/ nodes of the parse tree.
                 </para>
               </sect3>
+	      <sect3><title/dynviews/
+		<para>
+		  Shows a list of all dynamic views which are currently active, plus their underBits.
+		</para>
+	      </sect3>
+	      <sect3><title/gnf/
+		<para>
+		  Lists the rules of the GNF grammar used internally in FreeSCI to parse input.
+		</para>
+	      </sect3>
               <sect3><title/go/
                 <para>
                   Deactivates debug mode and runs the game. Debug mode can be re-activated in the
@@ -6282,6 +6791,34 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    to the first (zeroeth?) selector.
                 </para>
               </sect3>
+	      <sect3><title/hexgrep (resource, hex 2-tuples+)/
+		<para>
+		  Searches for a list of hexadecimal numbers inside a single resource (if specified
+		  like "script.042"), or in a set of resources (if specified like "pic").
+		</para>
+	      </sect3>
+	      <sect3><title/kernelnames/
+		<para>
+		  Lists all kernel function names
+		</para>
+	      </sect3>
+	      <sect3><title/list (string+)/
+		<para>
+		  If called without parameters, it lists all things it can list. Among these
+		  are:
+		  <simplelist>
+		    <member/vars: Global interpreter variables/
+		    <member/cmds: All available commands/
+		    <member/restypes: All resource types/
+		    <member/[restype]: All resources of that type/
+		  </simplelist>
+		</para>
+	      </sect3>
+	      <sect3><title/list_sentence_fragments/
+		<para>
+		  Lists all parser rules in their normal almost-CNF representation.
+		</para>
+	      </sect3>
               <sect3><Title/listinfo (address)/
                 <para>
                    So FreeSCI doesn't have an interactive list debugger as in Sierra SCI. But it has
@@ -6289,12 +6826,43 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    dumper, which lists all list elements, keys, and heap positions.
                 </para>
               </sect3>
+	      <sect3><title/man (command)/
+		<para>
+		  Shows a short descriptive message to the command.
+		</para>
+	      </sect3>
+	      <sect3><title/meminfo/
+		<para>
+		  Prints information about heap and hunk memory allocation.
+		</para>
+	      </sect3>
               <sect3><Title/obj/
                 <para>
                    This is, in essence, the same function as <function/accobj/, but it checks the
                    current base object as opposed to the object indexed by the accumulator.
                 </para>
               </sect3>
+	      <sect3><title/parse (string)/
+		<para>
+		  Attempts to parse a single string, and displays the word groups, word classes
+		  and the resulting parse tree, if successful.
+		</para>
+	      </sect3>
+	      <sect3><title/picviews/
+		<para>
+		  Displays information about all currently active picture views (picviews).
+		</para>
+	      </sect3>
+	      <sect3><title/print (variable)/
+		<para>
+		  Prints the contents of one global interpreter variable.
+		</para>
+	      </sect3>
+	      <sect3><title/quit/
+		<para>
+		  Exits the interpreter gracefully, by shutting down all resources manually.
+		</para>
+	      </sect3>
               <sect3><Title/redraw_screen/
                 <para>
                    This function retrieves the background picture, puts it on the foreground, and
@@ -6328,6 +6896,11 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    Use this little helper function to unpack it.
                 </para>
               </sect3>
+	      <sect3><title/restart [string]]/
+		<para>
+		  Forces a restart of the current game. The string parameter is meaningless now.
+		</para>
+	      </sect3>
               <sect3><Title/s [number]/
                 <para>
                    This function will execute <parameter/number/ steps, or one if number was not
@@ -6341,6 +6914,22 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                   game data is stored. See <xref linkend="freesci-savegames"> for details about this.
                 </para>
               </sect3>
+	      <sect3><title/scripttable/
+		<para>
+		  Lists all scripts that have been loaded, their positions in memory, and the position
+		  of their local variables and exports.
+		</para>
+	      </sect3>
+	      <sect3><title/selectornames/
+		<para>
+		  Displays the names of all selectors.
+		</para>
+	      </sect3>
+	      <sect3><title/set (variable, int)/
+		<para>
+		  Sets the specified variable to a new value. Most commonly used to set color_mode.
+		</para>
+	      </sect3>
               <sect3><Title/set_acc (number)/
                 <para>
                    Frobbing the accumulator is not recommended, but it may be fun at times. Use this
@@ -6348,6 +6937,13 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    up.
                 </para>
               </sect3>
+	      <sect3><title/set_parse_nodes/
+		<para>
+		  Sets the nodes of the parse tree, and shows the result in list representation.
+		  Useful to display information gathered from a certain hacked version of Sierra's SCI
+		  interpreter in a more readable fashion.
+		</para>
+	      </sect3>
               <sect3><title/set_vismap (mapnr)/
                 <para>
                   Sets the visual display map. Mapnr can be any of the following:
@@ -6368,6 +6964,11 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                   not applied.
                 </para>
               </sect3>
+	      <sect3><title/size (restype, resnr)/
+		<para>
+		  Displays the total byte size of one single resource.
+		</para>
+	      </sect3>
               <sect3><Title/snk [number]/
                 <para>
                    Another step command: Step until the interpreter hits a callk command. If you're
@@ -6375,6 +6976,12 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    Syscall hunting has never been so easy.
                 </para>
               </sect3>
+	      <sect3><title/so/
+		<para>
+		  "Steps over" one instruction, i.e. continues executing until that instruction
+		  has been completed (useful for send, call, and related functions)
+		</para>
+	      </sect3>
               <sect3><Title/sret/
                 <para>
                    Step until RETurning. If you're bored of the function you're debugging, just invoke
@@ -6387,12 +6994,31 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    will display as many stack elements as you want, starting at the TOS.
                 </para>
               </sect3>
+	      <sect3><title/version/
+		<para>
+		  Displays the interpreter and SCI game versions
+		</para>
+	      </sect3>
               <sect3><Title/viewinfo (number)/
                 <para>
-                   Examines the specified view resource and displays the number of loops it has, and
-                   the number of cels for each loop.
+                   Examines the specified view resource and displays the number of loops it has,
+                   the number of cels for each loop, and the size for each cel.
                 </para>
               </sect3>
+	      <sect3><title/vmvarlist/
+		<para>
+		  Lists the heap positions of the current global, local, parameter, and temporary
+		  variables.
+		</para>
+	      </sect3>
+	      <sect3><title/vmvars (type) (index) [value])/
+		<para>
+		  Reads or sets a global, local, temporary, or parameter value. Type must be any of
+		  'g', 'l', 'p', 't', to select global, local, parameter or temporary variables
+		  (respectively), while index represents the variable index. If value is not provided,
+		  that variable will be displayed; otherwise, it will be set to value.
+		</para>
+	      </sect3>
            </Sect2>
      </Sect1>
      <sect1 id = "freesci-savegames">

@@ -340,7 +340,6 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
     if (value) {
       item->said_pos = value;
       memcpy(item->said, s->heap + value, MENU_SAID_SPEC_SIZE); /* Copy Said spec */
-      vocab_decypher_said_block(s, value);
       item->flags |= MENU_ATTRIBUTE_FLAGS_SAID;
 
     } else

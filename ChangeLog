@@ -1,3 +1,7 @@
+2000-05-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci.sgml: Various documentation updates
+
 2000-05-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/menubar.h: Fixed menus to work with Said specs of
