@@ -755,7 +755,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
       s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
 
     s->priority_first = 42;
-    s->priority_last = 200;
+    s->priority_last = 180;
     s->pic_not_valid = 1;
     s->pic_is_new = 1;
 
@@ -1442,11 +1442,6 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
       word ubitsnew, ubitsold = GET_SELECTOR(obj, underBits);
       invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
       ubitsnew = GET_SELECTOR(obj, underBits);
-
-      if (ubitsold == 0xffff)
-	fprintf(stderr,"Obj %04x: Old underBits were 0xffff\n", obj);
-      if (ubitsnew != ubitsold)
-	fprintf(stderr,"Obj %04x: underBits(old, new) = (%04x, %04x)\n", obj, ubitsold, ubitsnew);
     }
 
     node = UGET_HEAP(node + LIST_PREVIOUS_NODE);

@@ -8,5 +8,5 @@ scidisasm_SOURCES = scidisasm.c
 vocabdump_SOURCES = vocabdump.c
 classes_SOURCES = classes.c
 listwords_SOURCES = listwords.c
-sciconsole_LDADD = ../sound/libscisound.a ../scicore/libscicore.a $(GLIB_LIBS) @ac_curses_libraries@ -lc -lreadline @ac_glib_libraries@ @ac_readline@ @ac_curses_libraries@ -lc -lm
+sciconsole_LDADD = ../sound/libscisound.a ../scicore/libscicore.a $(GLIB_LIBS) @ac_curses_libraries@ -lc @ac_glib_libraries@ @ac_readline@ @ac_curses_libraries@ -lc -lm
 sciconsole_SOURCES = sciconsole.c

@@ -1422,17 +1422,9 @@ game_run(state_t **_s)
       game_exit(s);
       game_init(s);
 
-      sciprintf(" Restarting flags=%02x\n", s->restarting_flags);
+      sciprintf("play()\n");
+      putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector */
 
-      sciprintf(" Restarting game with ");
-
-      if (s->restarting_flags & SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE) {
-	sciprintf("replay()\n");
-	putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
-      } else {
-	sciprintf("play()\n");
-	putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector */
-      }
       putInt16(s->heap + s->stack_base + 2, 0);
       send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
 
@@ -1443,12 +1435,23 @@ game_run(state_t **_s)
     else {
       successor = s->successor;
       if (successor) {
-	script_abort_flag = 0;
 	game_exit(s);
 	free(s);
 	*_s = s = successor;
+
 	if (!send_calls_allocated)
 	  send_calls = g_new(calls_struct_t, send_calls_allocated = 16);
+
+	if (script_abort_flag == SCRIPT_ABORT_WITH_REPLAY) {
+	  sciprintf("Restarting with replay()\n");
+	  s->execution_stack_pos = -1; /* Resatart with replay */
+	  putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
+	  putInt16(s->heap + s->stack_base + 2, 0);
+	  send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
+	}
+
+	script_abort_flag = 0;
+
 	SCI_MEMTEST;
       } else
 	game_is_finished = 1;

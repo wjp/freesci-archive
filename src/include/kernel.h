@@ -254,12 +254,11 @@ kernel_oops(struct _state *s, char *file, int line, char *reason);
 
 /******************** Priority macros ********************/
 
-#define ___CPORTY s->ports[s->view_port]->ymin 
-#define VIEW_PRIORITY(y) (((y - ___CPORTY) < s->priority_first)? 0 : (((y - ___CPORTY) > s->priority_last)? 15 : 1\
-	+ ((((y - ___CPORTY) - s->priority_first) * 15) / (s->priority_last - s->priority_first))))
+#define VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) > s->priority_last)? 14 : 1\
+	+ ((((y) - s->priority_first) * 14) / (s->priority_last - s->priority_first))))
 
 #define PRIORITY_BAND_FIRST(nr) ((((nr) == 0)? 0 :  \
-        ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 15))-10)
+        ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 14)))
 
 
 

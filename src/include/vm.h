@@ -221,9 +221,11 @@ extern int script_error_flag;
 extern int script_checkloads_flag;
 /* Displays the numbers of scripts when they are (un)loaded */
 
+#define SCRIPT_ABORT_WITH_REPLAY 1025
 extern DLLEXTERN int script_abort_flag;
 /* Set this to 1 to abort script execution immediately. Aborting will leave the
 ** debug exec stack intact.
+** Set it to SCRIPT_ABORT_WITH_REPLAY to force a replay afterwards.
 */
 
 extern int script_step_counter;

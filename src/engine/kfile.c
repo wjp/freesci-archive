@@ -655,6 +655,17 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
   char *game_description = UPARAM(2) + s->heap;
 
+  if (_savegame_indices_nr < 0) {
+    char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+
+    strcpy(game_id_file_name, game_id);
+    strcat(game_id_file_name, FREESCI_ID_SUFFIX);
+    SCIkwarn(SCIkWARNING, "Savegame index list not initialized!\n");
+    update_savegame_indices(game_id_file_name);
+
+  } if (savedir_nr < _savegame_indices_nr)
+    savedir_nr = _savegame_indices[savedir_nr].id;
+
   strcpy(game_id_file_name, game_id);
   strcat(game_id_file_name, FREESCI_ID_SUFFIX);
 
@@ -663,7 +674,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
     update_savegame_indices(game_id_file_name);
   }
 
-  savegame_dir = _k_get_savedir_name(_savegame_indices[savedir_nr].id);
+  savegame_dir = _k_get_savedir_name(savedir_nr);
 
   CHECK_THIS_KERNEL_FUNCTION;
   s->acc = 1;
@@ -718,7 +729,7 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (newstate) {
 
       s->successor = newstate;
-      script_abort_flag = 1; /* Abort current game */
+      script_abort_flag = SCRIPT_ABORT_WITH_REPLAY; /* Abort current game */
 
     } else {
       sciprintf("Restoring failed (game_id = '%s').\n", game_id);

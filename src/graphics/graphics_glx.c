@@ -153,13 +153,14 @@ glx_init_colors()
 int
 glx_init(state_t *s, picture_t pic)
 {
-  int attributes[] = { GLX_AUX_BUFFERS, 1, /* One aux buffer used for double buffering */
+  int attributes[] = { GLX_DOUBLEBUFFER,
 		       GLX_RGBA,
 		       GLX_STENCIL_SIZE, 8,
 		       None };
 
   GLXContext context;
   XVisualInfo *xvisinfo;
+  XSetWindowAttributes win_attr;
   int default_screen, num_aux_buffers;
   glx_state_t *x = malloc(sizeof(glx_state_t));
 
@@ -177,24 +178,24 @@ glx_init(state_t *s, picture_t pic)
 
   xvisinfo = glXChooseVisual(x->glx_display, default_screen, attributes);
   if (!xvisinfo) {
-    fprintf(stderr,"FSCI-GLX: Could not get an RGB visual with one AUX buffer!\n");
+    fprintf(stderr,"FSCI-GLX: Could not get a double-buffered RGBA visual!\n");
     free(x);
     return 1;
-  }
-
-  glXGetConfig(x->glx_display, xvisinfo, GLX_AUX_BUFFERS, &num_aux_buffers);
-
-  if (!num_aux_buffers) {
-    fprintf(stderr,"This glx implementation does not provide auxiliary buffers.\n"
-	    "Aborting...\n");
-    exit (1);
   }
 
   x->width = 640;
   x->height = 400;
 
-  x->glx_window = XCreateSimpleWindow(x->glx_display, RootWindow(x->glx_display, default_screen),
-				      0, 0, x->width, x->height, 0, 0, 0);
+  win_attr.colormap = XCreateColormap(x->glx_display, RootWindow(x->glx_display, default_screen),
+				      xvisinfo->visual, AllocNone);
+  win_attr.event_mask = PointerMotionMask | StructureNotifyMask | ButtonPressMask
+    | ButtonReleaseMask | KeyPressMask;
+  win_attr.background_pixel = win_attr.border_pixel = 0;
+
+  x->glx_window = XCreateWindow(x->glx_display, RootWindow(x->glx_display, default_screen),
+				0, 0, x->width, x->height, 0, xvisinfo->depth, InputOutput,
+				xvisinfo->visual, (CWBackPixel | CWBorderPixel | CWColormap | CWEventMask),
+				&win_attr);
 
   if (!x->glx_window) {
     fprintf(stderr,"FSCI-GLX: Could not create window!\n");
@@ -202,18 +203,18 @@ glx_init(state_t *s, picture_t pic)
     return 1;
   }
 
-  x->glx_context = glXCreateContext(x->glx_display, xvisinfo, NULL, 1);
+  XSync(x->glx_display, False);
+  x->glx_context = glXCreateContext(x->glx_display, xvisinfo, NULL, GL_TRUE);
+  XSync(x->glx_display, False);
+
+  XFree((char *) xvisinfo);
 
   s->graphics.glx_state = x;
 
   XStoreName(x->glx_display, x->glx_window, "FreeSCI on GLX");
   XDefineCursor(x->glx_display, x->glx_window, x_empty_cursor(x->glx_display, x->glx_window));
 
-  XSelectInput(x->glx_display, x->glx_window,
-	       PointerMotionMask | StructureNotifyMask | ButtonPressMask
-	       | ButtonReleaseMask | KeyPressMask);
   XMapWindow(x->glx_display, x->glx_window);
-
   glXMakeCurrent(x->glx_display, x->glx_window, x->glx_context);
 
   glShadeModel(GL_FLAT);
@@ -240,12 +241,6 @@ glx_init(state_t *s, picture_t pic)
   glPixelMapusv(GL_PIXEL_MAP_I_TO_G, 256, glx_palette_g);
   glPixelMapusv(GL_PIXEL_MAP_I_TO_B, 256, glx_palette_b);
 
-  {
-    int i;
-    glGetIntegerv(GL_AUX_BUFFERS, &i);
-    printf("Using the GLX display target with %d aux buffers\n", i);
-  }
-
   return 0;
 }
 
@@ -269,9 +264,10 @@ graphics_draw_region_glx(Window target, Display *display,
 			 int x, int y, int xl, int yl,
 			 mouse_pointer_t *pointer, int pointer_x, int pointer_y)
 {
+  int buf[320 * 200];
   int i;
 
-  glDrawBuffer(GL_AUX0);
+  glDrawBuffer(GL_BACK);
 
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 320);
   glPixelStorei(GL_UNPACK_SKIP_PIXELS, MAX(x,0));
@@ -309,11 +305,40 @@ graphics_draw_region_glx(Window target, Display *display,
   }
 
   glFlush();
-
+  /*  glXSwapBuffers(display, target);*/
+  glReadBuffer(GL_BACK);
   glDrawBuffer(GL_FRONT);
-  glReadBuffer(GL_AUX0);
+
+  /*  glRasterPos2f(-0.5,-0.5);
+      glCopyPixels(0,0,320,200,GL_COLOR);*/
+
+  /*  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);  
+  glStencilFunc(GL_ALWAYS, 0, 0);
+  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+  glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+  glDepthMask(GL_FALSE);
+
+  glReadPixels(x, y, xl, yl, GL_RGB, GL_UNSIGNED_BYTE, buf);
+  glRasterPos2f(x / 320.0, y / 200.0);
+  glDrawPixels(xl, yl, GL_RGB, GL_UNSIGNED_BYTE, buf);*/
+
+  /*  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, x, y, xl, yl, 0);
+
+  glGenTextures(1, &i);
+  glBindTexture(GL_TEXTURE_2D, i);
+
+  glBegin(GL_QUADS);
+  glTexCoord2f(0.0, 0.0); glVertex2f(x / 320.0, y / 200.0);
+  glTexCoord2f(1.0, 0.0); glVertex2f((x+xl) / 320.0, y / 200.0);
+  glTexCoord2f(1.0, 1.0); glVertex2f((x+xl) / 320.0, (y+yl) / 200.0);
+  glTexCoord2f(0.0, 1.0); glVertex2f(x / 320.0, (y+yl) / 200.0);
+  glEnd();
+  glFlush();
+
+  glDeleteTextures(1, &i);*/
 
   glCopyPixels(x, y, xl, yl, GL_COLOR);
+  glFlush();
 }
 
 
