@@ -1104,7 +1104,8 @@ nsrect_clip(state_t *s, int y, abs_rect_t retval, int priority)
 	if (priority == -1)
 		priority = VIEW_PRIORITY(y);
 
-	pri_top = PRIORITY_BAND_FIRST(priority);
+	pri_top = PRIORITY_BAND_FIRST(priority) + 1;
+	/* +1: Don't know why, but this seems to be happening */
 
 	if (retval.y < pri_top)
 		retval.y = pri_top;

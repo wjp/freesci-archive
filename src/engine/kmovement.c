@@ -153,6 +153,9 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+#define MOVING_ON_X (((axis == _K_BRESEN_AXIS_X)&&bi1) || dx)
+#define MOVING_ON_Y (((axis == _K_BRESEN_AXIS_Y)&&bi1) || dy)
+
 void
 kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -195,13 +198,34 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	y += dy;
 
 
+	/*
 	if ((((x <= destx) && (oldx >= destx)) || ((x >= destx) && (oldx <= destx)))
 	    && (((y <= desty) && (oldy >= desty)) || ((y >= desty) && (oldy <= desty))))
+	*/
+
+ 	if ((MOVING_ON_X
+	     && (((x < destx) && (oldx >= destx)) /* Moving left, exceeded? */
+		 ||
+		 ((x > destx) && (oldx <= destx)) /* Moving right, exceeded? */
+		 ||
+		 (x == destx && (abs(dx) > 0)) /* Moving fast, reached? */
+		 /* Treat this last case specially- when doing sub-pixel movements,
+		 ** we could still be far away from the destination  */
+		 )
+	     )
+	    || (MOVING_ON_Y
+		&& (((y < desty) && (oldy >= desty)) /* Moving upwards, exceeded? */
+		    ||
+		    ((y > desty) && (oldy <= desty)) /* Moving downwards, exceeded? */
+		    ||
+		    (y == desty && (dy > 0)) /* Moving fast, reached? */
+		    )
+		)
+	    )
 		/* Whew... in short: If we have reached or passed our target position */
 		{
 			x = destx;
 			y = desty;
-      
 			completed = 1;
 
 			SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
