@@ -61,7 +61,7 @@ sdl_soundserver_init(void *args)
   sound_server_state_t sss;
   memset(&sss, 0, sizeof(sound_server_state_t));
 
-  sci0_soundserver(sdl_reverse_stereo, &sss);
+  sci0_polled_ss(sdl_reverse_stereo, &sss);
   return 0;
 }
 

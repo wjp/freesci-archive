@@ -84,6 +84,13 @@
 
 #define MIDI_CHANNELS 16
 
+#define MUTE_ON  0
+#define MUTE_OFF 1
+
+#define POLYPHONY(song, channel) song->data[(channel << 1) + 1]
+
+FILE *debug_stream;	/* Where error messages are output to */
+
 
 typedef struct {
 	int polyphony;
@@ -200,6 +207,8 @@ typedef struct _song {
 
 } song_t;
 
+void
+dump_song(song_t *song);
 
 typedef song_t **songlib_t;
 
@@ -505,13 +514,14 @@ extern sound_server_t *global_sound_server; /* current soundserver */
 
 
 typedef struct {
-	songlib_t songlib;
-	song_t *current_song;
+	int suspended;	/* if sound server is suspended */
+	songlib_t songlib;	/* sound server's song library */
+	song_t *current_song;	/* currently playing song */
 	unsigned int ticks_to_wait;	/* before next midi operation */
 	guint8 master_volume;	/* (stored as percentage) */
 	sound_server_t *ss_driver;	/* driver currently being used for sound server */
-	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted (1 for mute, 0 unmuted) */
-	int suspended;	/* if sound server is suspended */
+	playing_notes_t playing_notes[16];	/* keeps track of polyphony */
+	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted */
 	int reverse_stereo;	/* FIXME: not currently used correctly */
 
 	/* note: only present in polled sound server and not currently used */
@@ -564,12 +574,27 @@ sound_server_find_driver(char *name);
 ** Returns   : (sound_server_t *): A pointer to the first matching driver
 */
 
-void sci0_soundserver(int reverse_stereo, sound_server_state_t *ss_state);
+
+/*********************************/
+/*    Sound server operations    */
+/*********************************/
+
+void sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state);
 /* Starts the sci0 sound server.
 */
 
-FILE *debug_stream;
-/* Where error messages are output to.
+void
+imap_set(int action, int instr, int value);
+/* Alters the instrument mappings
+** Parameters: (int) action: What to do to the instrument mapping
+**             (int) instr: Instrument to change
+**             (int) value: Value to change to
 */
+
+#ifdef DEBUG_SOUND_SERVER
+extern int channel_instrument[16];
+void print_channels_any(int mapped, sound_server_state_t *ss_state);
+void print_song_info(word song_handle, sound_server_state_t *ss_state);
+#endif
 
 #endif /* !_SCI_SOUND_SERVER_H_ */

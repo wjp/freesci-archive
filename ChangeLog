@@ -1,3 +1,25 @@
+2001-11-13  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/polled_ss.c: New home for sci0_soundserver(), not known as
+	sci0_polled_ss().
+
+	* src/sound/soundserver.c: Insert of event sound server functions that
+	could be used by polled sound server. Minor cleanups.
+
+	* src/include/soundserver.h: Changes as above. Minor cleanups.
+
+	* src/sound/polled_ss_sdl.c:
+	* src/sound/polled_ss_unix.c:
+	* src/sound/polled_ss_win32.c: Basically a rename from their
+	soundserver_xxx.c equivalents.
+
+	* src/sound/soundserver_sdl.c:
+	* src/sound/soundserver_unix.c:
+	* src/sound/soundserver_win32.c: Removed.
+
+	* src/sound/Makefile.am:
+	* src/win32/fsci_dll.dsp: Fixes for new filenames.
+
 2001-11-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/decompress1.c (decompress1):

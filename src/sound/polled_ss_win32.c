@@ -71,7 +71,7 @@ win32_soundserver_init(LPVOID lpP)
 #endif
 
 	/* start the sound server */
-	sci0_soundserver(reverse_stereo, &sss);
+	sci0_polled_ss(reverse_stereo, &sss);
 
 #ifdef SSWIN_DEBUG
 	fprintf(stdout, "SSWIN_DEBUG: TID%u, win32_soundserver_init() end\n", GetCurrentThreadId());

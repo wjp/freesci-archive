@@ -198,7 +198,7 @@ sound_unix_init(state_t *s, int flags)
 		debug_stream = fdopen(x_fd_debug, "w"); /* We want to output text to it */
 		ppid = getppid(); /* Get parent PID */
 
-		sci0_soundserver(flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO, &sss);
+		sci0_polled_ss(flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO, &sss);
 		_exit(0); /* quit */
 	}
 
