@@ -76,7 +76,7 @@ ac_png_includes = -I/usr/local/include
 ac_png_libraries = -L/usr/lib -lpng
 
 INCLUDES = -I$(top_srcdir)/src/include  -I/usr/local/include
-LDADD = -lc ../core/libscicore.a
+LDADD = -lefence -lc ../core/libscicore.a
 bin_PROGRAMS = sciunpack scriptdump vocabdump classes console
 sciunpack_SOURCES = sciunpack.c
 sciunpack_LDADD = -lc -lglib ../core/libscicore.a ../sound/libscisound.a ../graphics/libscigraphics.a -L/usr/lib -lpng 

@@ -54,8 +54,8 @@ typedef struct {
   picture_t bgpic; /* The background picture */
   picture_t pic; /* The foreground picture */
 
-  state vm_state; /* Heap and VM status */
-  heap* heap; /* Pointer to the heap stored in vm_state, for ease of use */
+  state_t vm_state; /* Heap and VM status */
+  byte* heap; /* Pointer to the heap stored in vm_state, for ease of use */
 
 } gamestate_t;
 

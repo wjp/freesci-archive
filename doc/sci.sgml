@@ -1329,13 +1329,13 @@ Basically, the initialization proceeds as follows:
 <member/   Initialize the window manager/
 <member/   Initialize the text parser (i.e. load the vocabulary files)/
 <member/   Initialize the music player/
-<member/   Save the machine state for restarting the game later on, see note/
+<member>   Save the machine state for restarting the game later on
+  <footnote><para/This is quite interesting, the KRestartGame kernel call is implemented
+  using a simple setjmp/longjmp pair./</footnote></member>
 <member/   Allocate the PMachine stack on the heap./
 <member/   Get a pointer to the game object/
 <member/   And run, by executing the play or replay method./
 </simplelist>
-Note: This is quite interesting, the KRestartGame kernel call is implemented
-using a simple setjmp/longjmp pair.
 </para><para>
 The right game object is found by looking in the "dispatch table" of script
 0. The dispatch table has block type 7, and is an array of words. The first

@@ -18,6 +18,10 @@ int* vocabulary_get_classes();
  * Returns a null terminated array of selector names.
  */
 char** vocabulary_get_snames();
+/**
+ * Frees the aforementioned array
+ */
+void vocabulary_free_snames(char **snames_list);
 
 /**
  * Returns a null terminated array of opcodes.

@@ -393,7 +393,7 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 
     maxx += x;
     maxy += y;
-    if (maxy > clipmaxy) maxy = clipmaxy;
+    if (maxy > clipmaxy + 1) maxy = clipmaxy + 1;
 
     if (maxx < 0) return 0;
     if (y > clipmaxy) return 0;
@@ -408,7 +408,7 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 
     blindright = maxx-(clipmaxx + 1);
 
-    if (maxx > (clipmaxx + 1)) maxx = (clipmaxx + 1);
+    if (maxx > clipmaxx) maxx = clipmaxx;
 
     if (reverse) { /* mirror picture along the y axis */
       int j = blindleft;

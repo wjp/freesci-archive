@@ -76,25 +76,25 @@ opcode_format formats[128][4]={
   /*10*/
   {Script_None}, {Script_None}, {Script_None}, {Script_None},
   /*14*/
-  {Script_None}, {Script_None}, {Script_None}, {Script_SWord, 0},
+  {Script_None}, {Script_None}, {Script_None}, {Script_Variable, 0},
   /*18*/
-  {Script_SWord, 0}, {Script_SWord, 0}, {Script_Variable, 0}, {Script_None},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_None},
   /*1C*/
   {Script_Variable, 0}, {Script_None}, {Script_None}, {Script_Variable, 0},
-  /*20 FIXME: is call correct?*/
+  /*20*/
   {Script_Variable, Script_Byte, 0}, {Script_Variable, Script_Byte, 0}, {Script_Variable, Script_Byte, 0}, {Script_Variable, Script_Variable, Script_Byte, 0},
   /*24 (24=ret)*/
   {Script_End}, {Script_Byte, 0}, {Script_Invalid}, {Script_Invalid},
   /*28*/
   {Script_Variable, 0}, {Script_Invalid}, {Script_Byte, 0}, {Script_Variable, Script_Byte, 0},
-  /*2C FIXME: lea (2D)*/
-  {Script_Variable, 0}, {Script_Word, 0}, {Script_None}, {Script_Invalid},
+  /*2C*/
+  {Script_Variable, 0}, {Script_Variable, Script_Variable, 0}, {Script_None}, {Script_Invalid},
   /*30*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_None}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*34*/
   {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*38*/
-  {Script_Variable, 0}, {Script_SWord, 0}, {Script_Word, 0}, {Script_None},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_None},
   /*3C*/
   {Script_None}, {Script_None}, {Script_None}, {Script_Invalid},
   /*40-4F*/
@@ -739,3 +739,20 @@ int loadObjects()
 }
 
 
+int
+script_find_selector(state_t *s, char *selectorname)
+{
+  int i;
+  for (i = 0; i < s->selector_names_nr; i++)
+    if (strcmp(selectorname, s->selector_names[i]) == 0)
+      return i;
+
+  return -1;
+}
+
+void
+script_map_selectors(state_t *s, selector_map_t *map)
+{
+  map->init = script_find_selector(s, "init");
+  map->play = script_find_selector(s, "play");
+}

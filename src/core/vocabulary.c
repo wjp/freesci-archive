@@ -1,3 +1,8 @@
+/* Modified 07/18/99 by Christoph Reichenbach:
+** - added vocabulary_free_snames();
+*/
+
+
 #include <string.h>
 #include "resource.h"
 #include "vocabulary.h"
@@ -33,7 +38,7 @@ char** vocabulary_get_snames()
   resource_t* r=findResource(sci_vocab, 997);
 
   count=getInt(r->data);
-  t=malloc(sizeof(char*)*count);
+  t=malloc(sizeof(char*)*(count+1));
 
   for(i=0; i<count; i++)
     {
@@ -47,6 +52,17 @@ char** vocabulary_get_snames()
   t[i]=0;
   
   return t;
+}
+
+void
+vocabulary_free_snames(char **snames_list)
+{
+  int pos = 0;
+
+  while (snames_list[pos])
+    free(snames_list[pos++]);
+
+  free(snames_list);
 }
 
 opcode* vocabulary_get_opcodes()
@@ -89,7 +105,6 @@ static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
   char **retval = malloc(sizeof (char *) * mallocsize);
   int i = 0, index = 0;
 
-  fprintf(stderr,"Evading for KQ1\n");
   while (index < r->length) {
 
     int slen = strlen(r->data + index) + 1;
@@ -129,7 +144,7 @@ static char** vocabulary_get_knames0(int* names)
     {
       int offset=getInt(r->data+index);
       int len=getInt(r->data+offset);
-  fprintf(stderr,"Getting name %d of %d...\n", i, count);
+      //fprintf(stderr,"Getting name %d of %d...\n", i, count);
       index+=2;
       t[i]=malloc(len+1);
       strncpy(t[i], r->data + offset + 2, len);

@@ -1,5 +1,5 @@
 INCLUDES = -I$(top_srcdir)/src/include @ac_glib_includes@ @ac_ggi_includes@
-LDADD = -lc ../core/libscicore.a
+LDADD = -lefence -lc ../core/libscicore.a
 bin_PROGRAMS = sciunpack scriptdump vocabdump classes console
 sciunpack_SOURCES = sciunpack.c
 sciunpack_LDADD = -lc -lglib ../core/libscicore.a ../sound/libscisound.a ../graphics/libscigraphics.a @ac_png_libraries@ @ac_glib_libraries@

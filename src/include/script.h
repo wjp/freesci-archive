@@ -13,6 +13,18 @@ typedef struct script_opcode_
   int pos, size;
 } script_opcode;
 
+
+enum {
+  sci_obj_terminator,
+  sci_obj_object,
+  sci_obj_code,
+  sci_obj_strings = 5,
+  sci_obj_class,
+  sci_obj_exports,
+  sci_obj_pointers,
+  sci_obj_localvars = 10
+} script_object_types;
+
 typedef FLEXARRAY(script_opcode,int number;) script_method;
 
 typedef struct object_
@@ -42,6 +54,7 @@ void printObject(object* obj, int flags);
 int loadObjects();
 void freeObject(object*);
 
+/* Opcode formats as used by script.c */
 typedef enum {
   Script_Invalid=-1,
   Script_None=0, 
@@ -51,8 +64,23 @@ typedef enum {
   Script_Variable,
   Script_End
 } opcode_format;
+
+typedef enum { /* FIXME */
+  op_call = 0x20,
+  op_callk,
+  op_callb,
+  op_calle,
+  op_ret,
+  op_send,
+  op_class = 0x28,
+  op_self = 0x2a,
+  op_super,
+  op_rest,
+  op_lea,
+  op_selfID
+} sci_opcodes;
  
 extern char* globals[];
-opcode_format formats[128][4];
+extern opcode_format formats[128][4];
 
 #endif

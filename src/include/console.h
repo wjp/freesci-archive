@@ -34,6 +34,7 @@
 #define _SCI_CONSOLE_H_
 
 #include <config.h>
+#include <engine.h>
 #include <graphics.h>
 #include <uinput.h>
 #define SCI_CONSOLE
@@ -85,6 +86,9 @@ extern int cmd_paramlength;
 
 extern cmd_param_t *cmd_params;
 /* The parameters passed to a function called by the parser */
+
+extern gamestate_t *con_gamestate;
+/* The gamestate as used by some of the console commands */
 
 
 /*** FUNCTION DEFINITIONS ***/
@@ -212,5 +216,8 @@ int c_dump(); /* gives a hex dump of a resource */
 int c_objinfo(); /* shows some info about one class */
 int c_objmethods(); /* Disassembles all methods of a class */
 int c_hexgrep(); /* Searches a string in one resource or resource class */
+int c_selectornames(); /* Displays all selector names */
+int c_kernelnames(); /* Displays all kernel function names */
+int c_dissectscript(); /* Splits a script into objects and explains them */
 
 #endif /* _SCI_CONSOLE_H_ */ 

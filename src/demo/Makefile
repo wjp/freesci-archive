@@ -76,7 +76,7 @@ ac_png_includes = -I/usr/local/include
 ac_png_libraries = -L/usr/lib -lpng
 
 INCLUDES = -I$(top_srcdir)/src/include  -I/usr/local/include
-LDADD = -lglib -lc -lggi -lgii ../core/libscicore.a ../graphics/libscigraphics.a ../sound/libscisound.a ../console/libsciconsole.a -L/usr/local/lib -lggi -lgii
+LDADD = -lefence -lglib -lc -lggi -lgii ../core/libscicore.a ../graphics/libscigraphics.a ../sound/libscisound.a ../console/libsciconsole.a -L/usr/local/lib -lggi -lgii
 bin_PROGRAMS = demo
 demo_SOURCES = demo.c
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs

@@ -1,3 +1,14 @@
+1999-07-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/vm.c (script_run): Finished the VM. In Theory.
+
+1999-07-18  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/vocabulary.c (vocabulary_get_snames): Tracked down a
+	nasty little bug in name getting. This one was so simple that it
+	was a killer- it's possible that it was at least part of the
+	cause for the memory corruption which haunted us in our sleeps.
+
 1999-07-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/graphics/graphics.c (drawView0): Views appear to clip correctly

@@ -76,7 +76,7 @@ ac_png_includes = -I/usr/local/include
 ac_png_libraries = -L/usr/lib -lpng
 
 INCLUDES = -I$(top_srcdir)/src/include  -I/usr/local/include -I/usr/local/include
-LDADD = -lglib -lscicore $(LDADD_ALL)
+LDADD = -lefence -lglib -lscicore $(LDADD_ALL)
 lib_LIBRARIES = libsciconsole.a
 libsciconsole_a_SOURCES = console.c console_font.c commands.c commands_scr.c
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs

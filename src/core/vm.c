@@ -1,46 +1,69 @@
+/***************************************************************************
+ vm.c Copyright (C) 1999 Christoph Reichenbach
+
+
+ This program may be modified and copied freely according to the terms of
+ the GNU general public license (GPL), as long as the above copyright
+ notice and the licensing information contained herein are preserved.
+
+ Please refer to www.gnu.org for licensing details.
+
+ This work is provided AS IS, without warranty of any kind, expressed or
+ implied, including but not limited to the warranties of merchantibility,
+ noninfringement, and fitness for a specific purpose. The author will not
+ be held liable for any damage caused by this work or derivatives of it.
+
+ By using this source code, you agree to the licensing terms as stated
+ above.
+
+
+ Please contact the maintainer for bug reports or inquiries.
+
+ Current Maintainer:
+
+    Christoph Reichenbach (CJR) [jameson@linuxgames.com]
+
+***************************************************************************/
+
+
+
 #include <script.h>
 #include <vm.h>
 
 
 
 
-int script_debug_flag = 0; /* Defaulting to no debug mode */
+int script_debug_flag = 1; /* Defaulting to debug mode */
 int script_abort_flag = 0; /* Set to 1 to abort execution */
 int script_exec_stackpos = -1; /* 0 means that one script is active */
+int script_error_flag = 0; /* Set to 1 if an error occured, reset each round by the VM */
+int script_checkloads_flag = 1; /* Print info when scripts get (un)loaded */
+int script_step_counter = 0; /* Counts the number of executed steps */
 
 script_exec_stack_t script_exec_stack[SCRIPT_MAX_EXEC_STACK];
 
-#if 0
-instance* instantiate(heap_t* h, object* o)
-{
-  instance* i;
-  int offset=h_malloc(h, (o->selector_count+1)*2);
-  if(offset==-1) return 0;
-
-  i=malloc(sizeof(instance));
-  if(i==0) return 0;
-  i->id=max_instance++;
-  i->class=o;
-  i->heap=h->data;
-  i->offset=offset;
-  instance_map[i->id]=i;
-  return i;
-}
-#endif /* false */
+extern int _debug_step_running; /* scriptdebug.c */
 
 int
-script_error(state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp, char *reason,
-	     int nonfatal) /* set nonfatal to 1 if returning should be allowed */
+script_error(state_t *s, char *reason)
 {
-  sciprintf("Script error: %s at 0x%04x\n", reason, *pc);
-  script_debug(s, pc, sp, pp, objp, nonfatal);
+  sciprintf("Script error: %s\n", reason);
+  script_debug_flag = script_error_flag = 1;
   return 0;
 }
 
+/*
 #define putInt16(bytes, value) do{\
-(bytes)[0]=(value>>8)&0xFF;\
-(bytes)[1]=value&0xFF;\
+(bytes)[0]=((value)>>8)&0xFF;\
+(bytes)[1]=(value)&0xFF;\
 } while(0)
+*/
+
+inline void putInt16(byte *addr, word value)
+{
+  addr[0] = value &0xff;
+  addr[1] = value >> 8;
+}
 
 
 /* Operating on the steck */
@@ -55,26 +78,96 @@ script_error(state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
 #define GET_OP_SIGNED_WORD() ((gint16)(getInt16(s->heap + (pc += 2) - 2)))
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
-#define GET_HEAP(address) ((address) < 800)? \
-script_error(s, &pc, &sp, &pp, &objp, "Heap address space violation on read", 0) \
-: getInt16(s->heap + (address))
+#define GET_HEAP(address) ((((guint16)(address)) < 800)? \
+script_error(s, "Heap address space violation on read")  \
+: getInt16(s->heap + ((guint16)(address))))
+/* Reads a heap value if allowed */
 
-#define PUT_HEAP(address, value) if ((address) < 800) \
-script_error(s, &pc, &sp, &pp, &objp, "Heap address space violation on write", 0); \
-else { s->heap[address] = (value) &0xff; s->heap[(address) + 1] = ((value) >> 8) & 0xff;}
+#define PUT_HEAP(address, value) if (((guint16)(address)) < 800) \
+script_error(s, "Heap address space violation on write");        \
+else { s->heap[(guint16) address] = (value) &0xff;               \
+ s->heap[((guint16)address) + 1] = ((value) >> 8) & 0xff;}
+/* Sets a heap value if allowed */
+
+#define CLASS_ADDRESS(classnr) (((classnr < 0) || (classnr >= s->classtable_size)) ?              \
+				0 /* Error condition */ : *(s->classtable[(classnr)].scriptposp)  \
+				+ s->classtable[(classnr)].class_offset)
+
+#define OBJ_SPECIES(address) GET_HEAP((address) + 0x8)
+/* Returns an object's species */
+
+#define OBJ_SUPERCLASS(address) GET_HEAP((address) + 0xa)
+/* Returns an object's superclass */
+
+#define OBJ_ISCLASS(address) (GET_HEAP((address) + SCRIPT_INFO_OFFSET) & SCRIPT_INFO_CLASS)
+/* Is true if the object at the address is a class */
 
 
-void
-executeMethod(state *s, word script, word pubfunct, heap_ptr sp, word argc, heap_ptr argp)
+inline void
+execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
+	       heap_ptr calling_obj, word argc, heap_ptr argp)
 {
-  /* FIXME */
+
+  heap_ptr tableaddress = s->scripttable[script].export_table_offset;
+  int exports_nr = GET_HEAP(tableaddress);
+  
+  tableaddress += 2; /* Points to the first actual function pointer */
+  if (pubfunct >= exports_nr) {
+    sciprintf("Request for invalid exported function 0x%x of script 0x%x\n", pubfunct, script);
+    script_error_flag = script_debug_flag = 1;
+    return;
+  }
+
+  execute(s, GET_HEAP(tableaddress + (pubfunct * 2)), sp, calling_obj, argc, argp, -1);
 }
 
 void
-execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr argp)
+send_selector(state_t *s, heap_ptr send_obj, heap_ptr sp, word argc, heap_ptr argp)
+{
+  heap_ptr lookupresult;
+  int selector = GET_HEAP(argp + 2);
+
+  if (GET_HEAP(send_obj) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+    sciprintf("Send: No object at %04x!\n", send_obj);
+    script_error_flag = script_debug_flag = 1;
+    return;
+  }
+
+  argp += 2;
+ 
+  switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
+
+  case SELECTOR_NONE:
+    sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", selector, send_obj);
+    script_error_flag = script_debug_flag = 1;
+    break;
+
+  case SELECTOR_VARIABLE:
+    switch (GET_HEAP(argp + 2)) {
+    case 0: s->acc = GET_HEAP(lookupresult); break;
+    case 1: { /* Argument is supplied -> Selector should be set */
+      word temp = GET_HEAP(argp + 4);
+      PUT_HEAP(lookupresult, temp);
+    } break;
+    default:
+      sciprintf("Send error: Variable selector %04x in %04x called with %04x params\n",
+		selector, send_obj, GET_HEAP(argp + 2));
+    }
+    break;
+
+  case SELECTOR_METHOD:
+    execute(s, lookupresult, sp, send_obj, argc-1, argp + 2, selector);
+    break;
+  } /* switch(lookup_selector()) */
+}
+
+void
+execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp, int selector)
 {
   gint16 temp, temp2, temp3;
-  gint16 pp = sp;
+  gint16 opparams[4]; /* Opcode parameters */
+  heap_ptr pp = sp;
+  int restadjust = 0; /* &rest adjusts the parameter count by this value */
   heap_ptr local_vars = getInt16(s->heap + SCRIPT_LOCALVARPTR_OFFSET);
 
   heap_ptr variables[4] =
@@ -90,390 +183,880 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
   script_exec_stack[script_exec_stackpos].ppp = &pp;
   script_exec_stack[script_exec_stackpos].argcp = &argc;
   script_exec_stack[script_exec_stackpos].argpp = &argp;
+  script_exec_stack[script_exec_stackpos].selector = selector;
 
   while (1) {
     heap_ptr old_pc = pc;
-    byte opcode = GET_OP_BYTE(); /* Get opcode */
+    byte opcode, opnumber;
     int var_number; /* See description below */
+
+    script_error_flag = 0; /* Set error condition to false */
 
     if (script_abort_flag)
       return; /* Emergency */
+
     if (script_debug_flag)
-      script_debug(s, &pc, &sp, &pp, &objp, 1);
+      script_debug(s, &pc, &sp, &pp, &objp, &restadjust);
     /* Debug if this has been requested */
 
-    if (sp < s->heap_base)
-      script_error(s, &pc, &sp, &pp, &objp, "Absolute stack underflow", 0);
+    opcode = GET_OP_BYTE(); /* Get opcode */
+
+    if (sp < s->stack_base)
+      script_error(s, "Absolute stack underflow");
 
     if (sp < pp)
-      script_error(s, &pc, &sp, &pp, &objp, "Relative stack underflow", 1);
+      script_error(s, "Relative stack underflow");
 
     if (pc < 800)
-      script_error(s, &pc, &sp, &pp, &objp, "Program Counter gone astray", 0);
+      script_error(s, "Program Counter gone astray");
 
-    switch (opcode >> 1) {
+    opnumber = opcode >> 1;
+
+    for (temp = 0; formats[opnumber][temp]; temp++) /* formats comes from script.c */
+      switch(formats[opnumber][temp]) {
+
+      case Script_Byte: opparams[temp] = GET_OP_BYTE(); break;
+
+      case Script_Word:
+      case Script_SWord: opparams[temp] = GET_OP_WORD(); break;
+
+      case Script_Variable: opparams[temp] = GET_OP_FLEX(); break;
+
+      }
+
+    switch (opnumber) {
+
     case 0x00: /* bnot */
       s->acc ^= 0xffff;
       break;
+
     case 0x01: /* add */
       s->acc = POP() + s->acc;
       break;
+
     case 0x02: /* sub */
       s->acc = POP() - s->acc;
       break;
+
     case 0x03: /* mul */
       s->acc = POP() * s->acc;
       break;
+
     case 0x04: /* div */
       s->acc = s->acc? POP() / s->acc : 0;
       break;
+
     case 0x05: /* mod */
       s->acc = (s->acc > 0)? POP() % s->acc : 0;
       break;
+
     case 0x06: /* shr */
       s->acc = POP() >> s->acc;
       break;
+
     case 0x07: /* shl */
       s->acc = POP() << s->acc;
       break;
+
     case 0x08: /* xor */
       s->acc = POP() ^ s->acc;
       break;
+
     case 0x09: /* and */
       s->acc = POP() & s->acc;
       break;
+
     case 0x0a: /* or */
       s->acc = POP() | s->acc;
       break;
+
     case 0x0b: /* neg */
       s->acc = -(s->acc);
       break;
+
     case 0x0c: /* not */
       s->acc = !s->acc;
       break;
+
     case 0x0d: /* eq? */
       s->acc = s->prev = (POP() == s->acc);
       break;
+
     case 0x0e: /* ne? */
       s->acc = s->prev = (POP() != s->acc);
       break;
+
     case 0x0f: /* gt? */
       s->acc = s->prev = (POP() > s->acc);
       break;
+
     case 0x10: /* ge? */
       s->acc = s->prev = (POP() >= s->acc);
       break;
+
     case 0x11: /* lt? */
       s->acc = s->prev = (POP() < s->acc);
       break;
+
     case 0x12: /* le? */
       s->acc = s->prev = (POP() <= s->acc);
       break;
+
     case 0x13: /* ugt? */
       s->acc = s->prev = ((guint16)(POP()) > ((guint16)(s->acc)));
       break;
+
     case 0x14: /* uge? */
       s->acc = s->prev = ((guint16)(POP()) >= ((guint16)(s->acc)));
       break;
+
     case 0x15: /* ult? */
       s->acc = s->prev = ((guint16)(POP()) < ((guint16)(s->acc)));
       break;
+
     case 0x16: /* ule? */
       s->acc = s->prev = ((guint16)(POP()) <= ((guint16)(s->acc)));
       break;
+
     case 0x17: /* bt */
-      if (s->acc) pc += GET_OP_FLEX();
+      if (s->acc) pc += opparams[0];
       break;
+
     case 0x18: /* bnt */
-      if (!s->acc) pc += GET_OP_FLEX();
+      if (!s->acc) pc += opparams[0];
       break;
+
     case 0x19: /* jmp */
-      pc += GET_OP_FLEX();
+      pc += opparams[0];
       break;
+
     case 0x1a: /* ldi */
-      s->acc = GET_OP_FLEX();
+      s->acc = opparams[0];
       break;
+
     case 0x1b: /* push */
       PUSH(s->acc);
       break;
+
     case 0x1c: /* pushi */
-      PUSH(GET_OP_FLEX());
+      PUSH(opparams[0]);
       break;
+
     case 0x1d: /* toss */
       POP();
       break;
+
     case 0x1e: /* dup */
       temp = POP();
       PUSH(temp);
-      PUSH(temp); /* Gets compiler-optimized */
+      PUSH(temp); /* Gets compiler-optimized (I hope) */
       break;
+
     case 0x1f: /* link */
-      sp += (GET_OP_FLEX()) * 2;
+      sp += (opparams[0]) * 2;
       break;
+
     case 0x20: /* call */
-      temp = GET_OP_FLEX(); /* relative position */
-      temp2 = GET_OP_BYTE(); /* frame size */
-      execute(s, pc + temp, sp, objp, getInt16(s->heap + (sp - temp2 - 2)), sp - temp2);
+      execute(s, pc + opparams[0], sp, objp, getInt16(s->heap + (sp - opparams[1] - 2)) + restadjust,
+	      sp -= opparams[1], -1);
+      restadjust = 0; /* Used up the &rest adjustment */
       break;
+
     case 0x21: /* callk */
-      /* FIXME */
+      sp -= (opparams[1] + 2);
+
+      if (opparams[0] >= s->kernel_names_nr) {
+	sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
+	script_debug_flag = script_error_flag = 1;
+      } else
+
+	s->kfunct_table[opparams[0]]
+	  (s, opparams[0], GET_HEAP(sp), sp + 2); /* Call kernel function */
+
       break;
+
     case 0x22: /* callb */
-      temp = GET_OP_FLEX();
-      temp2 = GET_OP_BYTE();
-      executeMethod(s, 0, temp, sp, getInt16(s->heap + (sp - temp2 - 2)) , sp - temp2);
+      execute_method(s, 0, opparams[0], sp, objp,
+		     getInt16(s->heap + (sp - opparams[1] - 2)) + restadjust, sp -= opparams[1]);
+      restadjust = 0; /* Used up the &rest adjustment */
       break;
+
     case 0x23: /* calle */
-      temp = GET_OP_FLEX();
-      temp2 = GET_OP_BYTE();
-      temp3 = GET_OP_BYTE();
-      executeMethod(s, temp, temp2, sp, getInt16(s->heap + (sp - temp3 - 2)) , sp - temp3);
+      execute_method(s, opparams[0], opparams[1], sp, objp,
+		     getInt16(s->heap + (sp - opparams[2] - 2)) + restadjust, sp -= opparams[2]);
+      restadjust = 0; /* Used up the &rest adjustment */
       break;
+
     case 0x24: /* ret */
       --script_exec_stackpos; /* Go back one exec stack level */
       return; /* Hard return */
       break;
+
     case 0x25: /* send */
-      /* FIXME */
+      send_selector(s, s->acc, sp, GET_HEAP(sp - temp + 4) + restadjust, sp - opparams[0]);
+      restadjust = 0;
+      sp -= opparams[0]; /* Adjust stack */
       break;
+
     case 0x28: /* class */
-      /* FIXME */
+      s->acc = CLASS_ADDRESS(opparams[0]);
       break;
+
     case 0x2a: /* self */
-      /* FIXME */
+      send_selector(s, objp, sp, GET_HEAP(sp - opparams[0] + 4) + restadjust, sp - opparams[0]);
+      restadjust = 0;
+      sp -= opparams[0]; /* Adjust stack */
       break;
+
     case 0x2b: /* super */
-      /* FIXME */
+
+      if ((opparams[0] < 0) || (opparams[0] >= s->classtable_size))
+	script_error(s, "Invalid superclass in object");
+      else {
+	send_selector(s, *(s->classtable[opparams[0]].scriptposp)
+		      + s->classtable[opparams[0]].class_offset,
+		      sp, GET_HEAP(sp - opparams[1] + 4) + restadjust, sp - opparams[1]);
+	restadjust = 0;
+	sp -= opparams[1]; /* Adjust stack */
+      }
+
       break;
+
     case 0x2c: /* &rest */
-      temp = GET_OP_FLEX() - 1; /* First argument (we start counting at 0) */
-      temp2 = argp + (temp << 1); /* Pointer to the first argument to &restore */
+      restadjust = temp = opparams[0] - 1; /* First argument (we start counting at 0) */
+      temp2 = argp + (opparams[0] << 1); /* Pointer to the first argument to &restore */
       for (; temp < argc; temp++) {
 	PUSH(getInt16(s->heap + temp2));
 	temp2 += 2;
       }
       break;
+
     case 0x2d: /* lea */
-      temp = GET_OP_FLEX() >> 1;
+      temp = opparams[0] >> 1;
       var_number = temp & 0x03; /* Get variable type */
 
       temp2 = variables[var_number]; /* Get variable block offset */
       if (temp & 0x08)
 	temp2 += s->acc; /* Add accumulator offset if requested */
-      s->acc = temp2 + (GET_OP_BYTE() << 1); /* Add index */
+      s->acc = temp2 + (opparams[1] << 1); /* Add index */
       break;
+
     case 0x2e: /* selfID */
-      s->acc = objp;
+      s->acc = objp + 8; /* The original SCI sets the object beginning 8 bytes ahead of FreeSCI */
       break;
+
     case 0x30: /* pprev */
       PUSH(s->prev);
       break;
+
     case 0x31: /* pToa */
-      s->acc = GET_HEAP(selector_offset + GET_OP_FLEX()); 
+      s->acc = GET_HEAP(selector_offset + opparams[0]); 
       break;
+
     case 0x32: /* aTop */
-      PUT_HEAP(selector_offset + GET_OP_FLEX(), s->acc);
+      PUT_HEAP(selector_offset + opparams[0], s->acc);
       break;
+
     case 0x33: /* pTos */
-      PUSH(GET_HEAP(selector_offset + GET_OP_FLEX()));
+      temp2 = GET_HEAP(selector_offset + opparams[0]);
+      PUSH(temp2);
       break;
+
     case 0x34: /* sTop */
-      PUT_HEAP(selector_offset + GETO_OP_FLEX(), POP());
+      temp = POP();
+      PUT_HEAP(selector_offset + opparams[0], temp);
       break;
+
     case 0x35: /* ipToa */
-      s->acc = GET_HEAP(selector_offset + GET_OP_FLEX()); 
+      temp = selector_offset + opparams[0];
+      s->acc = GET_HEAP(temp); 
       ++(s->acc);
-      PUT_HEAP(selector_offset + GET_OP_FLEX(), s->acc);
+      PUT_HEAP(temp, s->acc);
       break;
+
     case 0x36: /* dpToa */
-      s->acc = GET_HEAP(selector_offset + GET_OP_FLEX()); 
+      temp = selector_offset + opparams[0];
+      s->acc = GET_HEAP(temp); 
       --(s->acc);
-      PUT_HEAP(selector_offset + GET_OP_FLEX(), s->acc);
+      PUT_HEAP(temp, s->acc);
       break;
+
     case 0x37: /* ipTos */
-      temp = GET_HEAP(selector_offset + GET_OP_FLEX()); 
-      PUT_HEAP(selector_offset + GET_OP_FLEX(), temp + 1);
+      temp2 = selector_offset + opparams[0];
+      temp = GET_HEAP(temp2); 
+      PUT_HEAP(temp2, temp + 1);
       break;
+
     case 0x38: /* dpTos */
-      temp = GET_HEAP(selector_offset + GET_OP_FLEX()); 
-      PUT_HEAP(selector_offset + GET_OP_FLEX(), temp - 1);
+      temp2 = selector_offset + opparams[0];
+      temp = GET_HEAP(temp2);
+      PUT_HEAP(temp2, temp - 1);
       break;
+
     case 0x39: /* lofsa */
+      s->acc = opparams[0] + old_pc - 5; /* See below for -8 explanation */
       break;
+
     case 0x3a: /* lofss */
+      PUSH(opparams[0] + old_pc - 5);
+      /* Sierra SCI aims 8 bytes ahead of FreeSCI for objects. -2 is magic. */
       break;
+
     case 0x3b: /* push0 */
       PUSH(0);
       break;
+
     case 0x3c: /* push1 */
       PUSH(1);
       break;
+
     case 0x3d: /* push2 */
       PUSH(2);
       break;
+
     case 0x3e: /* pushSelf */
-      PUSH(objp);
+      PUSH(objp + 8); /* Sierra SCI aims 8 bytes ahead of FreeSCI when pointing to objects */
       break;
+
     case 0x40: /* lag */
     case 0x41: /* lal */
     case 0x42: /* lat */
     case 0x43: /* lap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       s->acc = GET_HEAP(temp);
       break;
+
     case 0x44: /* lsg */
     case 0x45: /* lsl */
     case 0x46: /* lst */
     case 0x47: /* lsp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       PUSH(GET_HEAP(temp));
       break;
+
     case 0x48: /* lagi */
     case 0x49: /* lali */
     case 0x4a: /* lati */
     case 0x4b: /* lapi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       s->acc = GET_HEAP(temp + s->acc);
       break;
+
     case 0x4c: /* lsgi */
     case 0x4d: /* lsli */
     case 0x4e: /* lsti */
     case 0x4f: /* lspi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       PUSH(GET_HEAP(temp + s->acc));
       break;
+
     case 0x50: /* sag */
     case 0x51: /* sal */
     case 0x52: /* sat */
     case 0x53: /* sap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       PUT_HEAP(temp, s->acc);
       break;
+
     case 0x54: /* ssg */
     case 0x55: /* ssl */
     case 0x56: /* sst */
     case 0x57: /* ssp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
-      PUT_HEAP(temp, POP());
+      temp = variables[var_number] + (opparams[0] << 1);
+      temp2 = POP();
+      PUT_HEAP(temp, temp2);
       break;
+
     case 0x58: /* sagi */
     case 0x59: /* sali */
     case 0x5a: /* sati */
     case 0x5b: /* sapi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       PUT_HEAP(temp + s->acc, s->acc);
       break;
+
     case 0x5c: /* ssgi */
     case 0x5d: /* ssli */
     case 0x5e: /* ssti */
     case 0x5f: /* sspi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
-      PUT_HEAP(temp + s->acc, POP());
+      temp = variables[var_number] + (opparams[0] << 1);
+      temp2 = POP();
+      PUT_HEAP(temp + s->acc, temp2);
       break;
+
     case 0x60: /* +ag */
     case 0x61: /* +al */
     case 0x62: /* +at */
     case 0x63: /* +ap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       s->acc = GET_HEAP(temp);
       ++(s->acc);
       GET_HEAP(temp);
       break;
+
     case 0x64: /* +sg */
     case 0x65: /* +sl */
     case 0x66: /* +st */
     case 0x67: /* +sp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       temp2 = GET_HEAP(temp);
       temp2++;
       PUT_HEAP(temp, temp2);
       PUSH(temp2);
       break;
+
     case 0x68: /* +agi */
     case 0x69: /* +ali */
     case 0x6a: /* +ati */
     case 0x6b: /* +api */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       s->acc = GET_HEAP(temp + s->acc);
       ++(s->acc);
       PUT_HEAP(temp, s->acc);
       break;
+
     case 0x6c: /* +sgi */
     case 0x6d: /* +sli */
     case 0x6e: /* +sti */
     case 0x6f: /* +spi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       temp2 = GET_HEAP(temp + s->acc);
       temp2++;
       PUT_HEAP(temp, temp2);
       PUSH(temp2);
       break;
+
     case 0x70: /* -ag */
     case 0x71: /* -al */
     case 0x72: /* -at */
     case 0x73: /* -ap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       s->acc = GET_HEAP(temp);
       --(s->acc);
       PUT_HEAP(temp, s->acc);
       break;
+
     case 0x74: /* -sg */
     case 0x75: /* -sl */
     case 0x76: /* -st */
     case 0x77: /* -sp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       temp2 = GET_HEAP(temp);
       temp2--;
       PUT_HEAP(temp, temp2);
       PUSH(temp2);
       break;
+
     case 0x78: /* -agi */
     case 0x79: /* -ali */
     case 0x7a: /* -ati */
     case 0x7b: /* -api */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       s->acc = GET_HEAP(temp + s->acc);
       --(s->acc);
       PUT_HEAP(temp, s->acc);
       break;
+
     case 0x7c: /* -sgi */
     case 0x7d: /* -sli */
     case 0x7e: /* -sti */
     case 0x7f: /* -spi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp = variables[var_number] + (opparams[0] << 1);
       temp2 = GET_HEAP(temp + s->acc);
       temp2--;
       PUT_HEAP(temp, temp2);
       PUSH(temp2);
       break;
+
     default:
+      script_error(s, "Illegal opcode");
+
+    } /* switch(opcode >> 1) */
+
+    if (script_error_flag) {
+      _debug_step_running = 0; /* Stop multiple execution */
       pc = old_pc;
-      scriptdebug(s, &pc, &sp, &pp, &objp, "Illegal opcode", 0);
     }
+    else script_step_counter++;
+
   }
 }
 
 
-
-
-int emulate(state* s, object* obj, int method)
+int
+_lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 {
-  int pc=0;
-  script_method* m=obj->methods[method];
+  int superclass; /* Possibly required for recursion */
+  word superclasspos;
+  int methodselectors = obj + GET_HEAP(obj + SCRIPT_FUNCTAREAPTR_OFFSET)
+    + SCRIPT_FUNCTAREAPTR_MAGIC;   /* First method selector */
+  int methodselector_nr = GET_HEAP(methodselectors - 2); /* Number of methods is stored there */
+  int i;
+
+  for (i = 0; i < methodselector_nr * 2; i += 2)
+    if (GET_HEAP(methodselectors + i) == selectorid) { /* Found it? */
+      *address = GET_HEAP(methodselectors + i + 2 + (methodselector_nr * 2)); /* Get address */
+      return SELECTOR_METHOD;
+    }
+
+  /* If we got here, we didn't find it. */
+
+  superclass = OBJ_SUPERCLASS(obj);
+
+  if (superclass == -1)
+    return SELECTOR_NONE; /* No success. Trust on calling function to report error. */
+
+  superclasspos = CLASS_ADDRESS(superclass);
+
+  return
+    _lookup_selector_functions(s, superclasspos, selectorid, address); /* Recurse to superclass */
 }
+
+
+int
+lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
+{
+  heap_ptr pc = 0;
+  int species = OBJ_SPECIES(obj);
+  int heappos = CLASS_ADDRESS(species);
+  int varselector_nr = GET_HEAP(heappos + SCRIPT_SELECTORCTR_OFFSET);
+  /* Number of variable selectors */
+
+  int i;
+
+  for (i = 0; i < varselector_nr * 2; i += 2)
+    if (GET_HEAP(heappos + SCRIPT_SELECTOR_OFFSET + varselector_nr * 2 + i) == selectorid)
+      { /* Found it? */
+	*address = obj + SCRIPT_SELECTOR_OFFSET + i; /* Get object- relative address */
+	return SELECTOR_VARIABLE; /* report success */
+      }
+
+  return
+    _lookup_selector_functions(s, obj, selectorid, address);
+  /* Call recursive function selector seeker */
+}
+
+
+
+int
+script_init_state(state_t *s)
+{
+  resource_t *vocab996 = findResource(sci_vocab, 996);
+  int scriptnr;
+  int seeker;
+  int classnr;
+  resource_t *script;
+
+  s->_heap = heap_new();
+  s->heap = s->_heap->start;
+  s->acc = s->prev = 0;
+
+  s->global_vars = 0; /* Set during launch time */
+
+  if (!vocab996)
+    return 1;
+
+  s->classtable_size = vocab996->length >> 2;
+  s->classtable = calloc(s->classtable_size, sizeof(class_t));
+
+  for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
+    int objtype;
+    resource_t *script = findResource(sci_script, scriptnr);
+
+    seeker = 0;
+
+    if (script)
+      do {
+
+	while ((objtype = getInt16(script->data + seeker)) && (objtype != sci_obj_class))
+	  seeker += getInt16(script->data + seeker + 2);
+
+	if (objtype) { /* implies sci_obj_class */
+
+	  classnr = getInt16(script->data + seeker + 4 + SCRIPT_SPECIES_OFFSET);
+
+	  s->classtable[classnr].class_offset = seeker + 4;
+	  s->classtable[classnr].script = scriptnr;
+	  s->classtable[classnr].scriptposp = &(s->scripttable[scriptnr].heappos);
+
+	  seeker += getInt16(script->data + seeker + 2); /* Move to next */
+	}
+
+      } while (objtype != sci_obj_terminator);
+
+  }
+
+}
+
+
+void
+script_free_state(state_t *s)
+{
+  heap_del(s->_heap);
+  free(s->classtable);
+}
+
+
+heap_ptr
+script_instantiate(state_t *s, int script_nr)
+{
+  resource_t *script = findResource(sci_script, script_nr);
+  heap_ptr pos;
+  int objtype;
+  unsigned int objlength;
+  heap_ptr handle;
+
+  if (!script) {
+    sciprintf("Script 0x%x requested but not found\n", script_nr);
+    script_debug_flag = script_error_flag = 1;
+    return 0;
+  }
+
+  if (s->scripttable[script_nr].heappos) { /* Is it already loaded? */
+    s->scripttable[script_nr].lockers++; /* Required by another script */
+    return s->scripttable[script_nr].heappos;
+  }
+
+  handle = heap_allocate(s->_heap, script->length);
+
+  if (!handle) {
+    sciprintf("Not enough heap space for script size 0x%x of script 0x%x\n",
+	      script->length, script_nr);
+    script_debug_flag = script_error_flag = 1;
+    return 0;
+  }
+
+  handle += 2; /* Get beyond the size word */
+
+  s->scripttable[script_nr].heappos = handle; /* Set heap position */
+  s->scripttable[script_nr].lockers = 1; /* Locked by one */
+  s->scripttable[script_nr].export_table_offset = 0;
+  s->scripttable[script_nr].localvar_offset = 0;
+
+  memcpy(s->heap + handle, script->data, script->length); /* Copy the script */
+
+  /* Now do a first pass through the script objects to find the
+  ** export table and local variable block 
+  */
+  pos = handle;
+
+  objlength = 0;
+
+  do {
+    pos += objlength; /* Step over the last checked object */
+
+    objtype = GET_HEAP(pos);
+    objlength = GET_HEAP(pos+2);
+
+    if (objtype == sci_obj_exports)
+      s->scripttable[script_nr].export_table_offset = pos + 4; /* +4 is to step over the header */
+    
+    if (objtype == sci_obj_localvars)
+      s->scripttable[script_nr].localvar_offset = pos + 4; /* +4 is to step over the header */
+
+  } while (objtype != 0);
+
+
+  /* And now a second pass to adjust objects and class pointers */
+  pos = handle;
+
+  objlength = 0;
+
+  do {
+    pos += objlength; /* Step over the last checked object */
+
+    objtype = GET_HEAP(pos);
+    objlength = GET_HEAP(pos+2);
+
+    pos += 4; /* Step over header */
+
+    if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
+      int i;
+      heap_ptr functarea = pos + GET_HEAP(pos + SCRIPT_FUNCTAREAPTR_OFFSET)
+	+ SCRIPT_FUNCTAREAPTR_MAGIC;
+      int functions_nr = GET_HEAP(functarea - 2); /* Number of functions */
+      int superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
+      heap_ptr name_addr = GET_HEAP(pos + SCRIPT_NAME_OFFSET);
+
+      PUT_HEAP(pos + SCRIPT_NAME_OFFSET, name_addr + handle); /* Fix name address */
+
+      /*      fprintf(stderr,"functs (%x) area @ %x\n", functions_nr, functarea); */
+
+      PUT_HEAP(pos + SCRIPT_LOCALVARPTR_OFFSET, s->scripttable[script_nr].localvar_offset);
+      /* This sets the local variable pointer */
+
+      functarea += 2 + functions_nr * 2;
+      /* Move over the selector IDs to the actual addresses */
+
+      for (i = 0; i < functions_nr * 2; i += 2) {
+	heap_ptr functpos = GET_HEAP(functarea + i);
+/*	fprintf(stderr,"FuncFix %04x -> %04x\n", functpos, functpos + handle); */
+	PUT_HEAP(functarea + i, functpos + handle); /* Adjust function pointer addresses */
+      }
+
+      if (superclass >= 0)
+	script_instantiate(s, s->classtable[superclass].script);
+      /* Recurse to assure that the superclass is available */
+      
+    } /* if object or class */
+
+    pos -= 4; /* Step back on header */
+
+    
+  } while (objtype != 0);
+
+  if (script_checkloads_flag)
+    sciprintf("Script 0x%x was loaded to %04x.\n", script_nr, handle);
+
+  return handle;
+
+}
+
+
+void
+script_uninstantiate(state_t *s, int script_nr)
+{
+  heap_ptr handle = s->scripttable[script_nr].heappos;
+  heap_ptr pos;
+  int objtype, objlength;
+
+  if (!handle) {
+    sciprintf("Warning: unloading script 0x%x requested although not loaded\n", script_nr);
+    return;
+  }
+
+
+  /* Make a pass over the object in order uninstantiate all superclasses */
+  pos = handle;
+
+  objlength = 0;
+
+  do {
+    pos += objlength; /* Step over the last checked object */
+
+    objtype = GET_HEAP(pos);
+    objlength = GET_HEAP(pos+2);
+
+    pos += 4; /* Step over header */
+
+    if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
+      int superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
+
+      if (superclass >= 0)
+	script_uninstantiate(s, s->classtable[superclass].script);
+      /* Recurse to assure that the superclass lockers number gets decreased */
+      
+    } /* if object or class */
+
+    pos -= 4; /* Step back on header */
+    
+  } while (objtype != 0);
+
+  if (--(s->scripttable[script_nr].lockers)) /* One less locker */
+    return; /* if xxx.lockers > 0 */
+
+  /* Otherwise we completely unload it */
+
+  s->scripttable[script_nr].heappos = 0;
+  s->scripttable[script_nr].localvar_offset = 0;
+  s->scripttable[script_nr].export_table_offset = 0;
+
+  heap_free(s->_heap, handle - 2); /* Unallocate script on the heap */
+
+  if (script_checkloads_flag)
+    sciprintf("Unloaded script 0x%x.\n", script_nr);
+
+  return;
+}
+
+
+int
+script_run(state_t *s)
+{
+  heap_ptr stack_handle = heap_allocate(s->_heap, 0x1000);
+  heap_ptr script0;
+  heap_ptr game_obj; /* Address of the game object */
+  heap_ptr game_init; /* Address of the init() method */
+  heap_ptr functarea;
+
+  if (!stack_handle) {
+    sciprintf("script_run(): Insufficient heap space for stack\n");
+    return 1;
+  }
+
+  if (!(script0 = script_instantiate(s, 0))) {
+    sciprintf("script_run(): Could not instantiate script 0\n");
+    return 1;
+  }
+
+  fprintf(stderr," Script 0 at %04x\n", script0);
+
+  s->stack_base = stack_handle + 2;
+  s->global_vars = s->scripttable[0].localvar_offset;
+  /* Global variables are script 0's local variables */
+
+  s->kernel_names = vocabulary_get_knames(&s->kernel_names_nr);
+  s->opcodes = vocabulary_get_opcodes();
+  s->selector_names = vocabulary_get_snames();
+  for (s->selector_names_nr = 0; s->selector_names[s->selector_names_nr]; s->selector_names_nr++);
+  /* Counts the number of selector names */
+
+  script_map_selectors(s, &(s->selector_map));
+  /* Maps a few special selectors for later use */
+
+  script_map_kernel(s);
+  /* Maps the kernel functions */
+
+  game_obj = script0 + GET_HEAP(s->scripttable[0].export_table_offset + 2) - 8;
+  /* This is the magical formula to calculate the offset of the game object.
+  ** Explanation: The first entry in the export table of script 0 points to offset 8
+  ** relative to the game object. This is used here.
+  */
+
+  fprintf(stderr," Game object at %04x\n", game_obj);
+
+  if (GET_HEAP(game_obj) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+    sciprintf("script_run(): Game object is not at 0x%x\n", game_obj);
+    return 1;
+  }
+
+  sciprintf(" Calling Game::play()\n");
+  putInt16(s->heap + s->stack_base + 2, s->selector_map.play); /* Call the play selector... */
+  putInt16(s->heap + s->stack_base + 4, 0);                    /* ... with 0 arguments. */
+  send_selector(s, game_obj, s->stack_base + 6, 1, s->stack_base); /* Engage! */
+
+  sciprintf(" Game::play() finished.\n");
+
+  vocabulary_free_snames(s->selector_names);
+  vocabulary_free_knames(s->kernel_names);
+  free(s->opcodes);
+  free(s->kfunct_table);
+
+  s->selector_names = NULL;
+  s->kernel_names = NULL;
+  s->opcodes = NULL;
+  s->kfunct_table = NULL;
+  /* Make sure to segfault if any of those are dereferenced */
+
+  heap_free(s->_heap, stack_handle);
+
+  return 0;
+}
+
+

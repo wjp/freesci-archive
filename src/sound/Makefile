@@ -76,7 +76,7 @@ ac_png_includes = -I/usr/local/include
 ac_png_libraries = -L/usr/lib -lpng
 
 INCLUDES = -I$(top_srcdir)/src/include
-LDADD = -lc
+LDADD = -lefence -lc
 lib_LIBRARIES = libscisound.a
 libscisound_a_SOURCES = midi.c sound.c
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs

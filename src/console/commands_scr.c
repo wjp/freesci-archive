@@ -99,7 +99,8 @@ c_objmethods()
   if (workobj == NULL)
     sciprintf("No such class\n");
   else
-    printObject(workobj, SCRIPT_PRINT_METHODS);
+    sciprintf("Function is temporarily out of order\n");
+    /*    printObject(workobj, SCRIPT_PRINT_METHODS); */
 
   return 0;
 }

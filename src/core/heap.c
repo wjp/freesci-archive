@@ -32,16 +32,16 @@ static void set_next(heap_t* h, int block_pos, int next)
 	return src[0]|((src[1])<<8);
 	}*/
 
-static int get_size(heap_t* h, int block_pos)
+static unsigned int get_size(heap_t* h, int block_pos)
 {
 	assert_in_range(block_pos);
-	return getInt16(h->start+block_pos);
+	return (guint16)getInt16(h->start+block_pos);
 }
 
-static int get_next(heap_t* h, int block_pos)
+static unsigned int get_next(heap_t* h, int block_pos)
 {
 	assert_in_range(block_pos);
-	return getInt16(h->start+block_pos+2);
+	return (guint16)getInt16(h->start+block_pos+2);
 }
 
 /*Allocates a new heap*/
@@ -228,6 +228,8 @@ void heap_dump_free(heap_t *h)
 }
 
 
+/*
+
 int main(int argc, char **argv) {
   heap_t *h = heap_new();
   int a,b,c,d,e;
@@ -261,3 +263,4 @@ int main(int argc, char **argv) {
   return 0;
 }
 
+*/
