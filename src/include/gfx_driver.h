@@ -175,6 +175,8 @@ typedef struct _gfx_driver { /* Graphics driver */
 	** and is used for internal representation of graphical data. The physical
 	** resolution set by the graphics driver may be different for practical
 	** reasons.
+	** Must also set drv->mode, preferrably with the gfx_new_mode() function
+	** specified in gfx_utils.h.
 	*/
 
 	int (*init) (struct _gfx_driver *drv);
@@ -185,6 +187,8 @@ typedef struct _gfx_driver { /* Graphics driver */
 	** most 'natural' to the graphics target. Target implementors have relatively
 	** free reign in choosing the heuristics used to determine the resulting
 	** mode.
+	** Must also set drv->mode, preferrably with the gfx_new_mode() function
+	** specified in gfx_utils.h.
 	*/
 
 	void (*exit) (struct _gfx_driver *drv);

@@ -3787,7 +3787,7 @@ explained more thoroughly, errors corrected, etc. The first 23 instructions
            </para></listitem>
            <listitem><para id="op-calle">
               <simplelist>
-                <member>op 0x46: calle W script, B dispindex, B framesize  (5 bytes)</member>
+                <member>op 0x46: calle W script, W dispindex, B framesize  (5 bytes)</member>
                 <member>op 0x47: calle B script, B dispindex, B framesize  (4 bytes)</member>
               </simplelist>
               Call external script
