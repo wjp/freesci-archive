@@ -1656,7 +1656,7 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int funct_nr, int arg
 
 
 static void
-_k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int options, int funct_nr, int argc, int argp)
+_k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int options, int funct_nr, int argc, int argp)
      /* Creates a view_list from a node list in heap space. Returns the list, stores the
      ** number of list entries in *list_nr. Calls doit for each entry if cycle is set.
      ** argc, argp, funct_nr should be the same as in the calling kernel function.
@@ -1665,7 +1665,7 @@ _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int optio
 	heap_ptr node;
 	int i;
 
-	if (!widget_list) {
+	if (!*widget_list) {
 		SCIkwarn(SCIkERROR, "make_view_list with widget_list == ()\n");
 		BREAKPOINT();
 	};
@@ -1673,8 +1673,11 @@ _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int optio
 	if (options & _K_MAKE_VIEW_LIST_CYCLE)
 		_k_invoke_view_list(s, list, funct_nr, argc, argp); /* Invoke all objects if requested */
 
+	assert_primary_widget_lists(s);
+	/* In case one of the views' doit() does a DrawPic... */
+
 	node = GET_HEAP(list + LIST_LAST_NODE);
-  
+
 	SCIkdebug(SCIkGRAPHICS, "Making list from %04x\n", list);
 
 	if (GET_HEAP(list - 2) != 0x6) { /* heap size check */
@@ -1690,7 +1693,7 @@ _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int optio
 		widget = _k_make_dynview_obj(s, obj, options, funct_nr, argc, argp);
 
 		if (widget) {
-			GFX_ASSERT(widget_list->add(GFXWC(widget_list), GFXW(widget)));
+			GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
 		}
 
 		node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
@@ -1822,7 +1825,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		pic_views = gfxw_new_list(s->picture_port->bounds, 0);
 
 		SCIkdebug(SCIkGRAPHICS, "Preparing picview list...\n");
-		_k_make_view_list(s, pic_views, list, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
+		_k_make_view_list(s, &pic_views, list, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
 		/* Store pic views for later re-use */
 
 		SCIkdebug(SCIkGRAPHICS, "Drawing picview list...\n");
@@ -2020,6 +2023,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
 
 	open_animation = (s->pic_is_new) && (s->pic_not_valid);
+	s->pic_is_new = 0;
 
 	if (open_animation) {
 		gfxop_clear_box(s->gfx_state, gfx_rect(0, 10, 320, 190)); /* Propagate pic */
@@ -2029,17 +2033,25 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	assert_primary_widget_lists(s);
 
-	if ((GFXWC(s->port) != GFXWC(s->dyn_views->parent)) /* If dynviews are on other port... */
-	    || (s->dyn_views->next)) /* ... or not on top of the view list */
+	if (!s->dyn_views->contents /* Only reparentize empty dynview list */
+	     && ((GFXWC(s->port) != GFXWC(s->dyn_views->parent)) /* If dynviews are on other port... */
+		 || (s->dyn_views->next))) /* ... or not on top of the view list */
 		reparentize_primary_widget_lists(s, s->port);
+
 
 	if (!cast_list)
 		s->dyn_views->tag(GFXW(s->dyn_views));
 
 	if (cast_list) {
 		s->dyn_views->tag(GFXW(s->dyn_views));
-		_k_make_view_list(s, s->dyn_views, cast_list, (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
+		_k_make_view_list(s, &(s->dyn_views), cast_list, (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
 				  | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
+
+		if (s->pic_is_new) { /* Happens if DrawPic() is executed by a dynview (yes, that happens) */
+			kAnimate(s, funct_nr, argc, argp);
+			return;
+		}
+
 		s->dyn_views->free_tagged(GFXWC(s->dyn_views)); /* Free obsolete dynviews */
 
 		/* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
@@ -2339,7 +2351,6 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			GRAPH_UPDATE_BOX(s, 0, 10, 320, 190);
 		}
 
-		s->pic_is_new = 0;
 		s->pic_not_valid = 0;
 		return;
 

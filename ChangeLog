@@ -1,3 +1,11 @@
+2001-01-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kAnimate): No reparentization for non-
+	empty dynview lists
+
+	* src/engine/kgraphics.c (kAnimate): Caught the case where
+	dynviews invoke DrawPic
+
 2001-01-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_k_draw_control): Fixed list control

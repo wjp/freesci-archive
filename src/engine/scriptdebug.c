@@ -900,7 +900,10 @@ c_vmvars(state_t *s)
   case 2:
     {
       int vartype = strchr(varabbrev, *cmd_params[0].str)-varabbrev;
-      sciprintf("%s var %d == %d\n", varnames[vartype], cmd_params[1].val, GET_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1)));
+      sciprintf("%s var %d == %d (0x%04x)\n", varnames[vartype], cmd_params[1].val,
+		GET_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1)),
+		UGET_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1))
+		);
       break;
     }
   case 3:
