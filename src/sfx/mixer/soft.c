@@ -190,8 +190,6 @@ mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 			if (fs->buf)
 				sci_free(fs->buf);
 
-			feed->debug_name = "DESTROYED";
-			
 			self->feeds_nr--;
 
 			/* Copy topmost into deleted so that we don't have any holes */

@@ -39,9 +39,6 @@
 #elif defined (_DREAMCAST)
 #  include <dc.h>
 #  define PATH_MAX 255
-#else
-#  include <unistd.h>
-#  include <dirent.h>
 #endif
 
 #ifndef O_BINARY
@@ -549,10 +546,11 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, reg_t *argv)
 
   remove(testpath);
 
-  return make_reg(0, !failed);
+  sci_free(testpath);
 
-  free(testpath);
+  return make_reg(0, !failed);
 }
+
 
 
 /* Returns a dynamically allocated pointer to the name of the requested save dir */
@@ -1053,9 +1051,9 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     }
     case K_FILEIO_READ_RAW :
     {
-	char *dest = kernel_dereference_bulk_pointer(s, argv[1], 0);
-	int size = UKPV(2);
-	int handle = UKPV(3);
+	int handle = UKPV(1);
+	char *dest = kernel_dereference_bulk_pointer(s, argv[2], 0);
+	int size = UKPV(3);
 
 	fread_wrapper(s, dest, size, handle);
 	break;

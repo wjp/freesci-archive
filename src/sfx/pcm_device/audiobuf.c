@@ -158,7 +158,7 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames)
 	}
 #endif
 
-	if (frames && src != buf->last_frame)
+	if (frames && (src - buf->framesize) != buf->last_frame)
 	/* Backup last frame, unless we're already filling from it */
 		memcpy(buf->last_frame, src - buf->framesize, buf->framesize);
 }

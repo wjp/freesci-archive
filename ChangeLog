@@ -1,3 +1,11 @@
+2003-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/pcm_device/audiobuf.c (sfx_audbuf_write): Minor fix to
+	fix
+
+	* src/engine/kfile.c (kFileIO): Fixed parameters for FileIO
+	reading
+
 2003-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/mixer/soft.c (mix_compute_input_linear): Fixed cracking
