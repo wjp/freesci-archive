@@ -121,18 +121,15 @@ _gfxop_grab_pixmap(gfx_state_t *state, gfx_pixmap_t **pxmp, int x, int y,
 	int unscaled_yl = (yl + yfact - 1) / yfact;
 	*zone = gfx_rect(x, y, xl, yl);
 
-fprintf(stderr,"OK-%d\n", __LINE__);
 	if (!(state->driver->capabilities & GFX_CAPABILITY_PIXMAP_GRABBING)) {
 		GFXERROR("Attempt to grab pixmap even though driver does not support pixmap grabbing!");
 		return GFX_FATAL;
 	}
-fprintf(stderr,"OK-%d\n", __LINE__);
 
 	if (_gfxop_clip(zone, gfx_rect(0, 0,
 				       320 * state->driver->mode->xfact,
 				       200 * state->driver->mode->yfact)))
 		return GFX_ERROR;
-fprintf(stderr,"OK-%d\n", __LINE__);
 
 	if (!*pxmp)
 		*pxmp = gfx_new_pixmap(unscaled_xl, unscaled_yl, GFX_RESID_NONE, 0, 0);
@@ -141,14 +138,12 @@ fprintf(stderr,"OK-%d\n", __LINE__);
 			gfx_pixmap_free_data(*pxmp);
 			(*pxmp)->data = NULL;
 		}
-fprintf(stderr,"OK-%d\n", __LINE__);
 
 	if (!(*pxmp)->data) {
 		(*pxmp)->index_xl = unscaled_xl + 1;
 		(*pxmp)->index_yl = unscaled_yl + 1;
 		gfx_pixmap_alloc_data(*pxmp, state->driver->mode);
 	}
-fprintf(stderr,"OK-%d\n", __LINE__);
 
 	return state->driver->grab_pixmap(state->driver, *zone, *pxmp,
 					  priority? GFX_MASK_PRIORITY : GFX_MASK_VISUAL);
@@ -2039,23 +2034,17 @@ gfxop_grab_pixmap(gfx_state_t *state, rect_t area)
 {
 	gfx_pixmap_t *pixmap = NULL;
 	rect_t resultzone; /* Ignored for this application */
-fprintf(stderr,"OK-%d\n", __LINE__);
 	BASIC_CHECKS(NULL);
-fprintf(stderr,"OK-%d\n", __LINE__);
 	if (_gfxop_remove_pointer(state)) {
 		GFXERROR("Could not remove pointer!\n");
 		return NULL;
 	}
-fprintf(stderr,"OK-%d\n", __LINE__);
 
 	_gfxop_scale_rect(&area, state->driver->mode);
-fprintf(stderr,"OK-%d\n", __LINE__);
 	if (_gfxop_grab_pixmap(state, &pixmap, area.x, area.y, area.xl, area.yl, 0, &resultzone))
 		return NULL; /* area CUT the visual screen had a null or negative size */
-fprintf(stderr,"OK-%d\n", __LINE__);
 
 	pixmap->flags |= GFX_PIXMAP_FLAG_PALETTE_SET | GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE;
-fprintf(stderr,"OK-%d\n", __LINE__);
 
 	return pixmap;
 }
