@@ -1008,16 +1008,16 @@ c_bpx(state_t *s)
     bp = s->bp_list;
     while (bp->next)
       bp = bp->next;
-    bp->next = (breakpoint_t *) malloc (sizeof (breakpoint_t));
+    bp->next = (breakpoint_t *) g_malloc (sizeof (breakpoint_t));
     bp = bp->next;
   }
   else {
-    s->bp_list = (breakpoint_t *) malloc (sizeof (breakpoint_t));
+    s->bp_list = (breakpoint_t *) g_malloc (sizeof (breakpoint_t));
     bp = s->bp_list;
   }
 
   bp->type = BREAK_EXECUTE;
-  bp->data = malloc (strlen (cmd_params [0].str)+1);
+  bp->data = g_malloc (strlen (cmd_params [0].str)+1);
   strcpy ((char *) bp->data, cmd_params [0].str);
   bp->next = NULL;
   s->have_bp |= BREAK_EXECUTE;

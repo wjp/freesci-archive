@@ -134,7 +134,7 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
 
     if (seeker) {
 
-      seeker->next = malloc(sizeof(struct singly_linked_resources_struct));
+      seeker->next = g_malloc(sizeof(struct singly_linked_resources_struct));
       seeker->next->resource = resource;
       seeker->next->next = 0;
       max_resource++;
@@ -166,7 +166,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
   do {
     if (resourceFileCounter > 0 && resourceFile > 0) {
       int decomperr;
-      resource = malloc(sizeof(resource_t));
+      resource = g_malloc(sizeof(resource_t));
 
       while (!(decomperr = (*decompress)(resource, resourceFile))) {
 
@@ -184,7 +184,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 
 	_addResource(&base, resource, 0);
 
-	resource = malloc(sizeof(resource_t));
+	resource = g_malloc(sizeof(resource_t));
       }
       free(resource);
       close(resourceFile);
@@ -228,7 +228,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
   }
   else printf("Ignoring any patches.\n");
 
-  resource_map = malloc(max_resource * sizeof(resource_t));
+  resource_map = g_malloc(max_resource * sizeof(resource_t));
 
   seeker = &base;
 
@@ -326,13 +326,13 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 	    close(file);
 	  } else {
 
-	    newrsc = malloc(sizeof(resource_t));
+	    newrsc = g_malloc(sizeof(resource_t));
 	    newrsc->length = filestat.st_size - 2;
 	    newrsc->id = restype << 11 | resnumber;
 	    newrsc->number = resnumber;
 	    newrsc->type = restype;
 
-	    newrsc->data = malloc(newrsc->length);
+	    newrsc->data = g_malloc(newrsc->length);
 	    read(file, newrsc->data, newrsc->length);
 	    close(file);
 

@@ -246,8 +246,8 @@ int decompress0(resource_t *result, int resh)
     return SCI_ERROR_EMPTY_OBJECT;
   }
 
-  buffer = malloc(compressedLength);
-  result->data = malloc(result->length);
+  buffer = g_malloc(compressedLength);
+  result->data = g_malloc(result->length);
 
   if (read(resh, buffer, compressedLength) != compressedLength) {
     free(result->data);

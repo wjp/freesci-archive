@@ -45,6 +45,11 @@ int script_step_counter = 0; /* Counts the number of steps executed */
 extern int _debug_step_running; /* scriptdebug.c */
 extern int _debug_seeking; /* scriptdebug.c */
 
+
+static calls_struct_t *send_calls = NULL;
+static int send_calls_allocated = 0;
+
+
 int
 script_error(state_t *s, int line, char *reason)
 {
@@ -72,7 +77,7 @@ get_class_address(state_t *s, int classnr)
   return scriptpos + s->classtable[classnr].class_offset;
 }
 
-/* Operating on the steck */
+/* Operating on the stack */
 #define PUSH(v) putInt16(s->heap + (((xs->sp) += 2)) - 2, (v))
 #define POP() ((gint16)(getInt16(s->heap + ((xs->sp)-=2))))
 
@@ -165,16 +170,7 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
   /* We return a pointer to the new active exec_stack_t */
 
   /* The selector calls we catch are stored below: */
-  int calls_nr = -1;
-  int calls_allocated = 2;
-  struct calls_struct {
-    heap_ptr address;
-    heap_ptr argp;
-    int argc;
-    int selector;
-    heap_ptr type; /* Same as exec_stack_t.type */
-  } *calls = malloc(sizeof(struct calls_struct) * calls_allocated);
-  /* FIXME: malloc()ing this thing every time is just one huge waste of performance. */
+  int send_calls_nr = -1;
 
   framesize += restmod * 2;
 
@@ -200,15 +196,15 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
 sciprintf("Send to selector %04x (%s):", selector, s->selector_names[selector]);
 #endif /* VM_DEBUG_SEND */
 
-    if (++calls_nr == (calls_allocated - 1))
-      calls = realloc(calls, sizeof(struct calls_struct) * (calls_allocated *= 2));
+    if (++send_calls_nr == (send_calls_allocated - 1))
+      send_calls = g_realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
 
     switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
 
     case SELECTOR_NONE:
       sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", 0xffff & selector, send_obj);
       script_error_flag = script_debug_flag = 1;
-      --calls_nr;
+      --send_calls_nr;
       break;
 
     case SELECTOR_VARIABLE:
@@ -225,15 +221,15 @@ else
       case 0:   /* Read selector */
       case 1: { /* Argument is supplied -> Selector should be set */
 
-	calls[calls_nr].address = lookupresult; /* register the call */
-	calls[calls_nr].argp = argp;
-	calls[calls_nr].argc = argc;
-	calls[calls_nr].selector = selector;
-	calls[calls_nr].type = EXEC_STACK_TYPE_VARSELECTOR; /* Register as a varselector */
+	send_calls[send_calls_nr].address = lookupresult; /* register the call */
+	send_calls[send_calls_nr].argp = argp;
+	send_calls[send_calls_nr].argc = argc;
+	send_calls[send_calls_nr].selector = selector;
+	send_calls[send_calls_nr].type = EXEC_STACK_TYPE_VARSELECTOR; /* Register as a varselector */
 
       } break;
       default:
-	--calls_nr;
+	--send_calls_nr;
 	sciprintf("Send error: Variable selector %04x in %04x called with %04x params\n",
 		  selector, send_obj, argc);
     }
@@ -253,11 +249,11 @@ sciprintf("Funcselector(");
 sciprintf(")\n");
 #endif /* VM_DEBUG_SEND */
 
-      calls[calls_nr].address = lookupresult; /* register call */
-      calls[calls_nr].argp = argp;
-      calls[calls_nr].argc = argc;
-      calls[calls_nr].selector = selector;
-      calls[calls_nr].type = EXEC_STACK_TYPE_CALL;
+      send_calls[send_calls_nr].address = lookupresult; /* register call */
+      send_calls[send_calls_nr].argp = argp;
+      send_calls[send_calls_nr].argc = argc;
+      send_calls[send_calls_nr].selector = selector;
+      send_calls[send_calls_nr].type = EXEC_STACK_TYPE_CALL;
 
       break;
     } /* switch(lookup_selector()) */
@@ -270,24 +266,27 @@ sciprintf(")\n");
   /* Iterate over all registered calls in the reverse order. This way, the first call is
   ** placed on the TOS; as soon as it returns, it will cause the second call to be executed.
   */
-  for (; calls_nr >= 0; calls_nr--)
-    if (calls[calls_nr].type == EXEC_STACK_TYPE_VARSELECTOR) /* Write/read variable? */
-      add_exec_stack_varselector(s, work_obj, calls[calls_nr].argc,
-				 calls[calls_nr].argp, calls[calls_nr].selector, 
-				 calls[calls_nr].address, origin);
+  for (; send_calls_nr >= 0; send_calls_nr--)
+    if (send_calls[send_calls_nr].type == EXEC_STACK_TYPE_VARSELECTOR) /* Write/read variable? */
+      add_exec_stack_varselector(s, work_obj, send_calls[send_calls_nr].argc,
+				 send_calls[send_calls_nr].argp, send_calls[send_calls_nr].selector, 
+				 send_calls[send_calls_nr].address, origin);
     else
       retval =
-	add_exec_stack_entry(s, calls[calls_nr].address, sp, work_obj, calls[calls_nr].argc,
-			     calls[calls_nr].argp, calls[calls_nr].selector, send_obj, origin);
+	add_exec_stack_entry(s, send_calls[send_calls_nr].address, sp, work_obj,
+			     send_calls[send_calls_nr].argc, send_calls[send_calls_nr].argp,
+			     send_calls[send_calls_nr].selector, send_obj, origin);
 
-  free(calls);
 
   /* Now check the TOS to execute all varselector entries */
   while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
+
     /* varselector access? */
     if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
+
       word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
       PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
+
     } else /* No, read */
       s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
 
@@ -320,11 +319,11 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
   exec_stack_t *xstack;
 
   if (!s->execution_stack)
-    s->execution_stack = malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
+    s->execution_stack = g_malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
 
   if (++(s->execution_stack_pos) == s->execution_stack_size) /* Out of stack space? */
-    s->execution_stack = realloc(s->execution_stack,
-				 sizeof(exec_stack_t) * (s->execution_stack_size += 8));
+    s->execution_stack = g_realloc(s->execution_stack,
+				   sizeof(exec_stack_t) * (s->execution_stack_size += 8));
 
   /*  sciprintf("Exec stack: [%d/%d], origin %d, at %p\n", s->execution_stack_pos,
       s->execution_stack_size, origin, s->execution_stack); /* */
@@ -1121,6 +1120,7 @@ script_init_state(state_t *s, sci_version_t version)
   resource_t *script;
   int magic_offset; /* For strange scripts in older SCI versions */
 
+
   /* Initialize script table */
   for (i = 0; i < 1000; i++)
     s->scripttable[i].heappos = 0;
@@ -1160,7 +1160,7 @@ script_init_state(state_t *s, sci_version_t version)
   else
     s->classtable_size = vocab996->length >> 2;
 
-  s->classtable = calloc(s->classtable_size, sizeof(class_t));
+  s->classtable = g_new0(class_t, s->classtable_size);
 
   for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
     int objtype;
@@ -1193,7 +1193,7 @@ script_init_state(state_t *s, sci_version_t version)
 	      return 1;
 	    }
 
-	    s->classtable = realloc(s->classtable, sizeof(class_t) * (classnr + 1));
+	    s->classtable = g_realloc(s->classtable, sizeof(class_t) * (classnr + 1));
 	    memset(&(s->classtable[s->classtable_size]), 0,
 		   sizeof(class_t) * (1 + classnr - s->classtable_size)); /* Clear after resize */
 
@@ -1498,6 +1498,10 @@ game_init(state_t *s)
   resource_t *resource;
   int i, font_nr;
 
+  /* Initialize send_calls buffer */
+  if (!send_calls_allocated)
+    send_calls = g_new(calls_struct_t, send_calls_allocated = 16);
+
   if (!stack_handle) {
     sciprintf("script_init(): Insufficient heap space for stack\n");
     return 1;
@@ -1550,7 +1554,7 @@ game_init(state_t *s)
   /* Maps a few special selectors for later use */
 
   s->file_handles_nr = 5;
-  s->file_handles = calloc(s->file_handles_nr, sizeof(FILE *));
+  s->file_handles = g_new0(FILE *, s->file_handles_nr);
   /* Allocate memory for file handles */
 
   script_map_kernel(s);
@@ -1757,6 +1761,11 @@ game_exit(state_t *s)
     bp = bp_next;
   }
   s->bp_list = NULL;
+
+  if (send_calls_allocated) {
+    g_free(send_calls);
+    send_calls_allocated = 0;
+  }
 
   return 0;
 }

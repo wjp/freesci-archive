@@ -2,7 +2,7 @@
 AC_PREREQ(2.13)
 AC_INIT(acinclude.m4)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.2.5)
+AM_INIT_AUTOMAKE(freesci, 0.2.6)
 
 AC_PROG_CC
 AC_PROG_RANLIB
@@ -10,6 +10,7 @@ AC_CHECK_HEADERS(sys/soundcard.h)
 AC_CHECK_HEADERS(obstack.h)
 AC_CHECK_HEADERS(dirent.h)
 AC_CHECK_HEADERS(unistd.h)
+AC_CHECK_HEADERS(fnmatch.h)
 AC_CHECK_HEADERS(readline/readline.h)
 AC_CHECK_HEADERS(readline/history.h)
 AC_CHECK_HEADERS(getopt.h)

@@ -34,6 +34,10 @@
 #include <uinput.h>
 #include <event.h>
 
+#ifdef HAVE_FNMATCH_H
+#include <fnmatch.h>
+#endif /* HAVE_FNMATCH_H */
+
 #ifdef _MSC_VER
 #include <direct.h>
 #include <ctype.h>
@@ -176,21 +180,33 @@ kernel_oops(state_t *s, int line, char *reason)
 
 /******************** Heap macros ********************/
 
-#define GET_HEAP(address) ((((guint16)(address)) < 800)? \
+/* Minimal heap position */
+#define HEAP_MIN 800
+
+#define GET_HEAP(address) ((((guint16)(address)) < HEAP_MIN)? \
 KERNEL_OOPS("Heap address space violation on read")  \
 : getInt16(s->heap + ((guint16)(address))))
 /* Reads a heap value if allowed */
 
-#define UGET_HEAP(address) ((((guint16)(address)) < 800)? \
+#define UGET_HEAP(address) ((((guint16)(address)) < HEAP_MIN)? \
 KERNEL_OOPS("Heap address space violation on read")  \
 : getUInt16(s->heap + ((guint16)(address))))
 /* Reads a heap value if allowed */
 
-#define PUT_HEAP(address, value) { if (((guint16)(address)) < 800) \
+#define PUT_HEAP(address, value) { if (((guint16)(address)) < HEAP_MIN) \
 KERNEL_OOPS("Heap address space violation on write");        \
 else { s->heap[((guint16)(address))] = (value) &0xff;               \
  s->heap[((guint16)(address)) + 1] = ((value) >> 8) & 0xff;}}
 /* Sets a heap value if allowed */
+
+
+/* Non-fatal assertion */
+#define SCIkASSERT(a) if (!(a)) { \
+  SCIkwarn(SCIkERROR, "Assertion " #a " failed in " __FILE__ " line %d\n", __LINE__); \
+  return; \
+}
+  
+
 
 #ifdef SCI_KERNEL_DEBUG
 
@@ -336,7 +352,7 @@ kalloc(state_t *s, int type, int space)
   if (seeker == MAX_HUNK_BLOCKS)
     KERNEL_OOPS("Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
   else {
-    s->hunk[seeker].data = malloc(s->hunk[seeker].size = space);
+    s->hunk[seeker].data = g_malloc(s->hunk[seeker].size = space);
     s->hunk[seeker].type = type;
   }
 
@@ -1009,7 +1025,7 @@ kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
     retval++;
 
   if (retval == s->file_handles_nr) /* Hit size limit => Allocate more space */
-    s->file_handles = realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
+    s->file_handles = g_realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
 
   s->file_handles[retval] = file;
 
@@ -1262,6 +1278,128 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
   *targetaddr++ = 0;
 
 }
+
+#define K_DEVICE_INFO_GET_DEVICE 0
+#define K_DEVICE_INFO_GET_CURRENT_DEVICE 1
+#define K_DEVICE_INFO_PATHS_EQUAL 2
+#define K_DEVICE_INFO_IS_FLOPPY 3
+
+#ifdef _WIN32
+
+void
+kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int mode = UPARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  switch(mode) {
+
+  case K_DEVICE_INFO_GET_DEVICE: {
+    heap_ptr input = UPARAM(1);
+    heap_ptr output = UPARAM(2);
+    char *input_s = s->heap + output;
+    char *output_s = s->heap + output;
+
+    SCIkASSERT(input >= HEAP_MIN);
+    SCIkASSERT(output >= HEAP_MIN);
+
+    strncpy(output_s, input_s, 2);
+  }
+  break;
+
+  case K_DEVICE_INFO_GET_CURRENT_DEVICE: {
+    heap_ptr output = UPARAM(2);
+    char *output_s = s->heap + output;
+
+    SCIkASSERT(output >= HEAP_MIN);
+
+    strncpy(output_s, "C:"); /* FIXME */
+  }
+  break;
+
+  case K_DEVICE_INFO_PATHS_EQUAL: {
+    heap_ptr path1 = UPARAM(1);
+    heap_ptr path2 = UPARAM(2);
+    char *path1_s = s->heap + path1;
+    char *path2_s = s->heap + path2;
+
+    SCIkASSERT(path1 >= HEAP_MIN);
+    SCIkASSERT(path2 >= HEAP_MIN);
+
+    s->acc = fnmatch(path1_s, path2_s, FNM_PATHNAME); /* POSIX.2 */
+  }
+  break;
+
+  case K_DEVICE_INFO_IS_FLOPPY: {
+
+    s->acc = 0; /* Never? FIXME */
+  }
+  break;
+
+  default: {
+    SCIkwarn(SCIkERROR, "Unknown DeviceInfo() sub-command: %d\n", mode);
+  }
+  }
+}
+
+#else /* !_WIN32 */
+
+void
+kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int mode = UPARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  switch(mode) {
+
+  case K_DEVICE_INFO_GET_DEVICE: {
+    heap_ptr output = UPARAM(2);
+    char *output_s = s->heap + output;
+
+    SCIkASSERT(output >= HEAP_MIN);
+
+    strcpy(output_s, "/");
+  }
+  break;
+
+  case K_DEVICE_INFO_GET_CURRENT_DEVICE: {
+    heap_ptr output = UPARAM(2);
+    char *output_s = s->heap + output;
+
+    SCIkASSERT(output >= HEAP_MIN);
+
+    strcpy(output_s, "/");
+  }
+  break;
+
+  case K_DEVICE_INFO_PATHS_EQUAL: {
+    heap_ptr path1 = UPARAM(1);
+    heap_ptr path2 = UPARAM(2);
+    char *path1_s = s->heap + path1;
+    char *path2_s = s->heap + path2;
+
+    SCIkASSERT(path1 >= HEAP_MIN);
+    SCIkASSERT(path2 >= HEAP_MIN);
+
+    s->acc = fnmatch(path1_s, path2_s, FNM_PATHNAME); /* POSIX.2 */
+  }
+  break;
+
+  case K_DEVICE_INFO_IS_FLOPPY: {
+
+    s->acc = 0; /* Never */
+  }
+  break;
+
+  default: {
+    SCIkwarn(SCIkERROR, "Unknown DeviceInfo() sub-command: %d\n", mode);
+  }
+  }
+}
+
+#endif /* !_WIN32 */
 
 
 void
@@ -1922,7 +2060,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
     startarg = 2;
   }
 
-  arguments = malloc(sizeof(int) * argc);
+  arguments = g_malloc(sizeof(int) * argc);
   for (i = startarg; i < argc; i++)
     arguments[i-startarg] = UPARAM(i); /* Parameters are copied to prevent overwriting */
 
@@ -3061,7 +3199,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
   if (!(*list_nr))
     return NULL; /* Empty */
 
-  retval = malloc(*list_nr * (sizeof(view_object_t))); /* Allocate the list */
+  retval = g_malloc(*list_nr * (sizeof(view_object_t))); /* Allocate the list */
 
   node = UGET_HEAP(list + LIST_LAST_NODE); /* Start over */
 
@@ -3075,7 +3213,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
 
     if (i == (*list_nr)) {
       (*list_nr)++;
-      retval = realloc(retval, *list_nr * sizeof(view_object_t));
+      retval = g_realloc(retval, *list_nr * sizeof(view_object_t));
       /* This has been reported to happen */
     }
 
@@ -3377,7 +3515,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   graph_update_port(s, s->ports[s->view_port]); /* Update the port we're leaving */
 
-  wnd = calloc(sizeof(port_t), 1);
+  wnd = g_malloc0(sizeof(port_t));
 
   wnd->ymin = PARAM(0) + 10;
   wnd->xmin = PARAM(1);
@@ -4051,6 +4189,11 @@ struct {
   {"Parse", kParse },
   {"ShakeScreen", kShakeScreen },
   {"RestartGame", kRestartGame },
+#ifdef _WIN32
+  {"DeviceInfo", kDeviceInfo_Win32},
+#else /* !_WIN32 */
+  {"DeviceInfo", kDeviceInfo_Unix},
+#endif
 
   /* Experimental functions */
   {"Said", kSaid },
@@ -4069,7 +4212,7 @@ script_map_kernel(state_t *s)
   int functnr;
   int mapped = 0;
 
-  s->kfunct_table = malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
+  s->kfunct_table = g_malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
 
   for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
     int seeker, found = -1;

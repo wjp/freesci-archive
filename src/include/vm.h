@@ -98,6 +98,17 @@ typedef struct
   int class_offset; /* script-relative position of the class */
 } class_t;
 
+
+/* This struct is used to buffer the list of send calls in send_selector() */
+typedef struct {
+    heap_ptr address;
+    heap_ptr argp;
+    int argc;
+    int selector;
+    heap_ptr type; /* Same as exec_stack_t.type */
+} calls_struct_t;
+
+
 typedef struct
 {
   heap_ptr heappos; /* Script position on the heap or 0 if not yet loaded */

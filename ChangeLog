@@ -1,3 +1,10 @@
+1999-12-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c (kDeviceInfo_Unix): Added DeviceInfo for UNIX-
+	like systems (and a preliminary, incomplete version for Win32).
+
+	*src/core/*.c : Replaced alloc functions with g_alloc functions
+
 1999-12-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c: Fixed char_gets_input() to handle fgets() being

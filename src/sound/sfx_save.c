@@ -81,7 +81,7 @@ _cfsml_mangle_string(char *s)
 {
   char *source = s;
   char c;
-  char *target = (char *) malloc(1 + strlen(s) * 2); /* We will probably need less than that */
+  char *target = (char *) g_malloc(1 + strlen(s) * 2); /* We will probably need less than that */
   char *writer = target;
 
   while (c = *source++) {
@@ -96,14 +96,14 @@ _cfsml_mangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) realloc(target, strlen(target) + 1);
+  return (char *) g_realloc(target, strlen(target) + 1);
 }
 
 
 static char *
 _cfsml_unmangle_string(char *s)
 {
-  char *target = (char *) malloc(1 + strlen(s));
+  char *target = (char *) g_malloc(1 + strlen(s));
   char *writer = target;
   char *source = s;
   char c;
@@ -118,7 +118,7 @@ _cfsml_unmangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) realloc(target, strlen(target) + 1);
+  return (char *) g_realloc(target, strlen(target) + 1);
 }
 
 
@@ -129,7 +129,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   int mem = 32;
   int pos = 0;
   int done = 0;
-  char *retval = (char *) malloc(mem);
+  char *retval = (char *) g_malloc(mem);
 
   while (isspace(c = fgetc(fd)) && (c != EOF));
   if (c == EOF) {
@@ -144,7 +144,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   while (((c = fgetc(fd)) != EOF) && ((pos == 0) || (c != '\n')) && (c != '=')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) realloc(retval, mem *= 2);
+       retval = (char *) g_realloc(retval, mem *= 2);
 
      if (!isspace(c)) {
         if (done) {
@@ -182,7 +182,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   }
 
   if (pos == mem - 1) /* Need more memory? */
-     retval = (char *) realloc(retval, mem += 1);
+     retval = (char *) g_realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
 
@@ -196,12 +196,12 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
   char c;
   int mem = 64;
   int pos = 0;
-  char *retval = (char *) malloc(mem);
+  char *retval = (char *) g_malloc(mem);
 
   while (((c = fgetc(fd)) != EOF) && (c != '\n')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) realloc(retval, mem *= 2);
+       retval = (char *) g_realloc(retval, mem *= 2);
 
      if (pos || (!isspace(c)))
         retval[pos++] = c;
@@ -224,10 +224,10 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
      ++(*line);
 
   if (pos == mem - 1) /* Need more memory? */
-    retval = (char *) realloc(retval, mem += 1);
+    retval = (char *) g_realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
-  return (char *) realloc(retval, strlen(retval));
+  return (char *) g_realloc(retval, strlen(retval));
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */
@@ -349,7 +349,7 @@ _cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo, char *lastval, int
 ;         }
 
          if (max)
-           foo->songs = (song_t *) malloc(max * sizeof(song_t));
+           foo->songs = (song_t *) g_malloc(max * sizeof(song_t));
          else
            foo->songs = NULL;
 #line 518 "cfsml.pl"
@@ -845,7 +845,7 @@ _cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof)
 
 
 /* Auto-generated CFSML declaration and function block ends here */
-/* Auto-generation performed by cfsml.pl 0.6.5 */
+/* Auto-generation performed by cfsml.pl 0.6.6 */
 #line 96 "CFSML input file"
 
 /* Sound state saving reference implementation */

@@ -224,7 +224,7 @@ _cfsml_mangle_string(char *s)
 {
   char *source = s;
   char c;
-  char *target = (char *) malloc(1 + strlen(s) * 2); /* We will probably need less than that */
+  char *target = (char *) g_malloc(1 + strlen(s) * 2); /* We will probably need less than that */
   char *writer = target;
 
   while (c = *source++) {
@@ -239,14 +239,14 @@ _cfsml_mangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) realloc(target, strlen(target) + 1);
+  return (char *) g_realloc(target, strlen(target) + 1);
 }
 
 
 static char *
 _cfsml_unmangle_string(char *s)
 {
-  char *target = (char *) malloc(1 + strlen(s));
+  char *target = (char *) g_malloc(1 + strlen(s));
   char *writer = target;
   char *source = s;
   char c;
@@ -261,7 +261,7 @@ _cfsml_unmangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) realloc(target, strlen(target) + 1);
+  return (char *) g_realloc(target, strlen(target) + 1);
 }
 
 
@@ -272,7 +272,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   int mem = 32;
   int pos = 0;
   int done = 0;
-  char *retval = (char *) malloc(mem);
+  char *retval = (char *) g_malloc(mem);
 
   while (isspace(c = fgetc(fd)) && (c != EOF));
   if (c == EOF) {
@@ -287,7 +287,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   while (((c = fgetc(fd)) != EOF) && ((pos == 0) || (c != '\n')) && (c != '=')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) realloc(retval, mem *= 2);
+       retval = (char *) g_realloc(retval, mem *= 2);
 
      if (!isspace(c)) {
         if (done) {
@@ -325,7 +325,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   }
 
   if (pos == mem - 1) /* Need more memory? */
-     retval = (char *) realloc(retval, mem += 1);
+     retval = (char *) g_realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
 
@@ -339,12 +339,12 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
   char c;
   int mem = 64;
   int pos = 0;
-  char *retval = (char *) malloc(mem);
+  char *retval = (char *) g_malloc(mem);
 
   while (((c = fgetc(fd)) != EOF) && (c != '\n')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) realloc(retval, mem *= 2);
+       retval = (char *) g_realloc(retval, mem *= 2);
 
      if (pos || (!isspace(c)))
         retval[pos++] = c;
@@ -367,10 +367,10 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
      ++(*line);
 
   if (pos == mem - 1) /* Need more memory? */
-    retval = (char *) realloc(retval, mem += 1);
+    retval = (char *) g_realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
-  return (char *) realloc(retval, strlen(retval));
+  return (char *) g_realloc(retval, strlen(retval));
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */
@@ -875,7 +875,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 ;         }
 
          if (max)
-           foo->pic_views = (view_object_t *) malloc(max * sizeof(view_object_t));
+           foo->pic_views = (view_object_t *) g_malloc(max * sizeof(view_object_t));
          else
            foo->pic_views = NULL;
 #line 518 "cfsml.pl"
@@ -911,7 +911,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 ;         }
 
          if (max)
-           foo->dyn_views = (view_object_t *) malloc(max * sizeof(view_object_t));
+           foo->dyn_views = (view_object_t *) g_malloc(max * sizeof(view_object_t));
          else
            foo->dyn_views = NULL;
 #line 518 "cfsml.pl"
@@ -1012,7 +1012,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 ;         }
 
          if (max)
-           foo->execution_stack = (exec_stack_t *) malloc(max * sizeof(exec_stack_t));
+           foo->execution_stack = (exec_stack_t *) g_malloc(max * sizeof(exec_stack_t));
          else
            foo->execution_stack = NULL;
 #line 518 "cfsml.pl"
@@ -1114,7 +1114,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 ;         }
 
          if (max)
-           foo->classtable = (class_t *) malloc(max * sizeof(class_t));
+           foo->classtable = (class_t *) g_malloc(max * sizeof(class_t));
          else
            foo->classtable = NULL;
 #line 518 "cfsml.pl"
@@ -1891,7 +1891,7 @@ _cfsml_read_menu_t(FILE *fh, menu_t* foo, char *lastval, int *line, int *hiteof)
 ;         }
 
          if (max)
-           foo->items = (menu_item_t *) malloc(max * sizeof(menu_item_t));
+           foo->items = (menu_item_t *) g_malloc(max * sizeof(menu_item_t));
          else
            foo->items = NULL;
 #line 518 "cfsml.pl"
@@ -2274,7 +2274,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 ;         }
 
          if (max)
-           foo->menus = (menu_t *) malloc(max * sizeof(menu_t));
+           foo->menus = (menu_t *) g_malloc(max * sizeof(menu_t));
          else
            foo->menus = NULL;
 #line 518 "cfsml.pl"
@@ -2308,7 +2308,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 
 /* Auto-generated CFSML declaration and function block ends here */
-/* Auto-generation performed by cfsml.pl 0.6.5 */
+/* Auto-generation performed by cfsml.pl 0.6.6 */
 #line 371 "CFSML input file"
 
 

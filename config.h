@@ -9,7 +9,7 @@
 #define YYTEXT_POINTER 1
 
 #define PACKAGE "freesci"
-#define VERSION "0.2.5"
+#define VERSION "0.2.6"
 #define HAVE_LIBGGI 1
 #define HAVE_LIBPNG 1
 #define HAVE_CURSES 1
@@ -33,6 +33,9 @@
 /* Define if you have the <dirent.h> header file.  */
 #define HAVE_DIRENT_H 1
 
+/* Define if you have the <fnmatch.h> header file.  */
+#define HAVE_FNMATCH_H 1
+
 /* Define if you have the <getopt.h> header file.  */
 #define HAVE_GETOPT_H 1
 
@@ -55,5 +58,5 @@
 #define PACKAGE "freesci"
 
 /* Version number of package */
-#define VERSION "0.2.5"
+#define VERSION "0.2.6"
 

@@ -142,7 +142,7 @@ int* vocabulary_get_classes(int* count)
 
   if((r=findResource(sci_vocab, 996))==0) return 0;
 
-  c=malloc(sizeof(int)*r->length/2);
+  c=g_malloc(sizeof(int)*r->length/2);
   for(i=2; i<r->length; i+=4)
     {
       c[i/4]=getInt(r->data+i);
@@ -164,13 +164,13 @@ char** vocabulary_get_snames()
     return NULL;
 
   count=getInt(r->data);
-  t=malloc(sizeof(char*)*(count+1));
+  t=g_malloc(sizeof(char*)*(count+1));
 
   for(i=0; i<count; i++)
     {
       int offset=getInt(r->data+2+i*2);
       int len=getInt(r->data+offset);
-      t[i]=malloc(len+1);
+      t[i]=g_malloc(len+1);
       memcpy(t[i], r->data+offset+2, len);
       t[i][len]='\0';
     }
@@ -205,14 +205,14 @@ opcode* vocabulary_get_opcodes()
 
   count=getInt(r->data);
 
-  o=malloc(sizeof(opcode)*256);
+  o=g_malloc(sizeof(opcode)*256);
   for(i=0; i<count; i++)
     {
       int offset=getInt(r->data+2+i*2);
       int len=getInt(r->data+offset)-2;
       o[i].type=getInt(r->data+offset+2);
       o[i].number=i;
-      o[i].name=malloc(len+1);
+      o[i].name=g_malloc(len+1);
       memcpy(o[i].name, r->data+offset+4, len);
       o[i].name[len]='\0';
 #ifdef VOCABULARY_DEBUG
@@ -223,7 +223,7 @@ opcode* vocabulary_get_opcodes()
     {
       o[i].type=0;
       o[i].number=i;
-      o[i].name=malloc(strlen("undefined")+1);
+      o[i].name=g_malloc(strlen("undefined")+1);
       strcpy(o[i].name, "undefined");
     }
   return o;
@@ -234,27 +234,27 @@ opcode* vocabulary_get_opcodes()
 static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 {
   int mallocsize = 32;
-  char **retval = malloc(sizeof (char *) * mallocsize);
+  char **retval = g_malloc(sizeof (char *) * mallocsize);
   int i = 0, index = 0;
 
   while (index < r->length) {
 
     int slen = strlen(r->data + index) + 1;
 
-    retval[i] = malloc(slen);
+    retval[i] = g_malloc(slen);
     memcpy(retval[i++], r->data + index, slen);
     /* Wouldn't normally read this, but the cleanup code wants to free() this */
 
     index += slen;
 
     if (i == mallocsize)
-      retval = realloc(retval, sizeof(char *) * (mallocsize <<= 1));
+      retval = g_realloc(retval, sizeof(char *) * (mallocsize <<= 1));
 
   }
 
   *names = i + 1;
-  retval = realloc(retval, sizeof(char *) * (i+2));
-  retval[i] = malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) + 1);
+  retval = g_realloc(retval, sizeof(char *) * (i+2));
+  retval[i] = g_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) + 1);
   strcpy(retval[i], SCRIPT_UNKNOWN_FUNCTION_STRING);
   /* The mystery kernel function- one in each SCI0 package */
 
@@ -271,7 +271,7 @@ static char** vocabulary_get_knames0(int* names)
   resource_t* r=findResource(sci_vocab, 999);
   
   if (!r) { /* No kernel name table found? Fall back to default table */
-    t = malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR) * sizeof(char*));
+    t = g_malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR) * sizeof(char*));
     *names = SCI0_KNAMES_DEFAULT_ENTRIES_NR - 1; /* index of last element */
 
     for (i = 0; i < SCI0_KNAMES_DEFAULT_ENTRIES_NR; i++)
@@ -285,18 +285,18 @@ static char** vocabulary_get_knames0(int* names)
   if (count > 1023)
     return _vocabulary_get_knames0alt(names, r);
 
-  t=malloc(sizeof(char*)*(count+2));
+  t=g_malloc(sizeof(char*)*(count+2));
   for(i=0; i<count; i++)
     {
       int offset=getInt(r->data+index);
       int len=getInt(r->data+offset);
       /*fprintf(stderr,"Getting name %d of %d...\n", i, count);*/
       index+=2;
-      t[i]=malloc(len+1);
+      t[i]=g_malloc(len+1);
       memcpy(t[i], r->data + offset + 2, len);
       t[i][len]='\0';
     }
-  t[count] = malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
+  t[count] = g_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
   strcpy(t[count], SCRIPT_UNKNOWN_FUNCTION_STRING);
   /* The mystery kernel function */
 
@@ -318,10 +318,10 @@ static char** vocabulary_get_knames1()
       if(used==size-1)
 	{
 	  size*=2;
-	  t=realloc(t, size*sizeof(char*));
+	  t=g_realloc(t, size*sizeof(char*));
 	}
       len=strlen(r->data+pos);
-      t[used]=malloc(len+1);
+      t[used]=g_malloc(len+1);
       strcpy(t[used], r->data+pos);
       used++;
       pos+=len+1;
