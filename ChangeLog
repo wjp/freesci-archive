@@ -1,5 +1,10 @@
 2001-04-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sound/midi_mt32gm.c (midi_mt32gm_volume): Fixed volume controls
+
+	* src/engine/kfile.c (kRestoreGame): Restoring a savegame now kills
+	the execution stack as completely as possible.
+
 	* src/gfx/resource/sci_pic_0.c: Some improvements regarding pic
 	drawing bugs in HQ/QfG
 

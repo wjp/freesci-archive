@@ -344,8 +344,8 @@ process_sound_events(struct _state *s); /* Get all sound events, apply their cha
 /* Sound status */
 #define _K_SOUND_STATUS_STOPPED 0
 #define _K_SOUND_STATUS_INITIALIZED 1
-#define _K_SOUND_STATUS_PLAYING 2
-#define _K_SOUND_STATUS_PAUSED 3
+#define _K_SOUND_STATUS_PAUSED 2
+#define _K_SOUND_STATUS_PLAYING 3
 
 
 /* List node addresses */

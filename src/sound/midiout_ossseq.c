@@ -31,7 +31,8 @@
 
 #undef DEBUG_OUTPUT;
 
-static int recorder = 0;
+static FILE *recorder = 0;
+static int recorder_count = 0;
 static int fd;
 
 static byte last_op = 0;
@@ -46,7 +47,7 @@ midiout_ossseq_set_parameter(struct _midiout_driver *drv, char *attribute, char 
 
 	if (!strcasecmp(attribute, "recorder")) {
 		recorder_file = value;
-		recorder = creat(recorder_file, 0644);
+		recorder = fopen(recorder_file, "w");
 	} else
 	if (!strcasecmp(attribute, "device")) {
 		device_nr = strtol(value, &testptr, 0);
@@ -75,7 +76,7 @@ int midiout_ossseq_close()
 {
 	close(fd);
 	if (recorder)
-		close(recorder);
+		fclose(recorder);
 	return 0;
 }
 
@@ -91,12 +92,6 @@ int midiout_ossseq_write(guint8 *buffer, unsigned int count)
 	int src = 1;
 	char buf[4];
 	byte input;
-
-	if (recorder) {
-		byte foo = 0;
-		write(recorder, &foo, 1);
-		write(recorder, buffer, count);
-	}
 
 	buf[0] = SEQ_MIDIPUTC;
 	buf[2] = device_nr;
@@ -123,6 +118,11 @@ int midiout_ossseq_write(guint8 *buffer, unsigned int count)
 #endif
 		buf[1] = input;
 		written = write(fd, buf, 4);
+		if (recorder) {
+			fprintf(recorder, "%05d: %02x:  %02x %02x %02x\n",
+				recorder_count++, buf[0], buf[1], buf[2], buf[3]);
+		}
+
 
 		if (i+1 < count)
 			input = buffer[src++];

@@ -268,7 +268,7 @@ NUMPATHPARAMTOKEN {NUMPARAMTOKEN}|{PATHTOKEN}
 	if (dospath)
 		conf[cur_section].work_dir = strdup(exported_conf_path);
 	else {
-		char *tmp = malloc(strlen(exported_conf_path) + 1 + strlen(yytext));
+		char *tmp = malloc(strlen(exported_conf_path) + 2 + strlen(conf[cur_section].name));
 		strcpy(tmp, exported_conf_path);
 		strcat(tmp, "/");
 		strcat(tmp, conf[cur_section].name);

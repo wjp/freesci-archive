@@ -893,6 +893,7 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 			s->successor = newstate;
 			script_abort_flag = SCRIPT_ABORT_WITH_REPLAY; /* Abort current game */
+			s->execution_stack_pos = s->execution_stack_base;
 
 		} else {
 			sciprintf("Restoring failed (game_id = '%s').\n", game_id);

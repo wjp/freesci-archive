@@ -1038,7 +1038,7 @@ mapMIDIInstruments(void)
         MIDI_mapping[i + 23].gm_rhythmkey = MT32_RhythmTimbreMaps[number - 64].gm_rhythmkey;
       else
 	MIDI_mapping[i + 23].gm_rhythmkey = NOMAP;
-      MIDI_mapping[i + 23].volume = (((long) *(patch1->data + pos + 4 * i + 3))*128)/100;
+      MIDI_mapping[i + 23].volume = (((long) *(patch1->data + pos + 4 * i + 3))*128) /100;
       /* SCIsdebug("%d => %d\n", i + 23, MIDI_mapping[i + 23].gm_rhythmkey); */
     }
     SCIsdebug("MIDI mapping magic: MT-32 Rhythm Channel Note Map\n", memtimbres);
