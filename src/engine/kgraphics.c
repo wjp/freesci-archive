@@ -2272,13 +2272,15 @@ kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 	gfxw_view_t *new_view;
 
 
+/*
 	if (!view) {
-		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", view);
+		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03d\n", view);
 		return;
 	}
-
+*/
+	
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
-		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", view);
+		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03d\n", view);
 		return;
 	}
 
