@@ -1,3 +1,8 @@
+1999-11-25  Rink Springer <rink@rink.cx>
+
+        * src/core/vocab_debug.c (vocabulary_get_opcodes): Added check for NULL
+          return of findResource () to avoid segmentation fault in scriptdump
+
 1999-11-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/scriptdebug.c (script_debug): Added functions to the

@@ -197,6 +197,12 @@ opcode* vocabulary_get_opcodes()
   int count, i=0;
   resource_t* r=findResource(sci_vocab, 998);
 
+  /* if the resource couldn't be loaded, leave */
+  if (r == NULL) {
+    fprintf(stderr,"unable to load vocab.998\n");
+    return NULL;
+  }
+
   count=getInt(r->data);
 
   o=malloc(sizeof(opcode)*256);
