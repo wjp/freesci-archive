@@ -68,7 +68,16 @@
 #define SOUND_STATUS_WAITING   3
 /* "waiting" means "tagged for playing, but not active right now" */
 
+#define MIDI_CHANNELS 16
+
 typedef struct _song {
+
+  int flags[MIDI_CHANNELS]; /* Flags for each channel */
+  int instruments[MIDI_CHANNELS]; /* Instrument number for each channel */
+  int velocity[MIDI_CHANNELS]; /* Velocity for each channel (0 for "mute") */
+  int pressure[MIDI_CHANNELS]; /* Channel pressure (MIDI Dx command) */
+  int pitch[MIDI_CHANNELS]; /* Pitch wheel */
+  int channel_map[MIDI_CHANNELS]; /* Number of HW channels to use */
 
   int size; /* Song size */
   int pos;  /* Current position in song */
@@ -76,6 +85,7 @@ typedef struct _song {
   int fading;   /* Ticks left until faded out, or -1 if not fading */
 
   byte *data;   /* dynamically allocated data */
+  int file_nr;  /* Temporarily used to save and restore song data */
 
   int priority; /* Song priority */
   int loops;    /* Loops left to do */
@@ -120,6 +130,13 @@ void
 sound_exit(struct _state *s);
 /* Default implementation for exit from the sfx_driver_t structure. */
 
+int
+sound_save(struct _state *s, char *dir);
+/* Default implementation for saving the sound status */
+
+int
+sound_restore(struct _state *s, char *dir);
+/* Default implementation for restoring the sound state */
 
 /* Song library commands: */
 
@@ -133,6 +150,14 @@ song_new(word handle, byte *data, int size, int priority);
 **             (int) priority: The song's priority
 ** Returns   : (song_t *) A freshly allocated song
 ** Other values are set to predefined defaults.
+*/
+
+
+void
+song_lib_free(songlib_t songlib);
+/* Frees a song library
+** Parameters: (songlib_t) songlib: The library to free
+** Returns   : (void)
 */
 
 
@@ -192,5 +217,40 @@ song_next_wakeup_time(GTimeVal *lastslept, int ticks);
 ** Returns   : (GTimeVal) A structure describing the time at which the
 **                              specified number of ticks has passed
 */
+
+
+int
+soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *curr_song,
+		    int soundcue, int usecs_to_sleep, int ticks_to_wait, int ticks_to_fade);
+/* Stores the sound server state to a file
+** Parameters: (FILE *) debugstream: The stream which all errors are sent to
+**             (char *) dir: The name of the directory to enter and write to
+**             (songlib_t) songlib: The song library to write
+**             (song_t *) curr_song: Pointer to the currently active song
+**             (int) soundcute: Status of the sound cue variable
+**             (int) usecs_to_sleep: Milliseconds the sound server has to sleep before the next tick
+**             (int) ticks_to_wait: Ticks the sound server has to wait before the next event
+**             (int) ticks_to_fade: Number of ticks left for fading (if fading is attempted)
+** Returns   : (int) 0 on success, 1 otherwise
+*/
+
+
+int
+soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t **curr_song,
+		       int *soundcue, int *usecs_to_sleep, int *ticks_to_wait, int *ticks_to_fade);
+/* Restores the sound state written to a directory
+** Parameters: (FILE *) debugstream: The stream to write all debug information to
+**             (char *) dir: The directory to enter and read from
+**             (songlib_t) songlib: The song library to overwrite (if successful)
+**             (song_t **) curr_song: The "currently active song" pointer to overwrite
+**             (int *) soundcue: The sound cue variable to set
+**             (int *) usecs_to_sleep: The "milliseconds left to sleep" variable to set
+**             (int *) ticks_to_wait: The "ticks left to wait" variable to set
+**             (int *) ticks_to_fade: THe "number of ticks to fade" variable to set
+** Returns   : (int) 0 on success, 1 otherwise
+** If restoring failed, an error message will be written to debugstream, and the
+** variables pointed to in the parameter list will be left untouched.
+*/
+
 
 #endif /* !_SCI_SOUND_SERVER_H_ */

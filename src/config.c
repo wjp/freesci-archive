@@ -1843,7 +1843,7 @@ int
 config_init(config_entry_t **_conf, char *conffile)
 {
   char *path;
-  char *homedir = getenv("HOME");
+  char *homedir = g_get_home_dir();
   char *conf_path;
 
   conf = malloc(sizeof(config_entry_t));

@@ -95,6 +95,20 @@ typedef struct {
   ** and cue events, which can be written directly to the sound objects.
   */
 
+  int (*save)(struct _state *s, char *name);
+  /* Saves the sound system state to the directory /name/.
+  ** Parameters: (state_t *) s: The current state
+  **             (char *) name: The directory name of the directory to write to (must exist)
+  ** Returns   : (int) 0 on success, 1 otherwise
+  */
+
+  int (*restore)(struct _state *s, char *name);
+  /* Restores the sound system state from the directory with the specified name.
+  ** Parameters: (state_t *) s: The current state
+  **             (char *) name: The name of the directory to read from
+  ** Returns   : (int) 0 on success, 1 otherwise
+  */
+
   int (*command)(struct _state *s, int command, int handle, int parameter);
   /* Executes a sound command (one of SOUND_COMMAND_xxx).
   ** Parameters: (state_t *) s: The current state
@@ -145,11 +159,13 @@ extern sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-term
 #define SOUND_COMMAND_SAVE_STATE 13
 /* Saves the current state of the sound engine. Followed by a zero-terminated
 ** directory name with a length as specified by PARAMETER (including the \0)
-** where the information should be placed.
+** where the information should be placed. Returns one int (0 for success,
+** 1 for failure)
 */
 #define SOUND_COMMAND_RESTORE_STATE 14
 /* Inverse of SOUND_COMMAND_SAVE_STATE (13): Restore sound state from zero terminated
 ** directory following the command, size specified in PARAMETER (incl. trailing \0).
+** Returns one int (0 for success, 1 for failure)
 */
 
 

@@ -1,3 +1,13 @@
+1999-11-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sfx_save.cfsml: Implemented persistance for the sound
+	subsystem. Sound data is written to "(savedir)/sound" as plain text,
+	while songs are dumped binarily into "(savedir)/song.*".
+
+	* src/core/cfsml.pl: Changed all fucntion declarations to static;
+	this should help with programs using CFSML generated code in more than
+	one place.
+
 1999-11-14  Dmitry Jemerov  <yole@exch.nnz.spb.su>
 
 	* Fixed Visual C++ build problems all around the code.

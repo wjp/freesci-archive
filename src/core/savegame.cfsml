@@ -36,6 +36,9 @@
 #include <glib.h>
 #include <ctype.h>
 #include <graphics_png.h>
+#ifdef __unix__
+#include <dirent.h>
+#endif
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -105,7 +108,7 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
       sprintf(filename + 5, "%d", ++filenr);
     }
 
-    hunkfile = creat(filename, O_WRONLY);
+    hunkfile = creat(filename, 0600);
     assert (hunkfile > 0);
 
     write(hunkfile, foo->data, foo->size);
@@ -452,12 +455,12 @@ gamestate_save(state_t *s, char *dirname)
 
   _global_save_state = s;
 
-  scimkdir (dirname, 0700);
-
   if (s->execution_stack_base) {
     sciprintf("Cannot save from below kernel function\n");
     return 1;
   }
+
+  scimkdir (dirname, 0700);
 
   if (chdir (dirname)) {
     sciprintf("Could not enter directory '%s'\n", dirname);
@@ -470,6 +473,14 @@ gamestate_save(state_t *s, char *dirname)
       unlink(dirent->d_name); /* Delete all files in directory */
   }
   closedir(dir);
+
+  if (s->sfx_driver) {
+    if ((s->sfx_driver->save)(s, dirname)) {
+      sciprintf("Saving failed for the sound subsystem\n");
+      chdir ("..");
+      return 1;
+    }
+  }
 
   fh = fopen("state", "w");
 
@@ -507,6 +518,13 @@ gamestate_restore(state_t *s, char *dirname)
   if (chdir (dirname)) {
     sciprintf("Game state '%s' does not exist\n", dirname);
     return NULL;
+  }
+
+  if (s->sfx_driver) {
+    if ((s->sfx_driver->restore)(s, dirname)) {
+      sciprintf("Restoring failed for the sound subsystem\n");
+      return NULL;
+    }
   }
 
   retval = (state_t *) xalloc(sizeof(state_t));

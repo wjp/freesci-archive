@@ -99,6 +99,8 @@ sfx_driver_t sound_null = {
 
   &sound_exit,
   &sound_get_event,
+  &sound_save,
+  &sound_restore,
   &sound_command
 };
 
@@ -146,14 +148,13 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
   FILE *ds = fdopen(fd_debug, "w"); /* We want to output text to it */
   fd_set input_fds;
   GTimeVal last_played, wakeup_time, ctime;
-  song_t *_songp;
+  song_t *_songp = NULL;
   songlib_t songlib = &_songp;   /* Song library */
   song_t *song = NULL; /* The song we're playing */
   int debugging = 0;   /* Debugging enabled? */
   int command = 0;
   int ccc = 127; /* cumulative cue counter */
 
-  songlib[0] = NULL;
 
   gettimeofday((struct timeval *)&last_played, NULL);
 
@@ -445,6 +446,76 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    write(fd_out, &i, sizeof(int)); /* Confirm test request */
 
 	  } break;
+
+
+	  case SOUND_COMMAND_SAVE_STATE: {
+	    char *dirname = (char *) malloc(event.value);
+	    char *dirptr = dirname;
+	    int size = event.value;
+	    int success = 1;
+	    int usecs;
+	    GTimeVal currtime;
+
+	    while (size > 0) {
+	      int received = read(fd_in, dirptr, MIN(size, SSIZE_MAX));
+
+	      if (received < 0) {
+		fprintf(ds, "Critical: Failed to receive save dir name\n");
+		write(fd_out, &success, sizeof(int));
+		break;
+	      }
+
+	      dirptr += received;
+	      size -= received;
+	    }
+
+	    g_get_current_time(&currtime);
+	    usecs = (currtime.tv_sec - last_played.tv_sec) * 1000000
+	      + (currtime.tv_usec - last_played.tv_usec);
+
+
+	    success = soundsrv_save_state(ds, dirname, songlib, song,
+					  ccc, usecs, ticks, fadeticks);
+
+	    /* Return soundsrv_save_state()'s return value */
+	    write(fd_out, &success, sizeof(int));
+	    free(dirname);
+	  }
+	  break;
+
+	  case SOUND_COMMAND_RESTORE_STATE: {
+	    char *dirname = (char *) malloc(event.value);
+	    char *dirptr = dirname;
+	    int size = event.value;
+	    int success = 1;
+	    int usecs, secs;
+
+	    while (size > 0) {
+	      int received = read(fd_in, dirptr, MIN(size, SSIZE_MAX));
+
+	      if (received < 0) {
+		fprintf(ds, "Critical: Failed to receive restore dir name\n");
+		write(fd_out, &success, sizeof(int));
+		break;
+	      }
+
+	      dirptr += received;
+	      size -= received;
+	    }
+
+	    g_get_current_time(&last_played);
+
+	    success = soundsrv_restore_state(ds, dirname, songlib, &song,
+					     &ccc, &usecs, &ticks, &fadeticks);
+
+	    last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
+	    last_played.tv_usec - usecs + secs * 1000000;
+
+	    /* Return return value */
+	    write(fd_out, &success, sizeof(int));
+	    free(dirname);
+	  }
+	  break;
 
 	  case SOUND_COMMAND_STOP_ALL: {
 

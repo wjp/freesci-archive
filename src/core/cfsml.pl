@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # The C File Storage Meta Language "reference" implementation
 # This implementation is supposed to conform to version
-$version = "0.6.2";
+$version = "0.6.4";
 # of the spec. Please contact the maintainer if it doesn't.
 #
 # cfsml.pl Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
@@ -52,7 +52,7 @@ sub create_string_functions
 
 #include <stdarg.h> /* We need va_lists */
 
-void
+static void
 _cfsml_error(char *fmt, ...)
 {
   va_list argp;
@@ -64,7 +64,7 @@ _cfsml_error(char *fmt, ...)
 
 }
 
-char *
+static char *
 _cfsml_mangle_string(char *s)
 {
   char *source = s;
@@ -88,7 +88,7 @@ _cfsml_mangle_string(char *s)
 }
 
 
-char *
+static char *
 _cfsml_unmangle_string(char *s)
 {
   char *target = (char *) malloc(1 + strlen(s));
@@ -110,7 +110,7 @@ _cfsml_unmangle_string(char *s)
 }
 
 
-char *
+static char *
 _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 {
   char c;
@@ -185,7 +185,7 @@ print <<'EOF2';
 }
 
 
-char *
+static char *
 _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 {
   char c;
@@ -282,8 +282,8 @@ sub create_declaration
       $types{$type}{'writer'} = "_cfsml_write_" . $typename;
       $types{$type}{'reader'} = "_cfsml_read_" . $typename;
       print "#line ", __LINE__, " \"cfsml.pl\"\n";
-      print "void\n$types{$type}{'writer'}(FILE *fh, $ctype* foo);\n";
-      print "int\n$types{$type}{'reader'}(FILE *fh, $ctype* foo, char *lastval,".
+      print "static void\n$types{$type}{'writer'}(FILE *fh, $ctype* foo);\n";
+      print "static int\n$types{$type}{'reader'}(FILE *fh, $ctype* foo, char *lastval,".
 	" int *line, int *hiteof);\n\n";
     };
 
@@ -295,7 +295,7 @@ sub create_writer
     $ctype = $types{$type}{'ctype'};
 
     print "#line ", __LINE__, " \"cfsml.pl\"\n";
-    print "void\n_cfsml_write_$typename(FILE *fh, $ctype* foo)\n{";
+    print "static void\n_cfsml_write_$typename(FILE *fh, $ctype* foo)\n{";
     print "\n  char *bar;\n  int min, max, i;\n\n";
 
     if ($types{$type}{'type'} eq $type_integer) {
@@ -379,7 +379,7 @@ sub create_reader
     $ctype = $types{$type}{'ctype'};
 
     print "#line ", __LINE__, " \"cfsml.pl\"\n";
-    print "int\n_cfsml_read_$typename";
+    print "static int\n_cfsml_read_$typename";
     print "(FILE *fh, $ctype* foo, char *lastval, int *line, int *hiteof)\n{\n";
 
     print "  char *bar;\n  int min, max, i;\n";
@@ -732,6 +732,8 @@ while (<STDIN>) {
 
 	$parsing = 0;
 	create_function_block;
+	my $linep = $line + 1;
+	print "#line $linep \"CFSML input file\"";
       } elsif ($struct) { # Parsing struct
 	if ($tokens_nr == 1) {
 	  if ($tokens[0] eq "}") {

@@ -36,6 +36,9 @@
 #include <glib.h>
 #include <ctype.h>
 #include <graphics_png.h>
+#ifdef __unix__
+#include <dirent.h>
+#endif
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -105,7 +108,7 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
       sprintf(filename + 5, "%d", ++filenr);
     }
 
-    hunkfile = creat(filename, O_WRONLY);
+    hunkfile = creat(filename, 0600);
     assert (hunkfile > 0);
 
     write(hunkfile, foo->data, foo->size);
@@ -203,7 +206,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof);
 
 #include <stdarg.h> /* We need va_lists */
 
-void
+static void
 _cfsml_error(char *fmt, ...)
 {
   va_list argp;
@@ -215,7 +218,7 @@ _cfsml_error(char *fmt, ...)
 
 }
 
-char *
+static char *
 _cfsml_mangle_string(char *s)
 {
   char *source = s;
@@ -239,7 +242,7 @@ _cfsml_mangle_string(char *s)
 }
 
 
-char *
+static char *
 _cfsml_unmangle_string(char *s)
 {
   char *target = (char *) malloc(1 + strlen(s));
@@ -261,7 +264,7 @@ _cfsml_unmangle_string(char *s)
 }
 
 
-char *
+static char *
 _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 {
   char c;
@@ -329,7 +332,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 }
 
 
-char *
+static char *
 _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 {
   char c;
@@ -372,91 +375,91 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
   */
 }
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_long(FILE *fh, long* foo);
-int
+static int
 _cfsml_read_long(FILE *fh, long* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_state_t(FILE *fh, state_t* foo);
-int
+static int
 _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_view_object_t(FILE *fh, view_object_t* foo);
-int
+static int
 _cfsml_read_view_object_t(FILE *fh, view_object_t* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_byte(FILE *fh, byte* foo);
-int
+static int
 _cfsml_read_byte(FILE *fh, byte* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_menu_item_t(FILE *fh, menu_item_t* foo);
-int
+static int
 _cfsml_read_menu_item_t(FILE *fh, menu_item_t* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_string(FILE *fh, char ** foo);
-int
+static int
 _cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_port_t(FILE *fh, port_t* foo);
-int
+static int
 _cfsml_read_port_t(FILE *fh, port_t* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_script_t(FILE *fh, script_t* foo);
-int
+static int
 _cfsml_read_script_t(FILE *fh, script_t* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_menu_t(FILE *fh, menu_t* foo);
-int
+static int
 _cfsml_read_menu_t(FILE *fh, menu_t* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_class_t(FILE *fh, class_t* foo);
-int
+static int
 _cfsml_read_class_t(FILE *fh, class_t* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_gint16(FILE *fh, gint16* foo);
-int
+static int
 _cfsml_read_gint16(FILE *fh, gint16* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_int(FILE *fh, int* foo);
-int
+static int
 _cfsml_read_int(FILE *fh, int* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_exec_stack_t(FILE *fh, exec_stack_t* foo);
-int
+static int
 _cfsml_read_exec_stack_t(FILE *fh, exec_stack_t* foo, char *lastval, int *line, int *hiteof);
 
 #line 284 "cfsml.pl"
-void
+static void
 _cfsml_write_menubar_t(FILE *fh, menubar_t* foo);
-int
+static int
 _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *hiteof);
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_long(FILE *fh, long* foo)
 {
   char *bar;
@@ -466,7 +469,7 @@ _cfsml_write_long(FILE *fh, long* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_long(FILE *fh, long* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -482,7 +485,7 @@ _cfsml_read_long(FILE *fh, long* foo, char *lastval, int *line, int *hiteof)
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_state_t(FILE *fh, state_t* foo)
 {
   char *bar;
@@ -705,7 +708,7 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -1207,7 +1210,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_view_object_t(FILE *fh, view_object_t* foo)
 {
   char *bar;
@@ -1249,7 +1252,7 @@ _cfsml_write_view_object_t(FILE *fh, view_object_t* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_view_object_t(FILE *fh, view_object_t* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -1343,7 +1346,7 @@ _cfsml_read_view_object_t(FILE *fh, view_object_t* foo, char *lastval, int *line
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_byte(FILE *fh, byte* foo)
 {
   char *bar;
@@ -1353,7 +1356,7 @@ _cfsml_write_byte(FILE *fh, byte* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_byte(FILE *fh, byte* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -1369,7 +1372,7 @@ _cfsml_read_byte(FILE *fh, byte* foo, char *lastval, int *line, int *hiteof)
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_menu_item_t(FILE *fh, menu_item_t* foo)
 {
   char *bar;
@@ -1399,7 +1402,7 @@ _cfsml_write_menu_item_t(FILE *fh, menu_item_t* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_menu_item_t(FILE *fh, menu_item_t* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -1473,7 +1476,7 @@ _cfsml_read_menu_item_t(FILE *fh, menu_item_t* foo, char *lastval, int *line, in
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_string(FILE *fh, char ** foo)
 {
   char *bar;
@@ -1489,7 +1492,7 @@ _cfsml_write_string(FILE *fh, char ** foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -1520,7 +1523,7 @@ _cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof)
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_port_t(FILE *fh, port_t* foo)
 {
   char *bar;
@@ -1577,7 +1580,7 @@ _cfsml_write_port_t(FILE *fh, port_t* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_port_t(FILE *fh, port_t* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -1696,7 +1699,7 @@ _cfsml_read_port_t(FILE *fh, port_t* foo, char *lastval, int *line, int *hiteof)
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_script_t(FILE *fh, script_t* foo)
 {
   char *bar;
@@ -1720,7 +1723,7 @@ _cfsml_write_script_t(FILE *fh, script_t* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_script_t(FILE *fh, script_t* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -1784,7 +1787,7 @@ _cfsml_read_script_t(FILE *fh, script_t* foo, char *lastval, int *line, int *hit
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_menu_t(FILE *fh, menu_t* foo)
 {
   char *bar;
@@ -1817,7 +1820,7 @@ _cfsml_write_menu_t(FILE *fh, menu_t* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_menu_t(FILE *fh, menu_t* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -1912,7 +1915,7 @@ _cfsml_read_menu_t(FILE *fh, menu_t* foo, char *lastval, int *line, int *hiteof)
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_class_t(FILE *fh, class_t* foo)
 {
   char *bar;
@@ -1930,7 +1933,7 @@ _cfsml_write_class_t(FILE *fh, class_t* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_class_t(FILE *fh, class_t* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -1984,7 +1987,7 @@ _cfsml_read_class_t(FILE *fh, class_t* foo, char *lastval, int *line, int *hiteo
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_gint16(FILE *fh, gint16* foo)
 {
   char *bar;
@@ -1994,7 +1997,7 @@ _cfsml_write_gint16(FILE *fh, gint16* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_gint16(FILE *fh, gint16* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -2010,7 +2013,7 @@ _cfsml_read_gint16(FILE *fh, gint16* foo, char *lastval, int *line, int *hiteof)
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_int(FILE *fh, int* foo)
 {
   char *bar;
@@ -2020,7 +2023,7 @@ _cfsml_write_int(FILE *fh, int* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_int(FILE *fh, int* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -2036,7 +2039,7 @@ _cfsml_read_int(FILE *fh, int* foo, char *lastval, int *line, int *hiteof)
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_exec_stack_t(FILE *fh, exec_stack_t* foo)
 {
   char *bar;
@@ -2082,7 +2085,7 @@ _cfsml_write_exec_stack_t(FILE *fh, exec_stack_t* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_exec_stack_t(FILE *fh, exec_stack_t* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -2191,7 +2194,7 @@ _cfsml_read_exec_stack_t(FILE *fh, exec_stack_t* foo, char *lastval, int *line, 
 }
 
 #line 297 "cfsml.pl"
-void
+static void
 _cfsml_write_menubar_t(FILE *fh, menubar_t* foo)
 {
   char *bar;
@@ -2215,7 +2218,7 @@ _cfsml_write_menubar_t(FILE *fh, menubar_t* foo)
 }
 
 #line 381 "cfsml.pl"
-int
+static int
 _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *hiteof)
 {
   char *bar;
@@ -2296,8 +2299,8 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 
 /* Auto-generated CFSML declaration and function block ends here */
-/* Auto-generation performed by cfsml.pl 0.6.2 */
-
+/* Auto-generation performed by cfsml.pl 0.6.4 */
+#line 369 "CFSML input file"
 
 
 
@@ -2311,7 +2314,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 376 "CFSML input file"
+#line 379 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2338,7 +2341,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 393 "CFSML input file"
+#line 396 "CFSML input file"
 
   }
   return *hiteof;
@@ -2354,7 +2357,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 404 "CFSML input file"
+#line 407 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2382,7 +2385,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 422 "CFSML input file"
+#line 425 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2416,12 +2419,12 @@ gamestate_save(state_t *s, char *dirname)
 
   _global_save_state = s;
 
-  scimkdir (dirname, 0700);
-
   if (s->execution_stack_base) {
     sciprintf("Cannot save from below kernel function\n");
     return 1;
   }
+
+  scimkdir (dirname, 0700);
 
   if (chdir (dirname)) {
     sciprintf("Could not enter directory '%s'\n", dirname);
@@ -2435,6 +2438,14 @@ gamestate_save(state_t *s, char *dirname)
   }
   closedir(dir);
 
+  if (s->sfx_driver) {
+    if ((s->sfx_driver->save)(s, dirname)) {
+      sciprintf("Saving failed for the sound subsystem\n");
+      chdir ("..");
+      return 1;
+    }
+  }
+
   fh = fopen("state", "w");
 
   /* Calculate the time spent with this game */
@@ -2445,7 +2456,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 480 "CFSML input file"
+#line 491 "CFSML input file"
 
   fclose(fh);
 
@@ -2478,6 +2489,13 @@ gamestate_restore(state_t *s, char *dirname)
     return NULL;
   }
 
+  if (s->sfx_driver) {
+    if ((s->sfx_driver->restore)(s, dirname)) {
+      sciprintf("Restoring failed for the sound subsystem\n");
+      return NULL;
+    }
+  }
+
   retval = (state_t *) xalloc(sizeof(state_t));
   retval->_heap = heap_new();
 
@@ -2501,7 +2519,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 523 "CFSML input file"
+#line 541 "CFSML input file"
 
   fclose(fh);
 

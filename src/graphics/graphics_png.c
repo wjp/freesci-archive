@@ -200,14 +200,13 @@ png_load_buffer(picture_t pic, char *name,
   png_color sci0_color_interpol[256];
 
   if (!(fil = fopen(name, "rb"))) {
-    sciprintf("File opening failed while trying to access '%s'\n", name);
-    perror("");
+    sciprintf("File opening failed while trying to access '%s': \n", name, strerror(errno));
     return NULL;
   }
 
   if ((width = (fread(header, 1, 8, fil)) != 8) || (png_sig_cmp(header, 0, 8))) {
     if (width != 8)
-      perror("While reading PNG header");
+      sciprintf("While reading PNG header: %s\n", (errno)? strerror(errno) : "File too small");
     return NULL;
   }
   if (!(structp = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0,0,0))

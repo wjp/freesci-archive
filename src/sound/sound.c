@@ -169,6 +169,43 @@ sound_exit(state_t *s)
 
 
 int
+_sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *timeoutmessage)
+{
+  fd_set fds;
+  GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
+  int success;
+
+  sound_command(s, command, 0, strlen(text) + 1);
+  write(s->sound_pipe_in[1], text, strlen(text) + 1);
+
+  FD_ZERO(&fds);
+  FD_SET(s->sound_pipe_out[0], &fds);
+  success = select(s->sound_pipe_out[0]+1, &fds, NULL, NULL, (struct timeval *)&timeout);
+
+  if (!success) {
+    sciprintf(timeoutmessage);
+    return 1;
+  }
+  else read(s->sound_pipe_out[0], &success, sizeof(int));
+
+  return success;
+}
+
+int
+sound_save(state_t *s, char *dir)
+{
+  return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_SAVE_STATE,
+					   "Sound server timed out while saving\n");
+}
+
+int
+sound_restore(state_t *s, char *dir)
+{
+  return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_RESTORE_STATE,
+					   "Sound server timed out while restoring\n");
+}
+
+int
 sound_command(state_t *s, int command, int handle, int parameter)
 {
   sound_event_t event = {handle, command, parameter};
@@ -188,10 +225,6 @@ sound_command(state_t *s, int command, int handle, int parameter)
     write(s->sound_pipe_in[1], &len, sizeof(int)); /* Write song length */
     write(s->sound_pipe_in[1], song->data, len); /* Transfer song */
 
-    for (len = 0; len < 10000000; len++);
-    sleep(2);
-    usleep(2000);
-
     return 0;
   }
 
@@ -206,6 +239,8 @@ sound_command(state_t *s, int command, int handle, int parameter)
   case SOUND_COMMAND_RENICE_HANDLE:
   case SOUND_COMMAND_SHUTDOWN:
   case SOUND_COMMAND_MAPPINGS:
+  case SOUND_COMMAND_SAVE_STATE: /* Those two commands are only used from special wrapper */
+  case SOUND_COMMAND_RESTORE_STATE: /* functions that provide additional data. */
   case SOUND_COMMAND_STOP_ALL:
     write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
     return 0;
@@ -286,6 +321,7 @@ song_t *
 song_new(word handle, byte *data, int size, int priority)
 {
   song_t *retval = malloc(sizeof(song_t));
+  int i;
 
   retval->data = data;
   retval->handle = handle;
@@ -296,6 +332,15 @@ song_new(word handle, byte *data, int size, int priority)
   retval->fading = -1; /* Not fading */
   retval->loops = 0; /* No fancy additional loops */
   retval->status = SOUND_STATUS_STOPPED;
+
+  memset(retval->instruments, 0, sizeof(int) * MIDI_CHANNELS);
+  memset(retval->velocity, 0, sizeof(int) * MIDI_CHANNELS);
+  memset(retval->pressure, 0, sizeof(int) * MIDI_CHANNELS);
+  memset(retval->pitch, 0, sizeof(int) * MIDI_CHANNELS);
+  memset(retval->channel_map, 1, sizeof(int) * MIDI_CHANNELS);
+
+  for (i = 0; i < MIDI_CHANNELS; i++)
+    retval->flags[i] = data[1 + (i << 1)];
 
   return retval;
 }
@@ -322,6 +367,23 @@ song_lib_add(songlib_t songlib, song_t *song)
   seeker->next = song;
 
 }
+
+void /* Recursively free a chain of songs */
+_song_free_chain(song_t *song)
+{
+  if (song) {
+    _song_free_chain(song->next);
+    free(song);
+  }
+}
+
+
+void
+song_lib_free(songlib_t songlib)
+{
+  _song_free_chain(*songlib);
+}
+
 
 song_t *
 song_lib_find(songlib_t songlib, word handle)

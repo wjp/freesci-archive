@@ -1,0 +1,279 @@
+/***************************************************************************
+ sfx_save.cfsml Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+
+
+ This program may be modified and copied freely according to the terms of
+ the GNU general public license (GPL), as long as the above copyright
+ notice and the licensing information contained herein are preserved.
+
+ Please refer to www.gnu.org for licensing details.
+
+ This work is provided AS IS, without warranty of any kind, expressed or
+ implied, including but not limited to the warranties of merchantibility,
+ noninfringement, and fitness for a specific purpose. The author will not
+ be held liable for any damage caused by this work or derivatives of it.
+
+ By using this source code, you agree to the licensing terms as stated
+ above.
+
+
+ Please contact the maintainer for bug reports or inquiries.
+
+ Current Maintainer:
+
+    Christoph Reichenbach (CJR) [jameson@linuxgames.com]
+
+***************************************************************************/
+/* CFSML file providing persistance to the sound system
+** Note that this is only useful if the default sound library implementation
+** is in use.
+*/
+
+#include <stdio.h>
+#include <sound.h>
+#include <soundserver.h>
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif  /* !O_BINARY */
+
+typedef struct {
+
+  int songs_nr; /* Number of songs */
+  song_t *songs; /* All songs in order */
+
+  int active_song;
+
+  int soundcue; /* Cumulative sound vue */
+  int usecs_to_sleep; /* Microseconds until the next tick is due */
+  int ticks_to_wait; /* Ticks until the next sound command has to be interpreted */
+  int ticks_to_fade; /* Ticks until a fade-out is complete */
+
+} sound_lib_file_t;
+
+
+
+%CFSML
+
+TYPE word "word" LIKE int
+
+RECORD song_t "song_t" {
+
+  int flags[STATIC MIDI_CHANNELS];
+  int instruments[STATIC MIDI_CHANNELS];
+  int velocity[STATIC MIDI_CHANNELS];
+  int pressure[STATIC MIDI_CHANNELS];
+  int pitch[STATIC MIDI_CHANNELS];
+  int channel_map[STATIC MIDI_CHANNELS];
+
+  int size;
+  int pos;
+  int loopmark;
+  int fading;
+
+  int file_nr;
+  int priority;
+  int loops;
+  int status;
+
+  word handle;
+}
+
+RECORD sound_lib_file_t "sound_lib_file_t" {
+
+  song_t songs[DYNAMIC songs_nr];
+
+  int active_song;
+
+  int soundcue;
+  int usecs_to_sleep;
+  int ticks_to_wait;
+  int ticks_to_fade;
+
+}
+
+%END CFSML
+
+
+/* Sound state saving reference implementation */
+int
+soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *curr_song,
+		    int soundcue, int usecs_to_sleep, int ticks_to_wait, int ticks_to_fade)
+{
+  sound_lib_file_t write_rec;
+  song_t *seeker;
+  int songctr = 0;
+  int curr_song_nr = -1;
+  FILE *fh;
+
+  if (chdir(dir)) {
+    fprintf(debugstream, "Failed to enter '%s'\n", dir);
+    return 1;
+  }
+
+  write_rec.soundcue = soundcue;
+  write_rec.usecs_to_sleep = usecs_to_sleep;
+  write_rec.ticks_to_wait = ticks_to_wait;
+  write_rec.ticks_to_fade = ticks_to_fade;
+
+  /* Determine number of songs */
+  seeker = *songlib;
+  while (seeker) {
+
+    if (seeker == curr_song)
+      curr_song_nr = songctr;
+
+    ++songctr;
+    seeker = seeker->next;
+  }
+
+  write_rec.songs_nr = songctr;
+  write_rec.active_song = curr_song_nr;
+
+  write_rec.songs = malloc(sizeof(song_t) * songctr);
+
+  /* Now memcpy those songs into a row and write their song data to a file */
+  songctr = -1;
+  seeker = *songlib;
+  while (seeker) {
+    char filename[10];
+    int fd;
+    ++songctr;
+
+    memcpy(&(write_rec.songs[songctr]), seeker, sizeof(song_t));
+    write_rec.songs[songctr].file_nr = songctr;
+
+    /* Now write to an external file */
+    sprintf(filename, "song.%d", songctr);
+    fd = creat(filename, 0600);
+
+    if (fd < 0) {
+      fprintf(debugstream, "Error creating file: %s while creating '%s/%s'\n",
+	      strerror(errno), dir, filename);
+      free(write_rec.songs);
+      chdir ("..");
+      return 1;
+    }
+
+    if (write(fd, seeker->data, seeker->size) < seeker->size) {
+      fprintf(debugstream, "Write error: Failed to write to '%s/%s'\n", dir, filename);
+      free(write_rec.songs);
+      chdir ("..");
+      return 1;
+    }
+    close(fd);
+
+    seeker = seeker->next;
+  }
+
+  fh = fopen("sound", "w");
+
+  %CFSMLWRITE sound_lib_file_t &write_rec INTO fh;
+
+  fclose(fh);
+  fprintf(stderr,"Finished all writing.\n");
+
+  free(write_rec.songs);
+
+  chdir ("..");
+  return 0;
+}
+
+/* Sound state restore complement for the saving reference implementation */
+int
+soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t **curr_song,
+		       int *soundcue, int *usecs_to_sleep, int *ticks_to_wait, int *ticks_to_fade)
+{
+  FILE *fh;
+  sound_lib_file_t read_rec;
+  song_t *seeker, *next = NULL;
+  int error;
+  int i;
+
+  if (chdir(dir)) {
+    fprintf(debugstream, "Failed to enter '%s'\n", dir);
+    return 1;
+  }
+
+  fh = fopen("sound", "r");
+
+  if (!fh) {
+    fprintf(debugstream, "'%s/sound' not found!\n", dir);
+    chdir ("..");
+    return 1;
+  }
+
+  read_rec.songs = NULL;
+
+  %CFSMLREAD sound_lib_file_t &read_rec FROM fh ERRVAR error;
+
+  if (error) {
+    if(read_rec.songs)
+      free(read_rec.songs);
+
+    chdir ("..");
+    fprintf(debugstream, "Failed to parse '%s/sound'\n", dir);
+    return 1;
+  }
+
+  for (i = 0; i < read_rec.songs_nr; i++) {
+    int size = read_rec.songs[i].size;
+    char filename[10];
+    int fd;
+
+    sprintf(filename, "song.%d", read_rec.songs[i].file_nr);
+    fd = open(filename, O_BINARY | O_RDONLY);
+
+    if (fd == -1) {
+      chdir ("..");
+      fprintf(debugstream, "Opening %s/%s failed: %s\n", dir, filename, strerror(errno));
+      if(read_rec.songs)
+	free(read_rec.songs);
+      return 1;
+    }
+
+    if (read(fd, read_rec.songs[i].data = (byte *) malloc(size), size) < size) {
+      int j;
+      for (j = 0; i < i; j++)
+	free(read_rec.songs[i].data);
+      chdir ("..");
+      fprintf(debugstream, "Reading %d bytes from %s/%s failed\n", size, dir, filename);
+      return 1;
+    }
+
+    close(fd);
+  }
+
+
+  song_lib_free(songlib); /* Everything is well, so free all  songs */
+
+  *curr_song = NULL;
+
+  for (i = 0; i < read_rec.songs_nr; i++) {
+
+    next = g_memdup(&(read_rec.songs[i]), sizeof(song_t));
+    next->next = NULL;
+    if (i > 0)
+      seeker->next = next;
+
+    seeker = next;
+
+    if (i == 0)
+      *songlib = seeker;
+
+    if (i == read_rec.active_song)
+      *curr_song = seeker;
+  }
+
+  *soundcue = read_rec.soundcue;
+  *usecs_to_sleep = read_rec.usecs_to_sleep;
+  *ticks_to_wait = read_rec.ticks_to_wait;
+  *ticks_to_fade = read_rec.ticks_to_fade;
+
+  if (read_rec.songs_nr)
+    free(read_rec.songs);
+
+  chdir ("..");
+
+  return 0;
+}
