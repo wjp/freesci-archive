@@ -421,7 +421,6 @@ _restore_midi_state(sound_server_state_t *ss_state)
 	if (ss_state->current_song) {
 		guint8 i;
 		midi_allstop();
-		set_master_volume((guint8)ss_state->master_volume, ss_state);
 		for (i = 0; i < MIDI_CHANNELS; i++) {
 			if (ss_state->current_song->instruments[i])
 				midi_event2((guint8)(0xc0 | i), (guint8)ss_state->current_song->instruments[i], 0);
@@ -996,6 +995,4 @@ restore_sound_state(sound_server_state_t *ss_state)
 
 	_restore_midi_state(ss_state);
 
-	if (ss_state->master_volume == 0)
-		set_master_volume(100, ss_state);
 }

@@ -2,6 +2,8 @@
         * src/sound/sound.c
           src/main.c:  Set a default master volume as older games do not
         explicitly set the volume on startup.
+	* src/sound/soundserver.c:  Fixed a bogus volume set on game
+        restores.  Also removed a workaround for the symptom
 
 2002-03-12  Alexander R Angas <wgd@internode.on.net>
 
