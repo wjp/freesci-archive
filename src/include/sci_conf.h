@@ -66,10 +66,10 @@ typedef struct {
 
 	subsystem_options_t *driver_options[FREESCI_DRIVER_SUBSYSTEMS_NR];
 
-	int animation_delay; /* Number of microseconds to wait between each pic transition animation cycle */
+	long animation_delay; /* Number of microseconds to wait between each pic transition animation cycle */
 	int animation_granularity; /* Granularity for pic transition animations */
 	int alpha_threshold; /* Crossblitting alpha threshold */
-	int unknown_count; /* The number of "unknown" kernel functions */ 
+	int unknown_count; /* The number of "unknown" kernel functions */
 	char *resource_dir; /* Resource directory */
 	char *work_dir;     /* Working directory (save games, additional graphics) */
 	char *gfx_driver_name; /* The graphics driver to use */
@@ -154,7 +154,7 @@ find_module(char *path, char *module_name, char *module_suffix);
 **             (char *) module_name: Name of the module to look for
 **             (char *) module_suffix: Module structure to look for
 ** More precisely, the module "module_name" + MODULE_NAME_SUFFIX is
-** looked for in all members of the path. If it is found, 
+** looked for in all members of the path. If it is found,
 
 ** FIXME: First need to add generic module architecture
 

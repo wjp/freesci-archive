@@ -245,12 +245,12 @@ memtest(char *location, ...);
 */
 
 void
-sci_gettime(int *seconds, int *useconds);
+sci_gettime(long *seconds, long *useconds);
 /* Calculates the current time in seconds and microseconds
-** Parameters: (int *) seconds: Pointer to the variable the seconds part of the
-**                              current time will be stored in
-**             (int *) useconds: Pointer to the variable the microseconds part
-**                               of the current time will be stored in
+** Parameters: (long *) seconds: Pointer to the variable the seconds part of the
+**                               current time will be stored in
+**             (long *) useconds: Pointer to the variable the microseconds part
+**                                of the current time will be stored in
 ** Returns   : (void)
 ** The resulting values must be relative to an arbitrary fixed point in time
 ** (typically 01/01/1970 on *NIX systems).

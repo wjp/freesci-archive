@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-    Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
+		Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
 
 ***************************************************************************/
 /* Auxiliary functions for sound server implementation- this stuff is just there
@@ -102,33 +102,33 @@ typedef struct {
 
 typedef struct _song {
 
-  int flags[MIDI_CHANNELS]; /* Flags for each channel */
-  int polyphony[MIDI_CHANNELS]; /* # of simultaneous notes on each */
-  int instruments[MIDI_CHANNELS]; /* Instrument number for each channel */
-  int velocity[MIDI_CHANNELS]; /* Velocity for each channel (0 for "mute") */
-  int pressure[MIDI_CHANNELS]; /* Channel pressure (MIDI Dx command) */
-  int pitch[MIDI_CHANNELS]; /* Pitch wheel */
-  int channel_map[MIDI_CHANNELS]; /* Number of HW channels to use */
+	int flags[MIDI_CHANNELS]; /* Flags for each channel */
+	int polyphony[MIDI_CHANNELS]; /* # of simultaneous notes on each */
+	int instruments[MIDI_CHANNELS]; /* Instrument number for each channel */
+	int velocity[MIDI_CHANNELS]; /* Velocity for each channel (0 for "mute") */
+	int pressure[MIDI_CHANNELS]; /* Channel pressure (MIDI Dx command) */
+	int pitch[MIDI_CHANNELS]; /* Pitch wheel */
+	int channel_map[MIDI_CHANNELS]; /* Number of HW channels to use */
 
-  int size; /* Song size */
-  int pos;  /* Current position in song */
-  int loopmark; /* loop position */
-  int fading;   /* Ticks left until faded out, or -1 if not fading */
-  int maxfade;  /* Total ticks in the fade (used to calculate volume */
- 
-  int reverb;   /* current reverb setting */
+	int size; /* Song size */
+	int pos;  /* Current position in song */
+	int loopmark; /* loop position */
+	long fading;   /* Ticks left until faded out, or -1 if not fading */
+	long maxfade;  /* Total ticks in the fade (used to calculate volume */
 
-  byte *data;   /* dynamically allocated data */
-  int file_nr;  /* Temporarily used to save and restore song data */
+	int reverb;   /* current reverb setting */
 
-  int priority; /* Song priority */
-  int loops;    /* Loops left to do */
-  int status;   /* See above */
+	byte *data;   /* dynamically allocated data */
+	int file_nr;  /* Temporarily used to save and restore song data */
 
-  int resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
-  word handle;  /* Handle for the game engine */
+	int priority; /* Song priority */
+	int loops;    /* Loops left to do */
+	int status;   /* See above */
 
-  struct _song *next; /* Next song or NULL if this is the last one */
+	int resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
+	word handle;  /* Handle for the game engine */
+
+	struct _song *next; /* Next song or NULL if this is the last one */
 
 } song_t;
 
@@ -137,15 +137,15 @@ typedef song_t **songlib_t;
 
 typedef struct _sound_event_queue_node {
 
-  sound_event_t *event;
-  struct _sound_event_queue_node *prev, *next;
+	sound_event_t *event;
+	struct _sound_event_queue_node *prev, *next;
 
 } sound_eq_node_t;
 
 
 typedef struct {
 
-  sound_eq_node_t *first, *last;
+	sound_eq_node_t *first, *last;
 
 } sound_eq_t;
 
@@ -255,18 +255,18 @@ song_lib_resort(songlib_t songlib, song_t *song);
 */
 
 GTimeVal
-song_sleep_time(GTimeVal *lastslept, int ticks);
+song_sleep_time(GTimeVal *lastslept, long ticks);
 /* Caluculates the amount of seconds and microseconds to sleep.
 ** Parameters: (GTimeVal *) lastslept: The time to start counting on
-**             (int) ticks: Number of ticks to sleep
+**             (long) ticks: Number of ticks to sleep
 ** Returns   : (GTimeVal) The amount of time to sleep
 */
 
 GTimeVal
-song_next_wakeup_time(GTimeVal *lastslept, int ticks);
+song_next_wakeup_time(GTimeVal *lastslept, long ticks);
 /* Calculates the time at which "ticks" have passed, counting from "lastslept".
 ** Parameters: (GTimeVal *) lastslept: The base to start counting on
-**             (int) ticks: Number of ticks to count
+**             (long) ticks: Number of ticks to count
 ** Returns   : (GTimeVal) A structure describing the time at which the
 **                              specified number of ticks has passed
 */
@@ -274,24 +274,24 @@ song_next_wakeup_time(GTimeVal *lastslept, int ticks);
 
 int
 soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *curr_song,
-		    int soundcue, int usecs_to_sleep, int ticks_to_wait, int ticks_to_fade,
-                    int master_volume);
+		    int soundcue, long usecs_to_sleep, long ticks_to_wait, long ticks_to_fade,
+		                int master_volume);
 /*·Stores the sound server state to a file
 ** Parameters: (FILE *) debugstream: The stream which all errors are sent to
 **             (char *) dir: The name of the directory to enter and write to
 **             (songlib_t) songlib: The song library to write
 **             (song_t *) curr_song: Pointer to the currently active song
 **             (int) soundcute: Status of the sound cue variable
-**             (int) usecs_to_sleep: Milliseconds the sound server has to sleep before the next tick
-**             (int) ticks_to_wait: Ticks the sound server has to wait before the next event
-**             (int) ticks_to_fade: Number of ticks left for fading (if fading is attempted)
+**             (long) usecs_to_sleep: Milliseconds the sound server has to sleep before the next tick
+**             (long) ticks_to_wait: Ticks the sound server has to wait before the next event
+**             (long) ticks_to_fade: Number of ticks left for fading (if fading is attempted)
 ** Returns   : (int) 0 on success, 1 otherwise
 */
 
 
 int
 soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t **curr_song,
-		       int *soundcue, int *usecs_to_sleep, int *ticks_to_wait, int *ticks_to_fade,
+		       int *soundcue, long *usecs_to_sleep, long *ticks_to_wait, long *ticks_to_fade,
 		       int *master_volume);
 /* Restores the sound state written to a directory
 ** Parameters: (FILE *) debugstream: The stream to write all debug information to
@@ -299,9 +299,9 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 **             (songlib_t) songlib: The song library to overwrite (if successful)
 **             (song_t **) curr_song: The "currently active song" pointer to overwrite
 **             (int *) soundcue: The sound cue variable to set
-**             (int *) usecs_to_sleep: The "milliseconds left to sleep" variable to set
-**             (int *) ticks_to_wait: The "ticks left to wait" variable to set
-**             (int *) ticks_to_fade: THe "number of ticks to fade" variable to set
+**             (long *) usecs_to_sleep: The "milliseconds left to sleep" variable to set
+**             (long *) ticks_to_wait: The "ticks left to wait" variable to set
+**             (long *) ticks_to_fade: The "number of ticks to fade" variable to set
 ** Returns   : (int) 0 on success, 1 otherwise
 ** If restoring failed, an error message will be written to debugstream, and the
 ** variables pointed to in the parameter list will be left untouched.
@@ -342,7 +342,7 @@ sound_event_t *
 sound_eq_peek_event(sound_eq_t *queue);
 
 void sci_midi_command(song_t *song, guint8 command, guint8 param,
-                      guint8 param2, 
+		                  guint8 param2,
 		      int *ccc, FILE *ds, playing_notes_t *playing);
 /* performs a regular midi event in the song. */
 
@@ -454,16 +454,16 @@ sound_server_find_driver(char *name);
 ** Returns   : (sound_server_t *): A pointer to the first matching driver
 */
 
-void 
+void
 sound_queue_event(int handle, int signal, int value);
 
-void 
+void
 sound_queue_command(int handle, int signal, int value);
 
 int sound_send_data(byte *data_ptr, int maxsend);
 int sound_get_data(byte **data_ptr, int *size, int maxlen);
 
-sound_event_t * 
+sound_event_t *
 sound_get_command(GTimeVal *wait_tvp);
 
 void sci0_soundserver();

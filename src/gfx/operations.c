@@ -1366,11 +1366,11 @@ _gfxop_full_pointer_refresh(gfx_state_t *state)
 }
 
 int
-gfxop_usleep(gfx_state_t *state, int usecs)
+gfxop_usleep(gfx_state_t *state, long usecs)
 {
-	int time, utime;
-	int wakeup_time, wakeup_utime;
-	int add_seconds;
+	long time, utime;
+	long wakeup_time, wakeup_utime;
+	long add_seconds;
 	int retval = GFX_OK;
 
 	BASIC_CHECKS(GFX_FATAL);
@@ -1384,7 +1384,6 @@ gfxop_usleep(gfx_state_t *state, int usecs)
 
 	do {
 		GFXOP_FULL_POINTER_REFRESH;
-
 		sci_gettime(&time, &utime);
 		usecs = (wakeup_time - time) * MILLION + wakeup_utime - utime;
 	} while ((usecs > 0) && !(retval = state->driver->usec_sleep(state->driver, usecs)));

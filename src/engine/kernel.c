@@ -507,11 +507,15 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		fprintf(stderr, "timeBeginPeriod(1) failed in kGetTime!\n");
 	}
 #endif /* _WIN32 */
+
 	the_time = time(NULL);
 	loc_time = localtime(&the_time);
 
 #ifdef _WIN32
-	timeEndPeriod(1);
+	if (TIMERR_NOERROR != timeEndPeriod(1))
+	{
+		fprintf(stderr, "timeEndPeriod(1) failed in kGetTime!\n");
+	}
 #endif /* _WIN32 */
 
 	if (s->version<SCI_VERSION_FTU_NEW_GETTIME) { /* Use old semantics */

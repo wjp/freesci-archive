@@ -1,3 +1,26 @@
+2001-09-06  Alex Angas  <wgd@adelaide.on.net>
+
+	* src/sound/soundserver.c: Did some very initial commenting.
+	
+	* src/include/midiout.h: Added #include <sci_memory.h>.
+
+	* src/win32/sciv.dsp, src/win32/fsci_dll.dsp: Changed SDL directory to
+	generic name.
+
+	* src/engine/kernel.c (kGetTime): Added check of return value for
+	timeEndPeriod().
+	
+	* src/scicore/tools.c (sci_gettime): Removed extra timeBeginPeriod
+	call and added check of return value for timeEndPeriod().
+
+	* src/engine/kernel.c; src/gfx/operations.c;
+	src/gfx/drivers/xlib_driver.c, sdl_driver.c, dd_driver.cpp,
+	ggi_driver.c; src/include/sci_conf.h, resource.h, gfx_operations.h,
+	gfx_driver.h, engine.h, soundserver.h; src/scicore/tools.c;
+	src/sound/soundserver.c, sound.c, sfx_save.c, sfx_save.cfsml: Made all
+	types used for timers consistent (changed from ints to longs).
+	Reformatted with indenting.
+
 2001-09-03  Alex Angas  <wgd@internode.on.net>
 
 	* src/sound/soundserver_win32.c: New Win32 sound server.

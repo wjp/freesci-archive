@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-    Christoph Reichenbach (CJR) [jameson@linuxgames.com]
+		Christoph Reichenbach (CJR) [jameson@linuxgames.com]
 
 ***************************************************************************/
 
@@ -110,17 +110,17 @@ memtest(char *where, ...)
 
 int sci_ffs(int _mask)
 {
-  int retval = 0;
+	int retval = 0;
 
-  if (!_mask) return 0;
-  retval++;
-  while (! (_mask & 1))
-  {
-    retval++;
-    _mask >>= 1;
-  }
+	if (!_mask) return 0;
+	retval++;
+	while (! (_mask & 1))
+	{
+		retval++;
+		_mask >>= 1;
+	}
 
-  return retval;
+	return retval;
 }
 
 
@@ -129,51 +129,51 @@ int sci_ffs(int _mask)
 void
 _SCIkvprintf(FILE *file, char *format, va_list args)
 {
-  vfprintf(file, format, args);
-  if (con_file) vfprintf(con_file, format, args);
+	vfprintf(file, format, args);
+	if (con_file) vfprintf(con_file, format, args);
 }
 
 void
 _SCIkprintf(FILE *file, char *format, ...)
 {
-  va_list args;
+	va_list args;
 
-  va_start(args, format);
-  _SCIkvprintf(file, format, args);
-  va_end (args);
+	va_start(args, format);
+	_SCIkvprintf(file, format, args);
+	va_end (args);
 }
 
 
 void
 _SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...)
 {
-  va_list args;
+	va_list args;
 
-  if (area == SCIkERROR_NR)
-    _SCIkprintf(stderr, "ERROR: ");
-  else
-    _SCIkprintf(stderr, "Warning: ");
+	if (area == SCIkERROR_NR)
+		_SCIkprintf(stderr, "ERROR: ");
+	else
+		_SCIkprintf(stderr, "Warning: ");
 
-  va_start(args, format);
-  _SCIkvprintf(stderr, format, args);
-  va_end(args);
-  fflush(NULL);
+	va_start(args, format);
+	_SCIkvprintf(stderr, format, args);
+	va_end(args);
+	fflush(NULL);
 
-  if (sci_debug_flags & _DEBUG_FLAG_BREAK_ON_WARNINGS) script_debug_flag=1;
+	if (sci_debug_flags & _DEBUG_FLAG_BREAK_ON_WARNINGS) script_debug_flag=1;
 }
 
 void
 _SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...)
 {
-  va_list args;
+	va_list args;
 
-  if (s->debug_mode & (1 << area)) {
-    _SCIkprintf(stdout, " kernel: (%s L%d): ", file, line);
-    va_start(args, format);
-    _SCIkvprintf(stdout, format, args);
-    va_end(args);
-    fflush(NULL);
-  }
+	if (s->debug_mode & (1 << area)) {
+		_SCIkprintf(stdout, " kernel: (%s L%d): ", file, line);
+		va_start(args, format);
+		_SCIkvprintf(stdout, format, args);
+		va_end(args);
+		fflush(NULL);
+	}
 }
 
 void
@@ -204,13 +204,13 @@ _SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *
 
 #ifdef HAVE_SYS_TIME_H
 void
-sci_gettime(int *seconds, int *useconds)
+sci_gettime(long *seconds, long *useconds)
 {
-        struct timeval tv;
+	struct timeval tv;
 
-        assert(!gettimeofday(&tv, NULL));
-        *seconds = time(NULL);
-        *useconds = tv.tv_usec;
+	assert(!gettimeofday(&tv, NULL));
+	*seconds = time(NULL);
+	*useconds = tv.tv_usec;
 }
 #elif defined (_MSC_VER)
 
@@ -218,22 +218,23 @@ sci_gettime(int *seconds, int *useconds)
 /* Warning: This function only retrieves the amount of mseconds since the start of
 ** the Win32 kernel; it does /not/ provide the number of seconds since the epoch!
 ** There are no known cases where this causes problems, though.  */
-void sci_gettime(int *seconds, int *useconds)
+void sci_gettime(long *seconds, long *useconds)
 {
-        DWORD tm;
+	DWORD tm;
 
-	timeBeginPeriod(0);
 	if (TIMERR_NOERROR != timeBeginPeriod(1))
 	{
 		fprintf(stderr, "timeBeginPeriod(1) failed in sci_gettime\n");
 	}
 
-        tm = timeGetTime();
+	tm = timeGetTime();
+	if (TIMERR_NOERROR != timeEndPeriod(1))
+	{
+		fprintf(stderr, "timeEndPeriod(1) failed in sci_gettime\n");
+	}
 
-	timeEndPeriod(1);
-
-        *seconds = tm/1000;
-        *useconds = tm*1000;
+	*seconds = tm/1000;
+	*useconds = tm*1000;
 }
 #else
 #  error "You need to provide a microsecond resolution sci_gettime implementation for your platform!"
@@ -243,7 +244,7 @@ void sci_gettime(int *seconds, int *useconds)
 void
 sci_get_current_time(GTimeVal *val)
 {
-	int foo, bar;
+	long foo, bar;
 	sci_gettime(&foo, &bar);
 	val->tv_sec = foo;
 	val->tv_usec = bar;
@@ -283,7 +284,7 @@ sci_find_first(sci_dir_t *dir, char *mask)
 
 		return dir->fileinfo.name;
 	}
-       else
+			 else
 	{
 		switch (errno)
 		{
@@ -308,14 +309,14 @@ sci_find_first(sci_dir_t *dir, char *mask)
 char *
 sci_find_next(sci_dir_t *dir)
 {
-        if (dir->search == -1)
-                return NULL;
+			  if (dir->search == -1)
+			          return NULL;
 
-        if (_findnext(dir->search, &(dir->fileinfo)) < 0) {
-                _findclose(dir->search);
-                dir->search = -1;
-                return NULL;
-        }
+			  if (_findnext(dir->search, &(dir->fileinfo)) < 0) {
+			          _findclose(dir->search);
+			          dir->search = -1;
+			          return NULL;
+			  }
 
 		if (strcmp(dir->fileinfo.name, ".") == 0 ||
 			strcmp(dir->fileinfo.name, "..") == 0)
@@ -332,8 +333,8 @@ sci_find_next(sci_dir_t *dir)
 void
 sci_finish_find(sci_dir_t *dir)
 {
-        if(dir->search != -1) {
-                _findclose(dir->search);
+			  if(dir->search != -1) {
+			          _findclose(dir->search);
 		dir->search = -1;
 	}
 }
@@ -466,7 +467,7 @@ sci_get_from_queue(sci_queue_t *queue, int *type)
 void
 sci_sched_yield()
 {
-  sched_yield();
+	sched_yield();
 }
 
 #else
@@ -482,8 +483,8 @@ sci_sched_yield()
 
 static char *
 _fcaseseek(char *fname, sci_dir_t *dir)
-     /* Expects *dir to be uninitialized and the caller to
-     ** free it afterwards  */
+		 /* Expects *dir to be uninitialized and the caller to
+		 ** free it afterwards  */
 {
 	char *buf, *iterator;
 	char _buf[14];

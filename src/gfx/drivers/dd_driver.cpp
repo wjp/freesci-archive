@@ -731,7 +731,7 @@ dd_get_event(gfx_driver_t *drv)
 }
 
 static void
-MsgWait (int WaitTime)
+MsgWait (long WaitTime)
 {
 	DWORD dwRet=0;
 	long dwWait;
@@ -762,7 +762,7 @@ MsgWait (int WaitTime)
 }
 
 int
-dd_usleep(gfx_driver_t* drv, int usec)
+dd_usleep(gfx_driver_t* drv, long usec)
 {
 	if (usec < 1000)
 		Sleep(usec / 1000);

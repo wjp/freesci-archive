@@ -970,7 +970,7 @@ init_input_ggi()
 
 
 int
-ggi_usleep(gfx_driver_t* drv, int usec)
+ggi_usleep(gfx_driver_t* drv, long usec)
 {
 	struct timeval tv = {0, usec};
 

@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-    Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
+		Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
 
 ***************************************************************************/
 
@@ -51,7 +51,7 @@ extern sound_server_t sound_server_unix;
 extern sound_server_t sound_server_sdl;
 #endif
 
-#ifdef _WINDOWS
+#ifdef _WIN32
 extern sound_server_t sound_server_win32;
 #endif
 
@@ -66,7 +66,7 @@ sound_server_t *sound_servers[] = {
 	&sound_server_unix,
 #  endif /* HAVE_FORK */
 
-#  ifdef _WINDOWS
+#  ifdef _WIN32
 	&sound_server_win32,
 #  endif
 
@@ -101,27 +101,27 @@ sound_server_find_driver(char *name)
 void
 sound_suspend(state_t *s)
 {
-  sound_command(s, SOUND_COMMAND_SUSPEND_SOUND, 0, 0);
+	sound_command(s, SOUND_COMMAND_SUSPEND_SOUND, 0, 0);
 }
 
 void
 sound_resume(state_t *s)
 {
-  sound_command(s, SOUND_COMMAND_RESUME_SOUND, 0, 0);
+	sound_command(s, SOUND_COMMAND_RESUME_SOUND, 0, 0);
 }
 
 static int
 _sound_expect_answer(char *timeoutmessage, int def_value)
 {
-  int *success;
-  int retval;
-  int size;
+	int *success;
+	int retval;
+	int size;
 
-  sound_get_data((byte **)&success,&size,sizeof(int));
+	sound_get_data((byte **)&success,&size,sizeof(int));
 
-  retval = *success;
-  free(success);
-  return retval;
+	retval = *success;
+	free(success);
+	return retval;
 
 }
 
@@ -143,14 +143,14 @@ _sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *tim
 int
 sound_save(state_t *s, char *dir)
 {
-  return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_SAVE_STATE,
+	return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_SAVE_STATE,
 					   "Sound server timed out while saving\n");
 }
 
 int
 sound_restore(state_t *s, char *dir)
 {
-  return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_RESTORE_STATE,
+	return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_RESTORE_STATE,
 					   "Sound server timed out while restoring\n");
 }
 
@@ -179,7 +179,6 @@ sound_command(state_t *s, int command, int handle, int parameter)
 			fprintf(stderr, "sound_command(): sound_send_data"
 				" returned < count\n");
 		}
-
 
 		return 0;
 	}
@@ -270,265 +269,265 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
 
 GTimeVal
-song_sleep_time(GTimeVal *lastslept, int ticks)
+song_sleep_time(GTimeVal *lastslept, long ticks)
 {
-  GTimeVal tv;
-  long timetosleep;
-  long timeslept; /* Time already slept */
-  timetosleep = ticks * SOUND_TICK; /* Time to sleep in us */
+	GTimeVal tv;
+	long timetosleep;
+	long timeslept; /* Time already slept */
+	timetosleep = ticks * SOUND_TICK; /* Time to sleep in us */
 
-  sci_get_current_time(&tv);
-  timeslept = 1000000 * (tv.tv_sec - lastslept->tv_sec) +
-    tv.tv_usec - lastslept->tv_usec;
+	sci_get_current_time(&tv);
+	timeslept = 1000000 * (tv.tv_sec - lastslept->tv_sec) +
+		tv.tv_usec - lastslept->tv_usec;
 
-  timetosleep -= timeslept;
+	timetosleep -= timeslept;
 
-  if (timetosleep < 0)
-    timetosleep = 0;
+	if (timetosleep < 0)
+		timetosleep = 0;
 
-  tv.tv_sec = timetosleep / 1000000;
-  tv.tv_usec = timetosleep % 1000000;
+	tv.tv_sec = timetosleep / 1000000;
+	tv.tv_usec = timetosleep % 1000000;
 
-  return tv;
+	return tv;
 }
 
 
 GTimeVal
-song_next_wakeup_time(GTimeVal *lastslept, int ticks)
+song_next_wakeup_time(GTimeVal *lastslept, long ticks)
 {
-  GTimeVal retval;
+	GTimeVal retval;
 
-  retval.tv_sec = lastslept->tv_sec + (ticks / 60);
-  retval.tv_usec = lastslept->tv_usec + ((ticks % 60) * SOUND_TICK);
+	retval.tv_sec = lastslept->tv_sec + (ticks / 60);
+	retval.tv_usec = lastslept->tv_usec + ((ticks % 60) * SOUND_TICK);
 
-  if (retval.tv_usec >= 1000000) {
-    retval.tv_usec -= 1000000;
-    ++retval.tv_sec;
-  }
+	if (retval.tv_usec >= 1000000) {
+		retval.tv_usec -= 1000000;
+		++retval.tv_sec;
+	}
 
-  return retval;
+	return retval;
 }
 
 
 song_t *
 song_new(word handle, byte *data, int size, int priority)
 {
-  song_t *retval = sci_malloc(sizeof(song_t));
-  unsigned int i;
+	song_t *retval = sci_malloc(sizeof(song_t));
+	unsigned int i;
 
-  retval->data = data;
-  retval->handle = handle;
-  retval->priority = priority;
-  retval->size = size;
+	retval->data = data;
+	retval->handle = handle;
+	retval->priority = priority;
+	retval->size = size;
 
-  retval->pos = 33;
-  retval->loopmark = 33; /* The first 33 bytes are header data */
-  retval->fading = -1; /* Not fading */
-  retval->maxfade = 1; /* placeholder */
-  retval->loops = 0; /* No fancy additional loops */
-  retval->status = SOUND_STATUS_STOPPED;
+	retval->pos = 33;
+	retval->loopmark = 33; /* The first 33 bytes are header data */
+	retval->fading = -1; /* Not fading */
+	retval->maxfade = 1; /* placeholder */
+	retval->loops = 0; /* No fancy additional loops */
+	retval->status = SOUND_STATUS_STOPPED;
 
-  retval->reverb = 0;  /* what reverb setting to use */
-  retval->resetflag = 0; /* don't reset position on SoundStop */
+	retval->reverb = 0;  /* what reverb setting to use */
+	retval->resetflag = 0; /* don't reset position on SoundStop */
 
-  memset(retval->instruments, 0, sizeof(int) * MIDI_CHANNELS);
-  memset(retval->velocity, 0, sizeof(int) * MIDI_CHANNELS);
-  memset(retval->pressure, 0, sizeof(int) * MIDI_CHANNELS);
-  memset(retval->pitch, 0, sizeof(int) * MIDI_CHANNELS);
-  memset(retval->channel_map, 1, sizeof(int) * MIDI_CHANNELS);
+	memset(retval->instruments, 0, sizeof(int) * MIDI_CHANNELS);
+	memset(retval->velocity, 0, sizeof(int) * MIDI_CHANNELS);
+	memset(retval->pressure, 0, sizeof(int) * MIDI_CHANNELS);
+	memset(retval->pitch, 0, sizeof(int) * MIDI_CHANNELS);
+	memset(retval->channel_map, 1, sizeof(int) * MIDI_CHANNELS);
 
-  for (i = 0; i < MIDI_CHANNELS; i++) {
-    retval->polyphony[i] = data[1 + (i << 1)];
-    retval->flags[i] = data[2 + (i << 1)];
-  }
-  return retval;
+	for (i = 0; i < MIDI_CHANNELS; i++) {
+		retval->polyphony[i] = data[1 + (i << 1)];
+		retval->flags[i] = data[2 + (i << 1)];
+	}
+	return retval;
 }
 
 
 void
 song_lib_add(songlib_t songlib, song_t *song)
 {
-  song_t *seeker	= NULL;
-  int pri			= song->priority;
+	song_t *seeker	= NULL;
+	int pri			= song->priority;
 
-  if (NULL == song)
-  {
-    sciprintf("song_lib_add(): NULL passed for song\n");
+	if (NULL == song)
+	{
+		sciprintf("song_lib_add(): NULL passed for song\n");
 	return;
-  }
+	}
 
-  if (*songlib == NULL)
-  {
-    *songlib = song;
-    song->next = NULL;
+	if (*songlib == NULL)
+	{
+		*songlib = song;
+		song->next = NULL;
 
-    return;
-  }
+		return;
+	}
 
-  seeker = *songlib;
-  while (seeker->next && (seeker->next->priority > pri))
-    seeker = seeker->next;
+	seeker = *songlib;
+	while (seeker->next && (seeker->next->priority > pri))
+		seeker = seeker->next;
 
-  song->next = seeker->next;
-  seeker->next = song;
+	song->next = seeker->next;
+	seeker->next = song;
 }
 
 void /* Recursively free a chain of songs */
 _sonfree_chain(song_t *song)
 {
-  if (song) {
-    _sonfree_chain(song->next);
-    free(song);
-  }
+	if (song) {
+		_sonfree_chain(song->next);
+		free(song);
+	}
 }
 
 
 void
 song_lib_free(songlib_t songlib)
 {
-  _sonfree_chain(*songlib);
+	_sonfree_chain(*songlib);
 }
 
 
 song_t *
 song_lib_find(songlib_t songlib, word handle)
 {
-  song_t *seeker = *songlib;
+	song_t *seeker = *songlib;
 
-  while (seeker && (seeker->handle != handle))
-    seeker = seeker->next;
+	while (seeker && (seeker->handle != handle))
+		seeker = seeker->next;
 
-  return seeker;
+	return seeker;
 }
 
 
 song_t *
 song_lib_find_active(songlib_t songlib, song_t *last_played_song)
 {
-  song_t *seeker = *songlib;
+	song_t *seeker = *songlib;
 
-  if (last_played_song)
-    if (last_played_song->status == SOUND_STATUS_PLAYING) {
-      return last_played_song; /* That one was easy... */
-    }
+	if (last_played_song)
+		if (last_played_song->status == SOUND_STATUS_PLAYING) {
+			return last_played_song; /* That one was easy... */
+		}
 
-  while (seeker && (seeker->status != SOUND_STATUS_WAITING)
-     && (seeker->status != SOUND_STATUS_PLAYING))
-    seeker = seeker->next;
+	while (seeker && (seeker->status != SOUND_STATUS_WAITING)
+		 && (seeker->status != SOUND_STATUS_PLAYING))
+		seeker = seeker->next;
 
-  return seeker;
+	return seeker;
 }
 
 int
 song_lib_remove(songlib_t songlib, word handle)
 {
-  int retval;
-  song_t *goner = *songlib;
+	int retval;
+	song_t *goner = *songlib;
 
-  if (!goner)
-    return -1;
+	if (!goner)
+		return -1;
 
-  if (goner->handle == handle)
-    *songlib = goner->next;
+	if (goner->handle == handle)
+		*songlib = goner->next;
 
-  else {
-      while ((goner->next) && (goner->next->handle != handle))
+	else {
+			while ((goner->next) && (goner->next->handle != handle))
 	goner = goner->next;
 
-      if (goner->next) {/* Found him? */
+			if (goner->next) {/* Found him? */
 	song_t *oldnext = goner->next;
 
 	goner->next = goner->next->next;
 	goner = oldnext;
-      } else return -1; /* No. */
-    }
+			} else return -1; /* No. */
+		}
 
-  retval = goner->status;
+	retval = goner->status;
 
-  free(goner->data);
-  free(goner);
+	free(goner->data);
+	free(goner);
 
-  return retval;
+	return retval;
 }
 
 
 void
 song_lib_resort(songlib_t songlib, song_t *song)
 {
-  if (*songlib == song)
-    *songlib = song->next;
-  else {
-    song_t *seeker = *songlib;
+	if (*songlib == song)
+		*songlib = song->next;
+	else {
+		song_t *seeker = *songlib;
 
-    while (seeker->next && (seeker->next != song))
-      seeker = seeker->next;
+		while (seeker->next && (seeker->next != song))
+			seeker = seeker->next;
 
-    if (seeker->next)
-      seeker->next = seeker->next->next;
-  }
+		if (seeker->next)
+			seeker->next = seeker->next->next;
+	}
 
-  song_lib_add(songlib, song);
+	song_lib_add(songlib, song);
 }
 
 
 void
 sound_eq_init(sound_eq_t *queue)
 {
-  queue->first = queue->last = NULL;
+	queue->first = queue->last = NULL;
 }
 
 void
 sound_eq_queue_event(sound_eq_t *queue, int handle, int signal, int value)
 {
-  sound_eq_node_t *node;
-  sound_event_t *evt;
+	sound_eq_node_t *node;
+	sound_event_t *evt;
 
-  evt = sci_malloc(sizeof(sound_event_t));
-  node = sci_malloc(sizeof(sound_eq_node_t));
+	evt = sci_malloc(sizeof(sound_event_t));
+	node = sci_malloc(sizeof(sound_eq_node_t));
 
-  evt->handle = handle;
-  evt->signal = signal;
-  evt->value = value;
+	evt->handle = handle;
+	evt->signal = signal;
+	evt->value = value;
 
-  node->event = evt;
+	node->event = evt;
 
-  if (queue->first)
-    queue->first->prev = node;
-  else
-    queue->last = node; /* !(queue->first) implies !(queue->last) */
+	if (queue->first)
+		queue->first->prev = node;
+	else
+		queue->last = node; /* !(queue->first) implies !(queue->last) */
 
-  node->next = queue->first;
-  node->prev = NULL;
-  queue->first = node;
+	node->next = queue->first;
+	node->prev = NULL;
+	queue->first = node;
 }
 
 sound_event_t *
 sound_eq_peek_event(sound_eq_t *queue)
 {
-  if (queue->last)
-    return queue->last->event;
+	if (queue->last)
+		return queue->last->event;
 
-  return NULL;
+	return NULL;
 }
 
 sound_event_t *
 sound_eq_retreive_event(sound_eq_t *queue)
 {
-  if (queue->last) {
-    sound_event_t *retval = queue->last->event;
-    sound_eq_node_t *ntf = queue->last;
+	if (queue->last) {
+		sound_event_t *retval = queue->last->event;
+		sound_eq_node_t *ntf = queue->last;
 
-    if (ntf->prev)
-      ntf->prev->next = NULL;
+		if (ntf->prev)
+			ntf->prev->next = NULL;
 
-    queue->last = ntf->prev;
-    free(ntf);
+		queue->last = ntf->prev;
+		free(ntf);
 
-    if (!queue->last)
-      queue->first = NULL;
-    return retval;
-  }
-  else return NULL;
+		if (!queue->last)
+			queue->first = NULL;
+		return retval;
+	}
+	else return NULL;
 }
 
 
@@ -538,7 +537,7 @@ sound_eq_retreive_event(sound_eq_t *queue)
 
 static inline int
 add_note_playing(playing_notes_t *playing, int note)
-     /* Returns 0 or a note to suspend */
+		 /* Returns 0 or a note to suspend */
 {
 	int retval = 0;
 
@@ -578,106 +577,107 @@ void sci_midi_command(song_t *song, guint8 command,
 		      FILE *ds, playing_notes_t *playing)
 {
 
-  if (SCI_MIDI_CONTROLLER(command)) {
-    switch (param) {
+	if (SCI_MIDI_CONTROLLER(command)) {
+		switch (param) {
 
-    case SCI_MIDI_CUMULATIVE_CUE:
-      *ccc += param2;
-      sound_queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, *ccc);
-      break;
-    case SCI_MIDI_RESET_ON_STOP:
-      song->resetflag = param2;
-      break;
-    case SCI_MIDI_SET_POLYPHONY:
-      song->polyphony[command & 0x0f] = param2;
-      break;
-    case SCI_MIDI_SET_REVERB:
-      song->reverb = param2;
-      midi_reverb(param2);
-      break;
-    case SCI_MIDI_SET_VELOCITY:
-      if (!param)
-	song->velocity[command & 0x0f] = 127;
-      break;
-    case 0x04: /* UNKNOWN NYI (happens in LSL2 gameshow) */
-    case 0x46: /* UNKNOWN NYI (happens in LSL3 binoculars) */
-    case 0x61: /* UNKNOWN NYI (special for adlib? Iceman) */
-    case 0x73: /* UNKNOWN NYI (happens in Hoyle) */
-    case 0xd1: /* UNKNOWN NYI (happens in KQ4 when riding the unicorn) */
-      break;
-    case 0x01: /* modulation */
-    case 0x07: /* volume */
-    case 0x0a: /* panpot */
-    case 0x0b: /* expression */
-    case 0x40: /* hold */
-    case 0x79: /* reset all */
-      midi_event(command, param, param2);
-      break;
-    default:
-      fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
-      break;
-    }
+		case SCI_MIDI_CUMULATIVE_CUE:
+			*ccc += param2;
+			sound_queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, *ccc);
+			break;
+		case SCI_MIDI_RESET_ON_STOP:
+			song->resetflag = param2;
+			break;
+		case SCI_MIDI_SET_POLYPHONY:
+			song->polyphony[command & 0x0f] = param2;
+			break;
+		case SCI_MIDI_SET_REVERB:
+			song->reverb = param2;
+			midi_reverb(param2);
+			break;
+		case SCI_MIDI_SET_VELOCITY:
+			if (!param)
+				song->velocity[command & 0x0f] = 127;
+			break;
+		case 0x04: /* UNKNOWN NYI (happens in LSL2 gameshow) */
+		case 0x46: /* UNKNOWN NYI (happens in LSL3 binoculars) */
+		case 0x61: /* UNKNOWN NYI (special for adlib? Iceman) */
+		case 0x73: /* UNKNOWN NYI (happens in Hoyle) */
+		case 0xd1: /* UNKNOWN NYI (happens in KQ4 when riding the unicorn) */
+			break;
+		case 0x01: /* modulation */
+		case 0x07: /* volume */
+		case 0x0a: /* panpot */
+		case 0x0b: /* expression */
+		case 0x40: /* hold */
+		case 0x79: /* reset all */
+			midi_event(command, param, param2);
+			break;
+		default:
+			fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+			break;
+		}
 
-  } else if (command == SCI_MIDI_SET_SIGNAL) {
+	} else if (command == SCI_MIDI_SET_SIGNAL) {
 
-    if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
-      song->loopmark = song->pos;
-    } else if (param <= 127) {
-      sound_queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
-    }
+		if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
+			song->loopmark = song->pos;
+		} else if (param <= 127) {
+			sound_queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
+		}
 
-  } else {
-    /* just your regular midi event.. */
+	} else {
+		/* just your regular midi event.. */
 
-    if (song->flags[command & 0x0f] & midi_playflag) {
-      switch (command & 0xf0) {
+		if (song->flags[command & 0x0f] & midi_playflag) {
+			switch (command & 0xf0) {
 
-      case 0xc0:  /* program change */
-	song->instruments[command & 0xf] = param;
-	midi_event2(command, param);
-	break;
-      case 0x80:  /* note on */
-      case 0x90:  /* note off */
+			case 0xc0:  /* program change */
+				song->instruments[command & 0xf] = param;
+				midi_event2(command, param);
+				break;
+			case 0x80:  /* note on */
+			case 0x90:  /* note off */
 
-	      if (1 || (command & 0xf != RHYTHM_CHANNEL)) {
-		      if ((command & 0x90) == 0x80) {
-			      int retval;
-			      /* Register notes when playing: */
+				if (1 || (command & 0xf != RHYTHM_CHANNEL)) {
+					if ((command & 0x90) == 0x80) {
+						int retval;
+						/* Register notes when playing: */
 
-			      retval = add_note_playing(playing, param);
+						retval = add_note_playing(playing, param);
 
-			      if (retval) { /* If we exceeded our polyphony */
-				      midi_event(command | 0x10, retval, 0);
-			      }
-		      } else {
-			      /* Unregister notes when muting: */
-			      midi_event(command & 0x80, param, param2);
-			      remove_note_playing(playing, param);
-		      }
-	      }
+						if (retval) { /* If we exceeded our polyphony */
+							midi_event(command | 0x10, retval, 0);
+						}
+					} else {
+						/* Unregister notes when muting: */
+						midi_event(command & 0x80, param, param2);
+						remove_note_playing(playing, param);
+					}
+				}
 
-	if (song->velocity[command & 0x0f])  /* do we ignore velocities? */
-	  param2 = song->velocity[command & 0x0f];
+				if (song->velocity[command & 0x0f])  /* do we ignore velocities? */
+					param2 = song->velocity[command & 0x0f];
 
-	if (song->fading != -1) {           /* is the song fading? */
-		if (song->maxfade == 0)
-			song->maxfade = 1;
+				if (song->fading != -1) {           /* is the song fading? */
+					if (song->maxfade == 0)
+						song->maxfade = 1;
 
-		param2 = (param2 * (song->fading)) / (song->maxfade);  /* scale the velocity */
-		/*	  printf("fading %d %d\n", song->fading, song->maxfade);*/
+					param2 = (param2 * (song->fading)) / (song->maxfade);  /* scale the velocity */
+					/*	  printf("fading %d %d\n", song->fading, song->maxfade);*/
 
+				}
+				/* intentional fall through */
+
+			case 0xb0:  /* program control */
+			case 0xd0:  /* channel pressure */
+			case 0xe0:  /* pitch bend */
+				midi_event(command, param, param2);
+				break;
+			default:
+				fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+			}
+		}
 	}
-
-      case 0xb0:  /* program control */
-      case 0xd0:  /* channel pressure */
-      case 0xe0:  /* pitch bend */
-	midi_event(command, param, param2);
-	break;
-      default:
-	fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
-      }
-    }
-  }
 }
 
 void
@@ -722,10 +722,3 @@ int init_midi_device (state_t *s) {
 
 	return 0;
 }
-
-
-
-
-
-
-

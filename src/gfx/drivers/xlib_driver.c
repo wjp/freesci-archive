@@ -1188,7 +1188,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 	Window window = S->window;
 	Display *display = S->display;
 	struct timeval ctime, timeout_time, sleep_time;
-	int usecs_to_sleep;
+	long usecs_to_sleep;
 
 	gettimeofday(&timeout_time, NULL);
 	timeout_time.tv_usec += wait_usec;
@@ -1313,7 +1313,7 @@ xlib_get_event(struct _gfx_driver *drv)
 
 
 static int
-xlib_usec_sleep(struct _gfx_driver *drv, int usecs)
+xlib_usec_sleep(struct _gfx_driver *drv, long usecs)
 {
 	x_get_event(drv, PointerMotionMask | StructureNotifyMask, usecs, NULL);
 	return GFX_OK;

@@ -91,7 +91,7 @@ typedef struct _state
 {
 	int savegame_version;
 
-	int widget_serial_counter; /* Used for savegames */ 
+	int widget_serial_counter; /* Used for savegames */
 
 	char *resource_dir; /* Directory the resource files are kept in */
 	char *work_dir; /* Directory the game metadata should be written to */
@@ -146,7 +146,7 @@ typedef struct _state
 	int drop_views_list_serial; /* Used for save/restore */
 	gfxw_list_t *drop_views; /* A list Animate() can dump dropped dynviews into */
 
-	int animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */
+	long animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */
 	int animation_granularity; /* Number of animation steps to perform betwen updates for transition animations */
 
 	hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */

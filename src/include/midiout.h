@@ -25,6 +25,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <sci_memory.h>
 #include <resource.h>
 
 typedef struct _midiout_driver {

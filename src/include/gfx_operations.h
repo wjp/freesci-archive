@@ -205,7 +205,7 @@ gfxop_set_visible_map(gfx_state_t *state, gfx_map_mask_t map);
 **             (gfx_map_mask_t) map: The GFX_MASK to set
 ** Returns   : (int) GFX_OK, or GFX_ERROR if map was invalid
 ** The screen needs to be updated for the changes to take effect.
-*/ 
+*/
 
 int
 gfxop_set_clip_zone(gfx_state_t *state, rect_t zone);
@@ -372,10 +372,10 @@ gfxop_free_color(gfx_state_t *state, gfx_color_t *color);
 /**********************/
 
 int
-gfxop_usleep(gfx_state_t *state, int usecs);
+gfxop_usleep(gfx_state_t *state, long usecs);
 /* Suspends program execution for the specified amount of microseconds
 ** Parameters: (gfx_state_t *) state: The state affected
-**             (int) usecs: The amount of microseconds to wait
+**             (long) usecs: The amount of microseconds to wait
 ** Returns   : (int) GFX_OK or GFX_ERROR
 ** The mouse pointer will be redrawn continually, if applicable
 */
