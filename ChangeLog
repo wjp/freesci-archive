@@ -1,3 +1,14 @@
+2002-10-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/include/resource.h, src/scicore/tools.c: Introduced
+	sci_fd_size() and sci_file_size() to determine a file's size either by
+	file descriptor or by filename respectively. This is useful for
+	working around the Dreamcast's lack of stat() and fstat().
+	* src/engine/kfile.c (_k_check_file), src/scicore/resource_map.c
+	(sci0_read_resource_map), src/scicore/resource_patch.c
+	(sci0_read_resource_patches): Removed some calls to stat() and
+	fstat() and used sci_fd_size() and sci_file_size() instead.
+
 2002-10-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/gfx_console.c (con_gfx_read): Added support for cursor keys

@@ -589,12 +589,7 @@ int
 _k_check_file(char *filename, int minfilesize)
      /* Returns 0 if the file exists and is big enough */
 {
-	struct stat state;
-
-	if (stat(filename, &state))
-		return 1;
-
-	return (state.st_size < minfilesize);
+	return (sci_file_size(filename) < minfilesize);
 }
 
 int

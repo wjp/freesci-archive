@@ -388,13 +388,13 @@ sci_find_first(sci_dir_t *dir, char *mask)
 	if (!(dir->dir = fs_open(fs_getwd(), O_RDONLY | O_DIR))) {
 		sciprintf("%s, L%d: fs_open(fs_getwd(), O_RDONLY | O_DIR) failed!\n",__FILE__, __LINE__);
 		return NULL;
-	}                                                                                
+	}
 
 	dir->mask_copy = sci_strdup(mask);
 
 	return sci_find_next(dir);
 }
-                                                                                                
+
 char *
 sci_find_next(sci_dir_t *dir)
 {
@@ -411,7 +411,7 @@ sci_find_next(sci_dir_t *dir)
 	sci_finish_find(dir);
 	return NULL;
 }
-                                                                                                                        
+
 void
 sci_finish_find(sci_dir_t *dir)
 {
@@ -703,3 +703,46 @@ sci_getcwd()
 	fprintf(stderr,"Could not determine current working directory!\n");
 	return NULL;
 }
+
+
+#ifdef _DREAMCAST
+
+int
+sci_fd_size(int fd)
+{
+	return fs_total(fd);
+}
+
+int
+sci_file_size(char *fname)
+{
+	int fd = fs_open(fname, O_RDONLY);
+	int retval = -1;
+	
+	if (fd != 0) {
+		retval = sci_fd_size(fd);
+		fs_close(fd);
+	}
+	
+	return retval;
+}
+
+#else
+
+int
+sci_fd_size(int fd)
+{
+	struct stat fd_stat;
+	if (fstat(fd, &fd_stat)) return -1;
+	return fd_stat.st_size;
+}
+
+int
+sci_file_size(char *fname)
+{
+	struct stat fn_stat;
+	if (stat(fname, &fn_stat)) return -1;
+	return fn_stat.st_size;
+}
+
+#endif

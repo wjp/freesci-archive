@@ -73,12 +73,12 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 		}
 
 		if (restype != sci_invalid_resource) {
-			struct stat filestat;
+			int fsize;
 
 			printf("Patching \"%s\": ", entry);
 
-			if (stat(entry, &filestat))
-				perror("""__FILE__"": (""__LINE__""): stat()");
+			if ((fsize = sci_file_size(entry)) < 0)
+				perror("""__FILE__"": (""__LINE__""): sci_file_size()");
 			else {
 				int file;
 				guint8 filehdr[2];
@@ -87,7 +87,7 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 										  restype,
 										  resnumber);
 
-				if (filestat.st_size < 3) {
+				if (fsize < 3) {
 					printf("File too small\n");
 					entry = sci_find_next(&dir);
 					continue; /* next file */
@@ -117,7 +117,7 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 						}
 
 						/* Overwrite everything, because we're patching */
-						newrsc->size = filestat.st_size - 2;
+						newrsc->size = fsize - 2;
 						newrsc->id = restype << 11 | resnumber;
 						newrsc->number = resnumber;
 						newrsc->status = SCI_STATUS_NOMALLOC;

@@ -390,6 +390,20 @@ sci_mkpath(char *path);
 ** This function will create any directories that couldn't be found
 */
 
+int
+sci_fd_size(int fd);
+/* Returns the filesize of an open file
+** Paramaters: (int) fd: File descriptor of open file
+** Returns   : (int) filesize of file pointed to by fd, -1 on error
+*/
+
+int
+sci_file_size(char *fname);
+/* Returns the filesize of a file
+** Parameters: (char *) fname: Name of file to get filesize of
+** Returns   : (int) filesize of the file, -1 on error
+*/
+
 #ifndef HAVE_FFS
 int sci_ffs(int _mask);
 #else
