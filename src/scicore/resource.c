@@ -160,6 +160,13 @@ _scir_find_resource_unsorted(resource_t *res, int res_nr, int type, int number)
 /** Resource manager constructors and operations **/
 /*------------------------------------------------*/
 
+void
+_scir_init_trivial(resource_mgr_t *mgr)
+{
+	mgr->resources_nr = 0;
+	mgr->resources = sci_malloc(1);
+}
+
 
 resource_mgr_t *
 scir_new_resource_manager(char *dir, int version,
@@ -201,6 +208,18 @@ scir_new_resource_manager(char *dir, int version,
 			free(caller_cwd);
 			return NULL;
 		}
+
+		if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND) {
+			/* fixme: Try reading w/o resource.map */
+			resource_error = SCI_ERROR_NO_RESOURCE_FILES_FOUND;
+		}
+
+		if (resource_error == SCI_ERROR_NO_RESOURCE_FILES_FOUND) {
+			/* Initialize empty resource manager */
+			_scir_init_trivial(mgr);
+			resource_error = 0;
+		}
+
 		if (!resource_error)
 			sci0_read_resource_patches(dir,
 						   &mgr->resources,
@@ -211,8 +230,11 @@ scir_new_resource_manager(char *dir, int version,
 
 
 	/* ADDME: Try again with sci1_read_resource_map() */
-
-	if (!mgr->resources) {
+	if (!mgr->resources || !mgr->resources_nr) {
+		if (mgr->resources) {
+			free(mgr->resources);
+			mgr->resources = NULL;
+		}
 		sciprintf("Resmgr: Could not retreive a resource list!\n");
 		sci_free(mgr);
 		chdir(caller_cwd);
@@ -242,6 +264,9 @@ scir_new_resource_manager(char *dir, int version,
 					sciprintf("Resmgr: Running KQ1 or similar, using SCI0 resource encoding\n");
 					version = SCI_VERSION_0;
 				} else version = SCI_VERSION_01;
+			} else {
+				sciprintf("Resmgr: Warning: Could not find vocabulary; assuming SCI0 w/o parser\n");
+				version = SCI_VERSION_0;
 			} break;
 
 		default:
@@ -346,13 +371,13 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 
 	fh = open(filename, O_RDONLY | O_BINARY);
 
+
 	if (!IS_VALID_FD(fh)) {
 		char *raiser = filename;
 		while (*raiser) {
 			*raiser = toupper(*raiser); /* Uppercasify */
 			++raiser;
 		}
-
 		fh = sci_open(filename, O_RDONLY|O_BINARY);
 	}    /* Try case-insensitively name */
 

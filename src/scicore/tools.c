@@ -604,7 +604,7 @@ sci_open(char *fname, int flags)
 {
 	sci_dir_t dir;
 	char *name = _fcaseseek(fname, &dir);
-	int file = 0;
+	int file = SCI_INVALID_FD;
 
 	if (name)
 		file = open(name, flags);

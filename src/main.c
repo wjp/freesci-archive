@@ -831,44 +831,44 @@ list_savegames(state_t *s)
 int 
 guess_version() 
 {
-  int i, len = 0;
-  int fd = -1;
-  int crc = 0;
-  guint8 *buff;
-  sci_version_t version = 0;
+	int i, len = 0;
+	int fd = -1;
+	int crc = 0;
+	guint8 *buff;
+	sci_version_t version = 0;
 
-  if (!IS_VALID_FD(fd = sci_open("resource.001", O_RDONLY|O_BINARY)))
-    return version;
+	if (!IS_VALID_FD(fd = sci_open("resource.001", O_RDONLY|O_BINARY)))
+		return version;
 
-  buff = sci_malloc(8192);
+	buff = sci_malloc(8192);
 
-  for (len = 1; len > 0; ) {
-    memset(buff, 0x00, 8192);
-    len = read(fd, buff, 8192);
-    for (i = 0; i < len; i++)
-      crc += *(buff + i);
-  }
+	for (len = 1; len > 0; ) {
+		memset(buff, 0x00, 8192);
+		len = read(fd, buff, 8192);
+		for (i = 0; i < len; i++)
+			crc += *(buff + i);
+	}
 
-  for (i = 0 ; i < SCI_GAMES_COUNT ; i++) {
-    if (sci_games[i].id == crc) {
-      version = sci_games[i].version;
-      sciprintf("Detected game id: 0x%08x (%s) interpreter %d.%03d.%03d\n",
-		crc, sci_games[i].name,
-		SCI_VERSION_MAJOR(version), SCI_VERSION_MINOR(version), 
-		SCI_VERSION_PATCHLEVEL(version));
-      break;
-    }
-  }
-  if (i == SCI_GAMES_COUNT) {
-    sciprintf("Unrecognized game id: 0x%08x\n", crc);
-  }
+	for (i = 0 ; i < SCI_GAMES_COUNT ; i++) {
+		if (sci_games[i].id == crc) {
+			version = sci_games[i].version;
+			sciprintf("Detected game id: 0x%08x (%s) interpreter %d.%03d.%03d\n",
+				  crc, sci_games[i].name,
+				  SCI_VERSION_MAJOR(version), SCI_VERSION_MINOR(version), 
+				  SCI_VERSION_PATCHLEVEL(version));
+			break;
+		}
+	}
+	if (i == SCI_GAMES_COUNT) {
+		sciprintf("Unrecognized game id: 0x%08x\n", crc);
+	}
 
-  if (fd > 0)
-    close(fd);
+	if (fd > 0)
+		close(fd);
 
-  sci_free(buff);
+	sci_free(buff);
 
-  return version;
+	return version;
 }
 
 int

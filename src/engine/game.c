@@ -64,10 +64,9 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 
 	if ((s->parser_words = vocab_get_words(s->resmgr, &(s->parser_words_nr)))) {
 		s->parser_suffices = vocab_get_suffices(s->resmgr, &(s->parser_suffices_nr));
-		s->parser_branches = vocab_get_branches(s->resmgr, &(s->parser_branches_nr));
-
-		/* Now build a GNF grammar out of this */
-		s->parser_rules = vocab_build_gnf(s->parser_branches, s->parser_branches_nr);
+		if ((s->parser_branches = vocab_get_branches(s->resmgr, &(s->parser_branches_nr))))
+		    /* Now build a GNF grammar out of this */
+		    s->parser_rules = vocab_build_gnf(s->parser_branches, s->parser_branches_nr);
 
 	} else {
 		sciprintf("Assuming that this game does not use a parser.\n");
@@ -237,7 +236,7 @@ static int
 suggested_script(resource_t *res, unsigned int class)
 {
 	int offset;
-	if (class >= res->size >> 2)
+	if (!res || class >= res->size >> 2)
 		return -1;
 
 	offset = 2 + (class << 2);

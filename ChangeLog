@@ -1,3 +1,17 @@
+2002-10-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/game.c (suggested_script): Added support for vocab.996
+	not being present
+
+	* src/scicore/resource.c (scir_new_resource_manager): Support running
+	without resources
+
+	* src/include/resource.h (SCI_INVALID_FD): Introduced SCI_INVALID_FD
+	as a global #define for an invalid file descriptor
+
+	* src/scicore/tools.c (sci_open): Fixed to return SCI_INVALID_FD
+	on error
+
 2002-09-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/sci_widgets.c (sciw_new_window): Made window title bar

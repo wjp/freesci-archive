@@ -304,52 +304,52 @@ static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 
 static char** vocabulary_get_knames0(resource_mgr_t *resmgr, int* names)
 {
-  char** t;
-  int count, i, index=2, empty_to_add = 1;
-  resource_t* r = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_KNAMES, 0);
+	char** t;
+	int count, i, index=2, empty_to_add = 1;
+	resource_t* r = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_KNAMES, 0);
 
-  if (!r) { /* No kernel name table found? Fall back to default table */
-    t = sci_malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR + 1) * sizeof(char*));
-    *names = SCI0_KNAMES_DEFAULT_ENTRIES_NR - 1; /* index of last element */
 
-    for (i = 0; i < SCI0_KNAMES_DEFAULT_ENTRIES_NR; i++)
-      t[i] = sci_strdup(sci0_default_knames[i]);
+	if (!r) { /* No kernel name table found? Fall back to default table */
+		t = sci_malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR + 1) * sizeof(char*));
+		*names = SCI0_KNAMES_DEFAULT_ENTRIES_NR - 1; /* index of last element */
 
-    t[SCI0_KNAMES_DEFAULT_ENTRIES_NR] = NULL; /* Terminate list */
+		for (i = 0; i < SCI0_KNAMES_DEFAULT_ENTRIES_NR; i++)
+			t[i] = sci_strdup(sci0_default_knames[i]);
 
-    return t;
-  }
+		t[SCI0_KNAMES_DEFAULT_ENTRIES_NR] = NULL; /* Terminate list */
 
-  count=getInt(r->data);
+		return t;
+	}
 
-  if (count > 1023)
-    return _vocabulary_get_knames0alt(names, r);
+	count=getInt(r->data);
 
-  if (count < SCI0_KNAMES_WELL_DEFINED) {
-    empty_to_add = SCI0_KNAMES_WELL_DEFINED - count;
-    sciprintf("Less than %d kernel functions; adding %d\n", SCI0_KNAMES_WELL_DEFINED, empty_to_add);
-  }
+	if (count > 1023)
+		return _vocabulary_get_knames0alt(names, r);
 
-  t= sci_malloc(sizeof(char*)*(count+1 + empty_to_add));
-  for(i=0; i<count; i++)
-    {
-      int offset=getInt(r->data+index);
-      int len=getInt(r->data+offset);
-      /*fprintf(stderr,"Getting name %d of %d...\n", i, count);*/
-      index+=2;
-      t[i]= sci_malloc(len+1);
-      memcpy(t[i], r->data + offset + 2, len);
-      t[i][len]='\0';
-    }
+	if (count < SCI0_KNAMES_WELL_DEFINED) {
+		empty_to_add = SCI0_KNAMES_WELL_DEFINED - count;
+		sciprintf("Less than %d kernel functions; adding %d\n", SCI0_KNAMES_WELL_DEFINED, empty_to_add);
+	}
 
-  for (i = 0; i < empty_to_add; i++) {
-    t[count + i] = sci_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
-    strcpy(t[count + i], SCRIPT_UNKNOWN_FUNCTION_STRING);
-  }
+	t= sci_malloc(sizeof(char*)*(count+1 + empty_to_add));
+	for(i=0; i<count; i++) {
+		int offset=getInt(r->data+index);
+		int len=getInt(r->data+offset);
+		/*fprintf(stderr,"Getting name %d of %d...\n", i, count);*/
+		index+=2;
+		t[i]= sci_malloc(len+1);
+		memcpy(t[i], r->data + offset + 2, len);
+		t[i][len]='\0';
+	}
 
-  t[count+empty_to_add]=0;
-  *names=count + empty_to_add;
-  return t;
+	for (i = 0; i < empty_to_add; i++) {
+		t[count + i] = sci_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
+		strcpy(t[count + i], SCRIPT_UNKNOWN_FUNCTION_STRING);
+	}
+
+	t[count+empty_to_add]=0;
+	*names=count + empty_to_add;
+	return t;
 }
 
 /*NOTE: Untested*/

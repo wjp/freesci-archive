@@ -140,71 +140,71 @@ vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 word_t **
 vocab_get_words(resource_mgr_t *resmgr, int *word_counter)
 {
-  int counter = 0;
-  int seeker;
-  word_t **words;
+	int counter = 0;
+	int seeker;
+	word_t **words;
 
-  char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
-  int currentwordpos = 0;
+	char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
+	int currentwordpos = 0;
 
-  resource_t *resource = scir_find_resource(resmgr, sci_vocab,
-					    VOCAB_RESOURCE_SCI0_MAIN_VOCAB, 0);
+	resource_t *resource = scir_find_resource(resmgr, sci_vocab,
+						  VOCAB_RESOURCE_SCI0_MAIN_VOCAB, 0);
 
-  if (!resource) {
-    fprintf(stderr,"SCI0: Could not find a main vocabulary, trying SCI01.\n");
-    return vocab_get_words_sci1(resmgr, word_counter); /* NOT critical: SCI1 games and some demos don't have one! */
-  }
+	if (!resource) {
+		fprintf(stderr,"SCI0: Could not find a main vocabulary, trying SCI01.\n");
+		return vocab_get_words_sci1(resmgr, word_counter); /* NOT critical: SCI1 games and some demos don't have one! */
+	}
 
-  seeker = 52; /* vocab.000 starts with 26 16-bit pointers which we don't use */
+	seeker = 52; /* vocab.000 starts with 26 16-bit pointers which we don't use */
 
-  if (resource->size < 52) {
-    fprintf(stderr, "Invalid main vocabulary encountered: Too small\n");
-    return NULL;
-    /* Now this ought to be critical, but it'll just cause parse() and said() not to work */
-  }
+	if (resource->size < 52) {
+		fprintf(stderr, "Invalid main vocabulary encountered: Too small\n");
+		return NULL;
+		/* Now this ought to be critical, but it'll just cause parse() and said() not to work */
+	}
 
-  words = sci_malloc(sizeof(word_t *));
+	words = sci_malloc(sizeof(word_t *));
 
-  while (seeker < resource->size) {
-    byte c;
+	while (seeker < resource->size) {
+		byte c;
 
-    words = sci_realloc(words, (counter + 1) * sizeof(word_t *));
+		words = sci_realloc(words, (counter + 1) * sizeof(word_t *));
 
-    currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
+		currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
 
-    do {
-      c = resource->data[seeker++];
-      currentword[currentwordpos++] = c & 0x7f; /* 0x80 is used to terminate the string */
-    } while (c < 0x80);
-    currentword[currentwordpos] = 0;
+		do {
+			c = resource->data[seeker++];
+			currentword[currentwordpos++] = c & 0x7f; /* 0x80 is used to terminate the string */
+		} while (c < 0x80);
+		currentword[currentwordpos] = 0;
 
-    words[counter] = sci_malloc(sizeof(word_t) + currentwordpos);
-    /* Allocate more memory, so that the word fits into the structure */
+		words[counter] = sci_malloc(sizeof(word_t) + currentwordpos);
+		/* Allocate more memory, so that the word fits into the structure */
 
-    strcpy(&(words[counter]->word[0]), &(currentword[0])); /* Copy the word */
+		strcpy(&(words[counter]->word[0]), &(currentword[0])); /* Copy the word */
 
-    /* Now decode class and group: */
-    c = resource->data[seeker + 1];
-    words[counter]->w_class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
+		/* Now decode class and group: */
+		c = resource->data[seeker + 1];
+		words[counter]->w_class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
 
-    if (c & 0xf0) {
-	    fprintf(stderr,"Unexpected class mask-");
-	    fprintf(stderr,"%s ", words[counter]->word);
-	    fprintf(stderr, " class mask = %03x\n", (words[counter]->w_class));
-    }
-    words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
+		if (c & 0xf0) {
+			fprintf(stderr,"Unexpected class mask-");
+			fprintf(stderr,"%s ", words[counter]->word);
+			fprintf(stderr, " class mask = %03x\n", (words[counter]->w_class));
+		}
+		words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
 
-    ++counter;
+		++counter;
 
-    seeker += 3;
+		seeker += 3;
 
-  }
+	}
 
-  *word_counter = counter;
+	*word_counter = counter;
 
-  qsort(words, counter, sizeof(word_t *), _vocab_cmp_words); /* Sort entries */
+	qsort(words, counter, sizeof(word_t *), _vocab_cmp_words); /* Sort entries */
 
-  return words;
+	return words;
 }
 
 

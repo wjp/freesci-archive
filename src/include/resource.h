@@ -41,8 +41,13 @@
  ** -- Christoph Reichenbach
  **/
 
+#ifdef _DREAMCAST
+#  define SCI_INVALID_FD 0
+#else
+#  define SCI_INVALID_FD -1
+#endif
 
-#define IS_VALID_FD(a) ((a) != -1) /* Tests validity of a file descriptor */
+#define IS_VALID_FD(a) ((a) != SCI_INVALID_FD) /* Tests validity of a file descriptor */
 
 #ifdef _WIN32
 #  ifndef _Win32
@@ -346,7 +351,7 @@ sci_open(char *fname, int flags);
 ** Parameters: (char *) fname: Name of the file to open
 **             (int) flags: open(2) flags for the file
 ** Returns   : (int) a file descriptor of the open file,
-**             or -1 on failure
+**             or SCI_INVALID_FD on failure
 ** Always refers to the cwd, cannot address subdirectories
 */
 
