@@ -341,6 +341,8 @@ script_init_engine(state_t *s, sci_version_t version)
 
 	/* Allocate static buffer for savegame and CWD directories */
 	s->save_dir = heap_allocate(s->_heap, MAX_SAVE_DIR_SIZE);
+	s->save_dir_copy = 0xffff;
+
 	cwd = sci_getcwd();
 	if (strlen(cwd) > MAX_SAVE_DIR_SIZE)
 		sciprintf("Warning: cwd '%s' is longer than the"

@@ -7,4 +7,4 @@ libsciengine_a_SOURCES = savegame.c kernel.c kscripts.c klists.c \
 	simplesaid.c said.y grammar.c
 
 savegame.c: savegame.cfsml
-	cat savegame.cfsml | ./cfsml.pl -f savegame.cfsml > savegame.c
+	cat savegame.cfsml | ./cfsml.pl -l -f savegame.cfsml > savegame.c
