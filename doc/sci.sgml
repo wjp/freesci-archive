@@ -3619,9 +3619,33 @@ Either draws or clears (overdraws with black) the menu bar.
 </sect3>
 
 
-
-
-<sect3><Title/Kernel function 0x21: MenuSelect(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x21: MenuSelect(HeapPtr[, word])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x21: MenuSelect
+		</funcdef><paramdef>HeapPtr event[, word flag]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ event: The event to interpret</member>
+                       <member><type/(word)/ flag: (unknown)</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        The menu index of a selected option, -1 if no menu option was selected,
+                        or 0 if the event passed through all of the menu system's filters.
+		</para><para>
+                   This function interprets the event passed to it by running several checks.
+                   First, it tries to determine whether the menu system was activated by pressing
+                   the ESC key or clicking on the menu bar. In this case, the interpreter takes over
+                   and waits for the player to select a menu option. It then returns the menu option
+                   selected (menu number, starting at 1, in the upper 8 bits, item number, starting
+                   at 1 as well, in the lower part) or -1 if no active menu item was selected.
+                   In any case, the event is claimed.
+                   If the menu system was not activated by the event, it checks the event against
+                   the key commands or Said Blocks associated with each menu entry. If there is a match,
+                   the menu coordinate tuple is returned and the event is claimed, otherwise, 0 is returned.
+		</para>
+	</sect3>
 
 
 
@@ -4770,11 +4794,12 @@ There are three types of events, distinguished by their "type" property.
 The possible values are listed below; they are laid out as a bitfield to
 allow for selective event retrieval, see later.
 <simplelist>
-  <member/0 - Null event/
-  <member/1 - Mouse button event/
-  <member/2 - Mouse button release event/
-  <member/4 - Keyboard event/
-  <member/64 - Movement (joystick) event/
+  <member/0x00 - Null event/
+  <member/0x01 - Mouse button event/
+  <member/0x02 - Mouse button release event/
+  <member/0x04 - Keyboard event/
+  <member/0x40 - Movement (joystick) event/
+  <member/0x80 - Menu event/
 </simplelist>
 </para><para>
 This type is returned to the SCI event managers by the input device drivers
@@ -4868,6 +4893,14 @@ That is, the direction code starts at straight up (code 1), increasing
 with clockwise movement.
 </para>
 </sect3>
+
+<sect3><title/The Menu event/
+<para>
+  The menu event is a special event used by the interpreter to activate the
+  menu system. If the Menu event is passed to the MenuSelect() kernel function,
+  the menu is activated.
+</para>
+
 </sect2>
   </sect1>
   <sect1 ID="LarsDMParser">
@@ -5674,6 +5707,12 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                 <para>
                    Can't remember what you pushed on that stack, and in which order? This command
                    will display as many stack elements as you want, starting at the TOS.
+                </para>
+              </sect3>
+              <sect3><Title/viewinfo (number)/
+                <para>
+                   Examines the specified view resource and displays the number of loops it has, and
+                   the number of cels for each loop.
                 </para>
               </sect3>
            </Sect2>

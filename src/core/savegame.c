@@ -1392,20 +1392,45 @@ _cfsml_write_menu_item_t(FILE *fh, menu_item_t* foo)
   fprintf(fh, "type = ");
     _cfsml_write_int(fh, &(foo->type));
     fprintf(fh, "\n");
-  fprintf(fh, "left = ");
-    _cfsml_write_string(fh, &(foo->left));
+  fprintf(fh, "keytext = ");
+    _cfsml_write_string(fh, &(foo->keytext));
     fprintf(fh, "\n");
-  fprintf(fh, "right = ");
-    _cfsml_write_string(fh, &(foo->right));
+  fprintf(fh, "keytext_size = ");
+    _cfsml_write_int(fh, &(foo->keytext_size));
     fprintf(fh, "\n");
-  fprintf(fh, "rightsize = ");
-    _cfsml_write_int(fh, &(foo->rightsize));
+  fprintf(fh, "flags = ");
+    _cfsml_write_int(fh, &(foo->flags));
     fprintf(fh, "\n");
-  fprintf(fh, "foo = ");
-    _cfsml_write_int(fh, &(foo->foo));
+  fprintf(fh, "said = ");
+    min = max = 8;
+#line 341 "cfsml.pl"
+    fprintf(fh, "[%d][\n", max);
+    for (i = 0; i < min; i++) {
+      _cfsml_write_byte(fh, &(foo->said[i]));
+      fprintf(fh, "\n");
+    }
+    fprintf(fh, "]");
     fprintf(fh, "\n");
-  fprintf(fh, "bar = ");
-    _cfsml_write_int(fh, &(foo->bar));
+  fprintf(fh, "said_pos = ");
+    write_heapptr(fh, &(foo->said_pos));
+    fprintf(fh, "\n");
+  fprintf(fh, "text = ");
+    _cfsml_write_string(fh, &(foo->text));
+    fprintf(fh, "\n");
+  fprintf(fh, "text_pos = ");
+    write_heapptr(fh, &(foo->text_pos));
+    fprintf(fh, "\n");
+  fprintf(fh, "modifiers = ");
+    _cfsml_write_int(fh, &(foo->modifiers));
+    fprintf(fh, "\n");
+  fprintf(fh, "key = ");
+    _cfsml_write_int(fh, &(foo->key));
+    fprintf(fh, "\n");
+  fprintf(fh, "enabled = ");
+    _cfsml_write_int(fh, &(foo->enabled));
+    fprintf(fh, "\n");
+  fprintf(fh, "tag = ");
+    _cfsml_write_int(fh, &(foo->tag));
     fprintf(fh, "\n");
   fprintf(fh, "}");
 }
@@ -1448,29 +1473,79 @@ _cfsml_read_menu_item_t(FILE *fh, menu_item_t* foo, char *lastval, int *line, in
          if (_cfsml_read_int(fh, &(foo->type), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "left")) {
+      if (!strcmp(bar, "keytext")) {
 #line 553 "cfsml.pl"
-         if (_cfsml_read_string(fh, &(foo->left), value, line, hiteof))
+         if (_cfsml_read_string(fh, &(foo->keytext), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "right")) {
+      if (!strcmp(bar, "keytext_size")) {
 #line 553 "cfsml.pl"
-         if (_cfsml_read_string(fh, &(foo->right), value, line, hiteof))
+         if (_cfsml_read_int(fh, &(foo->keytext_size), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "rightsize")) {
+      if (!strcmp(bar, "flags")) {
 #line 553 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->rightsize), value, line, hiteof))
+         if (_cfsml_read_int(fh, &(foo->flags), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "foo")) {
+      if (!strcmp(bar, "said")) {
+#line 487 "cfsml.pl"
+         if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
+            _cfsml_error("Opening brackets expected at line %d\n", *line);
+            return CFSML_FAILURE;
+;         }
+         /* Prepare to restore static array */
+         max = 8;
+#line 518 "cfsml.pl"
+         done = i = 0;
+         do {
+           free(value);
+           if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
+#line 527 "cfsml.pl"
+              return 1;
+           if (strcmp(value, "]")) {
+             if (i == max) {
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               return CFSML_FAILURE;
+             }
+             if (_cfsml_read_byte(fh, &(foo->said[i++]), value, line, hiteof))
+                return CFSML_FAILURE;
+           } else done = 1;
+         } while (!done);
+      } else
+      if (!strcmp(bar, "said_pos")) {
 #line 553 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->foo), value, line, hiteof))
+         if (read_heapptr(fh, &(foo->said_pos), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "bar")) {
+      if (!strcmp(bar, "text")) {
 #line 553 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->bar), value, line, hiteof))
+         if (_cfsml_read_string(fh, &(foo->text), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "text_pos")) {
+#line 553 "cfsml.pl"
+         if (read_heapptr(fh, &(foo->text_pos), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "modifiers")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->modifiers), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "key")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->key), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "enabled")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->enabled), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "tag")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->tag), value, line, hiteof))
             return CFSML_FAILURE;
       } else
 #line 560 "cfsml.pl"
@@ -2309,7 +2384,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.6.6 */
-#line 371 "CFSML input file"
+#line 377 "CFSML input file"
 
 
 
@@ -2323,7 +2398,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 381 "CFSML input file"
+#line 387 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2350,7 +2425,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 398 "CFSML input file"
+#line 404 "CFSML input file"
 
   }
   return *hiteof;
@@ -2366,7 +2441,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 409 "CFSML input file"
+#line 415 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2394,7 +2469,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 427 "CFSML input file"
+#line 433 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2465,7 +2540,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 493 "CFSML input file"
+#line 499 "CFSML input file"
 
   fclose(fh);
 
@@ -2530,7 +2605,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 545 "CFSML input file"
+#line 551 "CFSML input file"
 
   fclose(fh);
 

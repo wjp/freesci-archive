@@ -31,7 +31,9 @@
 
 #include <graphics.h>
 
-#define MENU_FREESCI_BLATANT_PLUG 0x10000
+struct _state;
+
+#define MENU_FREESCI_BLATANT_PLUG 0xfff0
 /* This adds an "About FreeSCI" menu option to the first menu */
 
 
@@ -54,13 +56,29 @@
 #define MENU_TYPE_HBAR 1 /* Horizontal bar */
 
 
+#define MENU_ATTRIBUTE_SAID 0x6d
+#define MENU_ATTRIBUTE_TEXT 0x6e
+#define MENU_ATTRIBUTE_KEY 0x6f
+#define MENU_ATTRIBUTE_ENABLED 0x70
+#define MENU_ATTRIBUTE_TAG 0x71
+
+/* Those flags determine whether the corresponding menu_item_t entries are valid */
+#define MENU_ATTRIBUTE_FLAGS_KEY 0x01
+#define MENU_ATTRIBUTE_FLAGS_SAID 0x02
+
 typedef struct {
   int type; /* Normal or hbar */
-  char *left, *right; /* The left-centered and the right-centered part of the text */
-  int rightsize; /* Width of the right-centered text */
+  char *keytext; /* right-centered part of the text (the key) */
+  int keytext_size; /* Width of the right-centered text */
 
-  int foo;  /* Purpose of those two is undetermined at this time. They are taken from... */
-  int bar; /* ...the SetMenu() kernel call (parameters 2 and 3). */
+  int flags;
+  byte said[8]; /* Said spec for this item */
+  heap_ptr said_pos;
+  char *text;
+  heap_ptr text_pos;
+  int modifiers, key; /* Hotkey for this item */
+  int enabled;
+  int tag;
 
 } menu_item_t;
 
@@ -127,12 +145,13 @@ menubar_free(menubar_t *menubar);
 
 
 void
-menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font);
+menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byte *heapbase);
 /* Adds a menu to the menubar.
 ** Parameters: (menubar_t *) menubar: The menubar to operate on
 **             (char *) title: The menu title
 **             (char *) entries: A string of menu entries
 **             (byte *) font: The font which is to be used for drawing
+**             (byte *) heapbase: Base address of the heap 'entries' is read from
 ** Returns   : (void)
 ** The menu entries use the following special characters:
 ** '`' : Right justify the following part
@@ -147,14 +166,25 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font);
 
 
 int
-menubar_set_foobar(menubar_t *menubar, int menu, int item, int foo, int bar);
+menubar_set_attribute(struct _state *s, int menu, int item, int attribute, int value);
 /* Sets the (currently unidentified) foo and bar values.
-** Parameters: (menubar_t *) menubar: The menubar to operate on
+** Parameters: (state_t *) s: The current state
 **             (int) menu: The menu number to edit
 **             (int) item: The menu item to change
-**             (int) foo: The new foo value
-**             (int) bar: The new bar value
+**             (int) attribute: The attribute to modify
+**             (int) value: The value the attribute should be set to
 ** Returns   : (int) 0 on success, 1 if either menu or item were invalid
+*/
+
+
+int
+menubar_get_attribute(struct _state *s, int menu, int item, int attribute);
+/* Sets the (currently unidentified) foo and bar values.
+** Parameters: (state_t *) s: The current state
+**             (int) menu: The menu number
+**             (int) item: The menu item to read
+**             (int) attribute: The attribute to read from
+** Returns   : (int) The attribute value, or -1 on error
 */
 
 void

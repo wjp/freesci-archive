@@ -31,6 +31,7 @@
 
 #include <resource.h>
 #include <menubar.h>
+#include <engine.h>
 
 
 char *
@@ -73,10 +74,10 @@ menubar_free(menubar_t *menubar)
     int j;
 
     for (j = 0; j < menu->items_nr; j++) {
-      if (menu->items[j].right)
-	free (menu->items[j].right);
-      if (menu->items[j].left)
-        free (menu->items[j].left);
+      if (menu->items[j].keytext)
+	free (menu->items[j].keytext);
+      if (menu->items[j].text)
+        free (menu->items[j].text);
     }
 
     free(menu->items);
@@ -91,7 +92,8 @@ menubar_free(menubar_t *menubar)
 
 
 int
-_menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *font)
+_menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *font, int key,
+		       int modifiers, heap_ptr text_pos)
 /* Returns the total text size, plus MENU_BOX_CENTER_PADDING if (right != NULL) */
 {
   menu_item_t *item;
@@ -108,33 +110,39 @@ _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *fo
     return 0;
 
   /* else assume MENU_TYPE_NORMAL */
-  item->left = (char *) malloc (strlen (left)+1);
-  strcpy (item->left, left);
+  item->text = left;
   if (right)
   {
-    item->right = (char *) malloc (strlen (right)+1);
-    strcpy (item->right, right);
+    item->keytext = right;
+    item->flags = MENU_ATTRIBUTE_FLAGS_KEY;
+    item->key = key;
+    item->modifiers = modifiers;
+  } else {
+    item->keytext=NULL;
+    item->flags = 0;
   }
-  else item->right=NULL;
 
   if (right)
-    total_left_size = MENU_BOX_CENTER_PADDING + (item->rightsize = get_text_width(right, font));
-  else total_left_size = item->rightsize = 0;
+    total_left_size = MENU_BOX_CENTER_PADDING + (item->keytext_size = get_text_width(right, font));
+  else total_left_size = item->keytext_size = 0;
 
-  item->foo = item->bar = 0; /* Set those anomalities to zero until I know what they mean */
+  item->enabled = 1;
+  item->tag = 0;
+  item->text_pos = text_pos;
 
   return total_left_size + get_text_width(left, font);
 }
 
 void
-menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font)
+menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byte *heapbase)
 {
   int add_freesci = 0;
   menu_t *menu;
   char tracker;
-  char *left = 0, *right;
+  char *left = NULL, *right, *left_origin;
   int string_len = 0;
   int c_width, max_width = 0;
+  char *_heapbase = (char *) heapbase;
 
   if (menubar->menus_nr == 0) {
 #ifdef MENU_FREESCI_BLATANT_PLUG
@@ -163,7 +171,8 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font)
 	if (strcmp(left, MENU_HBAR_STRING) == 0)
 	  entrytype = MENU_TYPE_HBAR; /* Horizontal bar */
 
-	c_width = _menubar_add_menu_item(menu, entrytype, left, NULL, font);
+	c_width = _menubar_add_menu_item(menu, entrytype, left, NULL, font, 0, 0,
+					 (entries - _heapbase) - string_len - 1);
 	if (c_width > max_width)
 	  max_width = c_width;
 
@@ -172,24 +181,36 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font)
 
       } else if (tracker == '`') { /* Start of right string */
 
-	left = malloc_ncpy(entries - string_len - 1, string_len);
+	left = malloc_ncpy(left_origin = (entries - string_len - 1), string_len);
 	string_len = 0; /* Continue with the right string */
 
       } string_len++; /* Nothing special */
 
     } else { /* Left string finished => working on right string */
       if ((tracker == ':') || (tracker == 0)) { /* End of entry */
+	int key, modifiers = 0;
 
 	right = malloc_ncpy(entries - string_len - 1, MIN(2, string_len));
 	/* Some entries have strange stuff added to the end */
 
-	if (right[0] == '#')
+	if (right[0] == '#') {
 	  right[0] = 'F'; /* Function key */
+	  key = SCI_K_F1 + (right[1] - '1');
+	} 
+	else
+	  if (right[0] == '^') {
+	    right[0] = 2; /* Control key */
+	    key = right[1];
+	    modifiers = SCI_EVM_CTRL;
+	  }
+	  else
+	    key = right[0];
 
-	if (right[0] == '^')
-	  right[0] = 2; /* Control key */
+	if ((key >= 'A') && (key <= 'Z'))
+	  key = key - 'A' + 'a'; /* Lowercase the key */
 
-	c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, left, right, font);
+	c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, left, right, font, key,
+					 modifiers, left_origin - _heapbase);
 	if (c_width > max_width)
 	  max_width = c_width;
 
@@ -202,11 +223,11 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font)
 #ifdef MENU_FREESCI_BLATANT_PLUG
   if (add_freesci) {
       
-    c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, "About FreeSCI", NULL, font);
+    c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, "About FreeSCI", NULL, font, 0, 0, 0);
     if (c_width > max_width)
       max_width = c_width;
 
-    menu->items[menu->items_nr-1].foo = MENU_FREESCI_BLATANT_PLUG;
+    menu->items[menu->items_nr-1].flags = MENU_FREESCI_BLATANT_PLUG;
   }
 #endif /* MENU_FREESCI_BLATANT_PLUG */
 
@@ -215,19 +236,117 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font)
 
 
 int
-menubar_set_foobar(menubar_t *menubar, int menu, int item, int foo, int bar)
+menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int value)
 {
-  if ((menu < 0) || (item < 0))
+  menubar_t *menubar = s->menubar;
+  menu_item_t *item;
+
+  if ((menu_nr < 0) || (item_nr < 0))
     return 1;
 
-  if ((menu < menubar->menus_nr) || (item < menubar->menus[menu].items_nr))
+  if ((menu_nr < menubar->menus_nr) || (item_nr < menubar->menus[menu_nr].items_nr))
     return 1;
 
-  menubar->menus[menu].items[item].foo = foo;
-  menubar->menus[menu].items[item].bar = bar;
+  item = menubar->menus[menu_nr].items + item_nr;
+
+  switch (attribute) {
+
+  case MENU_ATTRIBUTE_SAID:
+    if (value) {
+
+      item->said_pos = value;
+      memcpy(item->said, s->heap + value, 8); /* Copy Said spec */
+      item->flags |= MENU_ATTRIBUTE_SAID;
+
+    } else
+      item->flags &= ~MENU_ATTRIBUTE_SAID;
+
+    break;
+
+  case MENU_ATTRIBUTE_TEXT:
+    free(item->text);
+    assert(value);
+    item->text = strdup(s->heap + value);
+    item->text_pos = value;
+    break;
+
+  case MENU_ATTRIBUTE_KEY:
+    if (item->keytext)
+      free(item->keytext);
+
+    if (value) {
+
+      item->key = value;
+      item->modifiers = 0;
+      item->keytext = malloc(2);
+      item->keytext[0] = value;
+      item->keytext[1] = 0;
+      item->flags |= MENU_ATTRIBUTE_KEY;
+      if ((item->key >= 'A') && (item->key <= 'Z'))
+	item->key = item->key - 'A' + 'a'; /* Lowercase the key */
+
+
+    } else {
+
+      item->keytext = NULL;
+      item->flags &= ~MENU_ATTRIBUTE_KEY;
+
+    }
+
+  case MENU_ATTRIBUTE_ENABLED:
+    item->enabled = value;
+    break;
+
+  case MENU_ATTRIBUTE_TAG:
+    item->tag = value;
+    break;
+
+  default:
+    sciprintf("Attempt to set invalid attribute of menu %d, item %d: 0x%04x\n",
+	      menu_nr, item_nr, attribute);
+    return 1;
+  }
 
   return 0;
 }
+
+int
+menubar_get_attribute(state_t *s, int menu_nr, int item_nr, int attribute)
+{
+  menubar_t *menubar = s->menubar;
+  menu_item_t *item;
+
+  if ((menu_nr < 0) || (item_nr < 0))
+    return -1;
+
+  if ((menu_nr < menubar->menus_nr) || (item_nr < menubar->menus[menu_nr].items_nr))
+    return -1;
+
+  item = menubar->menus[menu_nr].items + item_nr;
+
+  switch (attribute) {
+  case MENU_ATTRIBUTE_SAID:
+    return item->said_pos;
+
+  case MENU_ATTRIBUTE_TEXT:
+    return item->text_pos;
+
+  case MENU_ATTRIBUTE_KEY:
+    return item->key;
+
+  case MENU_ATTRIBUTE_ENABLED:
+    return item->enabled;
+
+  case MENU_ATTRIBUTE_TAG:
+    return item->tag;
+
+  default:
+    sciprintf("Attempt to read invalid attribute from menu %d, item %d: 0x%04x\n",
+	      menu_nr, item_nr, attribute);
+    return -1;
+  }
+}
+
 
 void
 menubar_draw(picture_t pic, port_t *port, menubar_t *menubar, int activated, byte *font)

@@ -213,12 +213,18 @@ TYPE port_tp "port_t*" USING write_port_tp read_port_tp;
 
 RECORD menu_item_t "menu_item_t" {
   int type;
-  string left;
-  string right;
+  string keytext;
+  int keytext_size;
 
-  int rightsize;
-  int foo;
-  int bar;
+  int flags;
+  byte said[STATIC 8];
+  heap_ptr said_pos;
+  string text;
+  heap_ptr text_pos;
+  int modifiers;
+  int key;
+  int enabled;
+  int tag;
 }
 
 RECORD menu_t "menu_t" {

@@ -1,3 +1,10 @@
+1999-12-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kmenu.c (kGetMenu): Added GetMenu().
+
+	* src/include/kernel.h: Restructured the kernel by splitting it up
+	into one header and several source files.
+
 1999-12-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vm.c (send_selector): Fixed a stale pointer bug related to

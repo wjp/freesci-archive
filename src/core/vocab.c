@@ -256,8 +256,6 @@ vocab_lookup_word(char *word, int word_len,
   strncpy(&(tempword->word[0]), word, word_len);
   tempword->word[word_len] = 0;
 
-  fprintf(stderr,"Looking up '%s'\n", tempword->word);
-
   retval = g_malloc(sizeof(result_word_t));
 
   dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
@@ -435,7 +433,7 @@ _vocab_ptree_next_branch(parse_tree_branch_t *branches, int branches_nr, int cur
 inline int
 _vocab_ptree_add_final(parse_tree_node_t *nodes, int pos, int storage_code, int value)
 {
-  sciprintf("adding FINAL leafbranch (%04x, %04x) at %03x\n", storage_code, value, pos);
+  /*  sciprintf("adding FINAL leafbranch (%04x, %04x) at %03x\n", storage_code, value, pos);*/
   nodes[pos].type = PARSE_TREE_NODE_BRANCH;
   nodes[pos].content.branches[0] = pos+1;
   nodes[pos].content.branches[1] = pos+2;
@@ -459,7 +457,7 @@ _vocab_ptree_add_storage_list(parse_tree_node_t *nodes, int pos, int storage_cod
      **        list_nr    pos+4 (return value)
      */
 {
-  sciprintf("Adding BRANCH (%04x, %04x) from %03x to %03x\n", storage_code, list_nr, pos, pos+4);
+  /*  sciprintf("Adding BRANCH (%04x, %04x) from %03x to %03x\n", storage_code, list_nr, pos, pos+4);*/
   nodes[pos].type = PARSE_TREE_NODE_BRANCH;
   nodes[pos].content.branches[0] = pos + 1;
   nodes[pos].content.branches[1] = pos + 2;
@@ -505,7 +503,6 @@ _vocab_ptree_try_branches(parse_tree_node_t *nodes, result_word_t *words, int wo
 
   if (parent_node >= 0) { /* Must be a branch node */
     nodes[parent_node].content.branches[linkside] = ourfirstnode;
-    sciprintf("Linking %03x to parent node %03x\n", ourfirstnode, parent_node);
   }
 
   while (branch_nr >= 0) {

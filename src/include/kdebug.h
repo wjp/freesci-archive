@@ -102,6 +102,7 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 
 #endif /* !__GNUC__ */
 
+/* Internal functions */
 void
 _SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...);
 void
