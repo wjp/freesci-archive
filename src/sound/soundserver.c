@@ -443,7 +443,7 @@ stop_handle(word song_handle, sound_server_state_t *ss_state)
 			/* reset song position */
 			this_song->pos = 33;
 			this_song->loopmark = 33;
-			/* this_song->resetflag = 0; */
+			this_song->resetflag = 0;
 		}
 
 		/* global_sound_server->queue_event(song_handle, SOUND_SIGNAL_LOOP, -1); */

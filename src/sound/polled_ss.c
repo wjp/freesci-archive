@@ -88,14 +88,15 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 		ticks_to_wait = 0;	/* Ticks to next command */
 		fflush(debug_stream); /* Flush debug stream */
 
-		if (ss_state->current_song && (ss_state->current_song->fading == 0)) { /* Finished fading out the current song? */
+		if (ss_state->current_song)
+			if (ss_state->current_song->fading == 0) { /* Finished fading out the current song? */
 #ifdef DEBUG_SOUND_SERVER
-			printf("song %04x faded out \n", ss_state->current_song->handle);
+				printf("Song %04x faded out\n", ss_state->current_song->handle);
 #endif
-			ss_state->current_song->status = SOUND_STATUS_STOPPED;
-			global_sound_server->queue_command(ss_state->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
-			global_sound_server->queue_event(ss_state->current_song->handle, SOUND_SIGNAL_LOOP, -1);
-		}
+				ss_state->current_song->status = SOUND_STATUS_STOPPED;
+				global_sound_server->queue_command(ss_state->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
+				global_sound_server->queue_event(ss_state->current_song->handle, SOUND_SIGNAL_LOOP, -1);
+			}
 
 		/* find the active song */
 		ss_state->current_song = song_lib_find_active(ss_state->songlib, ss_state->current_song);
@@ -196,7 +197,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 
 						global_sound_server->get_data(&data, &totalsize);	/* Retreive song size */
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(debug_stream, "Song received.\n");
+						fprintf(debug_stream, "Song received\n");
 #endif
 						modsong = song_new((word)event.handle, data, totalsize, event.value);	/* Create new song */
 
@@ -280,10 +281,9 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						break;
 					}
 
-					case SOUND_COMMAND_LOOP_HANDLE: {
+					case SOUND_COMMAND_LOOP_HANDLE:
 						loop_handle(event.value, (word)event.handle, ss_state);
 						break;
-					}
 
 					case SOUND_COMMAND_DISPOSE_HANDLE: {
 #ifdef DEBUG_SOUND_SERVER
@@ -391,6 +391,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						free(dirname);
 						/* restore some MIDI device state */
 						/* (see MIDI specs). Effectively sets current instruments etc. */
+						midi_allstop();
 						_restore_midi_state(ss_state);
 						change_song(ss_state->current_song, ss_state);
 						newsong = ss_state->current_song;
@@ -461,24 +462,10 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						break;
 					}
 
-					case SOUND_COMMAND_STOP_ALL: {
-						song_t *seeker = *ss_state->songlib;
-
-	  					while (seeker) { /* FOREACH seeker IN songlib */
-						    if ((seeker->status == SOUND_STATUS_WAITING)
-							|| (seeker->status == SOUND_STATUS_PLAYING)) {
-
-							    seeker->status = SOUND_STATUS_STOPPED; /* Stop song */
-							    global_sound_server->queue_event(seeker->handle, SOUND_SIGNAL_FINISHED, 0);
-							    /* Notify parent process that the song was stopped */
-							}
-							seeker = seeker->next;
-						}
-
+					case SOUND_COMMAND_STOP_ALL:
+						stop_all(ss_state);
 						newsong = NULL;
-						midi_allstop();
 						break;
-					}
 
 					case SOUND_COMMAND_SHUTDOWN: {
 						fprintf(debug_stream,"Sound server: Received shutdown signal\n");
@@ -506,17 +493,6 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 		/*---------------*/
 		/* Handle output */
 		/*---------------*/
-
-#if 0	/* covered by change_song() */
-		if (newsong != oldsong && newsong) { /* If the song to play changed and is non-NULL */
-			int i;
-			for (i = 0; i < 16; i++) {
-				ss_state->playing_notes[i].polyphony = MAX(1, MIN(POLYPHONY(newsong, i), MAX_POLYPHONY));
-				ss_state->playing_notes[i].playing = 0;
-				/* Lingering notes are usually intended */
-			}
-		}
-#endif
 
 		if (ss_state->current_song && ss_state->current_song->data) { /* If we have a current song */
 			int newcmd;

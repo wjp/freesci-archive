@@ -40,6 +40,11 @@
 #define STANDARD_TIMER 0
 #define SCI_MIDI_TIME_TIMER 1
 
+/*
+#undef DEBUG_SOUND_SERVER
+#define DEBUG_SOUND_SERVER 2
+*/
+
 void do_sound(sound_server_state_t *sss)
 {
 	static midi_op_t cached_cmd;
@@ -52,9 +57,9 @@ void do_sound(sound_server_state_t *sss)
 	/* find the active song */
 	sss->current_song = song_lib_find_active(sss->songlib, sss->current_song);
 
-	if (sss->current_song)	/* have an active song */
+	if (sss->current_song && (sss->current_song->status == SOUND_STATUS_PLAYING))	/* have an active song */
 	{
-		midi_op_t this_cmd;
+		midi_op_t this_cmd;		/* current command (may come from cache) */
 
 		/* check if song has faded out */
 		if (sss->current_song->fading == 0)
@@ -62,7 +67,7 @@ void do_sound(sound_server_state_t *sss)
 #ifdef DEBUG_SOUND_SERVER
 		fprintf(debug_stream, "Song %04x faded out\n", sss->current_song->handle);
 #endif
-			/* set to reset song position */
+			/* reset song position */
 			sss->current_song->resetflag = 1;
 
 			/* stop this song */
@@ -84,7 +89,9 @@ void do_sound(sound_server_state_t *sss)
 
 			} else {
 				/* the tick is now so build midi cmd from cache */
+#ifdef DEBUG_SOUND_SERVER
 				this_cmd.pos_in_song = cached_cmd.pos_in_song;
+#endif
 				this_cmd.delta_time = 0;
 				this_cmd.midi_cmd = cached_cmd.midi_cmd;
 				this_cmd.param1 = cached_cmd.param1;
@@ -96,7 +103,7 @@ void do_sound(sound_server_state_t *sss)
 			/* no waiting MIDI command so if this song has data, process it */
 
 			static unsigned char last_cmd;
-			unsigned char msg_type;
+			unsigned char msg_type;	/* type of command */
 
 			/* retrieve MIDI command */
 			this_cmd.delta_time = 0;
@@ -114,8 +121,13 @@ void do_sound(sound_server_state_t *sss)
 				(sss->current_song->pos)++;
 			}
 			this_cmd.delta_time += sss->current_song->data[sss->current_song->pos];
+#if (DEBUG_SOUND_SERVER == 2)
+			fprintf(stdout, "delta: %u ", this_cmd.delta_time);
+#endif
 			(sss->current_song->pos)++;
+#ifdef DEBUG_SOUND_SERVER
 			this_cmd.pos_in_song = sss->current_song->pos;
+#endif
 			this_cmd.midi_cmd = sss->current_song->data[sss->current_song->pos];
 
 			if ((this_cmd.midi_cmd >> 4) >= '\x8')	/* this is a command */
@@ -127,8 +139,11 @@ void do_sound(sound_server_state_t *sss)
 				/* running status mode - use the last command cached */
 				this_cmd.midi_cmd = last_cmd;
 			}
+#if (DEBUG_SOUND_SERVER == 2)
+			fprintf(stdout, " cmd: %02x ", this_cmd.midi_cmd);
+#endif
 
-			/* work out the parameters */
+			/* work out the parameters for all types of commands */
 			msg_type = (unsigned char)(this_cmd.midi_cmd >> 4);
 			if (MIDI_PARAMETERS_TWO(msg_type))
 			{
@@ -136,6 +151,10 @@ void do_sound(sound_server_state_t *sss)
 				this_cmd.param1 = sss->current_song->data[sss->current_song->pos];
 				this_cmd.param2 = sss->current_song->data[(sss->current_song->pos) + 1];
 				(sss->current_song->pos) += 2;	/* lined up for next time around */
+#if (DEBUG_SOUND_SERVER == 2)
+				fprintf(stdout, " p1: %02x ", this_cmd.param1);
+				fprintf(stdout, " p2: %02x ", this_cmd.param2);
+#endif
 
 				if (sss->reverse_stereo &&
 					(msg_type == MIDI_MSG_TYPE_CONTROLLER_CHANGE) &&
@@ -146,9 +165,15 @@ void do_sound(sound_server_state_t *sss)
 				/* one parameter */
 				this_cmd.param1 = sss->current_song->data[sss->current_song->pos];
 				this_cmd.param2 = 0;
+#if (DEBUG_SOUND_SERVER == 2)
+				fprintf(stdout, " p1: %02x ", this_cmd.param1);
+#endif
 				(sss->current_song->pos)++;
 
 			} else if (msg_type == MIDI_MSG_TYPE_SYSTEM) {
+#if (DEBUG_SOUND_SERVER == 2)
+				fprintf(stdout, " SYSTEM ");
+#endif
 				if (this_cmd.midi_cmd <= 0xF6)
 					/* all system common messages cancel running status */
 					last_cmd = 0;
@@ -160,27 +185,19 @@ void do_sound(sound_server_state_t *sss)
 				{
 					while ((sss->current_song->data[(sss->current_song->pos) + 1] >= 0x80) &&
 						   (sss->current_song->data[(sss->current_song->pos) + 1] <= MIDI_SYSTEM_SYSEX_END))
-						  (sss->current_song->pos)++;
-					return;
+						  (sss->current_song->pos)++;	/* go past any parameters */
 
-				} else if (this_cmd.midi_cmd == MIDI_SYSTEM_SYSEX_END) {	/* 0xF7 */
-					/* ignore this if it just appears from nowhere */
-					return;
+				}
+				else
+				{
+					(sss->current_song->pos)++;
 
-				} else if (this_cmd.midi_cmd == SCI_MIDI_END_OF_TRACK) {	/* 0xFC */
-					if ((--(sss->current_song->loops) != 0) && sss->current_song->loopmark)
-					{
-						sss->current_song->pos = sss->current_song->loopmark;
-						global_sound_server->queue_event(
-							sss->current_song->handle, SOUND_SIGNAL_LOOP, sss->current_song->loops);
-
-					} else {
-						sss->current_song->resetflag = 1;	/* reset song position */
-						global_sound_server->queue_command(
-							sss->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
-
-					}
-					return;	/* no more commands to send if track has ended */
+					/* MIDI_SYSTEM_SYSEX_END (0xF7) - ignore if appears from
+					** nowhere (no parameters)
+					**
+					**
+					** SCI_MIDI_END_OF_TRACK (0xFC) - no parameters
+					*/
 				}
 
 			} else {
@@ -192,11 +209,16 @@ void do_sound(sound_server_state_t *sss)
 			if (this_cmd.delta_time > 0)
 			{
 				/* not yet, make cache */
+#ifdef DEBUG_SOUND_SERVER
 				cached_cmd.pos_in_song = this_cmd.pos_in_song;
+#endif
 				cached_cmd.delta_time = this_cmd.delta_time;
 				cached_cmd.midi_cmd = this_cmd.midi_cmd;
 				cached_cmd.param1 = this_cmd.param1;
 				cached_cmd.param2 = this_cmd.param2;
+#if (DEBUG_SOUND_SERVER == 2)
+				fprintf(stdout, " [cached] ");
+#endif
 				return;
 			}
 
@@ -204,22 +226,44 @@ void do_sound(sound_server_state_t *sss)
 			fprintf(debug_stream, "WARNING: do_sound() has handle with no data!\n");
 		}
 
-		/* unless the channel is muted, send MIDI command */
-		if (!( ((this_cmd.midi_cmd & 0xf0) == MIDI_NOTE_ON) &&
-			   sss->mute_channel[this_cmd.midi_cmd & 0xf] ))
+		/* handle 0xF commands */
+		if (this_cmd.midi_cmd == SCI_MIDI_END_OF_TRACK)
 		{
-#ifdef DEBUG_SOUND_SERVER
-			/* fprintf(stdout, "MIDI (ess): %04x:\t0x%02x\t%u\t%u\n", this_cmd.pos_in_song, this_cmd.midi_cmd, this_cmd.param1, this_cmd.param2); */
-#endif
-
-			sci_midi_command(debug_stream,
-				sss->current_song,
-				this_cmd.midi_cmd,
-				(unsigned char)this_cmd.param1,
-				(unsigned char)this_cmd.param2,
-				&(sss->sound_cue),
-				&(sss->playing_notes[this_cmd.midi_cmd & 0xf]));
+			if ((--(sss->current_song->loops) != 0) && sss->current_song->loopmark)
+			{
+				sss->current_song->pos = sss->current_song->loopmark;
+				global_sound_server->queue_event(
+					sss->current_song->handle, SOUND_SIGNAL_LOOP, sss->current_song->loops);
+			} else {
+				sss->current_song->resetflag = 1;	/* reset song position */
+				sss->current_song->status = SOUND_STATUS_STOPPED;
+				global_sound_server->queue_command(
+					sss->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
+				global_sound_server->queue_event(
+					sss->current_song->handle, SOUND_SIGNAL_LOOP, -1);
+			}
 		}
+		else
+		{
+			/* unless the channel is muted, send MIDI command */
+			if (!( ((this_cmd.midi_cmd & 0xf0) == MIDI_NOTE_ON) &&
+				   sss->mute_channel[this_cmd.midi_cmd & 0xf] ))
+			{
+				sci_midi_command(debug_stream,
+					sss->current_song,
+					this_cmd.midi_cmd,
+					(unsigned char)this_cmd.param1,
+					(unsigned char)this_cmd.param2,
+					&(sss->sound_cue),
+					&(sss->playing_notes[this_cmd.midi_cmd & 0xf]));
+#if (DEBUG_SOUND_SERVER == 2)
+					fprintf(stdout, " (playing %02x %02x %02x)", this_cmd.midi_cmd, this_cmd.param1, this_cmd.param2);
+#endif
+			}
+		}
+#if (DEBUG_SOUND_SERVER == 2)
+		fprintf(stdout, "\n");
+#endif
 	}
 }
 

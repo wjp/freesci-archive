@@ -1,3 +1,9 @@
+2001-12-18  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss.c: Fixed end of track problems.
+	
+	* src/sound/polled_ss.c: Now uses stop_all() from soundserver.c.
+	
 2001-12-17  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c:
