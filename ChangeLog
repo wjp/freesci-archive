@@ -1,3 +1,7 @@
+2002-10-27  Lars Skovlund  <lskovlun@image.dk>
+
+	* Updated SCI01 sound resource docs
+
 2002-10-22  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sound/polled_ss_dc.c, src/sound/sound.c: Added initial
