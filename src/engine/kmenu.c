@@ -111,6 +111,7 @@ struct {
 	 "Dark Minister\nSCI research (bytecode and parser)\n\n"
 	 "Dmitry Jemerov\nPort to the Win32 platform, numerous bugfixes\n\n"
 	 "Francois-R Boyer\nMT-32 information and mapping code\n\n"
+	 "George Reid\nFreeBSD package management\n\n"
 	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
 	 "Paul David Doherty\nGame version information",

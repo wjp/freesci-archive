@@ -1721,6 +1721,7 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 
 		widget = (gfxw_dyn_view_t *) gfxw_set_id(GFXW(widget), obj);
 		widget = gfxw_dyn_view_set_params(widget, under_bits, under_bitsp, signal, signalp);
+		widget->flags |= GFXW_FLAG_IMMUNE_TO_SNAPSHOTS; /* Only works the first time 'round */
 
 		return widget;
 	} else {
@@ -1877,8 +1878,10 @@ _k_update_signals_in_view_list(gfxw_list_t *old_list, gfxw_list_t *new_list)
 		while (new_widget && new_widget->ID != old_widget->ID)
 			new_widget = (gfxw_dyn_view_t *) new_widget->next;
 
-		if (new_widget)
+		if (new_widget) {
 			old_widget->signal = new_widget->signal;
+			new_widget->flags &= ~GFXW_FLAG_IMMUNE_TO_SNAPSHOTS;
+		}
 
 		old_widget = (gfxw_dyn_view_t *) old_widget->next;
 	}
@@ -2585,7 +2588,6 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		templist->widfree(GFXW(templist));
 		s->dyn_views->free_tagged(GFXWC(s->dyn_views)); /* Free obsolete dynviews */
-
 	} /* if (cast_list) */
 
 	if (open_animation) {
@@ -2595,7 +2597,6 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		FULL_REDRAW();
 
 		animate_do_animation(s, funct_nr, argc, argp);
-		return;
 	} /* if (open_animation) */
 
 	if (cast_list) {

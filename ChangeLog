@@ -1,3 +1,11 @@
+2001-02-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_make_dynview_obj): Made initial widgets
+	impervious to snapshots (and, thus, annihilate() operations)
+
+	* src/engine/kmenu.c: Added George Reid (FreeBSD package maintainer)
+	to the list of contributors
+
 2001-02-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/savegame.cfsml (gamestate_restore): Fixed savegames.

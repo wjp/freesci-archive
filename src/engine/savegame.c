@@ -5648,7 +5648,6 @@ gamestate_restore(state_t *s, char *dirname)
 	gfxop_clear_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
 
 	if (retval->visual) {
-		retval->visual->print(GFXWC(retval->visual), 1);
 		gfxop_set_clip_zone(retval->gfx_state, gfx_rect_fullscreen);
 		retval->visual->gfx_state = retval->gfx_state;
 		retval->visual->add_dirty_abs(GFXWC(retval->visual), gfx_rect_fullscreen, 1);
