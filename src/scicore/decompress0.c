@@ -235,6 +235,7 @@ int decompress0(resource_t *result, int resh)
 {
 	guint16 compressedLength;
 	guint16 compressionMethod;
+	guint16 result_size;
 	guint8 *buffer;
 
 #ifdef SATISFY_PURIFY
@@ -254,17 +255,18 @@ int decompress0(resource_t *result, int resh)
 		return SCI_ERROR_DECOMPRESSION_INSANE;
 
 	if ((read(resh, &compressedLength, 2) != 2) ||
-	    (read(resh, &(result->length), 2) != 2) ||
+	    (read(resh, &result_size, 2) != 2) ||
 	    (read(resh, &compressionMethod, 2) != 2))
 		return SCI_ERROR_IO_ERROR;
 
 #ifdef WORDS_BIGENDIAN
 	compressedLength = GUINT16_SWAP_LE_BE_CONSTANT(compressedLength);
-	result->length = GUINT16_SWAP_LE_BE_CONSTANT(result->length);
+	result_size = GUINT16_SWAP_LE_BE_CONSTANT(result_size);
 	compressionMethod = GUINT16_SWAP_LE_BE_CONSTANT(compressionMethod);
 #endif
+	result->size = result_size;
 
-	if ((result->length > SCI_MAX_RESOURCE_SIZE) ||
+	if ((result->size > SCI_MAX_RESOURCE_SIZE) ||
 	    (compressedLength > SCI_MAX_RESOURCE_SIZE))
 		return SCI_ERROR_RESOURCE_TOO_BIG;
 	/* With SCI0, this simply cannot happen. */
@@ -278,7 +280,7 @@ int decompress0(resource_t *result, int resh)
 	}
 
 	buffer = sci_malloc(compressedLength);
-	result->data = sci_malloc(result->length);
+	result->data = sci_malloc(result->size);
 
 	if (read(resh, buffer, compressedLength) != compressedLength) {
 		free(result->data);
@@ -290,17 +292,17 @@ int decompress0(resource_t *result, int resh)
 #ifdef _SCI_DECOMPRESS_DEBUG
 	fprintf(stderr, "Resource %s.%03hi encrypted with method %hi at %.2f%%"
 		" ratio\n",
-		Resource_Types[result->type], result->number, compressionMethod,
-		(result->length == 0)? -1.0 :
-		(100.0 * compressedLength / result->length));
+		sci_resource_types[result->type], result->number, compressionMethod,
+		(result->size == 0)? -1.0 :
+		(100.0 * compressedLength / result->size));
 	fprintf(stderr, "  compressedLength = 0x%hx, actualLength=0x%hx\n",
-		compressedLength, result->length);
+		compressedLength, result->size);
 #endif
 
 	switch(compressionMethod) {
 
 	case 0: /* no compression */
-		if (result->length != compressedLength) {
+		if (result->size != compressedLength) {
 			free(result->data);
 			result->data = NULL;
 			result->status = SCI_STATUS_NOMALLOC;
@@ -312,7 +314,7 @@ int decompress0(resource_t *result, int resh)
 		break;
 
 	case 1: /* LZW compression */
-		if (decrypt1(result->data, buffer, result->length, compressedLength)) {
+		if (decrypt1(result->data, buffer, result->size, compressedLength)) {
 			free(result->data);
 			result->data = 0; /* So that we know that it didn't work */
 			result->status = SCI_STATUS_NOMALLOC;
@@ -323,7 +325,7 @@ int decompress0(resource_t *result, int resh)
 		break;
 
 	case 2: /* Some sort of Huffman encoding */
-		if (decrypt2(result->data, buffer, result->length, compressedLength)) {
+		if (decrypt2(result->data, buffer, result->size, compressedLength)) {
 			free(result->data);
 			result->data = 0; /* So that we know that it didn't work */
 			result->status = SCI_STATUS_NOMALLOC;
@@ -335,7 +337,7 @@ int decompress0(resource_t *result, int resh)
 
 	default:
 		fprintf(stderr,"Resource %s.%03hi: Compression method %hi not "
-			"supported!\n", Resource_Types[result->type], result->number,
+			"supported!\n", sci_resource_types[result->type], result->number,
 			compressionMethod);
 		free(result->data);
 		result->data = 0; /* So that we know that it didn't work */

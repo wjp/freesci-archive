@@ -56,7 +56,8 @@
 /*** RESOURCE STATUS TYPES ***/
 #define SCI_STATUS_NOMALLOC 0
 #define SCI_STATUS_ALLOCATED 1
-#define SCI_STATUS_LOCKED 2 /* Allocated and in use */
+#define SCI_STATUS_ENQUEUED 2 /* In the LRU queue */
+#define SCI_STATUS_LOCKED 3 /* Allocated and in use */
 
 #define SCI_RES_FILE_NR_PATCH -1 /* Resource was read from a patch file rather than from a resource */
 
@@ -94,10 +95,10 @@
 
 #define SCI_VERSION_1 SCI_VERSION_1_EARLY
 
-extern DLLEXTERN const char* SCI_Error_Types[];
-extern DLLEXTERN const char* SCI_Version_Types[];
-extern DLLEXTERN const char* Resource_Types[];
-extern DLLEXTERN const char* resource_type_suffixes[]; /* Suffixes for SCI1 patch files */
+extern DLLEXTERN const char* sci_error_types[];
+extern DLLEXTERN const char* sci_version_types[];
+extern DLLEXTERN const char* sci_resource_types[];
+extern DLLEXTERN const char* sci_resource_type_suffixes[]; /* Suffixes for SCI1 patch files */
 extern DLLEXTERN const int sci_max_resource_nr[]; /* Highest possible resource numbers */
 
 
@@ -120,20 +121,34 @@ struct resource_index_struct {
 
 typedef struct resource_index_struct resource_index_t;
 
+
+typedef struct _resource_source_struct {
+	unsigned int file_offset;
+	unsigned char file;
+
+	struct _resource_source_struct *next;
+} resource_source_t;
+
+
 typedef struct _resource_struct {
 	unsigned char *data;
 
 	unsigned short number;
 	unsigned short type;
 	guint16 id; /* contains number and type */
-	guint16 length;
-	unsigned char status;
+
+	int size;
+
+	unsigned int file_offset; /* Offset in file */
 	unsigned char file; /* Number of the resource file this resource is stored in */
 
+	unsigned char status;
 	unsigned short lockers; /* Number of places where this resource was locked */
-	unsigned int file_offset; /* Offset in file */
+
 	struct _resource_struct *next; /* Position marker for the LRU queue */
 	struct _resource_struct *prev;
+
+	resource_source_t *alt_sources; /* SLL of alternative resource data sources */
 } resource_t; /* for storing resources in memory */
 
 
@@ -224,6 +239,20 @@ scir_unlock_resource(resource_mgr_t *mgr, resource_t *res);
 ** Returns   : (void)
 */
 
+resource_t *
+scir_test_resource(resource_mgr_t *mgr, int type, int number);
+/* Tests whether a resource exists
+** Parameters: (resource_mgr_t *) mgr: The resource manager to search in
+**             (int) type: Type of the resource to check
+**             (int) number: Number of the resource to check
+** Returns   : (resource_t *) non-NULL if the resource exists, NULL otherwise
+** This function may often be much faster than finding the resource
+** and should be preferred for simple tests.
+** The resource object returned is, indeed, the resource in question, but
+** it should be used with care, as it may be unallocated.
+** Use scir_find_resource() if you want to use the data contained in the resource.
+*/
+
 void
 scir_free_resource_manager(resource_mgr_t *mgr);
 /* Frees a resource manager and all memory handled by it
@@ -234,9 +263,10 @@ scir_free_resource_manager(resource_mgr_t *mgr);
 /**--- Resource map decoding functions ---*/
 
 int
-sci0_read_resource_map(resource_t **resources, int *resource_nr_p);
+sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p);
 /* Reads the resource.map file from a local directory
-** Parameters: (resource_t **) resources: Pointer to a pointer
+** Parameters: (char *) path: The path to read the resource map file from
+**             (resource_t **) resources: Pointer to a pointer
 **                                        that will be set to the
 **                                        location of the resources
 **                                        (in one large chunk)
@@ -298,6 +328,28 @@ int decrypt2(guint8* dest, guint8* src, int length, int complength);
 int decrypt4(guint8* dest, guint8* src, int length, int complength);
 /* DCL inflate- implemented in decompress1.c
 */
+
+
+/*--- Internal helper functions ---*/
+
+void
+_scir_free_resources(resource_t *resources, int resources_nr);
+/* Frees a block of resources and associated data
+** Parameters: (resource_t *) resources: The resources to free
+**             (int) resources_nr: Number of resources in the block
+** Returns   : (void)
+*/
+
+void
+_scir_add_altsource(resource_t *res, int file, unsigned int file_offset);
+/* Adds an alternative source to a resource
+** Parameters: (resource_t *) res: The resource to add to
+**             (int) file: file the resource is stored in
+**             (unsigned int) file_offset: Offset in the file the resource
+**                            is stored at
+** Retruns   : (void)
+*/
+
 
 /**** Internal #defines ****/
 

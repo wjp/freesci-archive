@@ -635,7 +635,6 @@ _gfxop_scan_one_bitmask(gfx_pixmap_t *pixmap, rect_t zone)
 	startindex += pixmap_xscale >> 1; /* Center on X */
 	startindex += (pixmap_yscale >> 1) * pixmap->index_xl; /* Center on Y */
 
-	fprintf(stderr,"Scanning bitmask size %d,%d\n", pixmap->index_xl, pixmap->index_yl);
 	if (_gfxop_clip(&zone, gfx_rect(0, 0, pixmap->index_xl, pixmap->index_yl)))
 		return 0;
 

@@ -223,7 +223,7 @@ static int
 suggested_script(resource_t *res, int class)
 {
 	int offset;
-	if (class >= res->length >> 2)
+	if (class >= res->size >> 2)
 		return -1;
 
 	offset = 2 + (class << 2);
@@ -261,7 +261,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	if (!vocab996)
 		s->classtable_size = 20;
 	else
-		s->classtable_size = vocab996->length >> 2;
+		s->classtable_size = vocab996->size >> 2;
 
 	s->classtable = sci_calloc(sizeof(class_t), s->classtable_size);
 
@@ -278,7 +278,7 @@ script_init_engine(state_t *s, sci_version_t version)
 
 			do {
 
-				while (seeker < script->length)	{
+				while (seeker < script->size)	{
 					int lastseeker = seeker;
 					objtype = getInt16(script->data + seeker);
 					if (objtype == sci_obj_class || objtype == sci_obj_terminator)
@@ -327,7 +327,7 @@ script_init_engine(state_t *s, sci_version_t version)
 					seeker += getInt16(script->data + seeker + 2); /* Move to next */
 				}
 
-			} while (objtype != sci_obj_terminator && seeker <= script->length);
+			} while (objtype != sci_obj_terminator && seeker <= script->size);
 
 		}
 	}

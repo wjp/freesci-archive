@@ -99,12 +99,12 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 	}
 
 	if (need_unscaled)
-		gfxr_draw_pic0(unscaled_pic, flags, default_palette, res->length, res->data, &basic_style, res->id);
+		gfxr_draw_pic0(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id);
 
 	if (scaled_pic->undithered_buffer)
 		memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
 
-	gfxr_draw_pic0(scaled_pic, flags, default_palette, res->length, res->data, &style, res->id);
+	gfxr_draw_pic0(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id);
 	if (need_unscaled)
 		gfxr_remove_artifacts_pic0(scaled_pic, unscaled_pic);
 
@@ -132,7 +132,7 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr)
 		return NULL;
 	}
 
-	return gfxr_draw_view0(res->id, res->data, res->length);
+	return gfxr_draw_view0(res->id, res->data, res->size);
 }
 
 
@@ -144,7 +144,7 @@ gfxr_interpreter_get_font(gfx_resstate_t *state, int nr)
 	if (!res || !res->data)
 		return NULL;
 
-	return gfxr_read_font(res->id, res->data, res->length);
+	return gfxr_read_font(res->id, res->data, res->size);
 }
 
 
@@ -162,9 +162,9 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr)
 	}
 
 	if (state->version == SCI_VERSION_0)
-		return gfxr_draw_cursor0(res->id, res->data, res->length);
+		return gfxr_draw_cursor0(res->id, res->data, res->size);
 	else
-		return gfxr_draw_cursor01(res->id, res->data, res->length);
+		return gfxr_draw_cursor01(res->id, res->data, res->size);
 }
 
 

@@ -681,7 +681,7 @@ getResourceNumber (char *resid)
   int i, res = -1;
 
   for (i = 0; i < sci_invalid_resource; i++)
-    if (strcmp (Resource_Types[i], resid) == 0)
+    if (strcmp (sci_resource_types[i], resid) == 0)
       res = i;
   return res;
 }
@@ -690,7 +690,7 @@ int
 c_version (state_t * s)
 {
   sciprintf ("FreeSCI, version " VERSION "\n");
-  sciprintf ("Running %s\n", SCI_Version_Types[sci_version]);
+  sciprintf ("Running %s\n", sci_version_types[sci_version]);
   return 0;
 }
 
@@ -725,7 +725,7 @@ c_list (state_t * s)
 
       int i;
       for (i = 0; i < sci_invalid_resource; i++)
-	sciprintf ("%s\n", Resource_Types[i]);
+	sciprintf ("%s\n", sci_resource_types[i]);
 
     }
     else if (strcmp ("vars", cmd_params[0].str) == 0)
@@ -748,7 +748,7 @@ c_list (state_t * s)
 	int i;
 	for (i = 0; i < 1000; i++)
 	  if (findResource (res, i))
-	    sciprintf ("%s.%03d\n", Resource_Types[res], i);
+	    sciprintf ("%s.%03d\n", sci_resource_types[res], i);
       }
 
     }
@@ -842,7 +842,7 @@ c_size (state_t * s)
     resource_t *resource = findResource (res, cmd_params[1].val);
     if (resource)
     {
-      sciprintf ("Size: %d\n", resource->length);
+      sciprintf ("Size: %d\n", resource->size);
     }
     else
       sciprintf ("Resource %s.%03d not found\n", cmd_params[0].str,
@@ -863,7 +863,7 @@ c_dump (state_t * s)
   {
     resource_t *resource = findResource (res, cmd_params[1].val);
     if (resource)
-      sci_hexdump (resource->data, resource->length, 0);
+      sci_hexdump (resource->data, resource->size, 0);
     else
       sciprintf ("Resource %s.%03d not found\n", cmd_params[0].str,
 		 cmd_params[1].val);
@@ -922,7 +922,7 @@ c_hexgrep (state_t * s)
       int comppos = 0;
       int output_script_name = 0;
 
-      while (seeker < script->length)
+      while (seeker < script->size)
       {
 
 	if (script->data[seeker] == seekstr[comppos])
@@ -939,7 +939,7 @@ c_hexgrep (state_t * s)
 
 	    if (!output_script_name)
 	    {
-	      sciprintf ("\nIn %s.%03d:\n", Resource_Types[restype], resnr);
+	      sciprintf ("\nIn %s.%03d:\n", sci_resource_types[restype], resnr);
 	      output_script_name = 1;
 	    }
 	    sciprintf ("   0x%04x\n", seekerold);

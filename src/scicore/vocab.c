@@ -90,7 +90,7 @@ vocab_get_words_sci1(int *word_counter)
 
   seeker = 0x1fe; /* vocab.900 starts with 255 16-bit pointers which we don't use */
 
-  if (resource->length < 510) {
+  if (resource->size < 510) {
     fprintf(stderr, "Invalid main vocabulary encountered: Too small\n");
     return NULL;
     /* Now this ought to be critical, but it'll just cause parse() and said() not to work */
@@ -98,7 +98,7 @@ vocab_get_words_sci1(int *word_counter)
 
   words = sci_malloc(sizeof(word_t *));
 
-  while (seeker < resource->length) {
+  while (seeker < resource->size) {
     byte c;
 
     words = sci_realloc(words, (counter + 1) * sizeof(word_t *));
@@ -155,7 +155,7 @@ vocab_get_words(int *word_counter)
 
   seeker = 52; /* vocab.000 starts with 26 16-bit pointers which we don't use */
 
-  if (resource->length < 52) {
+  if (resource->size < 52) {
     fprintf(stderr, "Invalid main vocabulary encountered: Too small\n");
     return NULL;
     /* Now this ought to be critical, but it'll just cause parse() and said() not to work */
@@ -163,7 +163,7 @@ vocab_get_words(int *word_counter)
 
   words = sci_malloc(sizeof(word_t *));
 
-  while (seeker < resource->length) {
+  while (seeker < resource->size) {
     byte c;
 
     words = sci_realloc(words, (counter + 1) * sizeof(word_t *));
@@ -255,7 +255,7 @@ vocab_get_suffices(int *suffices_nr)
 
   suffices = sci_malloc(sizeof(suffix_t *));
 
-  while ((seeker < resource->length-1) && (resource->data[seeker + 1] != 0xff)) {
+  while ((seeker < resource->size-1) && (resource->data[seeker + 1] != 0xff)) {
 
     char *alt_suffix = (char *) resource->data + seeker;
     int alt_len = strlen(alt_suffix);
@@ -323,7 +323,7 @@ vocab_get_branches(int *branches_nr)
     return NULL;
   }
 
-  *branches_nr = resource->length / 20;
+  *branches_nr = resource->size / 20;
 
   if (*branches_nr == 0) {
     fprintf(stderr,"Parser tree data is empty!\n");

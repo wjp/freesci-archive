@@ -173,7 +173,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 			return 1;
 		}
 
-		len = song->length;
+		len = song->size;
 		sound_queue_command(event.handle, event.signal, event.value);
 		if (sound_send_data(song->data, len) != len) {
 			fprintf(stderr, "sound_command(): sound_send_data"
@@ -716,7 +716,7 @@ int init_midi_device (state_t *s) {
 			return -1;
 		}
 
-	} else if (midi_open(midi_patch->data, midi_patch->length) < 0) {
+	} else if (midi_open(midi_patch->data, midi_patch->size) < 0) {
 		sciprintf(" The MIDI device failed to open cleanly.\n");
 		return -1;
 	}

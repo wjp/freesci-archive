@@ -1,4 +1,16 @@
+2001-09-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* Adjusted all files for the array name changes
+	
+	* src/scicore/resource.c: resource manager theoretically
+	functional
+
 2001-09-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/sciresource.h: array name cleanups
+
+	* src/scicore/resource.c (_scir_free_resources): Resource manager
+	updates
 
 	* src/gfx/operations.c (_gfxop_scan_one_bitmask): Bitmask
 	scan now compensates for higher-resolution pixmaps

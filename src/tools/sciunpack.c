@@ -96,18 +96,18 @@ void
 print_resource_filename(FILE* file, int type, int number)
 {
 	if (sci_version < SCI_VERSION_1)
-		fprintf(file, "%s.%03d", Resource_Types[type], number);
+		fprintf(file, "%s.%03d", sci_resource_types[type], number);
 	else
-		fprintf(file, "%d.%s", number, resource_type_suffixes[type]);
+		fprintf(file, "%d.%s", number, sci_resource_type_suffixes[type]);
 }
 
 void
 sprint_resource_filename(char* buf, int type, int number)
 {
 	if (sci_version < SCI_VERSION_1)
-		sprintf(buf, "%s.%03d", Resource_Types[type], number);
+		sprintf(buf, "%s.%03d", sci_resource_types[type], number);
 	else
-		sprintf(buf, "%d.%s", number, resource_type_suffixes[type]);
+		sprintf(buf, "%d.%s", number, sci_resource_type_suffixes[type]);
 }
 
 #ifdef HAVE_GETOPT_LONG
@@ -285,7 +285,7 @@ int main(int argc, char** argv)
 		} else resourcenumber_string = argv[optind+1];
 
 		for (i=0; i< 18; i++)
-			if ((strcmp(Resource_Types[i], resstring)==0)) stype = i;
+			if ((strcmp(sci_resource_types[i], resstring)==0)) stype = i;
 		if (stype==-1) {
 			printf("Could not find the resource type '%s'.\n", resstring);
 			return 1;
@@ -299,11 +299,11 @@ int main(int argc, char** argv)
 		}
 
 	if ((i = loadResources(SCI_VERSION_AUTODETECT, 0))) {
-		fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
+		fprintf(stderr,"SCI Error: %s!\n", sci_error_types[i]);
 		return 1;
 	};
 
-	if (verbose) printf("Autodetect determined: %s\n", SCI_Version_Types[sci_version]);
+	if (verbose) printf("Autodetect determined: %s\n", sci_version_types[sci_version]);
 
 
 	switch (action) {
@@ -315,7 +315,7 @@ int main(int argc, char** argv)
 			for (i=0; i<max_resource; i++) {
 				printf("%i: ",i);
 				print_resource_filename(stdout, resource_map[i].type, resource_map[i].number);
-				printf("   has size %i\n", resource_map[i].length);
+				printf("   has size %i\n", resource_map[i].size);
 			}
 
 			fprintf(stderr," Reading complete. Actual resource count is %i\n",
@@ -432,8 +432,8 @@ void unpack_resource(int stype, int snr, char *outfilename)
 					return;
 				}
 				if (verbose) printf("MIDI conversion from %d bytes of sound resource"
-						    " to a %d bytes MIDI file.\n",found->length,
-						    midilength);
+						    " to a %d bytes MIDI file.\n",
+						    found->size, midilength);
 				write(outf, outdata, midilength);
 				free(outdata);
 			} else {
@@ -446,7 +446,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 					write(outf, &header, 1);
 				}
 
-				write(outf,  found->data, found->length);
+				write(outf,  found->data, found->size);
 #ifdef HAVE_OBSTACK_H
 			}
 #endif /* HAVE_OBSTACK_H */

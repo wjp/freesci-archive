@@ -38,7 +38,7 @@ int decrypt4(guint8* dest, guint8* src, int length, int complength);
 int decompress11(resource_t *result, int resh)
 {
 	guint16 compressedLength;
-	guint16 compressionMethod;
+	guint16 compressionMethod, result_size;
 	guint8 *buffer;
 	guint8 tempid;
 
@@ -60,21 +60,22 @@ int decompress11(resource_t *result, int resh)
 		return SCI_ERROR_DECOMPRESSION_INSANE;
 
 	if ((read(resh, &compressedLength, 2) != 2) ||
-	    (read(resh, &(result->length), 2) != 2) ||
+	    (read(resh, &result_size, 2) != 2) ||
 	    (read(resh, &compressionMethod, 2) != 2))
 		return SCI_ERROR_IO_ERROR;
 
 #ifdef WORDS_BIGENDIAN
 	compressedLength = GUINT16_SWAP_LE_BE_CONSTANT(compressedLength);
-	result->length = GUINT16_SWAP_LE_BE_CONSTANT(result->length);
+	result_size = GUINT16_SWAP_LE_BE_CONSTANT(result_size);
 	compressionMethod = GUINT16_SWAP_LE_BE_CONSTANT(compressionMethod);
 #endif
+	result->size = result_size;
 
-  /*  if ((result->length < 0) || (compressedLength < 0))
+  /*  if ((result->size < 0) || (compressedLength < 0))
       return SCI_ERROR_DECOMPRESSION_INSANE; */
   /* This return will never happen in SCI0 or SCI1 (does it have any use?) */
 
-	if ((result->length > SCI_MAX_RESOURCE_SIZE) ||
+	if ((result->size > SCI_MAX_RESOURCE_SIZE) ||
 	    (compressedLength > SCI_MAX_RESOURCE_SIZE))
 		return SCI_ERROR_RESOURCE_TOO_BIG;
 
@@ -87,7 +88,7 @@ int decompress11(resource_t *result, int resh)
 	}
 
 	buffer = sci_malloc(compressedLength);
-	result->data = sci_malloc(result->length);
+	result->data = sci_malloc(result->size);
 
 	if (read(resh, buffer, compressedLength) != compressedLength) {
 		free(result->data);
@@ -103,20 +104,20 @@ int decompress11(resource_t *result, int resh)
 #ifdef _SCI_DECOMPRESS_DEBUG
 	fprintf(stderr, "Resource %i.%s encrypted with method SCI1.1/%hi at %.2f%%"
 		" ratio\n",
-		result->number, resource_type_suffixes[result->type],
+		result->number, sci_resource_type_suffixes[result->type],
 		compressionMethod,
-		(result->length == 0)? -1.0 :
-		(100.0 * compressedLength / result->length));
+		(result->size == 0)? -1.0 :
+		(100.0 * compressedLength / result->size));
 	fprintf(stderr, "  compressedLength = 0x%hx, actualLength=0x%hx\n",
-		compressedLength, result->length);
+		compressedLength, result->size);
 #endif
 
-	DDEBUG("/%d[%d]", compressionMethod, result->length);
+	DDEBUG("/%d[%d]", compressionMethod, result->size);
 
 	switch(compressionMethod) {
 
 	case 0: /* no compression */
-		if (result->length != compressedLength) {
+		if (result->size != compressedLength) {
 			free(result->data);
 			result->data = NULL;
 			result->status = SCI_STATUS_NOMALLOC;
@@ -126,12 +127,12 @@ int decompress11(resource_t *result, int resh)
 		memcpy(result->data, buffer, compressedLength);
 		result->status = SCI_STATUS_ALLOCATED;
 		printf("#################### %d.%s: compression type #%d\n",
-			result->number, resource_type_suffixes[result->type], compressionMethod);
+			result->number, sci_resource_type_suffixes[result->type], compressionMethod);
 		break;
 
 	case 18:
 		fprintf(stderr,"Preparing decompression...\n");
-		if (decrypt4(result->data, buffer, result->length, compressedLength)) {
+		if (decrypt4(result->data, buffer, result->size, compressedLength)) {
 			free(result->data);
 			result->data = 0; /* So that we know that it didn't work */
 			result->status = SCI_STATUS_NOMALLOC;
@@ -146,7 +147,7 @@ int decompress11(resource_t *result, int resh)
 	case 3:
 	case 4: /* NYI */
 		fprintf(stderr,"Resource %d.%s: Warning: compression type #%d not yet implemented\n",
-			result->number, resource_type_suffixes[result->type], compressionMethod);
+			result->number, sci_resource_type_suffixes[result->type], compressionMethod);
 		free(result->data);
 		result->data = NULL;
 		result->status = SCI_STATUS_NOMALLOC;
@@ -154,7 +155,7 @@ int decompress11(resource_t *result, int resh)
 
 	default:
 		fprintf(stderr,"Resource %d.%s: Compression method SCI1/%hi not "
-			"supported!\n", result->number, resource_type_suffixes[result->type],
+			"supported!\n", result->number, sci_resource_type_suffixes[result->type],
 			compressionMethod);
 		free(result->data);
 		result->data = NULL; /* So that we know that it didn't work */

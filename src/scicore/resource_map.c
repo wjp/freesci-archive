@@ -31,8 +31,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#define RESOURCE_MAP_FILENAME "resource.map"
 
 #define SCI0_RESMAP_ENTRIES_SIZE 6
+
 
 int
 sci0_read_entry(byte *buf, resource_t *res)
@@ -48,16 +50,18 @@ sci0_read_entry(byte *buf, resource_t *res)
 }
 
 int
-sci0_read_resource_map(resource_t **resource_p, int *resource_nr_p)
+sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 {
 	struct stat fd_stat;
-	int fd = sci_open("resource.map", O_RDONLY);
+	int fd;
 	resource_t *resources;
 	int resources_nr;
 	int resource_index = 0;
+	int resources_total_read = 0;
 	int next_entry;
 	int max_resfile_nr = 0;
 	byte buf[SCI0_RESMAP_ENTRIES_SIZE];
+	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY);
 
 	if (!fd)
 		return SCI_ERROR_RESMAP_NOT_FOUND;
@@ -85,17 +89,36 @@ sci0_read_resource_map(resource_t **resource_p, int *resource_nr_p)
 			next_entry = 0;
 
 		if (next_entry) {
-			sci0_read_entry(buf, resources + resource_index++);
+			int fresh = 1;
+			int addto = resource_index;
+			int i;
 
-			if (resources[resource_index - 1].file > max_resfile_nr)
+			sci0_read_entry(buf, resources + resource_index);
+
+			if (resources[resource_index].file > max_resfile_nr)
 				max_resfile_nr =
-					resources[resource_index - 1].file;
+					resources[resource_index].file;
 
-			if (resource_index >= resources_nr) {
+			for (i = 0; i < resource_index; i++)
+				if (resources[resource_index].id ==
+				    resources[i].id) {
+					addto = i;
+					fresh = 0;
+				}
+
+			_scir_add_altsource(resources + addto,
+					    resources[resource_index].file,
+					    resources[resource_index].file_offset);
+
+			if (fresh)
+				++resource_index;
+
+			if (++resources_total_read >= resources_nr) {
 				sciprintf("Warning: After %d entries, resource.map"
 					  " is not terminated!\n", resource_index);
 				next_entry = 0;
 			}
+
 		}
 
 	} while (next_entry);
@@ -104,21 +127,23 @@ sci0_read_resource_map(resource_t **resource_p, int *resource_nr_p)
 
 	if (!resource_index) {
 		sciprintf("resource.map was empty!\n");
+		_scir_free_resources(resources, resources_nr);
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 	}
 
-	if (max_resfile_nr > 999)
+	if (max_resfile_nr > 999) {
+		_scir_free_resources(resources, resources_nr);
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
-	else {
+	} else {
 		/* Check whehter the highest resfile used exists */
-		char resfilename_buffer[14];
-		sprintf(resfilename_buffer, "resource.%03d",
-					   max_resfile_nr);
-		fd = sci_open(resfilename_buffer, O_RDONLY);
+		char filename_buf[14];
+		sprintf(filename_buf, "resource.%03d", max_resfile_nr);
+		fd = sci_open(filename_buf, O_RDONLY);
 
-		if (!fd)
+		if (!fd) {
+			_scir_free_resources(resources, resources_nr);
 			return SCI_ERROR_INVALID_RESMAP_ENTRY;
-		else
+		} else
 			close(fd);
 	}
 
@@ -138,7 +163,7 @@ main(int argc, char **argv)
 {
 	int resources_nr;
 	resource_t *resources;
-	int notok = sci0_read_resource_map(&resources, &resources_nr);
+	int notok = sci0_read_resource_map(".", &resources, &resources_nr);
 
 	if (notok) {
 		fprintf(stderr,"Failed: Error code %d\n",notok);

@@ -49,7 +49,7 @@ kernel_lookup_text(state_t *s, int address, int index)
       return NULL; /* Will probably segfault */
     }
 
-    textlen = textres->length;
+    textlen = textres->size;
     seeker = (char *) textres->data;
 
     while (index--)

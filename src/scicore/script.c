@@ -303,7 +303,7 @@ script_dissect(int res_no, char **snames, int snames_nr)
 
   words=vocab_get_words (&word_count);
 
-  while (_seeker < script->length) {
+  while (_seeker < script->size) {
     int objtype = getInt16(script->data + _seeker);
     int objsize;
     int seeker = _seeker + 4;

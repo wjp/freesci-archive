@@ -369,7 +369,7 @@ static script_method* decode_method(byte* data)
 void list_code_blocks(resource_t* r)
 {
 	int pos=getInt16(r->data+2);
-	while(pos<r->length-2)
+	while(pos<r->size-2)
 	{
 		int type=getInt16(r->data+pos);
 		int len=getInt16(r->data+pos+2);
@@ -436,7 +436,7 @@ static int find_frame(resource_t* r, int type, int start)
 	int pos=start;
 	unsigned char* frame;
 
-	assert(start<=r->length-4);
+	assert(start<=r->size-4);
 
 	#ifdef SCRIPT_DEBUG
 	printf("Searching for frame of type %d in script %03d, starting at %#x\n", type, r->number, start);
@@ -445,7 +445,7 @@ static int find_frame(resource_t* r, int type, int start)
 
 	/*Some times there's an extra byte at the beginning. Christoph?*/
 #if 1
-	if(pos==0 && r->length>=6 && \
+	if(pos==0 && r->size>=6 && \
 	   !((0<getInt16(r->data)) && (10>getInt16(r->data)))) pos=2;
 #else
 	if(pos==0) pos=2;
@@ -462,7 +462,7 @@ static int find_frame(resource_t* r, int type, int start)
 		if(t==0) return -1;
 
 		pos+=get_length(frame);
-		if(pos>r->length-2) return -1;
+		if(pos>r->size-2) return -1;
 		frame+=get_length(frame);
 	}
 

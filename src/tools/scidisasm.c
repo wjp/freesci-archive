@@ -190,7 +190,7 @@ int main(int argc, char** argv)
 
   printf ("Loading resources...\n");
   if (i = loadResources(SCI_VERSION_AUTODETECT, 0)) {
-    fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
+    fprintf(stderr,"SCI Error: %s!\n", sci_error_types[i]);
     return 1;
   }
 
@@ -908,7 +908,7 @@ disassemble_script_pass (disasm_state_t *d, script_state_t *s,
 
   if (d->old_header) _seeker = 2;
 
-  while (_seeker < script->length) {
+  while (_seeker < script->size) {
     int objtype = getInt16(script->data + _seeker);
     int objsize;
     int seeker = _seeker + 4;

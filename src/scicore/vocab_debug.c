@@ -142,12 +142,12 @@ int* vocabulary_get_classes(int* count)
 
   if((r=findResource(sci_vocab, 996))==0) return 0;
 
-  c= sci_malloc(sizeof(int)*r->length/2);
-  for(i=2; i<r->length; i+=4)
+  c= sci_malloc(sizeof(int)*r->size/2);
+  for(i=2; i<r->size; i+=4)
     {
       c[i/4]=getInt(r->data+i);
     }
-  *count=r->length/4;
+  *count=r->size/4;
 
   return c;
 }
@@ -156,7 +156,7 @@ int vocabulary_get_class_count()
 {
   resource_t* r;
   if((r=findResource(sci_vocab, 996))==0) return 0;
-  return r->length/4;
+  return r->size/4;
 }
 
 char** vocabulary_get_snames(int* pcount, sci_version_t version)
@@ -274,7 +274,7 @@ static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
   char **retval = sci_malloc(sizeof (char *) * mallocsize);
   int i = 0, index = 0;
 
-  while (index < r->length) {
+  while (index < r->size) {
 
     int slen = strlen((char *) r->data + index) + 1;
 
@@ -358,7 +358,7 @@ static char** vocabulary_get_knames1(int *count)
   int size=64, used=0, pos=0;
   resource_t* r=findResource(sci_vocab, 999);
 
-  while(pos<r->length)
+  while(pos<r->size)
     {
       int len;
       if ((used==size-1)||(!t))

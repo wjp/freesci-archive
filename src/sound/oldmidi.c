@@ -949,7 +949,7 @@ mapMIDIInstruments(void)
   memtimbres = *(patch1->data + 0x1EB);
   pos = 0x1EC + memtimbres * 0xF6;
 
-  if (patch1->length > pos && \
+  if (patch1->size > pos && \
       ((0x100 * *(patch1->data + pos) + *(patch1->data +pos + 1)) == 0xABCD)) {
     patches = 96;
     pos += 2 + 8 * 48;
@@ -1026,7 +1026,7 @@ mapMIDIInstruments(void)
     MIDI_mapping[i].gm_instr = NOMAP;
   */
 
-  if (patch1->length > pos && \
+  if (patch1->size > pos && \
       ((0x100 * *(patch1->data + pos) + *(patch1->data + pos + 1)) == 0xDCBA)) {
     for (i = 0; i < 64 ; i++) {
       number = *(patch1->data + pos + 4 * i + 2);

@@ -1540,7 +1540,7 @@ c_resource_id(state_t *s)
 {
 	int id = cmd_params[0].val;
 
-	sciprintf("%s.%d (0x%x)\n", Resource_Types[id >> 11], id &0x7ff, id & 0x7ff);
+	sciprintf("%s.%d (0x%x)\n", sci_resource_types[id >> 11], id &0x7ff, id & 0x7ff);
 	return 0;
 }
 

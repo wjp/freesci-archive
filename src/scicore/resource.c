@@ -43,9 +43,10 @@
 #endif
 
 #undef SCI_REQUIRE_RESOURCE_FILES
+#define SCI_VERBOSE_RESMGR
 
 
-const char* SCI_Version_Types[] = {
+const char* sci_version_types[] = {
 	"SCI version undetermined (Autodetect failed / not run)",
 	"SCI version 0.xxx",
 	"SCI version 0.xxx w/ 1.000 compression",
@@ -57,7 +58,7 @@ const char* SCI_Version_Types[] = {
 
 const int sci_max_resource_nr[] = {65536, 1000, 1000, 1000, 8192};
 
-const char* SCI_Error_Types[] = {
+const char* sci_error_types[] = {
 	"No error",
 	"I/O error",
 	"Resource is empty (size 0)",
@@ -70,16 +71,16 @@ const char* SCI_Error_Types[] = {
 	"Decompression failed: Resource too big",
 	"SCI version is unsupported"};
 
-const char* Resource_Types[] = {"view","pic","script","text","sound",
-				"memory","vocab","font","cursor",
-				"patch","bitmap","palette","cdaudio",
-				"audio","sync","message","map","heap"};
+const char* sci_resource_types[] = {"view","pic","script","text","sound",
+				    "memory","vocab","font","cursor",
+				    "patch","bitmap","palette","cdaudio",
+				    "audio","sync","message","map","heap"};
 /* These are the 18 resource types supported by SCI1 */
 
-const char *resource_type_suffixes[] = {"v56","p56","scr","tex","snd",
-					"   ","voc","fon","cur","pat",
-					"bit","pal","cda","aud","syn",
-					"msg","map","hep"};
+const char *sci_resource_type_suffixes[] = {"v56","p56","scr","tex","snd",
+					    "   ","voc","fon","cur","pat",
+					    "bit","pal","cda","aud","syn",
+					    "msg","map","hep"};
 
 
 int sci_version = 0;
@@ -345,12 +346,13 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 		char *endptr;
 
 		for (i = sci_view; i < sci_invalid_resource; i++)
-			if (strncasecmp(Resource_Types[i], entry, strlen(Resource_Types[i])) == 0)
+			if (strncasecmp(sci_resource_types[i], entry,
+					strlen(sci_resource_types[i])) == 0)
 				restype = i;
 
 		if (restype != sci_invalid_resource) {
 
-			resname_len = strlen(Resource_Types[restype]);
+			resname_len = strlen(sci_resource_types[restype]);
 			if (entry[resname_len] != '.')
 				restype = sci_invalid_resource;
 			else {
@@ -398,18 +400,18 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 						memset(newrsc, 0, sizeof(resource_t));
 #endif
 
-						newrsc->length = filestat.st_size - 2;
+						newrsc->size = filestat.st_size - 2;
 						newrsc->id = restype << 11 | resnumber;
 						newrsc->number = resnumber;
 						newrsc->status = SCI_STATUS_ALLOCATED;
 						newrsc->type = restype;
 
-						newrsc->data = sci_malloc(newrsc->length);
+						newrsc->data = sci_malloc(newrsc->size);
 #ifdef SATISFY_PURIFY
-						memset(newrsc->data, 0, newrsc->length);
+						memset(newrsc->data, 0, newrsc->size);
 #endif
 
-						read(file, newrsc->data, newrsc->length);
+						read(file, newrsc->data, newrsc->size);
 						close(file);
 
 						_addResource(resourcelist, newrsc, 1); /* Add and overwrite old stuff */
@@ -477,49 +479,306 @@ void freeResources()
 /** Resource manager constructors and operations **/
 /*------------------------------------------------*/
 
+void
+_scir_add_altsource(resource_t *res, int file, unsigned int file_offset)
+{
+	resource_source_t *rsrc = sci_malloc(sizeof(resource_source_t));
+
+	rsrc->next = res->alt_sources;
+	rsrc->file = file;
+	rsrc->file_offset = file;
+	res->alt_sources = rsrc;
+}
+
 resource_mgr_t *
 scir_new_resource_manager(char *dir, int version,
 			  char allow_patches, int max_memory)
 {
-	int resource_ok;
+	int resource_error = 0;
 	resource_mgr_t *mgr = sci_malloc(sizeof(resource_mgr_t));
+	char *caller_cwd = sci_getcwd();
+	chdir(dir);
 
 	mgr->max_memory = max_memory;
-	mgr->sci_version = version;
 
 	mgr->memory_locked = 0;
 	mgr->memory_lru = 0;
 
 	mgr->resource_path = dir;
-	resource_ok =
-		sci0_read_resource_map(&mgr->resources,
-				       &mgr->resources_nr);
 
-	if (!resource_ok) {
+	mgr->resources = NULL;
+
+	if (version <= SCI_VERSION_01) {
+		resource_error =
+			sci0_read_resource_map(dir,
+					       &mgr->resources,
+					       &mgr->resources_nr);
+
+		if (resource_error >= SCI_ERROR_CRITICAL) {
+			sci_free(mgr);
+			chdir(caller_cwd);
+			free(caller_cwd);
+			return NULL;
+		}
+
+		mgr->sci_version = SCI_VERSION_0;
+	}
+
+	/* FIXME: Check for certain vocab files to determine
+	**        SCI version  */
+
+	/* ADDME: Try again with sci1_read_resource_map() */
+
+	if (!mgr->resources) {
+		sciprintf("Could not retreive a resource list!\n");
 		sci_free(mgr);
+		chdir(caller_cwd);
+		free(caller_cwd);
 		return NULL;
 	}
 
 	mgr->lru_first = NULL;
 	mgr->lru_last = NULL;
 
-	mgr->allow_patches = allow_patches;
+	qsort(resource_map, max_resource, sizeof(resource_t),
+	      resourcecmp); /* Sort resources */
 
-	return NULL;
+	mgr->allow_patches = allow_patches;
+	mgr->sci_version = version;
+
+	chdir(caller_cwd);
+	free(caller_cwd);
+
+	return mgr;
+}
+
+static void
+_scir_free_resource_sources(resource_source_t *rss)
+{
+	if (rss) {
+		_scir_free_resource_sources(rss->next);
+		free(rss);
+	}
+}
+
+void
+_scir_free_resources(resource_t *resources, int resources_nr)
+{
+	int i;
+
+	for (i = 0; i < resources_nr; i++) {
+		resource_t *res = resources + i;
+
+		if (res->status != SCI_STATUS_NOMALLOC)
+			sci_free(res->data);
+	}
+
+	sci_free(resources);
 }
 
 void
 scir_free_resource_manager(resource_mgr_t *mgr)
 {
+	_scir_free_resources(mgr->resources, mgr->resources_nr);
+
+	mgr->resources = NULL;
+
+	sci_free(mgr);
+}
+
+static void
+_scir_load_resource(resource_mgr_t *mgr, resource_t *res)
+{
+	char *cwd = sci_getcwd();
+	char filename[14];
+	int fh;
+
+	/* Enter resource directory */
+	chdir(mgr->resource_path);
+
+	/* First try lower-case name */
+	sprintf(filename, "resource.%03i", res->file);
+	fh = open(filename, O_RDONLY|O_BINARY);
+
+	if (fh <= 0) {
+		sprintf(filename, "RESOURCE.%03i", res->file);
+		fh = sci_open(filename, O_RDONLY|O_BINARY);
+	}    /* Try case-insensitively name */
+
+	if (fh <= 0) {
+		sciprintf("Failed to open %s/resource.%03d!\n",
+			  mgr->resource_path, res->file);
+		res->data = NULL;
+		res->status = SCI_STATUS_NOMALLOC;
+		res->size = 0;
+		return;
+	}
+
+	lseek(fh, res->file_offset, SEEK_SET);
+
+	if (!decompressors[mgr->sci_version])
+		sciprintf("Resource manager's SCI version (%d) is invalid!\n",
+			  mgr->sci_version);
+	else {
+		int error =
+			decompressors[mgr->sci_version](res, fh);
+
+		if (error) {
+			sciprintf("Error %d occured while reading %s.%03d"
+				  " from resource file: %s\n",
+				  error, sci_resource_types[res->type], res->number,
+				  sci_error_types[error]);
+			res->data = NULL;
+			res->status = SCI_STATUS_NOMALLOC;
+			res->size = 0;
+			return;
+		}
+	}
+
+	close(fh);
+	chdir(cwd);
+	free(cwd);
+}
+
+void
+_scir_unalloc(resource_t *res)
+{
+	sci_free(res->data);
+	res->status = SCI_STATUS_NOMALLOC;
+}
+
+
+void
+_scir_remove_from_lru(resource_mgr_t *mgr, resource_t *res)
+{
+	if (res->status != SCI_STATUS_ENQUEUED) {
+		sciprintf("Resmgr: Oops: trying to remove resource that isn't"
+			  " enqueued");
+		return;
+	}
+
+	if (res->next)
+		res->next->prev = res->prev;
+	if (res->prev)
+		res->prev->next = res->next;
+	if (mgr->lru_first == res)
+		mgr->lru_first = res->next;
+	if (mgr->lru_last == res)
+		mgr->lru_last = res->prev;
+
+	mgr->memory_lru -= res->size;
+
+	res->status = SCI_STATUS_ALLOCATED;
+}
+
+void
+_scir_add_to_lru(resource_mgr_t *mgr, resource_t *res)
+{
+	if (res->status != SCI_STATUS_ALLOCATED) {
+		sciprintf("Resmgr: Oops: trying to enqueue resource with state"
+			  " %d", res->status);
+		return;
+	}
+
+	res->prev = NULL;
+	res->next = mgr->lru_first;
+	mgr->lru_first = res;
+
+	mgr->memory_lru += res->size;
+
+	res->status = SCI_STATUS_ENQUEUED;
+}
+
+static void
+_scir_free_old_resources(resource_mgr_t *mgr, int last_invulnerable)
+{
+	while (mgr->max_memory < mgr->memory_lru
+	       && (!last_invulnerable || mgr->lru_first != mgr->lru_last)) {
+		resource_t *goner = mgr->lru_last;
+		_scir_remove_from_lru(mgr, goner);
+		_scir_unalloc(goner);
+#ifdef SCI_VERBOSE_RESMGR
+		sciprintf("Resmgr-debug: LRU: Freeing %s.%03d (%d bytes)\n",
+			  sci_resource_types[goner->type], goner->number,
+			  goner->size);
+#endif
+	}
+}
+
+resource_t *
+scir_test_resource(resource_mgr_t *mgr, int type, int number)
+{
+	resource_t binseeker;
+	binseeker.type = type;
+	binseeker.number = number;
+	return (resource_t *)
+		bsearch(&binseeker, mgr->resources, mgr->resources_nr,
+			sizeof(resource_t), resourcecmp);
 }
 
 resource_t *
 scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock)
 {
-	return NULL;
+	resource_t *retval = scir_test_resource(mgr, type, number);
+
+	if (!retval)
+		return NULL;
+
+	if (!retval->status) {
+		_scir_load_resource(mgr, retval);
+		mgr->memory_lru += retval->size;
+	} else if (retval->status == SCI_STATUS_ENQUEUED)
+			_scir_remove_from_lru(mgr, retval);
+	/* Unless an error occured, the resource is now either
+	** locked or allocated, but never queued or freed.  */
+
+	if (lock) {
+		if (retval->status == SCI_STATUS_ALLOCATED) {
+			retval->status = SCI_STATUS_LOCKED;
+			retval->lockers = 0;
+			mgr->memory_locked += retval->size;
+		}
+
+		++retval->lockers;
+
+	} else { /* Don't lock it */
+		if (retval->status == SCI_STATUS_ALLOCATED)
+			_scir_add_to_lru(mgr, retval);
+	}
+
+	_scir_free_old_resources(mgr, retval->status == SCI_STATUS_ALLOCATED);
+
+	if (retval->data)
+		return retval;
+	else {
+		sciprintf("Resmgr: Failed to read %s.%03\n",
+			  sci_resource_types[retval->type], retval->number);
+		return NULL;
+	}
 }
 
 void
 scir_unlock_resource(resource_mgr_t *mgr, resource_t *res)
 {
+	if (!res) {
+		sciprintf("Resmgr: Warning: Attempt to unlock non-existant"
+			  " resource %s.%03d\n",
+			  sci_resource_types[res->type], res->number);
+		return;
+	}
+
+	if (res->status != SCI_STATUS_LOCKED) {
+		sciprintf("Resmgr: Warning: Attempt to unlock unlocked"
+			  " resource %s.%03d\n",
+			  sci_resource_types[res->type], res->number);
+		return;
+	}
+
+	if (!--res->lockers) { /* No more lockers? */
+		mgr->memory_locked -= res->size;
+		_scir_add_to_lru(mgr, res);
+	}
+
+	_scir_free_old_resources(mgr, 0);
 }
+

@@ -1325,13 +1325,13 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		return s->scripttable[script_nr].heappos;
 	}
 
-/* fprintf(stderr,"Allocing %d(0x%x)\n", script->length, script->length); */
-	script_basepos = heap_allocate(s->_heap, script->length);
+/* fprintf(stderr,"Allocing %d(0x%x)\n", script->size, script->size); */
+	script_basepos = heap_allocate(s->_heap, script->size);
 
 
 	if (!script_basepos) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
 		sciprintf("Not enough heap space for script size 0x%x of script 0x%x, has 0x%x\n",
-			  script->length, script_nr, heap_largest(s->_heap));
+			  script->size, script_nr, heap_largest(s->_heap));
 		script_debug_flag = script_error_flag = 1;
 		return 0;
 	}
@@ -1357,14 +1357,14 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		/* There won't be a localvar block in this case */
 /* HEAP CORRUPTOR! */
 /*
- fprintf(stderr,"script of size %d(+2) -> %04x\n", script->length, script_basepos);
- fprintf(stderr,"   -- memcpying [%04x..%04x]\n", script_basepos + 2, script_basepos + script->length);
+ fprintf(stderr,"script of size %d(+2) -> %04x\n", script->size, script_basepos);
+ fprintf(stderr,"   -- memcpying [%04x..%04x]\n", script_basepos + 2, script_basepos + script->size);
 */
-                memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
+                memcpy(s->heap + script_basepos + 2, script->data + 2, script->size -2);
 		pos = script_basepos + 2;
 		magic_pos_adder = 2;
 	} else {
-		memcpy(s->heap + script_basepos + 2, script->data, script->length); /* Copy the script */
+		memcpy(s->heap + script_basepos + 2, script->data, script->size); /* Copy the script */
 		script_basepos += 2;
 		magic_pos_adder = 0;
 		pos = script_basepos;
@@ -1486,9 +1486,9 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 		pos -= 4; /* Step back on header */
 
-	} while ((objtype != 0) && ((pos - script_basepos) < script->length - 2));
+	} while ((objtype != 0) && ((pos - script_basepos) < script->size - 2));
 
-	/*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->length-2, script_basepos);*/
+	/*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->size-2, script_basepos);*/
 	return s->scripttable[script_nr].heappos;
 
 }

@@ -816,7 +816,7 @@ main(int argc, char** argv)
 	printf ("Loading resources...\n");
 	if ((errc = loadResources(SCI_VERSION_AUTODETECT, 1))) {
 		fprintf(stderr,"Error while loading resources: %s!\n",
-			SCI_Error_Types[errc]);
+			sci_error_types[errc]);
 		exit(1);
 	};
 

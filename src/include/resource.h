@@ -332,6 +332,14 @@ sciprintf(char *fmt, ...);
 */
 
 char *
+sci_getcwd();
+/* Returns the current working directory, malloc'd.
+** Parameters: (void)
+** Returns   : (char *) a malloc'd cwd, or NULL if it couldn't be determined.
+*/
+
+
+char *
 sci_get_homedir();
 /* Returns the user's home directory
 ** Parameters: (void)

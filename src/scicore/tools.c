@@ -558,3 +558,22 @@ sci_open(char *fname, int flags)
 
 	return file;
 }
+
+char *
+sci_getcwd()
+{
+	int size = 0;
+	char *cwd = NULL;
+
+	while (size < 8192) {
+		size += 256;
+		cwd = sci_malloc(size);
+		if (getcwd(cwd, size-1))
+			return cwd;
+
+		sci_free(cwd);
+	}
+
+	fprintf(stderr,"Could not determine current working directory!\n");
+	return NULL;
+}

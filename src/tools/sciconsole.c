@@ -61,7 +61,7 @@ main(int argc, char** argv)
 	 "It comes with ABSOLUTELY NO WARRANTY.\n");
 
   if ((i = loadResources(SCI_VERSION_AUTODETECT, 1))) {
-    fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
+    fprintf(stderr,"SCI Error: %s!\n", sci_error_types[i]);
     exit(-1);
   };
   printf("SCI resources loaded.\n");
