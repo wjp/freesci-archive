@@ -1,3 +1,10 @@
+2004-02-28  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/iterator.c (_sci1_init): Change default hardware ID
+	for cue computation to 0x00.
+	* src/engine/iterator.c (_sci1_song_init): Fix offset signedness
+	issue.
+
 2004-02-26  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/ksound.c (kDoSound_SCI1): Fix subfunction constants,

@@ -719,7 +719,7 @@ _sci1_song_init(sci1_song_iterator_t *self)
 	sci1_sample_t *seeker;
 	int last_time;
 	int offset = 0;
-
+	
 	self->channels_nr = 0;
 	self->next_sample = 0;
 
@@ -747,13 +747,12 @@ _sci1_song_init(sci1_song_iterator_t *self)
 	while (SONGDATA(0) != 0xff) { /* End of list? */
 		int track_offset;
 		int end;
-
 		offset += 2;
+
 		CHECK_FOR_END_ABSOLUTE(offset + 4);
 
-		track_offset = getInt16(self->data + offset);
-		end = getInt16(self->data + offset + 2);
-
+		track_offset = getUInt16(self->data + offset);
+		end = getUInt16(self->data + offset + 2);
 
 		CHECK_FOR_END_ABSOLUTE(track_offset - 1);
 
@@ -1143,7 +1142,7 @@ _sci1_init(sci1_song_iterator_t *self)
 {
 	_common_init((base_song_iterator_t *) self);
 	self->ccc = 127;
-	self->device_id = 0x12; /* Default to PC speaker for purposes
+	self->device_id = 0x00; /* Default to Sound Blaster/Adlib for purposes
 				** of cue computation  */
 	self->next_sample = NULL;
 	self->channels_nr = 0;
