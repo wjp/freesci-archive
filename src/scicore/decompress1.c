@@ -355,8 +355,8 @@ int decompress1(resource_t *result, int resh, int early)
 		return SCI_ERROR_EMPTY_OBJECT;
 	}
 
-	buffer = malloc(compressedLength);
-	result->data = malloc(result->length);
+	buffer = sci_malloc(compressedLength);
+	result->data = sci_malloc(result->length);
 
 	if (read(resh, buffer, compressedLength) != compressedLength) {
 		free(result->data);
@@ -369,9 +369,9 @@ int decompress1(resource_t *result, int resh, int early)
 	fprintf(stderr, "Resource %i.%s encrypted with method SCI1%c/%hi at %.2f%%"
 		" ratio\n",
 		result->number, resource_type_suffixes[result->type],
-		early? 'e' : 'l', 
+		early? 'e' : 'l',
 		compressionMethod,
-		(result->length == 0)? -1.0 : 
+		(result->length == 0)? -1.0 :
 		(100.0 * compressedLength / result->length));
 	fprintf(stderr, "  compressedLength = 0x%hx, actualLength=0x%hx\n",
 		compressedLength, result->length);
@@ -388,7 +388,7 @@ int decompress1(resource_t *result, int resh, int early)
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
 		memcpy(result->data, buffer, compressedLength);
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	case 1: /* LZW */
@@ -399,7 +399,7 @@ int decompress1(resource_t *result, int resh, int early)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	case 2: /* ??? */
@@ -411,7 +411,7 @@ int decompress1(resource_t *result, int resh, int early)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	case 3: /* Some sort of Huffman encoding */
@@ -422,7 +422,7 @@ int decompress1(resource_t *result, int resh, int early)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	case 4: /* NYI */

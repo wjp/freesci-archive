@@ -38,7 +38,7 @@ static int __active = 0;
 inline void*
 __my_malloc(long size, char *function, int line)
 {
-  void *retval = malloc(size);
+  void *retval = sci_malloc(size);
   __active++;
   fprintf(stderr,"[%d] line %d, %s: malloc(%d) -> %p\n", __active, line, function, size, retval);
   return retval;
@@ -47,7 +47,7 @@ __my_malloc(long size, char *function, int line)
 inline void*
 __my_realloc(void *origin, long size, char *function, int line)
 {
-  void *retval = realloc(origin, size);
+  void *retval = sci_realloc(origin, size);
   fprintf(stderr,"line %d, %s: realloc(%p, %d) -> %p\n", line, function, origin, size, retval);
   return retval;
 }
@@ -68,7 +68,7 @@ __my_free(void *origin, char *function, int line)
 char *
 malloc_cpy(char *source)
 {
-  char *tmp = malloc(strlen(source) + 1);
+  char *tmp = sci_malloc(strlen(source) + 1);
 
   strcpy(tmp, source);
   return tmp;
@@ -78,7 +78,7 @@ char *
 malloc_ncpy(char *source, int length)
 {
   int rlen = MIN(strlen(source), length) + 1;
-  char *tmp = malloc(rlen);
+  char *tmp = sci_malloc(rlen);
 
   strncpy(tmp, source, rlen);
   tmp[rlen -1] = 0;
@@ -89,7 +89,7 @@ malloc_ncpy(char *source, int length)
 menubar_t *
 menubar_new()
 {
-  menubar_t *tmp = malloc(sizeof(menubar_t));
+  menubar_t *tmp = sci_malloc(sizeof(menubar_t));
   tmp->menus_nr = 0;
 
   return tmp;
@@ -131,9 +131,9 @@ _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *fo
   int total_left_size;
 
   if (menu->items_nr == 0) {
-    menu->items = (menu_item_t *) malloc(sizeof(menu_item_t));
+    menu->items = (menu_item_t *) sci_malloc(sizeof(menu_item_t));
     menu->items_nr = 1;
-  } else menu->items = (menu_item_t *) realloc(menu->items, sizeof(menu_item_t) * ++(menu->items_nr));
+  } else menu->items = (menu_item_t *) sci_realloc(menu->items, sizeof(menu_item_t) * ++(menu->items_nr));
 
   item = &(menu->items[menu->items_nr - 1]);
 
@@ -180,14 +180,14 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 #ifdef MENU_FREESCI_BLATANT_PLUG
     add_freesci = 1;
 #endif
-    menubar->menus = malloc(sizeof(menu_t));
+    menubar->menus = sci_malloc(sizeof(menu_t));
     menubar->menus_nr = 1;
-  } else menubar->menus = realloc(menubar->menus, ++(menubar->menus_nr) * sizeof (menu_t));
+  } else menubar->menus = sci_realloc(menubar->menus, ++(menubar->menus_nr) * sizeof (menu_t));
 
   menu = &(menubar->menus[menubar->menus_nr-1]);
   memset(menu, 0, sizeof(menu_t));
   menu->items_nr = 0;
-  menu->title = malloc_cpy(title);
+  menu->title = sci_malloc_cpy(title);
 
   menu->title_width = get_text_width(menu->title, font);
 
@@ -198,7 +198,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 
       if (tracker == '=') { /* Hit early-SCI tag assignment? */
 
-	left = malloc_ncpy(entries - string_len - 1, string_len);
+	left = sci_malloc_ncpy(entries - string_len - 1, string_len);
 	tag = atoi(entries++);
 	tracker =  *entries++;
       }
@@ -206,7 +206,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	int entrytype = MENU_TYPE_NORMAL;
 
 	if (!left)
-	  left = malloc_ncpy(entries - string_len - 1, string_len);
+	  left = sci_malloc_ncpy(entries - string_len - 1, string_len);
 
 	if (!strncmp(left, MENU_HBAR_STRING_1, strlen(MENU_HBAR_STRING_1))
 	    || !strncmp(left, MENU_HBAR_STRING_2, strlen(MENU_HBAR_STRING_2))
@@ -228,17 +228,17 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
       } else if (tracker == '`') { /* Start of right string */
 
 	if (!left)
-	  left = malloc_ncpy(left_origin = (entries - string_len - 1), string_len);
+	  left = sci_malloc_ncpy(left_origin = (entries - string_len - 1), string_len);
 	string_len = 0; /* Continue with the right string */
 
-      } 
+      }
       else string_len++; /* Nothing special */
 
     } else { /* Left string finished => working on right string */
       if ((tracker == ':') || (tracker == 0)) { /* End of entry */
 	int key, modifiers = 0;
 
-	right = malloc_ncpy(entries - string_len - 1, string_len);
+	right = sci_malloc_ncpy(entries - string_len - 1, string_len);
 
 	if (right[0] == '#') {
 	  right[0] = SCI_SPECIAL_CHAR_FUNCTION; /* Function key */
@@ -315,8 +315,8 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 
 #ifdef MENU_FREESCI_BLATANT_PLUG
   if (add_freesci) {
-      
-    char *freesci_text = strdup ("About FreeSCI");
+
+    char *freesci_text = sci_strdup ("About FreeSCI");
     c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, freesci_text, NULL, font, 0, 0, 0, 0);
     if (c_width > max_width)
       max_width = c_width;
@@ -373,7 +373,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
   case MENU_ATTRIBUTE_TEXT:
     free(item->text);
     assert(value);
-    item->text = strdup(s->heap + value);
+    item->text = sci_strdup(s->heap + value);
     item->text_pos = value;
     break;
 
@@ -385,7 +385,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 
       item->key = value;
       item->modifiers = 0;
-      item->keytext = malloc(2);
+      item->keytext = sci_malloc(2);
       item->keytext[0] = value;
       item->keytext[1] = 0;
       item->flags |= MENU_ATTRIBUTE_FLAGS_KEY;
@@ -539,7 +539,7 @@ menubar_draw_item(struct _state *s, port_t *port, int menu_nr, int item_nr, int 
 
     graph_fill_box_custom(s, port->xmin, y + 10, port->xmax - port->xmin, 10,
 			  active? 0x00 : 0xff, -1, -1, SCI_MAP_VISUAL);
-    
+
     port->alignment = ALIGN_TEXT_LEFT;
     port->bgcolor = -1;
     port->gray_text = !item->enabled;

@@ -1,5 +1,5 @@
 /***************************************************************************
-  Copyright (C) 2001 Christoph Reichenbach
+ scriptdump.c Copyright (C) 2001 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

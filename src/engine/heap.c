@@ -44,9 +44,9 @@ static unsigned int get_next(heap_t* h, int block_pos)
 heap_t* heap_new()
 {
 	heap_t* h;
-	if((h=malloc(sizeof(heap_t)))==0) return 0;
+	if((h= sci_malloc(sizeof(heap_t)))==0) return 0;
 
-	if((h->start=calloc(SCI_HEAP_SIZE, 1))==0)
+	if((h->start= sci_calloc(SCI_HEAP_SIZE, 1))==0)
 	{
 		free(h);
 		return 0;

@@ -151,7 +151,7 @@ dgfx_init(state_t* s, picture_t pic) {
   dgfx_state=s;
 
   /* first allocate 64KB of temponary data */
-  if((dgfx_virtualmem=malloc0(64000))==NULL) {
+  if((dgfx_virtualmem= sci_malloc0(64000))==NULL) {
     /* this failed... say it's bad */
     return 1;
   }
@@ -216,7 +216,7 @@ dgfx_init(state_t* s, picture_t pic) {
   _go32_dpmi_set_protected_mode_interrupt_vector(0x9,&wrapper);
 
   dgfx_shift_state=0;
-  
+
   return 0;
 }
 

@@ -206,10 +206,10 @@ kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp)
       if (s->scripttable[script].synonyms_nr) {
 	int i;
 	if (s->synonyms_nr)
-	  s->synonyms = realloc(s->synonyms,
+	  s->synonyms = sci_realloc(s->synonyms,
 				sizeof(synonym_t) * (s->synonyms_nr + s->scripttable[script].synonyms_nr));
 	else
-	  s->synonyms = malloc(sizeof(synonym_t) * (s->scripttable[script].synonyms_nr));
+	  s->synonyms = sci_malloc(sizeof(synonym_t) * (s->scripttable[script].synonyms_nr));
 
 	s->synonyms_nr +=  s->scripttable[script].synonyms_nr;
 
@@ -438,7 +438,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
     startarg = 2;
   }
 
-  arguments = malloc(sizeof(int) * argc);
+  arguments = sci_malloc(sizeof(int) * argc);
   for (i = startarg; i < argc; i++)
     arguments[i-startarg] = UPARAM(i); /* Parameters are copied to prevent overwriting */
 

@@ -52,7 +52,7 @@ char *con_input_line = _inpbuf + 1;
 
 void *_xmalloc(size_t size)
 {
-  void *retval = (void *) malloc(size);
+  void *retval = (void *) sci_malloc(size);
   if (!retval) {
     fprintf(stderr,"Out of memory!\n");
     exit(1);
@@ -84,7 +84,7 @@ con_input(sci_event_t *event)
   if (con_visible_rows <= 0) return NULL;
 
   if (event->type == SCI_EVT_KEYBOARD) {
-    
+
     if ((event->buckybits & (SCI_EVM_CTRL | SCI_EVM_ALT)) == 0) {
       if (((event->data >= '0') && (event->data < '@'))
 	  || ((event->data >= 'a') && (event->data <= 'z'))
@@ -123,7 +123,7 @@ con_input(sci_event_t *event)
 	    default:
 	      _inpbuf[con_cursor] = toupper(event->data);
 
-	    } else _inpbuf[con_cursor] = event->data;  
+	    } else _inpbuf[con_cursor] = event->data;
 
 	  con_cursor++;
 	}
@@ -278,7 +278,7 @@ con_input(sci_event_t *event)
 byte *
 con_backup_screen(state_t *s)
 {
-  byte *retval = malloc(s->pic->size);
+  byte *retval = sci_malloc(s->pic->size);
 
   return memcpy(retval, s->pic->maps[s->pic_visible_map], s->pic->size);
 }

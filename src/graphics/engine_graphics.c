@@ -217,7 +217,7 @@ graph_restore_box(struct _state *s, int handle)
 
 	pos += SCI_SCREEN_WIDTH;
 	src += box->xl;
-	
+
       }
     }
 
@@ -380,7 +380,7 @@ graph_draw_control_edit(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl, int cursor,
 			 char *text, byte *font)
 {
-  char *temp = malloc(strlen(text) +2);
+  char *temp = sci_malloc(strlen(text) +2);
   int textwidth;
   int textheight;
 
@@ -642,7 +642,7 @@ graph_png_load_box(state_t *s, int handle, int *alloc_size)
   if (!layers) /* Nothing read */
     return NULL;
 
-  box = (_graph_memrect_t *) malloc(*alloc_size = (sizeof(int) * 5 + totalsize));
+  box = (_graph_memrect_t *) sci_malloc(*alloc_size = (sizeof(int) * 5 + totalsize));
 
   box->x = x;
   box->y = y;

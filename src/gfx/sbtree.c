@@ -82,7 +82,7 @@ sbtree_new(int size, int *keys)
 	if (table_size > 1)
 		--table_size;
 
-	table = calloc(sizeof(cell_t), table_size);
+	table = sci_calloc(sizeof(cell_t), table_size);
 	for (i = 0; i < table_size; i++)
 		table[i].key = NOT_A_KEY;
 
@@ -91,7 +91,7 @@ sbtree_new(int size, int *keys)
 		return NULL;
 	}
 
-	tree = malloc(sizeof(sbtree_t));
+	tree = sci_malloc(sizeof(sbtree_t));
 
 	if (!tree) {
 		fprintf(stderr,"SBTree: Could not allocate tree structure\n");
@@ -242,7 +242,7 @@ int *
 generate_linear_forward(int numbers)
 {
 	int i;
-	int *data = malloc(sizeof(int) * numbers);
+	int *data = sci_malloc(sizeof(int) * numbers);
 	for (i = 0; i < numbers; i++)
 		data[i] = i + 1;
 
@@ -253,7 +253,7 @@ int *
 generate_linear_backward(int numbers)
 {
 	int i;
-	int *data = malloc(sizeof(int) * numbers);
+	int *data = sci_malloc(sizeof(int) * numbers);
 	for (i = 0; i < numbers; i++)
 		data[i] = numbers - i;
 
@@ -264,7 +264,7 @@ int *
 generate_random(int numbers, int max)
 {
 	int i;
-	int *data = malloc(sizeof(int) * numbers);
+	int *data = sci_malloc(sizeof(int) * numbers);
 
 	for (i = 0; i < numbers; i++)
 		data[i] = 1 + (int) ((rand() * 1.0 * max) / (RAND_MAX + 1.0));

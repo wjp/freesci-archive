@@ -263,7 +263,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	else
 		s->classtable_size = vocab996->length >> 2;
 
-	s->classtable = calloc(sizeof(class_t), s->classtable_size);
+	s->classtable = sci_calloc(sizeof(class_t), s->classtable_size);
 
 	for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
 		int objtype = 0;
@@ -281,7 +281,7 @@ script_init_engine(state_t *s, sci_version_t version)
 				while (seeker < script->length)	{
 					int lastseeker = seeker;
 					objtype = getInt16(script->data + seeker);
-					if (objtype == sci_obj_class || objtype == sci_obj_terminator) 
+					if (objtype == sci_obj_class || objtype == sci_obj_terminator)
 						break;
 					seeker += getInt16(script->data + seeker + 2);
 					if (seeker <= lastseeker) {
@@ -290,10 +290,10 @@ script_init_engine(state_t *s, sci_version_t version)
 						return  SCI_ERROR_INVALID_SCRIPT_VERSION;
 					}
 				}
-        
+
 				if (objtype == sci_obj_class) {
 					int sugg_script;
-					
+
 					seeker -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Adjust position; script home is base +8 bytes */
 
 					classnr = getInt16(script->data + seeker + 4 + SCRIPT_SPECIES_OFFSET);
@@ -305,7 +305,7 @@ script_init_engine(state_t *s, sci_version_t version)
 							return 1;
 						}
 
-						s->classtable = realloc(s->classtable, sizeof(class_t) * (classnr + 1));
+						s->classtable = sci_realloc(s->classtable, sizeof(class_t) * (classnr + 1));
 						memset(&(s->classtable[s->classtable_size]), 0,
 						       sizeof(class_t) * (1 + classnr - s->classtable_size)); /* Clear after resize */
 
@@ -362,7 +362,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->have_bp = 0;
 
 	s->file_handles_nr = 5;
-	s->file_handles = calloc(sizeof(FILE *), s->file_handles_nr);
+	s->file_handles = sci_calloc(sizeof(FILE *), s->file_handles_nr);
 	/* Allocate memory for file handles */
 
 	sci_init_dir(&(s->dirseeker));
@@ -433,7 +433,7 @@ script_free_engine(state_t *s)
 	bp = s->bp_list;
 	while (bp) {
 		bp_next = bp->next;
-		if (bp->type == BREAK_SELECTOR) free (bp->data.name);
+		if (bp->type == BREAK_SELECTOR) sci_free (bp->data.name);
 		free (bp);
 		bp = bp_next;
 	}
@@ -485,7 +485,7 @@ game_init(state_t *s)
 	/* Initialize send_calls buffer */
 
 	if (!send_calls_allocated)
-		send_calls = calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
+		send_calls = sci_calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
 
 	if (!stack_handle) {
 		sciprintf("game_init(): Insufficient heap space for stack\n");
@@ -560,7 +560,7 @@ game_init(state_t *s)
 }
 
 
-  
+
 int
 game_exit(state_t *s)
 {

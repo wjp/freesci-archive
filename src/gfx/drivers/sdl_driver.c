@@ -146,7 +146,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   int i;
 
   if (!S)
-    S = malloc(sizeof(struct _sdl_state));
+    S = sci_malloc(sizeof(struct _sdl_state));
   if (!S)
     return GFX_FATAL;
 
@@ -829,7 +829,7 @@ sdl_create_cursor_rawdata(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
   int linewidth = (pointer->xl + 7) >> 3;
   int lines = pointer->yl;
   int xc, yc;
-  byte *data = calloc(linewidth, lines);
+  byte *data = sci_calloc(linewidth, lines);
   byte *linebase = data, *pos;
   byte *src = pointer->index_data;
 

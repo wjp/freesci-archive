@@ -50,7 +50,7 @@ make_titlebar_list(state_t *s, rect_t bounds, gfxw_port_t *status_bar)
 {
 	gfx_color_t white = s->ega_colors[0xf];
 	gfxw_list_t *list;
-	gfxw_box_t *bgbox; 
+	gfxw_box_t *bgbox;
 
 
 	list = gfxw_new_list(status_bar->bounds, 0);
@@ -135,7 +135,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	gfx_color_t black;
 	gfxw_port_t *win = gfxw_new_port(visual, s->port, area, color, bgcolor);
 	gfxw_list_t *decorations;
-	
+
 	win->font_nr = font;
 	win->title_text = title;
 	win->port_flags = flags;
@@ -146,7 +146,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 		flags = WINDOW_FLAG_TRANSPARENT | WINDOW_FLAG_NOFRAME;
 
 	if (flags == (WINDOW_FLAG_TRANSPARENT | WINDOW_FLAG_NOFRAME))
-		return win; /* Fully transparent window */ 
+		return win; /* Fully transparent window */
 
 
 	if (flags & WINDOW_FLAG_TITLE)
@@ -355,7 +355,7 @@ sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 
 		list->add(GFXWC(list), GFXW(text_handle));
 	} else {
-		char *textdup = malloc(strlen(text) + 1);
+		char *textdup = sci_malloc(strlen(text) + 1);
 
 		strncpy(textdup, text, cursor);
 
@@ -550,7 +550,7 @@ sciw_set_menubar(state_t *s, gfxw_port_t *status_bar, menubar_t *menubar, int se
 				  GFXW(gfxw_new_text(s->gfx_state, gfx_rect(offset, 0, width, MENU_BAR_HEIGHT),
 						     status_bar->font_nr, menu->title, ALIGN_CENTER, ALIGN_CENTER,
 						     status_bar->color, status_bar->color, status_bar->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES)));
-				  
+
 		offset += width;
 	}
 

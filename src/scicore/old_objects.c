@@ -210,7 +210,7 @@ void printObject(object* obj, int flags)
 
 static object* object_new()
 {
-	object* obj=malloc(sizeof(object));
+	object* obj= sci_malloc(sizeof(object));
 	if(obj==0) return 0;
 
 	obj->parent=0;
@@ -267,10 +267,10 @@ static script_method* decode_method(byte* data)
   int done=0;
   int pos=0;
   static int count=0;
-  
+
   count++;
 
-  if((m=malloc(sizeof(script_method)))==0) return 0;
+  if((m= sci_malloc(sizeof(script_method)))==0) return 0;
   FLEXARRAY_INIT(script_opcode, *m);
 
   while(!done)
@@ -317,7 +317,7 @@ static script_method* decode_method(byte* data)
 	    case Script_Byte: /*Just a one byte arg*/
 	    case Script_SByte:
 	      {
-		*args[arg]=data[pos++]; 
+		*args[arg]=data[pos++];
 	      } break;
 	    case Script_Word: /*A two byte arg*/
 	      {
@@ -545,7 +545,7 @@ static object* read_object(int script, int positions[1000])
 	/*FIXME: decode selectors here*/
 
 	obj->method_count=get_method_count(raw);
-	obj->methods=malloc(obj->method_count*sizeof(script_method));
+	obj->methods= sci_malloc(obj->method_count*sizeof(script_method));
 	if(obj->methods==0)
 	{
 		free(obj);

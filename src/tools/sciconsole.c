@@ -86,7 +86,7 @@ main(int argc, char** argv)
 #ifdef HAVE_READLINE_READLINE_H
     command = readline("$ ");
 #else /* !HAVE_READLINE_READLINE_H */
-    command = malloc(1024);
+    command = sci_malloc(1024);
     fgets(command, 1023, stdin);
     if (command [strlen (command)-1] == '\n')
       command [strlen (command)-1] = 0;

@@ -33,7 +33,7 @@
 #ifdef HAVE_LIBPNG
 
 #include <graphics_png.h>
-#include <math.h>  
+#include <math.h>
 
 static png_color sci0_png_palette[16] = {
   {0x00, 0x00, 0x00}, {0x00, 0x00, 0xaa}, {0x00, 0xaa, 0x00}, {0x00, 0xaa, 0xaa},
@@ -293,7 +293,7 @@ png_load_buffer(picture_t pic, char *name,
 
   png_read_update_info(structp, infop);
 
-  bufpos = buf = malloc(*size = (height * (stepwidth = width * bytespp)));
+  bufpos = buf = sci_malloc(*size = (height * (stepwidth = width * bytespp)));
 
   for (i = 0; i < height; i++) {
     png_read_rows(structp, &bufpos, NULL, 1);
@@ -341,7 +341,7 @@ png_load_pic(picture_t pic)
 
   for (i = 0; i < 4; i++)
     if (!(temp_maps[i] = png_load_buffer(pic, _freesci_file_maps[i],
-					 NULL, NULL, 
+					 NULL, NULL,
 					 (i)? NULL : &width, (i)? NULL : &height, &size,
 					 i)))
       {

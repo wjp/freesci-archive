@@ -134,7 +134,7 @@ alloc_empty_picture(int resolution, int colordepth)
 {
   int i;
 
-  picture_t retval = malloc(sizeof(struct gfx_picture));
+  picture_t retval = sci_malloc(sizeof(struct gfx_picture));
 
   switch (resolution) {
 
@@ -161,8 +161,8 @@ alloc_empty_picture(int resolution, int colordepth)
   retval->bytespp = colordepth;
 
   for (i=0; i<4; i++)
-    retval->maps[i] = calloc(retval->xres, retval->yres * colordepth);
-  retval->view = calloc(retval->xres, retval->yres * colordepth);
+    retval->maps[i] = sci_calloc(retval->xres, retval->yres * colordepth);
+  retval->view = sci_calloc(retval->xres, retval->yres * colordepth);
 
   retval->size = retval->xres * retval->yres * colordepth;
   retval->bytespl = retval->xres * colordepth;
@@ -651,7 +651,7 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
       int j = blindleft;
       blindleft = blindright;
       blindright = j;
-    } 
+    }
 
     {
       guint8 color, rep;
@@ -661,7 +661,7 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 	dataptr++;
 	rep = (*dataptr >> 4) & 0xf;
 	if (!rep) return 0;
-	if (rep >= blindtop) { 
+	if (rep >= blindtop) {
 	  rep -= blindtop;
 	  blindtop = 0;
 	} else blindtop -= rep;
@@ -942,9 +942,9 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	    for (y=0; y<40; y++) colors[x][y] = *(ptr++);
 	    break;
 	  case 2:	/* Cases 2-6 only apply for monochrome displays - L.S. */
-	    ptr+=41; 
+	    ptr+=41;
 	    break;
-	  case 3:	
+	  case 3:
 	    ptr++;
 	    break;
 	  case 4:
@@ -954,7 +954,7 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	    break;
 	  case 6:
 	    break;
-/* The following cases are SCI01 only */	    	   
+/* The following cases are SCI01 only */
 	  case 7: /* Draw an _embedded_ view in the picture */
           	x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
 		y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
@@ -965,7 +965,7 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	      ptr+=16;
 	      fprintf(stderr, "draw_pic0: Priority table skipped\n");
 	      break;
-	      	        
+
 	  default:
 	    fprintf(stderr,"Unknown palette cmd %02x at %x\n", code, (int) ptr-(int) data);
 	    break;

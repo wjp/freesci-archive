@@ -173,7 +173,7 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
 
 		if (seeker) {
 
-			seeker->next = malloc(sizeof(struct singly_linked_resources_struct));
+			seeker->next = sci_malloc(sizeof(struct singly_linked_resources_struct));
 			seeker->next->resource = resource;
 			seeker->next->next = 0;
 			max_resource++;
@@ -206,13 +206,13 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 	do {
 		if (resourceFileCounter > 0 && resourceFile > 0) {
 			int decomperr;
-			resource = malloc(sizeof(resource_t));
+			resource = sci_malloc(sizeof(resource_t));
 			while (!(decomperr = (*decompress)(resource, resourceFile))) {
 
 				_addResource(&base, resource, 0);
 				found_resfiles = 1;
 
-				resource = malloc(sizeof(resource_t));
+				resource = sci_malloc(sizeof(resource_t));
 			}
 			free(resource);
 			close(resourceFile);
@@ -269,7 +269,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 
 	else printf("Ignoring any patches.\n");
 
-	resource_map = malloc(max_resource * sizeof(resource_t));
+	resource_map = sci_malloc(max_resource * sizeof(resource_t));
 
 	seeker = &base;
 
@@ -377,14 +377,14 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 						close(file);
 					} else {
 
-						newrsc = malloc(sizeof(resource_t));
+						newrsc = sci_malloc(sizeof(resource_t));
 						newrsc->length = filestat.st_size - 2;
 						newrsc->id = restype << 11 | resnumber;
 						newrsc->number = resnumber;
-						newrsc->status = SCI_STATUS_ALLOCATED;
+						newrsc->status = SCI_STATUS_OK;
 						newrsc->type = restype;
 
-						newrsc->data = malloc(newrsc->length);
+						newrsc->data = sci_malloc(newrsc->length);
 						read(file, newrsc->data, newrsc->length);
 						close(file);
 
@@ -439,7 +439,7 @@ void freeResources()
 		int i;
 
 		for (i=0; i < max_resource; i++) {
-			if (!resource_map[i].status) free(resource_map[i].data);
+			if (!resource_map[i].status) sci_free(resource_map[i].data);
 		}
 		free(resource_map);
 		max_resource = 0;

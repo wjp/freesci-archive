@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+#include <sci_memory.h>
 #include <gfx_widgets.h>
 
 /*#define GFXW_DEBUG_DIRTY*/ /* Enable to debug dirty rectangle propagation (writes to stderr) */
@@ -133,7 +134,7 @@ _gfxwop_print_empty(gfxw_widget_t *widget, int indentation)
 gfxw_widget_t *
 _gfxw_new_widget(int size, int type)
 {
-	gfxw_widget_t *widget = malloc(size);
+	gfxw_widget_t *widget = sci_malloc(size);
 	widget->magic = GFXW_MAGIC_VALID;
 	widget->parent = NULL;
 	widget->visual = NULL;
@@ -375,7 +376,7 @@ _gfxwop_basic_free(gfxw_widget_t *widget)
 
 		gfxw_remove_widget_from_container(widget->parent, widget);
 	}
-	
+
 	_gfxw_unallocate_widget(state, widget);
 
 
@@ -837,7 +838,7 @@ gfxw_new_view(gfx_state_t *state, point_t pos, int view_nr, int loop, int cel, i
 		pos.y += offset.y;
 	}
 
-	view = _gfxw_new_simple_view(state, pos, view_nr, loop, cel, priority, control, halign, valign, 
+	view = _gfxw_new_simple_view(state, pos, view_nr, loop, cel, priority, control, halign, valign,
 				     sizeof(gfxw_view_t), (flags & GFXW_VIEW_FLAG_STATIC) ? GFXW_STATIC_VIEW : GFXW_VIEW);
 
 	_gfxw_set_ops_VIEW(GFXW(view), flags & GFXW_VIEW_FLAG_STATIC);
@@ -906,7 +907,7 @@ _gfxwop_some_view_print(gfxw_widget_t *widget, int indentation, char *type_strin
 	_gfxw_print_widget(widget, indentation);
 
 	sciprintf(type_string);
-	sciprintf(" SORT=%d z=%d seq=%d (%d/%d/%d)@(%d,%d)[p:%d,c:%d]; sig[%04x@%04x]", view->force_precedence, view->z, 
+	sciprintf(" SORT=%d z=%d seq=%d (%d/%d/%d)@(%d,%d)[p:%d,c:%d]; sig[%04x@%04x]", view->force_precedence, view->z,
 		  view->sequence, view->view, view->loop, view->cel, view->pos.x, view->pos.y,
 		  (view->color.mask & GFX_MASK_PRIORITY)? view->color.priority : -1,
 		  (view->color.mask & GFX_MASK_CONTROL)? view->color.control : -1,
@@ -1191,7 +1192,7 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 
 	widget->widget_priority = _gfxw_color_get_priority(color1);
 	widget->font_nr = font;
-	widget->text = malloc(strlen(text) + 1);
+	widget->text = sci_malloc(strlen(text) + 1);
 	widget->halign = halign;
 	widget->valign = valign;
 	widget->color1 = color1;
@@ -1248,7 +1249,7 @@ _gfxw_set_container_ops(gfxw_container_t *container, gfxw_point_op *draw, gfxw_o
 		      draw,
 		      free,
 		      tag,
-		      print, 
+		      print,
 		      compare_to,
 		      equals,
 		      superarea_of);
@@ -1529,7 +1530,7 @@ _parentize_widget(gfxw_container_t *container, gfxw_widget_t *widget)
 
 	return 0;
 }
-			
+
 static int
 _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 {
@@ -1658,7 +1659,7 @@ _gfxw_make_widget_list_recursive(gfxw_widget_t *widget)
 	if (!widget)
 		return NULL;
 
-	node = malloc(sizeof(struct gfxw_widget_list));
+	node = sci_malloc(sizeof(struct gfxw_widget_list));
 	node->widget = widget;
 	node->next = _gfxw_make_widget_list_recursive(widget->next);
 
@@ -1935,7 +1936,7 @@ gfxw_new_visual(gfx_state_t *state, int font)
 	visual->font_nr = font;
 	visual->gfx_state = state;
 
-	visual->port_refs = calloc(sizeof(gfxw_port_t), visual->port_refs_nr = 16);
+	visual->port_refs = sci_calloc(sizeof(gfxw_port_t), visual->port_refs_nr = 16);
 
 	_gfxw_set_ops_VISUAL(GFXWC(visual));
 
@@ -1953,7 +1954,7 @@ _visual_find_free_ID(gfxw_visual_t *visual)
 		id++;
 
 	if (id == visual->port_refs_nr) {/* Out of ports? */
-		visual->port_refs = realloc(visual->port_refs, visual->port_refs_nr += newports);
+		visual->port_refs = sci_realloc(visual->port_refs, visual->port_refs_nr += newports);
 		memset(visual->port_refs + id, 0, newports * sizeof(gfxw_port_t *)); /* Clear new port refs */
 	}
 
@@ -2276,7 +2277,7 @@ gfxw_show_widget(gfxw_widget_t *widget)
 gfxw_snapshot_t *
 gfxw_make_snapshot(gfxw_visual_t *visual, rect_t area)
 {
-	gfxw_snapshot_t *retval = malloc(sizeof(gfxw_snapshot_t));
+	gfxw_snapshot_t *retval = sci_malloc(sizeof(gfxw_snapshot_t));
 
 	retval->serial = widget_serial_number_counter++;
 
@@ -2363,7 +2364,7 @@ gfxw_picviewize_dynview(gfxw_dyn_view_t *dynview)
 {
 	dynview->type = GFXW_PIC_VIEW;
 	dynview->flags |= GFXW_FLAG_DIRTY;
-	
+
 	_gfxw_set_ops_PICVIEW(GFXW(dynview));
 
 	if (dynview->parent)

@@ -675,7 +675,7 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 		if (visual->port_refs_nr < 1)
 			sciprintf("visual->port_refs_nr is too small: %d!\n", visual->port_refs_nr);
 
-		visual->port_refs = calloc(sizeof(gfxw_port_t *), visual->port_refs_nr);
+		visual->port_refs = sci_calloc(sizeof(gfxw_port_t *), visual->port_refs_nr);
 	}
 
 	if (widget->next)
@@ -957,7 +957,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
 		*foo = NULL; /* No menu bar */
 	} else {
 
-		*foo = (menubar_t *) malloc(sizeof(menubar_t));
+		*foo = (menubar_t *) sci_malloc(sizeof(menubar_t));
 		%CFSMLREAD menubar_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
 
 	}
@@ -1144,7 +1144,7 @@ gamestate_restore(state_t *s, char *dirname)
 			gfxop_add_to_pic(s->gfx_state, retval->pics[i].nr, 1, retval->pics[i].palette);
 	} else {
 		if (FILE_VERSION == 1) {
-			retval->pics = malloc(sizeof(drawn_pic_t) * (retval->pics_nr = 8));
+			retval->pics = sci_malloc(sizeof(drawn_pic_t) * (retval->pics_nr = 8));
 			retval->pics_drawn_nr = 0;
 		}
 		gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
@@ -1183,7 +1183,7 @@ gamestate_restore(state_t *s, char *dirname)
 
 	/* File IO state: */
 	retval->file_handles_nr = 2;
-	retval->file_handles = calloc(2, sizeof(FILE *));
+	retval->file_handles = sci_calloc(2, sizeof(FILE *));
 
 	/* static parser information: */
 	retval->parser_rules = s->parser_rules;

@@ -1,5 +1,5 @@
 /***************************************************************************
-  Copyright (C) 1999,2000,01 Magnus Reftel
+ util.h Copyright (C) 1999,2000,01 Magnus Reftel
 
 
  This program may be modified and copied freely according to the terms of

@@ -21,6 +21,7 @@ extern "C" {
 #include <uinput.h>
 #include <ctype.h>
 #include <console.h> // for sciprintf
+#include <sci_memory.h>
 };
 
 #include "dd_driver.h"
@@ -121,7 +122,7 @@ dd_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	if(g_bFullScreen)
 	{
 		// force the best mode
-		xres=1; yres=1; bpp=1; 
+		xres=1; yres=1; bpp=1;
 	}
 	switch(bpp) // bpp of 8,16,24,32
 	{
@@ -140,7 +141,7 @@ dd_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 
 	drv->state = NULL;
 
-	ctx = (struct gfx_dd_struct_t *) malloc(sizeof(gfx_dd_struct_t));
+	ctx = (struct gfx_dd_struct_t *) sci_malloc(sizeof(gfx_dd_struct_t));
 	if(ctx == NULL)
 		return GFX_FATAL;
 
@@ -169,7 +170,7 @@ dd_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	ctx->hMainWnd = CreateWindowEx (0,"freesci.WndClass","FreeSCI",
 		g_bFullScreen ? WS_POPUP : (WS_OVERLAPPED | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU),
 		0,0,rc.right-rc.left,rc.bottom-rc.top,NULL,NULL,NULL,NULL);
-	
+
 	SetWindowLong(ctx->hMainWnd,0,(long) drv);
 
 	hr = DirectDrawCreate(NULL,&(ctx->pDD),NULL);
@@ -239,8 +240,8 @@ dd_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	if(dd_desc.ddpfPixelFormat.dwFlags & DDPF_PALETTEINDEXED8)
 		dd_bpp2=256;
 
-	drv->mode = gfx_new_mode(xres,yres,dd_desc.ddpfPixelFormat.dwRGBBitCount/8, 
-		dd_desc.ddpfPixelFormat.dwRBitMask,dd_desc.ddpfPixelFormat.dwGBitMask,dd_desc.ddpfPixelFormat.dwBBitMask,0, 
+	drv->mode = gfx_new_mode(xres,yres,dd_desc.ddpfPixelFormat.dwRGBBitCount/8,
+		dd_desc.ddpfPixelFormat.dwRBitMask,dd_desc.ddpfPixelFormat.dwGBitMask,dd_desc.ddpfPixelFormat.dwBBitMask,0,
 		r_sh,g_sh,b_sh,0, dd_bpp2, 0);
 
 	tbytes = 320*xres*200*yres* (dd_desc.ddpfPixelFormat.dwRGBBitCount/8);
@@ -313,7 +314,7 @@ dd_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	}
 
 	if (frames < 2) {
-		meta->alt_back_buffer = malloc(bpp * 320 * 200 * xres * yres);
+		meta->alt_back_buffer = sci_malloc(bpp * 320 * 200 * xres * yres);
 		meta->back_vis = ggiOpen("memory:pointer", meta->alt_back_buffer, NULL);
 		if (ggiSetSimpleMode(meta->back_vis, xres * 320, yres * 200, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual failed\n");
@@ -321,7 +322,7 @@ dd_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	} else meta->alt_back_buffer = NULL;
 
 	if (frames < 3) {
-		meta->static_buffer = malloc(bpp * 320 * 200 * xres * yres);
+		meta->static_buffer = sci_malloc(bpp * 320 * 200 * xres * yres);
 		meta->static_vis = ggiOpen("memory:pointer", meta->static_buffer, NULL);
 		if (ggiSetSimpleMode(meta->static_vis, xres * 320, yres * 200, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual #2 failed\n");
@@ -389,7 +390,7 @@ dd_exit(gfx_driver_t *drv)
 	}
 	if(ctx->pDD)
 	{
-		ctx->pDD->Release(); 
+		ctx->pDD->Release();
 		ctx->pDD = NULL;
 	}
 
@@ -449,18 +450,18 @@ dd_draw_filled_rect(gfx_driver_t *drv, rect_t box, gfx_color_t color1, gfx_color
 	rcDest.right  = box.x+box.xl;
 	rcDest.bottom = box.y+box.yl;
 
-	if (color1.mask & GFX_MASK_VISUAL) 
+	if (color1.mask & GFX_MASK_VISUAL)
 	{
 		memset(&ddblt,0,sizeof(ddblt));
 		ddblt.dwSize = sizeof(ddblt);
 		if(drv->mode->palette!=NULL)
 			ddblt.dwFillColor = color1.visual.global_index;
-		else 
+		else
 			ddblt.dwFillColor = MakeRGB(drv->mode,color1.visual.r,color1.visual.g,color1.visual.b);
 		hr = ctx->pBack->Blt(&rcDest,NULL,NULL,DDBLT_COLORFILL,&ddblt);
 	}
 
-	if (color1.mask & GFX_MASK_PRIORITY) 
+	if (color1.mask & GFX_MASK_PRIORITY)
 	{
 		pri = ctx->priority_maps[DD_BUFFER_BACK]->index_data + box.x + box.y*(drv->mode->xfact * 320);
 		for(i=0; i<box.yl; i++)
@@ -474,7 +475,7 @@ dd_draw_filled_rect(gfx_driver_t *drv, rect_t box, gfx_color_t color1, gfx_color
 }
 
 int
-dd_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority, 
+dd_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 		rect_t src, rect_t dest, gfx_buffer_t buffer)
 {
 	HRESULT hr;
@@ -488,7 +489,7 @@ dd_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 
 	ctx = (gfx_dd_struct_t *) drv->state;
 
-	if (src.xl != dest.xl || src.yl != dest.yl) 
+	if (src.xl != dest.xl || src.yl != dest.yl)
 	{
 		GFXERROR("Attempt to draw scaled view- not supported by this driver!\n");
 		return GFX_FATAL; /* Scaling not supported! */
@@ -542,13 +543,13 @@ dd_grab_pixmap(gfx_driver_t *drv, rect_t src, gfx_pixmap_t *pxm, gfx_map_mask_t 
 
 	ctx = (gfx_dd_struct_t *) drv->state;
 
-	if (src.x < 0 || src.y < 0) 
+	if (src.x < 0 || src.y < 0)
 	{
 		GFXERROR("Attempt to grab pixmap from invalid coordinates (%d,%d)\n", src.x, src.y);
 		return GFX_ERROR;
 	}
 
-	if (!pxm->data) 
+	if (!pxm->data)
 	{
 		GFXERROR("Attempt to grab pixmap to unallocated memory\n");
 		return GFX_ERROR;
@@ -556,7 +557,7 @@ dd_grab_pixmap(gfx_driver_t *drv, rect_t src, gfx_pixmap_t *pxm, gfx_map_mask_t 
 
 	pxm->xl = src.xl;
 	pxm->yl = src.yl;
-	
+
 	memset(&ddsc,0,sizeof(ddsc));
 	ddsc.dwSize = sizeof(ddsc);
 	hr = ctx->pBack->Lock(NULL,&ddsc,DDLOCK_WAIT,NULL);
@@ -566,13 +567,13 @@ dd_grab_pixmap(gfx_driver_t *drv, rect_t src, gfx_pixmap_t *pxm, gfx_map_mask_t 
 	bpp = ddsc.ddpfPixelFormat.dwRGBBitCount / 8;
 	x = src.x*drv->mode->xfact;
 	y = src.y*drv->mode->yfact;
-/*	
+/*
 	if(!g_bFullScreen)
 	{
 		x += ctx->win_xpos;
 		y += ctx->win_ypos;
 	}
-*/	
+*/
 	s = (BYTE *) ddsc.lpSurface + x*bpp + y*ddsc.lPitch;
 	d = pxm->data;
 	xlb = src.xl * bpp;
@@ -654,7 +655,7 @@ dd_set_static_buffer(gfx_driver_t *drv, gfx_pixmap_t *pic, gfx_pixmap_t *priorit
 
 	/* First, check if the priority map is sane */
 	if (priority->index_xl != ctx->priority_maps[DD_BUFFER_STATIC]->index_xl
-	    || priority->index_yl != ctx->priority_maps[DD_BUFFER_STATIC]->index_yl) 
+	    || priority->index_yl != ctx->priority_maps[DD_BUFFER_STATIC]->index_yl)
 	{
 		GFXERROR("Invalid priority map: (%dx%d) vs expected (%dx%d)\n",
 			 priority->index_xl, priority->index_yl,
@@ -707,7 +708,7 @@ static int process_messages(void)
 
 	while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
 	{
-		if (!GetMessage (&msg, NULL, 0, 0)) 
+		if (!GetMessage (&msg, NULL, 0, 0))
 			return 0;
 		TranslateMessage (&msg);
 		DispatchMessage(&msg);
@@ -738,7 +739,7 @@ MsgWait (int WaitTime)
 
 	dwWait = WaitTime;
 
-	if (!process_messages()) 
+	if (!process_messages())
 		return;
 
 	if (dwWait <= 0)
@@ -746,17 +747,17 @@ MsgWait (int WaitTime)
 	do
 	{
 		dwWait=WaitTime-(timeGetTime()-StartTime);
-		if (dwWait <= 0) 
+		if (dwWait <= 0)
 			break;
 
 		dwRet=MsgWaitForMultipleObjects (0, NULL, FALSE, dwWait, QS_ALLINPUT);
- 
+
 		if(dwRet == WAIT_TIMEOUT)
 			return;
 
-		if (!process_messages()) 
+		if (!process_messages())
 			return;
-			
+
 	} while(1);
 }
 
@@ -777,12 +778,12 @@ static void init_event_queue(gfx_dd_struct_t *ctx)
 	ctx->queue_first = 0;
 	ctx->queue_last  = 0;
 	ctx->queue_size  = 256;
-	ctx->event_queue = (sci_event_t *) malloc (ctx->queue_size * sizeof (sci_event_t));
+	ctx->event_queue = (sci_event_t *) sci_malloc (ctx->queue_size * sizeof (sci_event_t));
 }
 
 static void free_event_queue(gfx_dd_struct_t *ctx)
 {
-	if (ctx->event_queue) free(ctx->event_queue);
+	if (ctx->event_queue) sci_free(ctx->event_queue);
 	ctx->queue_size  = 0;
 	ctx->queue_first =0;
 	ctx->queue_last  =0;
@@ -796,7 +797,7 @@ static void add_queue_event(gfx_dd_struct_t *ctx,int type, int data, int buckybi
 		int i, event_count;
 		sci_event_t *new_queue;
 
-		new_queue = (sci_event_t *) malloc (ctx->queue_size * 2 * sizeof (sci_event_t));
+		new_queue = (sci_event_t *) sci_malloc (ctx->queue_size * 2 * sizeof (sci_event_t));
 		event_count = (ctx->queue_last - ctx->queue_first) % ctx->queue_size;
 		for (i=0; i<event_count; i++)
 			new_queue [i] = ctx->event_queue [(ctx->queue_first+i) % ctx->queue_size];
@@ -810,7 +811,7 @@ static void add_queue_event(gfx_dd_struct_t *ctx,int type, int data, int buckybi
 	ctx->event_queue [ctx->queue_last].data = data;
 	ctx->event_queue [ctx->queue_last].type = type;
 	ctx->event_queue [ctx->queue_last++].buckybits = buckybits;
-	if (ctx->queue_last == ctx->queue_size) 
+	if (ctx->queue_last == ctx->queue_size)
 		ctx->queue_last=0;
 }
 
@@ -818,36 +819,36 @@ static void add_mouse_event (gfx_dd_struct_t *ctx,int type, int data, WPARAM wPa
 {
 	int buckybits = 0;
 
-	if (wParam & MK_SHIFT) 
+	if (wParam & MK_SHIFT)
 		buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
-	if (wParam & MK_CONTROL) 
+	if (wParam & MK_CONTROL)
 		buckybits |= SCI_EVM_CTRL;
-  
+
 	add_queue_event (ctx,type, data, buckybits);
 }
 
 static void add_key_event (gfx_dd_struct_t *ctx,int data)
 {
 	int buckybits = 0;
-  
+
 	/* FIXME: If anyone cares, on Windows NT we can distinguish left and right shift */
-	if (GetAsyncKeyState (VK_SHIFT)) 
+	if (GetAsyncKeyState (VK_SHIFT))
 		buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
-	if (GetAsyncKeyState (VK_CONTROL)) 
+	if (GetAsyncKeyState (VK_CONTROL))
 		buckybits |= SCI_EVM_CTRL;
-	if (GetAsyncKeyState (VK_MENU)) 
+	if (GetAsyncKeyState (VK_MENU))
 		buckybits |= SCI_EVM_ALT;
 	if (GetKeyState (VK_CAPITAL) & 1)
 		buckybits |= SCI_EVM_CAPSLOCK;
-	
+
 	add_queue_event (ctx,SCI_EVT_KEYBOARD, data, buckybits);
 }
 
 sci_event_t get_queue_event(gfx_dd_struct_t *ctx)
 {
-	if (ctx->queue_first == ctx->queue_size) 
+	if (ctx->queue_first == ctx->queue_size)
 		ctx->queue_first = 0;
-  
+
 	if (ctx->queue_first == ctx->queue_last)
 	{
 		sci_event_t noevent;
@@ -856,7 +857,7 @@ sci_event_t get_queue_event(gfx_dd_struct_t *ctx)
 		noevent.buckybits = 0;
 		return noevent;
 	}
-	else 
+	else
 		return ctx->event_queue [ctx->queue_first++];
 }
 
@@ -887,12 +888,12 @@ static long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 				ctx->win_ypos = pnt.y;
 			}
 			break;
-		case WM_PAINT: 
+		case WM_PAINT:
 			{
 				RECT rcSrc,rcDst;
 				if (ctx->pPrimary!=NULL && ctx->pBack!=NULL && GetUpdateRect (hWnd, &rcSrc, FALSE))
 				{
-					if(rcSrc.right>320) 
+					if(rcSrc.right>320)
 						rcSrc.right=320;
 					if(rcSrc.bottom>200)
 						rcSrc.bottom=200;
@@ -922,8 +923,8 @@ static long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			ctx->bShowMouse = FALSE;
 			if( ((lParam & 0xFFFF) >= 320*drv->mode->xfact) || ((lParam >> 16) >= 200*drv->mode->yfact))
 				break;
-			drv->pointer_x = lParam & 0xFFFF; 
-			drv->pointer_y = lParam >> 16; 
+			drv->pointer_x = lParam & 0xFFFF;
+			drv->pointer_y = lParam >> 16;
 			break;
 
 		case WM_LBUTTONDOWN: add_mouse_event (ctx, SCI_EVT_MOUSE_PRESS, 1, wParam);   break;
@@ -932,7 +933,7 @@ static long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		case WM_LBUTTONUP:   add_mouse_event (ctx, SCI_EVT_MOUSE_RELEASE, 1, wParam); break;
 		case WM_RBUTTONUP:   add_mouse_event (ctx, SCI_EVT_MOUSE_RELEASE, 2, wParam); break;
 		case WM_MBUTTONUP:   add_mouse_event (ctx, SCI_EVT_MOUSE_RELEASE, 3, wParam); break;
-		
+
 		case WM_KEYDOWN:
 			switch (wParam)
 			{
@@ -985,7 +986,7 @@ static long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 }
 
 /* --------------------------------------------------------------- */
-extern "C" 
+extern "C"
 gfx_driver_t gfx_driver_dd = {
 	"ddraw",
 	DD_DRIVER_VERSION,

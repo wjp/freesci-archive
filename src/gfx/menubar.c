@@ -41,7 +41,7 @@ static int __active = 0;
 inline void*
 __my_malloc(long size, char *function, int line)
 {
-  void *retval = malloc(size);
+  void *retval = sci_malloc(size);
   __active++;
   fprintf(stderr,"[%d] line %d, %s: malloc(%d) -> %p\n", __active, line, function, size, retval);
   return retval;
@@ -50,7 +50,7 @@ __my_malloc(long size, char *function, int line)
 inline void*
 __my_realloc(void *origin, long size, char *function, int line)
 {
-  void *retval = realloc(origin, size);
+  void *retval = sci_realloc(origin, size);
   fprintf(stderr,"line %d, %s: realloc(%p, %d) -> %p\n", line, function, origin, size, retval);
   return retval;
 }
@@ -71,7 +71,7 @@ __my_free(void *origin, char *function, int line)
 menubar_t *
 menubar_new()
 {
-	menubar_t *tmp = malloc(sizeof(menubar_t));
+	menubar_t *tmp = sci_malloc(sizeof(menubar_t));
 	tmp->menus_nr = 0;
 
 	return tmp;
@@ -114,9 +114,9 @@ _menubar_add_menu_item(gfx_state_t *state, menu_t *menu, int type, char *left, c
 	int width, height;
 
 	if (menu->items_nr == 0) {
-		menu->items = (menu_item_t *) malloc(sizeof(menu_item_t));
+		menu->items = (menu_item_t *) sci_malloc(sizeof(menu_item_t));
 		menu->items_nr = 1;
-	} else menu->items = (menu_item_t *) realloc(menu->items, sizeof(menu_item_t) * ++(menu->items_nr));
+	} else menu->items = (menu_item_t *) sci_realloc(menu->items, sizeof(menu_item_t) * ++(menu->items_nr));
 
 	item = &(menu->items[menu->items_nr - 1]);
 
@@ -170,9 +170,9 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 #ifdef MENU_FREESCI_BLATANT_PLUG
 		add_freesci = 1;
 #endif
-		menubar->menus = malloc(sizeof(menu_t));
+		menubar->menus = sci_malloc(sizeof(menu_t));
 		menubar->menus_nr = 1;
-	} else menubar->menus = realloc(menubar->menus, ++(menubar->menus_nr) * sizeof (menu_t));
+	} else menubar->menus = sci_realloc(menubar->menus, ++(menubar->menus_nr) * sizeof (menu_t));
 
 	menu = &(menubar->menus[menubar->menus_nr-1]);
 	memset(menu, 0, sizeof(menu_t));
@@ -316,7 +316,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 #ifdef MENU_FREESCI_BLATANT_PLUG
 	if (add_freesci) {
 
-		char *freesci_text = strdup ("About FreeSCI");
+		char *freesci_text = sci_strdup ("About FreeSCI");
 		c_width = _menubar_add_menu_item(state, menu, MENU_TYPE_NORMAL, freesci_text, NULL, font, 0, 0, 0, 0);
 		if (c_width > max_width)
 			max_width = c_width;
@@ -373,7 +373,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 	case MENU_ATTRIBUTE_TEXT:
 		free(item->text);
 		assert(value);
-		item->text = strdup((char *) s->heap + value);
+		item->text = sci_strdup((char *) s->heap + value);
 		item->text_pos = value;
 		break;
 
@@ -385,7 +385,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 
 			item->key = value;
 			item->modifiers = 0;
-			item->keytext = malloc(2);
+			item->keytext = sci_malloc(2);
 			item->keytext[0] = value;
 			item->keytext[1] = 0;
 			item->flags |= MENU_ATTRIBUTE_FLAGS_KEY;

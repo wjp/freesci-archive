@@ -34,7 +34,7 @@ malloc0(guint32 size) {
     char* ptr;
 
     /* allocate the buffer, return NULL if no buffer */
-    if((ptr=malloc(size))==NULL) return NULL;
+    if((ptr= sci_malloc(size))==NULL) return NULL;
 
     /* clear it to zeros */
     memset(ptr,0,size);
@@ -208,7 +208,7 @@ g_memdup (gpointer mem, guint byte_size) {
   gpointer new_mem;
 
   if (mem) {
-    new_mem = malloc (byte_size);
+    new_mem = sci_malloc (byte_size);
     memcpy (new_mem, mem, byte_size);
   } else {
     new_mem = NULL;

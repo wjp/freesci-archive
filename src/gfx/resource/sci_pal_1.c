@@ -71,7 +71,7 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 		return NULL;
 	}
 
-	retval = malloc(sizeof(gfx_pixmap_color_t) * counter);
+	retval = sci_malloc(sizeof(gfx_pixmap_color_t) * counter);
 
 	*colors_nr = counter;
 	fprintf(stderr,"c=%d\n", counter);

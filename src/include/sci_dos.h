@@ -1,7 +1,7 @@
 /***************************************************************************
  sci_dos.h Copyright (C) 1999 Rink Springer
 
- 
+
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -60,11 +60,11 @@ typedef void* gpointer;
 typedef struct timeval GTimeVal;
 
 #define g_new0(type, count) ((type*)g_malloc0((unsigned)sizeof(type) * (count)))
-#define g_new(type, count) ((type*)malloc((unsigned)sizeof(type) * (count)))
+#define g_new(type, count) ((type*)sci_malloc((unsigned)sizeof(type) * (count)))
 
-#define g_malloc(x) malloc(x)
-#define g_free(x) free(x)
-#define g_realloc(x,y) realloc(x,y)
+#define g_malloc(x) sci_malloc(x)
+#define g_free(x) sci_free(x)
+#define g_realloc(x,y) sci_realloc(x,y)
 
 extern gpointer g_malloc0(guint32 size);
 

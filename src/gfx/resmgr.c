@@ -45,7 +45,7 @@ struct param_struct {
 gfx_resstate_t *
 gfxr_new_resource_manager(int version, gfx_options_t *options, gfx_driver_t *driver)
 {
-	gfx_resstate_t *state = malloc(sizeof(gfx_resstate_t));
+	gfx_resstate_t *state = sci_malloc(sizeof(gfx_resstate_t));
 	int i;
 
 	state->version = version;
@@ -87,7 +87,7 @@ gfxr_new_resource_manager(int version, gfx_options_t *options, gfx_driver_t *dri
 		if (resource->unscaled_data.type) \
 			freecmd(resource->unscaled_data.type); \
                 resource->unscaled_data.type = NULL;
-    
+
 
 void
 gfxr_free_resource(gfx_driver_t *driver, gfx_resource_t *resource, int type)
@@ -269,7 +269,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
         int must_post_process_pic = 0;
-	int need_unscaled = 
+	int need_unscaled =
 		(state->driver->mode->xfact != 1 || state->driver->mode->yfact != 1);
 
 	if (!tree)
@@ -315,7 +315,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 			pic->priority_map = gfx_pixmap_scale_index_data(pic->priority_map, state->driver->mode);
 
 		if (!res) {
-			res = malloc(sizeof(gfx_resource_t));
+			res = sci_malloc(sizeof(gfx_resource_t));
 			res->ID = ((restype << 16) | nr);
 			res->lock_sequence_nr = state->options->buffer_pics_nr;
 			sbtree_set(tree, nr, (void *) res);
@@ -430,7 +430,7 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel)
 			return NULL;
 
 		if (!res) {
-			res = malloc(sizeof(gfx_resource_t));
+			res = sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.view = NULL;
 			res->ID = ((restype << 16) | nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
@@ -492,7 +492,7 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 			return NULL;
 
 		if (!res) {
-			res = malloc(sizeof(gfx_resource_t));
+			res = sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.font = NULL;
 			res->ID = ((restype << 16) | nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
@@ -535,7 +535,7 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr)
 			return NULL;
 
 		if (!res) {
-			res = malloc(sizeof(gfx_resource_t));
+			res = sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.pointer = NULL;
 			res->ID = ((restype << 16) | nr);
 			res->lock_sequence_nr = state->tag_lock_counter;

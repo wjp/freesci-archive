@@ -331,7 +331,7 @@ kalloc(state_t *s, int type, int space)
 	if (seeker == MAX_HUNK_BLOCKS)
 		KERNEL_OOPS("Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
 	else {
-		s->hunk[seeker].data = malloc(s->hunk[seeker].size = space);
+		s->hunk[seeker].data = sci_malloc(s->hunk[seeker].size = space);
 		s->hunk[seeker].type = type;
 	}
 
@@ -400,7 +400,7 @@ char *old_save_dir;
 void
 kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	old_save_dir=strdup((char *) s->heap+s->save_dir+2);
+	old_save_dir= sci_strdup((char *) s->heap+s->save_dir+2);
 	s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
 	s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE; /* This appears to help */
 	s->execution_stack_pos = s->execution_stack_base;
@@ -540,7 +540,7 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			s->acc=(loc_time->tm_min<<6)|(loc_time->tm_hour<<12)|(loc_time->tm_sec);
 			SCIkdebug(SCIkTIME, "GetTime(12h) returns %d\n", s->acc);
 			break;
-		}  
+		}
 		case _K_NEW_GETTIME_TIME_24HOUR : {
 			s->acc=(loc_time->tm_min<<5)|(loc_time->tm_sec>>1)|(loc_time->tm_hour<<11);
 			SCIkdebug(SCIkTIME, "GetTime(24h) returns %d\n", s->acc);
@@ -569,11 +569,11 @@ void
 kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	CHECK_THIS_KERNEL_FUNCTION;
-  
+
 	switch (PARAM(0)) {
-  
+
 	case K_MEMORY_ALLOCATE_CRITICAL :
-	
+
 		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
 		if (!s->acc)
 			{
@@ -583,36 +583,36 @@ kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		break;
 
 	case K_MEMORY_ALLOCATE_NONCRITICAL :
-	
+
 		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
 		break;
 
 	case K_MEMORY_FREE :
-	
+
 		heap_free(s->_heap, UPARAM(1)-2);
 		break;
-	
+
 	case K_MEMORY_MEMCPY :
 		{
 
 			int dest = UPARAM(1);
 			int src = UPARAM(2);
 			int n = UPARAM(3);
-    
+
 			memcpy(s->heap + dest, s->heap + src, n);
 			break;
 		}
-    
+
 	case K_MEMORY_PEEK :
-    
-		s->acc=GET_HEAP(UPARAM(1));		
+
+		s->acc=GET_HEAP(UPARAM(1));
 		break;
-	
+
 	case K_MEMORY_POKE :
-    
+
 		PUT_HEAP(UPARAM(1), UPARAM(2));
 		break;
-    
+
 	}
 }
 
@@ -645,7 +645,7 @@ script_map_kernel(state_t *s)
 	int functnr;
 	int mapped = 0;
 
-	s->kfunct_table = malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
+	s->kfunct_table = sci_malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
 
 	for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
 		int seeker, found = -1;

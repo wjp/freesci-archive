@@ -162,7 +162,7 @@ gfxr_interpreter_options_hash(gfx_resource_types_t type, int version, gfx_option
 int *
 arrdup(int *src, int count)
 {
-	int *retval = malloc(sizeof(int) * count);
+	int *retval = sci_malloc(sizeof(int) * count);
 	memcpy(retval, src, sizeof(int) * count);
 	return retval;
 }
@@ -234,7 +234,7 @@ gfx_pixmap_color_t pic_colors[PIC_COLORS_NR] = {
 gfxr_pic_t *
 gfxr_interpreter_init_pic(int version, gfx_mode_t *mode, int ID)
 {
-	gfxr_pic_t *pic = malloc(sizeof(gfxr_pic_t));
+	gfxr_pic_t *pic = sci_malloc(sizeof(gfxr_pic_t));
 
 	pic->mode = mode;
 	pic->undithered_buffer = NULL;
@@ -356,7 +356,7 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr)
 	if (nr < 0 || nr > TEST_VIEWS_NR)
 		return NULL;
 
-	view = malloc(sizeof(gfxr_view_t));
+	view = sci_malloc(sizeof(gfxr_view_t));
 	view->ID = nr | 2048;
 	view->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 
@@ -364,10 +364,10 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr)
 	view->colors = view_colors;
 
 	view->loops_nr = 1;
-	view->loops = loop = malloc(sizeof(gfxr_loop_t));
+	view->loops = loop = sci_malloc(sizeof(gfxr_loop_t));
 
 	loop->cels_nr = 3;
-	loop->cels = malloc(sizeof(gfx_pixmap_t *) * loop->cels_nr);
+	loop->cels = sci_malloc(sizeof(gfx_pixmap_t *) * loop->cels_nr);
 
 	for (i = 0; i < 3; i++) {
 		gfx_pixmap_t *pxm = gfx_pixmap_alloc_index_data(gfx_new_pixmap(16, 16, 2048 | nr, 0, i));
@@ -422,16 +422,16 @@ gfxr_interpreter_get_font(gfx_resstate_t *state, int nr)
 	if (nr < 0 || nr > TEST_FONTS_NR)
 		return NULL;
 
-	font = malloc(sizeof(gfx_bitmap_font_t));
+	font = sci_malloc(sizeof(gfx_bitmap_font_t));
 	font->ID = nr;
 	font->chars_nr = BUILTIN_CHARS_NR;
-	font->widths = malloc(sizeof(int) * BUILTIN_CHARS_NR);
+	font->widths = sci_malloc(sizeof(int) * BUILTIN_CHARS_NR);
 	for (i = 0; i < BUILTIN_CHARS_NR; i++)
 		font->widths[i] = BUILTIN_CHARS_WIDTH;
 	font->row_size = (BUILTIN_CHARS_WIDTH + 7) >> 3;
 	font->height = font->line_height = BUILTIN_CHARS_HEIGHT;
 	font->char_size = ((BUILTIN_CHARS_WIDTH + 7) >> 3) * BUILTIN_CHARS_HEIGHT;
-	font->data = memdup(builtin_font, font->char_size * BUILTIN_CHARS_NR);
+	font->data = sci_memdup(builtin_font, font->char_size * BUILTIN_CHARS_NR);
 
 	printf(">> resource manager retreived font #%d\n", nr);
 
@@ -1116,8 +1116,8 @@ main(int argc, char **argv)
 		case 's': skip_intro = 1;
 			break;
 
-		case 'g': if (driver) free(driver);
-			driver = strdup(optarg);
+		case 'g': if (driver) sci_free(driver);
+			driver = sci_strdup(optarg);
 			break;
 
 		case 'l': {

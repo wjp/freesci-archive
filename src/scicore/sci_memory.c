@@ -81,7 +81,7 @@ inline void
 _SCI_FREE(void *ptr, char *file, int line, char *funct, int debug)
 {
 	if (debug)
-		fprintf(stderr, "_SCI_FREE() [%s:(%s)%u]\n",
+		fprintf(stderr, "_SCI_FREE() [%s (%s) : %u]\n",
 			file, funct, line);
 	assert(ptr);
 	free(ptr);

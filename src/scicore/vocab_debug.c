@@ -142,7 +142,7 @@ int* vocabulary_get_classes(int* count)
 
   if((r=findResource(sci_vocab, 996))==0) return 0;
 
-  c=malloc(sizeof(int)*r->length/2);
+  c= sci_malloc(sizeof(int)*r->length/2);
   for(i=2; i<r->length; i+=4)
     {
       c[i/4]=getInt(r->data+i);
@@ -174,8 +174,8 @@ char** vocabulary_get_snames(int* pcount, sci_version_t version)
   count=getInt(r->data);
 
   magic=((version==0) || (version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER))? 1 : 2;
-    
-  t=malloc(sizeof(char*)*magic*(count+1));
+
+  t= sci_malloc(sizeof(char*)*magic*(count+1));
 
   j=0;
 
@@ -183,13 +183,13 @@ char** vocabulary_get_snames(int* pcount, sci_version_t version)
     {
       int offset=getInt(r->data+2+i*2);
       int len=getInt(r->data+offset);
-      t[j]=malloc(len+1);
+      t[j]= sci_malloc(len+1);
       memcpy(t[j], r->data+offset+2, len);
       t[j][len]='\0';
       j++;
       if ((version!=0) && (version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER))
       {
-        t[j]=malloc(len+1);
+        t[j]= sci_malloc(len+1);
         memcpy(t[j], r->data+offset+2, len);
         t[j][len]='\0';
         j++;
@@ -199,7 +199,7 @@ char** vocabulary_get_snames(int* pcount, sci_version_t version)
   t[j]=0;
 
   if (pcount != NULL) *pcount=magic*count;
-  
+
   return t;
 }
 
@@ -228,14 +228,14 @@ opcode* vocabulary_get_opcodes()
 
 	count=getInt(r->data);
 
-	o=malloc(sizeof(opcode)*256);
+	o= sci_malloc(sizeof(opcode)*256);
 	for(i=0; i<count; i++)
 		{
 			int offset=getInt(r->data+2+i*2);
 			int len=getInt(r->data+offset)-2;
 			o[i].type=getInt(r->data+offset+2);
 			o[i].number=i;
-			o[i].name=malloc(len+1);
+			o[i].name= sci_malloc(len+1);
 			memcpy(o[i].name, r->data+offset+4, len);
 			o[i].name[len]='\0';
 #ifdef VOCABULARY_DEBUG
@@ -246,7 +246,7 @@ opcode* vocabulary_get_opcodes()
 		{
 			o[i].type=0;
 			o[i].number=i;
-			o[i].name=malloc(strlen("undefined")+1);
+			o[i].name= sci_malloc(strlen("undefined")+1);
 			strcpy(o[i].name, "undefined");
 		}
 	return o;
@@ -271,27 +271,27 @@ vocabulary_free_opcodes(opcode *opcodes)
 static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 {
   int mallocsize = 32;
-  char **retval = malloc(sizeof (char *) * mallocsize);
+  char **retval = sci_malloc(sizeof (char *) * mallocsize);
   int i = 0, index = 0;
 
   while (index < r->length) {
 
     int slen = strlen((char *) r->data + index) + 1;
 
-    retval[i] = malloc(slen);
+    retval[i] = sci_malloc(slen);
     memcpy(retval[i++], r->data + index, slen);
     /* Wouldn't normally read this, but the cleanup code wants to free() this */
 
     index += slen;
 
     if (i == mallocsize)
-      retval = realloc(retval, sizeof(char *) * (mallocsize <<= 1));
+      retval = sci_realloc(retval, sizeof(char *) * (mallocsize <<= 1));
 
   }
 
   *names = i + 1;
-  retval = realloc(retval, sizeof(char *) * (i+2));
-  retval[i] = malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) + 1);
+  retval = sci_realloc(retval, sizeof(char *) * (i+2));
+  retval[i] = sci_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) + 1);
   strcpy(retval[i], SCRIPT_UNKNOWN_FUNCTION_STRING);
   /* The mystery kernel function- one in each SCI0 package */
 
@@ -306,13 +306,13 @@ static char** vocabulary_get_knames0(int* names)
   char** t;
   int count, i, index=2, empty_to_add = 1;
   resource_t* r=findResource(sci_vocab, 999);
-  
+
   if (!r) { /* No kernel name table found? Fall back to default table */
-    t = malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR + 1) * sizeof(char*));
+    t = sci_malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR + 1) * sizeof(char*));
     *names = SCI0_KNAMES_DEFAULT_ENTRIES_NR - 1; /* index of last element */
 
     for (i = 0; i < SCI0_KNAMES_DEFAULT_ENTRIES_NR; i++)
-      t[i] = strdup(sci0_default_knames[i]);
+      t[i] = sci_strdup(sci0_default_knames[i]);
 
     t[SCI0_KNAMES_DEFAULT_ENTRIES_NR] = NULL; /* Terminate list */
 
@@ -329,20 +329,20 @@ static char** vocabulary_get_knames0(int* names)
     sciprintf("Less than %d kernel functions; adding %d\n", SCI0_KNAMES_WELL_DEFINED, empty_to_add);
   }
 
-  t=malloc(sizeof(char*)*(count+1 + empty_to_add));
+  t= sci_malloc(sizeof(char*)*(count+1 + empty_to_add));
   for(i=0; i<count; i++)
     {
       int offset=getInt(r->data+index);
       int len=getInt(r->data+offset);
       /*fprintf(stderr,"Getting name %d of %d...\n", i, count);*/
       index+=2;
-      t[i]=malloc(len+1);
+      t[i]= sci_malloc(len+1);
       memcpy(t[i], r->data + offset + 2, len);
       t[i][len]='\0';
     }
 
   for (i = 0; i < empty_to_add; i++) {
-    t[count + i] = malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
+    t[count + i] = sci_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
     strcpy(t[count + i], SCRIPT_UNKNOWN_FUNCTION_STRING);
   }
 
@@ -364,16 +364,16 @@ static char** vocabulary_get_knames1(int *count)
       if ((used==size-1)||(!t))
 	{
 	  size*=2;
-	  t=realloc(t, size*sizeof(char*));
+	  t= sci_realloc(t, size*sizeof(char*));
 	}
       len=strlen((char *) r->data+pos);
-      t[used]=malloc(len+1);
+      t[used]= sci_malloc(len+1);
       strcpy(t[used], (char *) r->data+pos);
       used++;
       pos+=len+1;
     }
   *count=used;
-  t=realloc(t, used*sizeof(char*));
+  t= sci_realloc(t, used*sizeof(char*));
   return t;
 }
 

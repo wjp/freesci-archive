@@ -130,7 +130,7 @@ int decrypt1(guint8 *dest, guint8 *src, int length, int complength)
 				  if (destctr >= length)
 				    {
 #ifdef _SCI_DECOMPRESS_DEBUG
-				      printf ("decrypt1: Try to write sing byte beyound end of array!\n"); 
+				      printf ("decrypt1: Try to write sing byte beyound end of array!\n");
 #endif
 				    } else
 					dest[destctr++] = token;
@@ -151,7 +151,7 @@ int decrypt1(guint8 *dest, guint8 *src, int length, int complength)
 			tokenlengthlist[tokenctr++] = tokenlastlength;
 
 		}
-      
+
 	}
 
 	return 0;
@@ -193,7 +193,7 @@ gint16 getc2(guint8 *node, guint8 *src,
 				return (result | 0x100);
 			}
 		}
-		else { 
+		else {
 			next = node[1] >> 4;  /* high 4 bits */
 		}
 		node += next<<1;
@@ -273,8 +273,8 @@ int decompress0(resource_t *result, int resh)
 		return SCI_ERROR_EMPTY_OBJECT;
 	}
 
-	buffer = malloc(compressedLength);
-	result->data = malloc(result->length);
+	buffer = sci_malloc(compressedLength);
+	result->data = sci_malloc(result->length);
 
 	if (read(resh, buffer, compressedLength) != compressedLength) {
 		free(result->data);
@@ -287,7 +287,7 @@ int decompress0(resource_t *result, int resh)
 	fprintf(stderr, "Resource %s.%03hi encrypted with method %hi at %.2f%%"
 		" ratio\n",
 		Resource_Types[result->type], result->number, compressionMethod,
-		(result->length == 0)? -1.0 : 
+		(result->length == 0)? -1.0 :
 		(100.0 * compressedLength / result->length));
 	fprintf(stderr, "  compressedLength = 0x%hx, actualLength=0x%hx\n",
 		compressedLength, result->length);
@@ -304,7 +304,7 @@ int decompress0(resource_t *result, int resh)
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
 		memcpy(result->data, buffer, compressedLength);
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	case 1: /* LZW compression */
@@ -315,7 +315,7 @@ int decompress0(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	case 2: /* Some sort of Huffman encoding */
@@ -326,7 +326,7 @@ int decompress0(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	default:

@@ -167,7 +167,7 @@ int main(int argc, char** argv)
 			       "It comes WITHOUT WARRANTY of any kind.\n"
 			       "This is free software, released under the GNU General Public License.\n");
 			exit(0);
-	  
+
 		case 'h': {
 			char *gcc_3_0_can_kiss_my_ass =
 			       "Usage: sciunpack [options] [-U] <resource.number>\n"
@@ -229,15 +229,15 @@ int main(int argc, char** argv)
 		case 'L':
 			action = ACT_LIST;
 			break;
-	  
+
 		case 'W':
 			action = ACT_WORDS;
 			break;
-	  
+
 		case 'V':
 			action = ACT_VOCABDUMP;
 			break;
-	  
+
 		case 'O':
 			action = ACT_SCRIPTDUMP;
 			break;
@@ -247,8 +247,8 @@ int main(int argc, char** argv)
 			break;
 
 		case 'd':
-			if (gamedir) free (gamedir);
-			gamedir = strdup (optarg);
+			if (gamedir) sci_free (gamedir);
+			gamedir = sci_strdup (optarg);
 			break;
 
 		case 'c':
@@ -364,7 +364,7 @@ int main(int argc, char** argv)
 	freeResources();
 	return retval;
 }
-  
+
 
 void unpack_resource(int stype, int snr, char *outfilename)
 {
@@ -407,7 +407,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 				fprintf(stderr,"Writing the png failed (%d)\n",i);
 			} else if (verbose) printf("Done.\n");
 			free_picture(pic);
-		} else 
+		} else
 #endif /* DRAW_GRAPHICS */
 		if ((stype == sci_script) && conversion) {
 			sprintf (outfilename, "%03d.script", snr);
@@ -417,11 +417,11 @@ void unpack_resource(int stype, int snr, char *outfilename)
 		} else {
 
 /* Visual C++ doesn't allow to specify O_BINARY with creat() */
-#ifdef _MSC_VER	
+#ifdef _MSC_VER
                         int outf = open(outfilename, _O_CREAT | _O_BINARY | _O_RDWR);
 #else
                         int outf = creat(outfilename, CREAT_OPTIONS);
-#endif                        
+#endif
 
 #ifdef HAVE_OBSTACK_H
 			if ((stype == sci_sound) && conversion) {

@@ -1,7 +1,7 @@
 /***************************************************************************
  scriptdebug.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
-	
+
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -101,11 +101,11 @@ c_step(state_t *s)
 }
 
 
-int 
+int
 c_stepover(state_t *s)
 {
   int opcode, opnumber;
-  
+
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
     return 1;
@@ -114,9 +114,9 @@ c_stepover(state_t *s)
   _debugstate_valid = 0;
   opcode = s->heap [*_pc];
   opnumber = opcode >> 1;
-  if (opnumber == 0x22 /* callb */ || opnumber == 0x23 /* calle */ || 
-      opnumber == 0x25 /* send */ || opnumber == 0x2a /* self */ || 
-      opnumber == 0x2b /* super */) 
+  if (opnumber == 0x22 /* callb */ || opnumber == 0x23 /* calle */ ||
+      opnumber == 0x25 /* send */ || opnumber == 0x2a /* self */ ||
+      opnumber == 0x2b /* super */)
   {
     _debug_seeking = _DEBUG_SEEK_SO;
     _debug_seek_level = s->execution_stack_pos;
@@ -219,7 +219,7 @@ c_sim_parse(state_t *s)
 	s->parser_nodes[i].content.value = result->group;
 	free(result);
       } else { /* group name was specified directly? */
-	int val = strtol(token, NULL, 0); 
+	int val = strtol(token, NULL, 0);
 	if (val) {
 	  s->parser_nodes[i].type = 0;
 	  s->parser_nodes[i].content.value = val;
@@ -388,7 +388,7 @@ _parse_nodes(state_t *s, int *i, int *pos, int type, int nr)
 
   if (type == _parse_token_number) {
     s->parser_nodes[*pos += 1].type = PARSE_TREE_NODE_LEAF;
-    s->parser_nodes[*pos].content.value = nr; 
+    s->parser_nodes[*pos].content.value = nr;
     return *pos;
   }
   if (type == _parse_eoi) {
@@ -400,7 +400,7 @@ _parse_nodes(state_t *s, int *i, int *pos, int type, int nr)
     return -1;
   }
   s->parser_nodes[oldpos = ++(*pos)].type = PARSE_TREE_NODE_BRANCH;
-  
+
   nexttk = _parse_getinp(i, &nextval);
   if ((newpos = s->parser_nodes[oldpos].content.branches[0] = _parse_nodes(s, i, pos, nexttk, nextval)) == -1)
     return -1;
@@ -482,7 +482,7 @@ c_parse(state_t *s)
       vocab_dump_parse_tree("debug-parse-tree", s->parser_nodes);
 
   } else {
-    
+
       sciprintf("Unknown word: '%s'\n", error);
       free(error);
   }
@@ -507,7 +507,7 @@ c_save_game(state_t *s)
 		for (i = 0; i < s->file_handles_nr; i++)
 			if (s->file_handles[i])
 				result++;
-		
+
 		if (result) {
 			sciprintf("Game state has %d open file handles.\n", result);
 			sciprintf("Save to '_%s' to ignore this check.\nGame was NOT saved.\n", cmd_params[0].str);
@@ -527,7 +527,7 @@ int
 c_restore_game(state_t *s)
 {
 	state_t *newstate;
-  
+
 	if (!s) {
 		sciprintf("Not in debug state\n");
 		return 1;
@@ -649,7 +649,7 @@ int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)
 
 	return (getInt16(selectorIDoffset + prop_ofs));
 
-}  
+}
 
 void
 print_objname_wrapper(int foo)
@@ -773,7 +773,7 @@ disassemble(state_t *s, heap_ptr pos)
     {
       int prop_ofs = s->heap[retval - 1];
       int prop_id = prop_ofs_to_id(s, prop_ofs, *_objp & 0xffff);
-      
+
       sciprintf("	(%s)", selector_name(s, prop_id));
     }
 
@@ -823,7 +823,7 @@ disassemble(state_t *s, heap_ptr pos)
 	}
 
 	selector = getInt16(s->heap + *_sp - stackframe);
-      
+
 	if (called_obj_addr > 100) /* If we are in valid heap space */
 	  if (getInt16(s->heap + called_obj_addr + SCRIPT_OBJECT_MAGIC_OFFSET)
 	      == SCRIPT_OBJECT_MAGIC_NUMBER)
@@ -905,11 +905,11 @@ c_vmvarlist(state_t *s)
 {
       exec_stack_t *stack = s->execution_stack+s->execution_stack_pos;
       int i;
-      for (i=0;i<4;i++) 
+      for (i=0;i<4;i++)
 	sciprintf("%s vars at %04x\n", varnames[i], stack->variables[i]);
       return 0;
 }
- 
+
 int
 c_vmvars(state_t *s)
 {
@@ -1017,7 +1017,7 @@ c_redraw_screen(state_t *s)
 
 	s->visual->draw(GFXW(s->visual), gfx_point(0,0));
 	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
-	
+
 	return 0;
 }
 
@@ -1049,7 +1049,7 @@ WARNING(fixme!)
 
   if (cmd_params[0].val <= 3) s->pic_visible_map = cmd_params[0].val;
   c_redraw_screen(s);
-  
+
   if (s->onscreen_console)
     s->osc_backup = con_backup_screen(s);
 #endif
@@ -1463,7 +1463,7 @@ c_snk(state_t *s)
 {
 	int callk_index;
 	char *endptr;
-  
+
 	if (!_debugstate_valid) {
 		sciprintf("Not in debug state\n");
 		return 1;
@@ -1807,7 +1807,7 @@ c_show_list(state_t *s)
 		return 1;
 	}
 
-	return 
+	return
 		show_list(s, list);
 }
 
@@ -2131,7 +2131,7 @@ objinfo(state_t *s, heap_ptr pos)
 		sciprintf(" %s\n", s->heap + namepos);
 		sciprintf("Species=%04x, Superclass=%04x\n", species, superclass);
 		sciprintf("Local variables @ 0x%04x\n", localvarptr);
-    
+
 		selectors = getInt16(s->heap + pos + SCRIPT_SELECTORCTR_OFFSET);
 
 		selectoroffset = s->heap + pos + SCRIPT_SELECTOR_OFFSET;
@@ -2244,11 +2244,11 @@ bp_alloc(state_t *s)
     bp = s->bp_list;
     while (bp->next)
       bp = bp->next;
-    bp->next = (breakpoint_t *) malloc (sizeof (breakpoint_t));
+    bp->next = (breakpoint_t *) sci_malloc (sizeof (breakpoint_t));
     bp = bp->next;
   }
   else {
-    s->bp_list = (breakpoint_t *) malloc (sizeof (breakpoint_t));
+    s->bp_list = (breakpoint_t *) sci_malloc (sizeof (breakpoint_t));
     bp = s->bp_list;
   }
 
@@ -2269,7 +2269,7 @@ c_bpx(state_t *s)
   bp=bp_alloc (s);
 
   bp->type = BREAK_SELECTOR;
-  bp->data.name = malloc (strlen (cmd_params [0].str)+1);
+  bp->data.name = sci_malloc (strlen (cmd_params [0].str)+1);
   strcpy (bp->data.name, cmd_params [0].str);
   s->have_bp |= BREAK_SELECTOR;
 
@@ -2311,7 +2311,7 @@ c_bplist(state_t *s)
       sciprintf ("Execute script %d, export %d\n", bpdata >> 16, bpdata & 0xFFFF);
       break;
     }
-    
+
     bp = bp->next;
     i++;
   }
@@ -2343,7 +2343,7 @@ int c_bpdel(state_t *s)
 	/* Delete it */
 	bp_next = bp->next;
 	type = bp->type;
-	if (type == BREAK_SELECTOR) free (bp->data.name);
+	if (type == BREAK_SELECTOR) sci_free (bp->data.name);
 	free (bp);
 	if (bp_prev)
 		bp_prev->next = bp_next;
@@ -2478,7 +2478,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
 			con_hook_command(c_snk, "snk", "s*", "Steps forward until it hits the next\n  callk operation.\n"
 					 "  If invoked with a parameter, it will\n  look for that specific callk.\n");
-			con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");      
+			con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");
 			con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
 			con_hook_command(c_set_acc, "set_acc", "i", "Sets the accumulator");
 			con_hook_command(c_heap_free, "heapfree", "", "Shows the free heap");

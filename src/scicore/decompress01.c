@@ -139,7 +139,7 @@ guint32 gbits(int numbits,  guint8 * data, int dlen)
 	int i;
 
 	if(numbits==0) {whichbit=0; return 0;}
-  
+
 	place = whichbit >> 3;
 	bitstring=0;
 	for(i=(numbits>>3)+1;i>=0;i--)
@@ -208,8 +208,8 @@ int decompress01(resource_t *result, int resh)
 		return SCI_ERROR_EMPTY_OBJECT;
 	}
 
-	buffer = malloc(compressedLength);
-	result->data = malloc(result->length);
+	buffer = sci_malloc(compressedLength);
+	result->data = sci_malloc(result->length);
 
 	if (read(resh, buffer, compressedLength) != compressedLength) {
 		free(result->data);
@@ -222,7 +222,7 @@ int decompress01(resource_t *result, int resh)
 	fprintf(stderr, "Resource %s.%03hi encrypted with method SCI01/%hi at %.2f%%"
 		" ratio\n",
 		Resource_Types[result->type], result->number, compressionMethod,
-		(result->length == 0)? -1.0 : 
+		(result->length == 0)? -1.0 :
 		(100.0 * compressedLength / result->length));
 	fprintf(stderr, "  compressedLength = 0x%hx, actualLength=0x%hx\n",
 		compressedLength, result->length);
@@ -239,7 +239,7 @@ int decompress01(resource_t *result, int resh)
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
 		memcpy(result->data, buffer, compressedLength);
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	case 1: /* LZW */
@@ -250,7 +250,7 @@ int decompress01(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	case 2: /* ??? */
@@ -262,7 +262,7 @@ int decompress01(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	case 3: /* Some sort of Huffman encoding */
@@ -273,7 +273,7 @@ int decompress01(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		break;
 
 	default:

@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 
   if (argc < 2)
     return -1;
-  
+
   if ((fd1 = open(argv[1], O_RDONLY)) < 0)
     return -1;
   if ((fd2 = open(argv[2], O_RDONLY)) < 0) {
@@ -48,11 +48,11 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  patch001 = (unsigned char *)malloc(65536);
+  patch001 = (unsigned char *)sci_malloc(65536);
   length001 = read(fd1, patch001, 65536);
   close(fd1);
 
-  patch004 = (unsigned char *)malloc(65536);
+  patch004 = (unsigned char *)sci_malloc(65536);
   length004 = read(fd2, patch004, 65536);
   close(fd2);
 
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
       analyze(patch001 + 2, length001 - 2, patch004, length004);
   else
     if (patch004[0] == 0x89 && patch004[1] == 0x00)
-      analyze(patch001, length001, patch004 + 2, length004 - 2);   
+      analyze(patch001, length001, patch004 + 2, length004 - 2);
     else
       analyze(patch001, length001, patch004, length004);
 
@@ -90,7 +90,7 @@ void analyze(unsigned char *patch001, unsigned int length001,
       mt32patch = patch001 + 107 + i * 8;
     else
       mt32patch = patch001 + 110 + i * 8 + patch001[491] * 246;
-    
+
     if (!((mt32patch[0] == 0) &&
 	  (mt32patch[1] == 0) &&
 	  (mt32patch[2] == 0) &&
@@ -143,7 +143,7 @@ void analyze(unsigned char *patch001, unsigned int length001,
 	if (mt32rhythm[0] < 64)
 	  printf(" m %.10s", patch001 + 492 + mt32rhythm[0] * 246);
 	else
-	  printf(" r %.10s", MT32_RhythmTimbre[mt32rhythm[0] - 64]);	  
+	  printf(" r %.10s", MT32_RhythmTimbre[mt32rhythm[0] - 64]);
 	printf(" | %03i %02i | ", mt32rhythm[1], mt32rhythm[2]);
 	if (patch004[384 + i + 24] != 0xFF)
 	  printf("%-23s |", GM_RhythmKey[patch004[384 + i + 24] - 35]);

@@ -137,7 +137,7 @@ script_init_state(state_t *s, sci_version_t version)
 	      return 1;
 	    }
 
-	    s->classtable = realloc(s->classtable, sizeof(class_t) * (classnr + 1));
+	    s->classtable = sci_realloc(s->classtable, sizeof(class_t) * (classnr + 1));
 	    memset(&(s->classtable[s->classtable_size]), 0,
 		   sizeof(class_t) * (1 + classnr - s->classtable_size)); /* Clear after resize */
 

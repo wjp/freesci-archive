@@ -1,4 +1,4 @@
- /***************************************************************************
+/***************************************************************************
  decompress11.c Copyright (C) 1999 The FreeSCI project
 
 
@@ -86,8 +86,8 @@ int decompress11(resource_t *result, int resh)
 		return SCI_ERROR_EMPTY_OBJECT;
 	}
 
-	buffer = malloc(compressedLength);
-	result->data = malloc(result->length);
+	buffer = sci_malloc(compressedLength);
+	result->data = sci_malloc(result->length);
 
 	if (read(resh, buffer, compressedLength) != compressedLength) {
 		free(result->data);
@@ -105,7 +105,7 @@ int decompress11(resource_t *result, int resh)
 		" ratio\n",
 		result->number, resource_type_suffixes[result->type],
 		compressionMethod,
-		(result->length == 0)? -1.0 : 
+		(result->length == 0)? -1.0 :
 		(100.0 * compressedLength / result->length));
 	fprintf(stderr, "  compressedLength = 0x%hx, actualLength=0x%hx\n",
 		compressedLength, result->length);
@@ -124,7 +124,7 @@ int decompress11(resource_t *result, int resh)
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
 		memcpy(result->data, buffer, compressedLength);
-		result->status = SCI_STATUS_ALLOCATED;
+		result->status = SCI_STATUS_OK;
 		printf("#################### %d.%s: compression type #%d\n",
 			result->number, resource_type_suffixes[result->type], compressionMethod);
 		break;
@@ -138,8 +138,8 @@ int decompress11(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_ALLOCATED;
-		break;		
+		result->status = SCI_STATUS_OK;
+		break;
 
 	case 19:
 	case 20:

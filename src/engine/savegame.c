@@ -649,7 +649,7 @@ _cfsml_write_gfxw_container_t(FILE *fh, gfxw_container_t* save_struc)
     fprintf(fh, "\n");
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
-      fprintf(fh, "\\null\\");    else 
+      fprintf(fh, "\\null\\");    else
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -679,7 +679,7 @@ _cfsml_read_gfxw_container_t(FILE *fh, gfxw_container_t* save_struc, char *lastv
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -813,7 +813,7 @@ _cfsml_read_menu_t(FILE *fh, menu_t* save_struc, char *lastval, int *line, int *
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -943,7 +943,7 @@ _cfsml_read_gfxw_widget_t(FILE *fh, gfxw_widget_t* save_struc, char *lastval, in
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1070,7 +1070,7 @@ _cfsml_read_gfxw_primitive_t(FILE *fh, gfxw_primitive_t* save_struc, char *lastv
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1211,7 +1211,7 @@ _cfsml_read_drawn_pic_t(FILE *fh, drawn_pic_t* save_struc, char *lastval, int *l
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1287,7 +1287,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* save_struc, char *lastval, int *line,
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1465,7 +1465,7 @@ _cfsml_read_gfxw_view_t(FILE *fh, gfxw_view_t* save_struc, char *lastval, int *l
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1590,7 +1590,7 @@ _cfsml_read_point_t(FILE *fh, point_t* save_struc, char *lastval, int *line, int
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1708,7 +1708,7 @@ _cfsml_read_gfxw_text_t(FILE *fh, gfxw_text_t* save_struc, char *lastval, int *l
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1861,7 +1861,7 @@ _cfsml_read_gfx_pixmap_color_t(FILE *fh, gfx_pixmap_color_t* save_struc, char *l
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1935,7 +1935,7 @@ _cfsml_write_gfxw_port_t(FILE *fh, gfxw_port_t* save_struc)
     fprintf(fh, "\n");
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
-      fprintf(fh, "\\null\\");    else 
+      fprintf(fh, "\\null\\");    else
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -1992,7 +1992,7 @@ _cfsml_read_gfxw_port_t(FILE *fh, gfxw_port_t* save_struc, char *lastval, int *l
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2155,7 +2155,7 @@ _cfsml_write_gfxw_visual_t(FILE *fh, gfxw_visual_t* save_struc)
     fprintf(fh, "\n");
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
-      fprintf(fh, "\\null\\");    else 
+      fprintf(fh, "\\null\\");    else
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -2191,7 +2191,7 @@ _cfsml_read_gfxw_visual_t(FILE *fh, gfxw_visual_t* save_struc, char *lastval, in
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2374,7 +2374,7 @@ _cfsml_read_gfxw_dyn_view_t(FILE *fh, gfxw_dyn_view_t* save_struc, char *lastval
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2585,7 +2585,7 @@ _cfsml_write_gfxw_list_t(FILE *fh, gfxw_list_t* save_struc)
     fprintf(fh, "\n");
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
-      fprintf(fh, "\\null\\");    else 
+      fprintf(fh, "\\null\\");    else
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -2615,7 +2615,7 @@ _cfsml_read_gfxw_list_t(FILE *fh, gfxw_list_t* save_struc, char *lastval, int *l
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2734,7 +2734,7 @@ _cfsml_read_gfxw_snapshot_t(FILE *fh, gfxw_snapshot_t* save_struc, char *lastval
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -3030,7 +3030,7 @@ _cfsml_read_state_t(FILE *fh, state_t* save_struc, char *lastval, int *line, int
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -3614,7 +3614,7 @@ _cfsml_read_menu_item_t(FILE *fh, menu_item_t* save_struc, char *lastval, int *l
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -3762,7 +3762,7 @@ _cfsml_read_gfx_color_t(FILE *fh, gfx_color_t* save_struc, char *lastval, int *l
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -3911,7 +3911,7 @@ _cfsml_read_script_t(FILE *fh, script_t* save_struc, char *lastval, int *line, i
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4001,7 +4001,7 @@ _cfsml_read_class_t(FILE *fh, class_t* save_struc, char *lastval, int *line, int
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4071,7 +4071,7 @@ _cfsml_read_synonym_t(FILE *fh, synonym_t* save_struc, char *lastval, int *line,
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4169,7 +4169,7 @@ _cfsml_read_exec_stack_t(FILE *fh, exec_stack_t* save_struc, char *lastval, int 
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4351,7 +4351,7 @@ _cfsml_read_rect_t(FILE *fh, rect_t* save_struc, char *lastval, int *line, int *
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4510,7 +4510,7 @@ _cfsml_read_gfxw_box_t(FILE *fh, gfxw_box_t* save_struc, char *lastval, int *lin
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4600,7 +4600,7 @@ _cfsml_write_gfx_dirty_rect_t(FILE *fh, gfx_dirty_rect_t* save_struc)
     fprintf(fh, "\n");
   fprintf(fh, "next = ");
     if (!save_struc->next)
-      fprintf(fh, "\\null\\");    else 
+      fprintf(fh, "\\null\\");    else
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->next);
     fprintf(fh, "\n");
   fprintf(fh, "}");
@@ -4627,7 +4627,7 @@ _cfsml_read_gfx_dirty_rect_t(FILE *fh, gfx_dirty_rect_t* save_struc, char *lastv
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4737,7 +4737,7 @@ _cfsml_read_view_object_t(FILE *fh, view_object_t* save_struc, char *lastval, in
     if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(token, "}")) 
+      if (!strcmp(token, "}"))
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4994,7 +4994,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
 	if (type_name)
 		fputs(type_name, fh);
 	else {
-		sciprintf("While writing widget: Encountered invalid widget type %d\n", 
+		sciprintf("While writing widget: Encountered invalid widget type %d\n",
 			  (*widget)->type);
 		fputs("\\null\\", fh);
 		return;
@@ -5145,7 +5145,7 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 		if (visual->port_refs_nr < 1)
 			sciprintf("visual->port_refs_nr is too small: %d!\n", visual->port_refs_nr);
 
-		visual->port_refs = calloc(sizeof(gfxw_port_t *), visual->port_refs_nr);
+		visual->port_refs = sci_calloc(sizeof(gfxw_port_t *), visual->port_refs_nr);
 	}
 
 	if (widget->next)
@@ -5180,7 +5180,7 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 				sciprintf("Restored port with invalid ID #%d\n", port->ID);
 			else
 				visual->port_refs[port->ID] = port; /* List port globally */
-					  
+
 		}
 	}
 
@@ -5700,7 +5700,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
 		*foo = NULL; /* No menu bar */
 	} else {
 
-		*foo = (menubar_t *) malloc(sizeof(menubar_t));
+		*foo = (menubar_t *) sci_malloc(sizeof(menubar_t));
 /* Auto-generated CFSML data reader code */
 #line 796 "savegame.cfsml"
   {
@@ -5945,7 +5945,7 @@ gamestate_restore(state_t *s, char *dirname)
 			gfxop_add_to_pic(s->gfx_state, retval->pics[i].nr, 1, retval->pics[i].palette);
 	} else {
 		if (FILE_VERSION == 1) {
-			retval->pics = malloc(sizeof(drawn_pic_t) * (retval->pics_nr = 8));
+			retval->pics = sci_malloc(sizeof(drawn_pic_t) * (retval->pics_nr = 8));
 			retval->pics_drawn_nr = 0;
 		}
 		gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
@@ -5984,7 +5984,7 @@ gamestate_restore(state_t *s, char *dirname)
 
 	/* File IO state: */
 	retval->file_handles_nr = 2;
-	retval->file_handles = calloc(2, sizeof(FILE *));
+	retval->file_handles = sci_calloc(2, sizeof(FILE *));
 
 	/* static parser information: */
 	retval->parser_rules = s->parser_rules;

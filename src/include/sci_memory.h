@@ -65,17 +65,19 @@
  **/
 
 
+#ifndef _SCI_MEMORY_H
+#define _SCI_MEMORY_H
+
 #include <stdio.h>
 #include <assert.h>
 #include <errno.h>
 #include <resource.h>
 
-#ifndef _SCI_MEMORY_H
-#define _SCI_MEMORY_H
-
-#ifndef MIN
-#  define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#ifdef _WIN32
+#  undef inline /* just to be sure it is not defined */
+#  define inline __inline
 #endif
+
 
 
 /********** macros for error messages **********/

@@ -283,7 +283,7 @@ con_parse (state_t * s, char *command)
   int done = 0;			/* are we done yet? */
   int cdone = 0;		/* Done with the current command? */
   char *paramt;			/* parameter types */
-  char *cmd = (char *) strdup (command);
+  char *cmd = (char *) sci_strdup (command);
   char *_cmd = cmd;
   int pos = 0;
 
@@ -553,7 +553,7 @@ sciprintf (char *fmt, ...)
   va_list argp;
   size_t bufsize = 256;
   int i;
-  char *buf 	= (char *) malloc (bufsize);
+  char *buf 	= (char *) sci_malloc (bufsize);
   char *mbuf	= NULL;
 
   if (NULL == fmt)
@@ -577,7 +577,7 @@ sciprintf (char *fmt, ...)
     va_start (argp, fmt);	/* reset argp */
 
     free (buf);
-    buf = (char *) malloc (bufsize <<= 1);
+    buf = (char *) sci_malloc (bufsize <<= 1);
   }
   va_end (argp);
 
@@ -886,7 +886,7 @@ c_hexgrep (state_t * s)
     return(-1);
   }
 
-  seekstr = malloc (seeklen = (cmd_paramlength - 1));
+  seekstr = sci_malloc (seeklen = (cmd_paramlength - 1));
 
   if (NULL == seekstr)
   {

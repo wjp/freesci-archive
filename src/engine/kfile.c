@@ -70,7 +70,7 @@ f_open_mirrored(state_t *s, char *fname)
 
 	fstat(fd, &fstate);
 	if (fstate.st_size) {
-		buf = malloc(fstate.st_size);
+		buf = sci_malloc(fstate.st_size);
 		read(fd, buf, fstate.st_size);
 	}
 
@@ -139,7 +139,7 @@ file_open(state_t *s, char *filename, int mode)
 		retval++;
 
 	if (retval == s->file_handles_nr) /* Hit size limit => Allocate more space */
-		s->file_handles = realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
+		s->file_handles = sci_realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
 
 	s->file_handles[retval] = file;
 
@@ -360,7 +360,7 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     GetFullPathName (path1_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
     GetFullPathName (path2_s, sizeof (dir_buffer2)-1, dir_buffer2, NULL);
-    
+
     s->acc = !stricmp (path1_s, path2_s);
   }
   break;
@@ -371,7 +371,7 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
     dir_buffer [3] = 0;  /* leave X:\ */
-    
+
     s->acc = (GetDriveType (dir_buffer) == DRIVE_REMOVABLE);
   }
   break;
@@ -459,7 +459,7 @@ void
 kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   char *path = (char *) s->heap + UPARAM(0);
-  char *testpath = malloc(strlen(path) + 15);
+  char *testpath = sci_malloc(strlen(path) + 15);
   char buf[1024];
   int i;
   int fd;
@@ -520,7 +520,7 @@ char *
 _k_get_savedir_name(int nr)
 {
 	char suffices[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-	char *savedir_name = malloc(strlen(FREESCI_SAVEDIR_PREFIX) + 2);
+	char *savedir_name = sci_malloc(strlen(FREESCI_SAVEDIR_PREFIX) + 2);
 	assert(nr >= 0);
 	assert(nr < MAX_SAVEGAME_NR);
 	strcpy(savedir_name, FREESCI_SAVEDIR_PREFIX);
@@ -582,7 +582,7 @@ test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_n
 {
 	int retval = 1;
 	char *game_id = (char *) s->game_name;
-	char *game_id_file = (char *) malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+	char *game_id_file = (char *) sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 
 	strcpy(game_id_file, game_id);
 	strcat(game_id_file, FREESCI_ID_SUFFIX);
@@ -706,7 +706,7 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr nametarget = UPARAM(1);
 	heap_ptr nameoffsets = UPARAM(2);
 	int gfname_len = strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1;
-	char *gfname = malloc(gfname_len);
+	char *gfname = sci_malloc(gfname_len);
 	int i;
 
 	strcpy(gfname, game_id);
@@ -764,7 +764,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	char *game_id = (char *) (UPARAM(0) + s->heap);
 	char *savegame_dir;
 	int savedir_nr = UPARAM(1);
-	char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+	char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 	char *game_description = (char *) (UPARAM(2) + s->heap);
 
 	if (soundserver_dead) {
@@ -774,7 +774,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	if (_savegame_indices_nr < 0) {
-		char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+		char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 
 		strcpy(game_id_file_name, game_id);
 		strcat(game_id_file_name, FREESCI_ID_SUFFIX);
@@ -829,7 +829,7 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int savedir_nr = UPARAM(1);
 
 	if (_savegame_indices_nr < 0) {
-		char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+		char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 
 		strcpy(game_id_file_name, game_id);
 		strcat(game_id_file_name, FREESCI_ID_SUFFIX);
@@ -929,7 +929,7 @@ first_file(state_t *s, char *dir, char *mask, heap_ptr buffer)
 
 	if (s->dirseeker_outbuffer)
 		sci_finish_find(&(s->dirseeker));
-  
+
 	s->dirseeker_outbuffer = buffer;
 
 	if (write_filename_to_mem(s, s->dirseeker_outbuffer,
@@ -945,21 +945,21 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int func_nr = UPARAM(0);
 
   CHECK_THIS_KERNEL_FUNCTION;
-  
+
   switch (func_nr) {
-  
+
     case K_FILEIO_OPEN :
     {
 	char *name = (char *) s->heap + UPARAM(1);
 	int mode = UPARAM(2);
-	
+
 	file_open(s, name, mode);
 	break;
     }
     case K_FILEIO_CLOSE :
     {
 	int handle = UPARAM(1);
-	
+
 	file_close(s, handle);
 	break;
     }
@@ -968,7 +968,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	char *dest = (char *) s->heap + UPARAM(2);
 	int size = UPARAM(3);
 	int handle = UPARAM(1);
-	
+
 	fread_wrapper(s, dest, size, handle);
 	break;
     }
@@ -977,14 +977,14 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	char *buf = (char *) s->heap + UPARAM(2);
 	int size = UPARAM(3);
 	int handle = UPARAM(1);
-	
+
 	fwrite_wrapper(s, handle, buf, size);
 	break;
     }
     case K_FILEIO_UNLINK :
     {
 	char *name = (char *) (s->heap + UPARAM(1));
-	
+
 	unlink(name);
 	break;
     }
@@ -993,7 +993,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	char *dest = (char *) (s->heap + UPARAM(1));
 	int size = UPARAM(2);
 	int handle = UPARAM(3);
-	
+
 	fgets_wrapper(s, dest, size, handle);
 	break;
     }
@@ -1002,7 +1002,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	char *buf = (char *) (s->heap + UPARAM(1));
 	int size = UPARAM(2);
 	int handle = UPARAM(3);
-	
+
 	fputs_wrapper(s, handle, buf);
 	break;
     }
@@ -1011,7 +1011,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int handle = UPARAM(1);
 	int offset = UPARAM(2);
 	int whence = UPARAM(3);
-	
+
 	fseek_wrapper(s, handle, offset, whence);
 	break;
     }
@@ -1024,7 +1024,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #ifndef _WIN32
 	if (strcmp(mask, "*.*")==0) strcpy(mask, "*"); /* For UNIX */
 #endif
-	first_file(s, ".", mask, buf);	
+	first_file(s, ".", mask, buf);
 
 	break;
     }
@@ -1042,4 +1042,4 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
     default :
         SCIkwarn(SCIkERROR, "Unknown FileIO() sub-command: %d\n", func_nr);
   }
-}    
+}

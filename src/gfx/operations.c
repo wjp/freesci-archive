@@ -26,7 +26,7 @@
 ***************************************************************************/
 /* Graphical operations, called from the widget state manager */
 
-
+#include <sci_memory.h>
 #include <gfx_operations.h>
 
 #define POINTER_VISIBLE_BUT_CLIPPED 2
@@ -71,9 +71,9 @@ _gfxop_alloc_colors(gfx_state_t *state, gfx_pixmap_color_t *colors, int colors_n
 
 	if (!PALETTE_MODE)
 		return;
-	
+
 	for (i = 0; i < colors_nr; i++)
-		gfx_alloc_color(state->driver->mode->palette, colors + i); 
+		gfx_alloc_color(state->driver->mode->palette, colors + i);
 }
 
 static void
@@ -83,9 +83,9 @@ _gfxop_free_colors(gfx_state_t *state, gfx_pixmap_color_t *colors, int colors_nr
 
 	if (!PALETTE_MODE)
 		return;
-	
+
 	for (i = 0; i < colors_nr; i++)
-		gfx_free_color(state->driver->mode->palette, colors + i); 
+		gfx_free_color(state->driver->mode->palette, colors + i);
 }
 
 
@@ -405,7 +405,7 @@ _rect_create(rect_t box)
 {
 	struct _dirty_rect *rect;
 
-	rect = malloc(sizeof(struct _dirty_rect));
+	rect = sci_malloc(sizeof(struct _dirty_rect));
 	rect->next = NULL;
 	rect->rect = box;
 
@@ -434,7 +434,7 @@ gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy)
 	case GFXOP_DIRTY_FRAMES_ONE:
 		if (base)
 			base->rect = gfx_rects_merge(box, base->rect);
-		else 
+		else
 			base = _rect_create(box);
 		break;
 
@@ -452,7 +452,7 @@ gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy)
 				rectp = &((*rectp)->next);
 		}
 		*rectp = _rect_create(box);
-		
+
 	} break;
 
 	default:
@@ -513,7 +513,7 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options)
 {
 	state->options = options;
 
-	if ((state->static_palette = 
+	if ((state->static_palette =
 	     gfxr_interpreter_get_palette(state->version,
 					  &(state->static_palette_entries))))
 		_gfxop_alloc_colors(state, state->static_palette, state->static_palette_entries);
@@ -955,7 +955,7 @@ simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, rect_t line, gfx_
 		if (line.xl)
 			line.xl = length_left;
 		else
-			if (line.yl) 
+			if (line.yl)
 				line.yl = length_left;
 
 		if ((retval = driver->draw_line(driver, line, color, line_mode, GFX_LINE_STYLE_NORMAL))) {
@@ -1015,7 +1015,7 @@ _gfxop_draw_line_clipped(gfx_state_t *state, rect_t line, gfx_color_t color, gfx
 	}
 	return GFX_OK;
 }
- 
+
 int
 gfxop_draw_line(gfx_state_t *state, rect_t line, gfx_color_t color, gfx_line_mode_t line_mode,
 		gfx_line_style_t line_style)
@@ -1039,7 +1039,7 @@ gfxop_draw_line(gfx_state_t *state, rect_t line, gfx_color_t color, gfx_line_mod
 
 	return _gfxop_draw_line_clipped(state, line, color, line_mode, line_style);
 }
- 
+
 int
 gfxop_draw_rectangle(gfx_state_t *state, rect_t rect, gfx_color_t color, gfx_line_mode_t line_mode,
 		     gfx_line_style_t line_style)
@@ -1346,7 +1346,7 @@ _gfxop_full_pointer_refresh(gfx_state_t *state)
 	int new_y = state->driver->pointer_y;
 
 	if (new_x != state->old_pointer_draw_pos.x
-	    || new_y != state->old_pointer_draw_pos.y) {	
+	    || new_y != state->old_pointer_draw_pos.y) {
 
 		if (!_gfxop_get_pointer_bounds(state, &pointer_bounds)) {
 			memcpy(&old_pointer_bounds, &(state->pointer_bg_zone), sizeof(rect_t));
@@ -1548,7 +1548,7 @@ gfxop_get_event(gfx_state_t *state, unsigned int mask)
 
 		do {
 			if (event.type) {
-				*seekerp = malloc(sizeof(gfx_input_event_t));
+				*seekerp = sci_malloc(sizeof(gfx_input_event_t));
 				(*seekerp)->next = NULL;
 				(*seekerp)->event = event;
 				seekerp = &((*seekerp)->next);
@@ -1818,8 +1818,8 @@ gfxop_add_to_pic(gfx_state_t *state, int nr, int flags, int default_palette)
 		return GFX_ERROR;
 	}
 	state->pic_unscaled = gfxr_add_to_pic(state->resstate, state->pic_nr, nr,
-					      state->visible_map, flags, 
-					      state->palette_nr, 
+					      state->visible_map, flags,
+					      state->palette_nr,
 					      default_palette, 1);
 
 	return _gfxop_set_pic(state);
@@ -1904,9 +1904,9 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 		return NULL;
 	}
 
-	handle = malloc(sizeof(gfx_text_handle_t));
+	handle = sci_malloc(sizeof(gfx_text_handle_t));
 
-	handle->text = malloc(strlen(text) + 1);
+	handle->text = sci_malloc(strlen(text) + 1);
 	strcpy(handle->text, text);
 	handle->halign = halign;
 	handle->valign = valign;
@@ -1932,7 +1932,7 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 		handle->lines->length = strlen(text);
 	}
 
-	handle->text_pixmaps = malloc(sizeof(gfx_pixmap_t *) * handle->lines_nr);
+	handle->text_pixmaps = sci_malloc(sizeof(gfx_pixmap_t *) * handle->lines_nr);
 
 	for (i = 0; i < handle->lines_nr; i++) {
 		int chars_nr = handle->lines[i].length;
@@ -2023,7 +2023,7 @@ gfxop_draw_text(gfx_state_t *state, gfx_text_handle_t *handle, rect_t zone)
 		pos.y += (zone.yl - (line_height * handle->lines_nr));
 		break;
 
-	default: 
+	default:
 		GFXERROR("Invalid vertical alignment %d!\n", handle->valign);
 		return GFX_FATAL; /* Internal error... */
 	}
@@ -2056,7 +2056,7 @@ gfxop_draw_text(gfx_state_t *state, gfx_text_handle_t *handle, rect_t zone)
 			pos.x += (zone.xl - pxm->xl);
 			break;
 
-		default: 
+		default:
 			GFXERROR("Invalid vertical alignment %d!\n", handle->valign);
 			return GFX_FATAL; /* Internal error... */
 		}
@@ -2122,7 +2122,7 @@ gfxop_draw_pixmap(gfx_state_t *state, gfx_pixmap_t *pxm, rect_t zone, point_t po
 	_gfxop_scale_rect(&zone, state->driver->mode);
 	_gfxop_scale_rect(&target, state->driver->mode);
 
-	return _gfxop_draw_pixmap(state->driver, pxm, -1, -1, zone, target, 
+	return _gfxop_draw_pixmap(state->driver, pxm, -1, -1, zone, target,
 				  gfx_rect(0, 0, 320*state->driver->mode->xfact,
 					   200*state->driver->mode->yfact), 0, NULL);
 }

@@ -66,7 +66,7 @@ calc_mouse_cursor0(mouse_pointer_t *pointer, byte* data)
 
   pointer->size_x = pointer->size_y = 16; /* Fixed size */
 
-  pointer->bitmap = malloc(16 * 16);
+  pointer->bitmap = sci_malloc(16 * 16);
 
   data += 4; /* Get over the header */
 
@@ -85,7 +85,7 @@ calc_mouse_cursor01(mouse_pointer_t *pointer, byte* data)
 
   pointer->size_x = pointer->size_y = 16; /* Fixed size */
 
-  pointer->bitmap = malloc(16 * 16);
+  pointer->bitmap = sci_malloc(16 * 16);
 
   data += 4; /* Get over the header */
 
@@ -99,7 +99,7 @@ calc_mouse_cursor01(mouse_pointer_t *pointer, byte* data)
 mouse_pointer_t *
 calc_mouse_cursor(byte *data)
 {
-  mouse_pointer_t *pointer = malloc(sizeof(mouse_pointer_t));
+  mouse_pointer_t *pointer = sci_malloc(sizeof(mouse_pointer_t));
 
   switch (sci_version) {
   case SCI_VERSION_0: calc_mouse_cursor0(pointer, data); break;

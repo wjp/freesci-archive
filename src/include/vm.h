@@ -1,5 +1,5 @@
 /***************************************************************************
-  Copyright (C) 2000,2001 Christoph Reichenbach
+ vm.h Copyright (C) 2000,2001 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -188,8 +188,8 @@ typedef struct {
 
 	int looper, mover, isBlocked, heading; /* Used in DoAvoider */
 
-	int caller; /* Used for DoBresen */ 
-	
+	int caller; /* Used for DoBresen */
+
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {
@@ -529,7 +529,7 @@ script_map_kernel(struct _state *s);
 */
 
 
-void 
+void
 script_detect_early_versions(struct _state *s);
 /* Detects early SCI versions by their different script header
 ** Parameters: (state_t *) s: The state to operate on

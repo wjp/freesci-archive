@@ -32,7 +32,7 @@
 static sci_module_t *
 _sci_try_open_module(char *filename, char *path, char *struct_name, void **handle)
 {
-	char *fullname = malloc(strlen(path) + strlen(DIR_SEPARATOR_STR)
+	char *fullname = sci_malloc(strlen(path) + strlen(DIR_SEPARATOR_STR)
 				+ strlen(filename));
 	sci_module_t *module;
 fprintf(stderr,"Trying module %s at %s\n", filename, path);
@@ -60,10 +60,10 @@ void *
 sci_find_module(char *path, char *name, char *type, char *struct_prefix,
 		char *file_suffix, int magic, int version, void **handle)
 {
-	char *module_name = malloc(strlen(type) + strlen(DIR_SEPARATOR_STR)
+	char *module_name = sci_malloc(strlen(type) + strlen(DIR_SEPARATOR_STR)
 				 + strlen(name) + strlen(file_suffix)
 				 + strlen(MODULE_NAME_SUFFIX) + 1);
-	char *struct_name = malloc(strlen(struct_prefix) + strlen(name) + 1);
+	char *struct_name = sci_malloc(strlen(struct_prefix) + strlen(name) + 1);
 	char *dir_end;
 	char *path_pos = path;
 	char path_separator = PATH_SEPARATOR_STR[0];
@@ -143,5 +143,5 @@ sci_close_module(void *module, char *type, char *name)
 			type, name, dlerror());
 	}
 }
-	
+
 

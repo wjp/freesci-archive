@@ -69,7 +69,7 @@ void free_event_queue();
 
 /*** Graphics driver ***/
 
-gfx_driver_t gfx_driver_ddraw = 
+gfx_driver_t gfx_driver_ddraw =
 {
   "ddraw",
   ddraw_init,
@@ -100,7 +100,7 @@ void initColors()
       vcal[i].rgbGreen >>= 1;
     }
   }
-  
+
   for (i=0; i< 256; i++) {
     color_table [i].rgbRed   = INTERCOL(vcal[i & 0xf].rgbRed, vcal[i >> 4].rgbRed);
     color_table [i].rgbGreen = INTERCOL(vcal[i & 0xf].rgbGreen, vcal[i >> 4].rgbGreen);
@@ -217,7 +217,7 @@ static void TraceLastDDrawError (HRESULT hResult, char *buf)
     TRACE_DDERR (DDERR_NOTPAGELOCKED);
     TRACE_DDERR (DDERR_NOTINITIALIZED);
     default : sprintf (buf, "Unknown DirectDraw error %i\n", hResult);
-  } 
+  }
 }
 
 int
@@ -254,7 +254,7 @@ ddraw_init(state_t *s, struct _picture *pic)
   int32* pPal;
 
   _s = s;
-  
+
   if (bFullscreen)
     scale = 1;
   else
@@ -294,14 +294,14 @@ ddraw_init(state_t *s, struct _picture *pic)
     NULL,
     NULL
   );
-                              
+
   if (!hMainWnd) return 1;
 
   ShowWindow (hMainWnd, SW_SHOW);
   UpdateWindow (hMainWnd);
   SetFocus (hMainWnd);
 
-  /* Initialize DirectDraw for windowed mode, create the surface and 
+  /* Initialize DirectDraw for windowed mode, create the surface and
      attach clipper */
   if (!pDD)
     DDCHECK (DirectDrawCreate (NULL, &pDD, NULL));
@@ -373,13 +373,13 @@ ddraw_init(state_t *s, struct _picture *pic)
   hhConverter = Hermes_ConverterInstance (0);
   if (!hhConverter) return 1;
   hfSrc = Hermes_FormatNew (8, 0, 0, 0, 0, 1);
-  
+
   /* Create Hermes format corresponding to the DirectDraw format of the
      primary surface */
   hfDest = Hermes_FormatNew (ddpf.dwRGBBitCount,
-    ddpf.dwRBitMask, ddpf.dwGBitMask, ddpf.dwBBitMask, 0, 
+    ddpf.dwRBitMask, ddpf.dwGBitMask, ddpf.dwBBitMask, 0,
     ((ddpf.dwFlags & DDPF_PALETTEINDEXED8) != 0));
- 
+
   /* Process initial messages */
   init_event_queue();
   bInitialized = TRUE;
@@ -416,7 +416,7 @@ ddraw_shutdown(state_t *s)
     {
       IDirectDrawSurface_Release (pBuffer);
       pBuffer = NULL;
-    }      
+    }
 
     if (pPrimary)
     {
@@ -439,14 +439,14 @@ int queue_size, queue_first, queue_last;
 void init_event_queue()
 {
   queue_size = 256;
-  event_queue = (sci_event_t *) malloc (queue_size * sizeof (sci_event_t));
+  event_queue = (sci_event_t *) sci_malloc (queue_size * sizeof (sci_event_t));
   queue_first=0;
   queue_last=0;
 }
 
 void free_event_queue()
 {
-  if (event_queue) free(event_queue);
+  if (event_queue) sci_free(event_queue);
 }
 
 void add_queue_event(int type, int data, int buckybits)
@@ -457,7 +457,7 @@ void add_queue_event(int type, int data, int buckybits)
     int i, event_count;
     sci_event_t *new_queue;
 
-    new_queue = (sci_event_t *) malloc (queue_size * 2 * sizeof (sci_event_t));
+    new_queue = (sci_event_t *) sci_malloc (queue_size * 2 * sizeof (sci_event_t));
     event_count = (queue_last - queue_first) % queue_size;
     for (i=0; i<event_count; i++)
       new_queue [i] = event_queue [(queue_first+i) % queue_size];
@@ -500,13 +500,13 @@ void add_mouse_event (int type, int data, WPARAM wParam)
 void add_key_event (int data)
 {
   int buckybits = 0;
-  
+
   /* FIXME: If anyone cares, on Windows NT we can distinguish left and right shift */
-  if (GetAsyncKeyState (VK_SHIFT)) 
+  if (GetAsyncKeyState (VK_SHIFT))
     buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
-  if (GetAsyncKeyState (VK_CONTROL)) 
+  if (GetAsyncKeyState (VK_CONTROL))
     buckybits |= SCI_EVM_CTRL;
-  if (GetAsyncKeyState (VK_MENU)) 
+  if (GetAsyncKeyState (VK_MENU))
     buckybits |= SCI_EVM_ALT;
   if (GetKeyState (VK_CAPITAL) & 1)
     buckybits |= SCI_EVM_CAPSLOCK;
@@ -545,12 +545,12 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     PostQuitMessage (0);
     break;
 
-  case WM_PAINT: 
+  case WM_PAINT:
     if (bInitialized)
     {
       RECT rc;
       GetUpdateRect (hWnd, &rc, FALSE);
-      ddraw_redraw (_s, GRAPHICS_CALLBACK_REDRAW_BOX, 
+      ddraw_redraw (_s, GRAPHICS_CALLBACK_REDRAW_BOX,
         rc.left/scale, rc.top/scale, (rc.right-rc.left)/scale+1, (rc.bottom-rc.top)/scale+1);
     }
     break;
@@ -643,10 +643,10 @@ MsgWait (int WaitTime)
 
   if (!process_messages()) return;
 
-  if (WaitTime > 0) 
+  if (WaitTime > 0)
   {
     dwRet=MsgWaitForMultipleObjects (0, NULL, FALSE, WaitTime, QS_ALLINPUT);
-  
+
     while (dwRet != WAIT_TIMEOUT)
     {
       if (!process_messages()) return;
@@ -734,7 +734,7 @@ graphics_draw_region_ddraw(state_t *s,
      ourselves, or do a blit from a secondary buffer, letting DirectDraw
      use the clipper by itself. The second approach is faster and easier
      to implement, despite the need of using a secondary buffer. */
-    
+
   ddsd.dwSize = sizeof (DDSURFACEDESC);
   IDirectDrawSurface_Lock (pBuffer, NULL, &ddsd, DDLOCK_WAIT, NULL);
 
@@ -750,11 +750,11 @@ graphics_draw_region_ddraw(state_t *s,
       ddsd.lpSurface,
       0,0,1,1,
       ddsd.lPitch);
-    
+
     cvt_color_key=0;
     memcpy (&cvt_color_key, ddsd.lpSurface, ddsd.ddpfPixelFormat.dwRGBBitCount / 8);
   }
-  
+
   if (!Hermes_ConverterCopy (hhConverter,
     data,
     sx, sy, xl, yl,
@@ -763,10 +763,10 @@ graphics_draw_region_ddraw(state_t *s,
     0, 0, xl*scale, yl*scale,
     ddsd.lPitch))
     SCIkdebug (SCIkWARNING, "Hermes copy failed\n");
-  
+
   IDirectDrawSurface_Unlock (pBuffer, NULL);
 
-  SetRect (&rcDest, WndXStart+x*scale, WndYStart+y*scale, 
+  SetRect (&rcDest, WndXStart+x*scale, WndYStart+y*scale,
                     WndXStart+(x+xl)*scale, WndYStart+(y+yl)*scale);
   SetRect (&rcSrc, 0, 0, xl*scale, yl*scale);
   if (!color_key)
@@ -776,11 +776,11 @@ graphics_draw_region_ddraw(state_t *s,
     bltfx.dwSize = sizeof (DDBLTFX);
     bltfx.ddckSrcColorkey.dwColorSpaceLowValue = cvt_color_key;
     bltfx.ddckSrcColorkey.dwColorSpaceHighValue = cvt_color_key;
-    hr=IDirectDrawSurface_Blt (pPrimary, &rcDest, pBuffer, &rcSrc, 
+    hr=IDirectDrawSurface_Blt (pPrimary, &rcDest, pBuffer, &rcSrc,
       DDBLT_WAIT | DDBLT_KEYSRCOVERRIDE, &bltfx);
   }
 
-  if (hr != DD_OK) 
+  if (hr != DD_OK)
   {
     DDrawFailure (s, hr);
     SCIkdebug (SCIkGFXDRIVER, "src rect (%d,%d)-(%d,%d)\n", rcSrc.left, rcSrc.top, rcSrc.right, rcSrc.bottom);
@@ -845,7 +845,7 @@ default:
   s->last_pointer_y = mp_y; /* Update mouse pointer status */
 }
 
-void 
+void
 ddraw_configure (char *key, char *value)
 {
   if (!stricmp (key, "fullscreen"))

@@ -240,7 +240,7 @@ kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if (PARAM(1)) {
 		s->mouse_pointer_nr = PARAM(0);
-	} else 
+	} else
 		s->mouse_pointer_nr = GFXOP_NO_POINTER;
 
 	GFX_ASSERT(gfxop_set_pointer_cursor(s->gfx_state, s->mouse_pointer_nr));
@@ -299,12 +299,12 @@ WARNING( "_k_redraw_box: Fixme!")
 	       list[i].nsRight-list[i].nsLeft,
 	       list[i].nsBottom-list[i].nsTop,
 	       SCI_MAP_VISUAL | SCI_MAP_PRIORITY);
-    draw_view0(s->pic, s->ports[0], 
+    draw_view0(s->pic, s->ports[0],
 	       list[i].nsLeft, list[i].nsTop,
 	       list[i].priority, list[i].loop,
-	       list[i].cel, 0, list[i].view);	
+	       list[i].cel, 0, list[i].view);
   }
- 
+
   graph_update_box(s, x1, y1, x2-x1, y2-y1);
 
   for (i=0;i<s->dyn_views_nr;i++)
@@ -350,14 +350,14 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	area.xl = area.xl - area.x; /* Since the actual coordinates are absolute */
 	area.yl = area.yl - area.y;
-  
+
 	switch(PARAM(0)) {
 
 	case K_GRAPH_GET_COLORS_NR:
 
 		s->acc = (sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
 		break;
-  
+
 	case K_GRAPH_DRAW_LINE:
 
 		gfxcolor = graph_map_ega_color(s, PARAM(5) & 0xf, PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1));
@@ -368,14 +368,14 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		redraw_port = 1;
 		ADD_TO_CURRENT_BG_WIDGETS(GFXW(gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
-		
+
 		break;
 
 	case K_GRAPH_SAVE_BOX:
 
 		area.x += s->port->zone.x;
 		area.y += s->port->zone.y;
-  
+
 		s->acc = graph_save_box(s, area);
 		break;
 
@@ -444,7 +444,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		if (s->dyn_views && s->dyn_views->parent == GFXWC(s->port))
 			s->dyn_views->draw(GFXW(s->dyn_views), gfx_point(0, 0));
-		
+
 		gfxop_update_box(s->gfx_state, area);
 
 	}
@@ -459,7 +459,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		break;
 
 	default:
-    
+
 		CHECK_THIS_KERNEL_FUNCTION;
 		SCIkdebug(SCIkSTUB, "Unhandled Graph() operation %04x\n", PARAM(0));
 
@@ -876,7 +876,7 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				s->acc |= 0x8000;
 			} else
 				view = (gfxw_dyn_view_t *) view->next;
-		
+
 	}
 				 */
 
@@ -924,14 +924,14 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
 
 	if (!s->pics) {
-		s->pics = malloc(sizeof(drawn_pic_t) * (s->pics_nr = 8));
+		s->pics = sci_malloc(sizeof(drawn_pic_t) * (s->pics_nr = 8));
 		s->pics_drawn_nr = 0;
 	}
 
 	if (add_to_pic) {
 		if (s->pics_nr == s->pics_drawn_nr) {
 			s->pics_nr += 4;
-			s->pics = realloc(s->pics, sizeof(drawn_pic_t) * s->pics_nr);
+			s->pics = sci_realloc(s->pics, sizeof(drawn_pic_t) * s->pics_nr);
 		}
 		s->pics[s->pics_drawn_nr].palette = palette;
 		s->pics[s->pics_drawn_nr++].nr = pic_nr;
@@ -1032,7 +1032,7 @@ set_base(state_t *s, heap_ptr object)
 
 	return retval;
 }
-  
+
 
 void
 _k_base_setter(state_t *s, heap_ptr object)
@@ -1040,7 +1040,7 @@ _k_base_setter(state_t *s, heap_ptr object)
 	abs_rect_t absrect = set_base(s, object);
 
 	if (lookup_selector(s, object, s->selector_map.brLeft, NULL)
-	    != SELECTOR_VARIABLE) 
+	    != SELECTOR_VARIABLE)
 		return; /* non-fatal */
 
 	PUT_SELECTOR(object, brLeft, absrect.x);
@@ -1141,7 +1141,7 @@ _k_set_now_seen(state_t *s, heap_ptr object)
 
 	if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
 	    != SELECTOR_VARIABLE) { return; } /* This isn't fatal */
-      
+
 	PUT_SELECTOR(object, nsLeft, absrect.x);
 	PUT_SELECTOR(object, nsRight, absrect.xend);
 	PUT_SELECTOR(object, nsTop, absrect.y);
@@ -1286,7 +1286,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					PUT_SELECTOR(event, claimed, 1);
 				} else if ((key > 31) && (key < 128)) {
 					int inserting = (modifiers & SCI_EVM_INSERT);
-            
+
 					modifiers &= ~(SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK);
 
 					if (cursor == textlen) {
@@ -1309,7 +1309,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 					PUT_SELECTOR(event, claimed, 1);
 				}
-          
+
 				PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
 			}
 
@@ -1411,7 +1411,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 		if (entries_nr) { /* determine list_top, selection, and the entries_list */
 			seeker = text;
-			entries_list = malloc(sizeof(char *) * entries_nr);
+			entries_list = sci_malloc(sizeof(char *) * entries_nr);
 			for (i = 0; i < entries_nr; i++) {
 				entries_list[i] = seeker;
 				seeker += SCI_MAX_SAVENAME_LENGTH;
@@ -1446,7 +1446,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 static inline void
 draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, int base_set, int funct_nr, int argc, int argp)
 {
-	int priority = view->color.priority; 
+	int priority = view->color.priority;
 	abs_rect_t abs_zone;
 	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
 
@@ -1478,7 +1478,7 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 		SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n",
 			  abs_zone.x, abs_zone.y, abs_zone.xend, abs_zone.yend);
 
-		box = gfxw_new_box(s->gfx_state, 
+		box = gfxw_new_box(s->gfx_state,
 				   gfx_rect(abs_zone.x, abs_zone.y,
 					    abs_zone.xend - abs_zone.x + 1,
 					    abs_zone.yend - abs_zone.y + 1),
@@ -1675,7 +1675,7 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 
 	if (oldcel != cel)
 		PUT_SELECTOR(obj, cel, cel);
-    
+
 	if (lookup_selector(s, obj, s->selector_map.underBits, &(under_bitsp))
 	    != SELECTOR_VARIABLE) {
 		under_bitsp = under_bits = 0;
@@ -1812,7 +1812,7 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 			view->color.mask |= GFX_MASK_PRIORITY;
 		else
 			view->color.mask &= ~GFX_MASK_PRIORITY;
-		
+
 		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)
 			draw_to_control_map(s, view, 1, funct_nr, 1, argc, argp);
 
@@ -1950,7 +1950,7 @@ _k_redraw_view_list(state_t *s, gfxw_list_t *list)
 /* Flags for _k_draw_view_list */
 /* Whether some magic with the base object's "signal" selector should be done: */
 #define _K_DRAW_VIEW_LIST_USE_SIGNAL 1
-/* This flag draws all views with the "DISPOSE_ME" flag set: */ 
+/* This flag draws all views with the "DISPOSE_ME" flag set: */
 #define _K_DRAW_VIEW_LIST_DISPOSEABLE 2
 /* Use this one to draw all views with "DISPOSE_ME" NOT set: */
 #define _K_DRAW_VIEW_LIST_NONDISPOSEABLE 4
@@ -2026,7 +2026,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		y = PARAM(4);
 		priority = PARAM(5);
 		control = PARAM(6);
-		
+
 		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y+1 /* magic +1 */ ), 0, view, loop, cel,
 						priority, control, ALIGN_CENTER, ALIGN_BOTTOM, 0));
 		/*		draw_to_control_map(s, (gfxw_dyn_view_t *) widget, 1, funct_nr, argc, argp); */
@@ -2036,7 +2036,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		} else {
 			ADD_TO_CURRENT_PICTURE_PORT(gfxw_picviewize_dynview((gfxw_dyn_view_t *) widget));
 		}
-			
+
 	} else {
 
 		if (!list)
@@ -2073,9 +2073,9 @@ kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	gfxw_port_t *new_port;
 
 	CHECK_THIS_KERNEL_FUNCTION;
-  
+
 	new_port = gfxw_find_port(s->visual, port_nr);
-  
+
 	if (!new_port) {
 		SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", port_nr);
 		return;
@@ -2185,7 +2185,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	bgcolor.priority = priority;
 
 	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", PARAM(0), PARAM(1), PARAM(2), PARAM(3));
-	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr, 
+	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr,
 				 s->ega_colors[PARAM_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
 				 s->ega_colors[15], s->ega_colors[8], (char *) (s->heap + UPARAM(4)), flags);
 
@@ -2296,7 +2296,7 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 	case K_ANIMATE_BORDER_CLOSE_V_CENTER_OPEN_V :
-		
+
 		for (i = 0; i < 94 + granularity2; i += granularity2) {
 			GRAPH_BLANK_BOX(s, 0, i + 10, 320, granularity2, 0);
 			gfxop_update(s->gfx_state);
@@ -2903,12 +2903,12 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			return;
 
 		case K_DONT_UPDATE_IMMEDIATELY:
-    
+
 			update_immediately=0;
 			SCIkdebug(SCIkGRAPHICS, "Display: set_dont_update()\n");
 			argpt++;
 			break;
-      
+
 		default:
 			SCIkdebug(SCIkGRAPHICS, "Unknown Display() command %x\n", PARAM(argpt-1));
 			return;

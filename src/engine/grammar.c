@@ -109,7 +109,7 @@ _vbuild(int id, int argc, ...)
 {
   va_list args;
   int i;
-  parse_rule_t *rule = malloc(sizeof(int) * (argc + 4));
+  parse_rule_t *rule = sci_malloc(sizeof(int) * (argc + 4));
 
   ++_allocd_rules;
   rule->id = id;
@@ -136,7 +136,7 @@ _vbuild(int id, int argc, ...)
 static parse_rule_t *
 _vcat(int id, parse_rule_t *a, parse_rule_t *b)
 {
-  parse_rule_t *rule = malloc(sizeof(int) * (a->length + b->length + 4));
+  parse_rule_t *rule = sci_malloc(sizeof(int) * (a->length + b->length + 4));
 
   rule->id = id;
   rule->length = a->length + b->length;
@@ -153,7 +153,7 @@ _vcat(int id, parse_rule_t *a, parse_rule_t *b)
 static parse_rule_t *
 _vdup(parse_rule_t *a)
 {
-  parse_rule_t *rule = malloc(sizeof(int) * (a->length + 4));
+  parse_rule_t *rule = sci_malloc(sizeof(int) * (a->length + 4));
 
   rule->id = a->id;
   rule->length = a->length;
@@ -180,7 +180,7 @@ _vinsert(parse_rule_t *turkey, parse_rule_t *stuffing)
       || (turkey->data[firstnt] != stuffing->id))
     return NULL;
 
-  rule = malloc(sizeof(int) * (turkey->length - 1 + stuffing->length + 4));
+  rule = sci_malloc(sizeof(int) * (turkey->length - 1 + stuffing->length + 4));
   rule->id = turkey->id;
   rule->specials_nr = turkey->specials_nr + stuffing->specials_nr - 1;
   rule->first_special = firstnt + stuffing->first_special;
@@ -232,7 +232,7 @@ _vbuild_rule(parse_tree_branch_t *branch)
     else return NULL; /* invalid */
   }
 
-  rule = malloc(sizeof(int) * (4 + tokens));
+  rule = sci_malloc(sizeof(int) * (4 + tokens));
 
   ++_allocd_rules;
   rule->id = branch->id;
@@ -283,7 +283,7 @@ _vsatisfy_rule(parse_rule_t *rule, result_word_t *input)
       ||
       ((dep & TOKEN_TERMINAL_GROUP)
        && ((dep & 0xffff) & input->group))) {
-    parse_rule_t *retval = malloc(sizeof(int) * (4 + rule->length));
+    parse_rule_t *retval = sci_malloc(sizeof(int) * (4 + rule->length));
     ++_allocd_rules;
     retval->id = rule->id;
     retval->specials_nr = rule->specials_nr - 1;
@@ -341,7 +341,7 @@ _vocab_add_rule(parse_rule_list_t *list, parse_rule_t *rule)
 	if (!rule)
 		return list;
 
-	new_elem = malloc(sizeof(parse_rule_list_t));
+	new_elem = sci_malloc(sizeof(parse_rule_list_t));
 	term = rule->data[rule->first_special];
 
 	new_elem->rule = rule;
@@ -444,7 +444,7 @@ _vocab_clone_rule_list_by_id(parse_rule_list_t *list, int id)
 		}
 		seeker = seeker->next;
 	}
-  
+
 	return result;
 }
 
@@ -667,7 +667,7 @@ vocab_gnf_parse(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
 	}
 
 	seeker = seeker->next;
-      } 
+      }
       vocab_free_rule_list(reduced_rules);
     } else /* last word */
       new_work = reduced_rules;

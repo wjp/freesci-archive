@@ -1,3 +1,10 @@
+2001-08-24  Alex Angas  <wgd@internode.on.net>
+
+	* src/*.c* *.l *.y *.pl *.h: Global search and replace as follows:
+	malloc -> sci_malloc, calloc -> sci_calloc, realloc -> sci_realloc,
+	free -> sci_free, memdup -> sci_memdup, strdup -> sci_strdup,
+	strndup -> sci_strndup.
+
 2001-08-22  Alex Angas  <wgd@internode.on.net>
 
 	* ./acinclude.m4, ./configure.in: Fixed configure script so it actually

@@ -44,7 +44,7 @@ static unsigned int win32mci_lastwrote = 0;
 int _win32mci_print_error(int ret)
 {
 	char *err	= NULL;
-	err = malloc(MAXERRORLENGTH);
+	err = sci_malloc(MAXERRORLENGTH);
 
 	if (NULL == err)
 	{
@@ -62,10 +62,10 @@ int _win32mci_print_error(int ret)
 static int
 midiout_win32mci_set_parameter(struct _midiout_driver *drv, char *attribute, char *value)
 {
-	if (!strcasecmp(attribute, "device")) 
+	if (!strcasecmp(attribute, "device"))
 	{
 		devicenum = ((int)*value) - 48;
-	} 
+	}
 	else
 		sciprintf("Unknown win32mci option '%s'!\n", attribute);
 
@@ -78,7 +78,7 @@ int midiout_win32mci_open()
 	MMRESULT ret;					/* return value of MCI calls */
 	MIDIOUTCAPS devicecaps;			/* device capabilities structure */
 	int loop				= 0;
-	
+
 	numdevs = midiOutGetNumDevs();
 
 	if (numdevs == 0)
@@ -170,7 +170,7 @@ int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 
 	/* then we pass the MIDIHDR here to have the rest of it initialized */
 	ret = midiOutPrepareHeader(devicename, &midioutput, midioutputsize);
-	if (ret != MMSYSERR_NOERROR) 
+	if (ret != MMSYSERR_NOERROR)
 	{
 		fprintf(stderr, "midiOutPrepareHeader: ");
 		return(_win32mci_print_error(ret));
@@ -178,7 +178,7 @@ int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 
 	/* then we send MIDIHDR to be played */
 	ret = midiOutLongMsg(devicename, &midioutput, midioutputsize);
-	if (ret != MMSYSERR_NOERROR) 
+	if (ret != MMSYSERR_NOERROR)
 	{
 		fprintf(stderr, "midiOutLongMsg: ");
 		return(_win32mci_print_error(ret));
@@ -186,13 +186,13 @@ int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 
 	/* things can't get freed before they're done playing */
 	ret = midiOutUnprepareHeader(devicename, &midioutput, midioutputsize);
-	if (ret != MMSYSERR_NOERROR) 
+	if (ret != MMSYSERR_NOERROR)
 	{
 		/* if it fails, it's probably because it's still playing */
 		Sleep(count);
 		ret = midiOutUnprepareHeader(devicename, &midioutput, midioutputsize);
 		/* if it still fails, it's probably something else */
-		if (ret != MMSYSERR_NOERROR) 
+		if (ret != MMSYSERR_NOERROR)
 		{
 			printf("midiOutUnprepareHeader() failed: ");
 			return(_win32mci_print_error(ret));

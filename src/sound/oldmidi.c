@@ -181,7 +181,7 @@ char *GM_Instrument_Names[] = {
 
 /* The GM Percussion map is downwards compatible to the MT32 map, which is used in SCI */
 char *GM_Percussion_Names[] = {
-  /*00*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /*00*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   /*10*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   /*20*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   /*30*/  0, 0, 0, 0,
@@ -596,7 +596,7 @@ const char MIDI_Header_data[10] = { 0, 0, 0, 6,
 /* This contains the information (and block length) found in
 ** the MIDI header.
 */
-				   
+
 const char MIDI_Track[4] = "MTrk";
 /* Starts every MIDI track */
 
@@ -697,23 +697,23 @@ makeMIDI0(const guint8 *src, int *size, guint8 flag)
   while (!EOT) {
 
     eventpos = pos;
-    
+
     while (src[pos] >= 0xf0) {
       if (src[pos] == 0xf8) {
-	pending_delay += 240;	
+	pending_delay += 240;
       } else
 	SCIsdebug("[%04x] !!! Unknown instead of delta-time: 0x%02x\n", pos, src[pos]);
       pos++;
     }
 
     pending_delay += src[pos];
-    pos++;    
+    pos++;
 
     if (src[pos] & 0x80) {
       status = src[pos];
       pos++;
     }
-    
+
     if (status < 0xb0) {
     /* Note Off (8x), Note On (9x), Aftertouch (Ax) */
       if (muteflags[status & 0x0f] == 0)
@@ -858,7 +858,7 @@ makeMIDI0(const guint8 *src, int *size, guint8 flag)
 	    pos - 1, pos, *size);
 
 
-  result = malloc(*size);
+  result = sci_malloc(*size);
   memcpy(result, obstack_finish(stackp), *size);
   obstack_free(stackp, NULL);
 
@@ -922,7 +922,7 @@ mapMIDIInstruments(void)
     MIDI_mapping[i].keyshift = 0x40;
     MIDI_mapping[i].finetune = 0x2000;
     MIDI_mapping[i].bender_range = 0x0c;
-    MT32_patch[i].name = MT32_PresetTimbreMaps[i].name;    
+    MT32_patch[i].name = MT32_PresetTimbreMaps[i].name;
   }
 
   for (i = 0; i < 128; i++) {
@@ -953,7 +953,7 @@ mapMIDIInstruments(void)
       ((0x100 * *(patch1->data + pos) + *(patch1->data +pos + 1)) == 0xABCD)) {
     patches = 96;
     pos += 2 + 8 * 48;
-  } else 
+  } else
     patches = 48;
 
   SCIsdebug("MIDI mapping magic: %d MT-32 Patches detected\n", patches);
@@ -975,7 +975,7 @@ mapMIDIInstruments(void)
       keyshift = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 2);
       finetune = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 3);
       bender_range = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 4);
-      patchpointer = patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2; 
+      patchpointer = patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2;
     }
 
     MT32_patch[i].group = group;
@@ -997,7 +997,7 @@ mapMIDIInstruments(void)
 	  MIDI_mapping[i].gm_instr = MT32_PresetTimbreMaps[number].gm_instr;
 	  break;
         case 1:
-	  MT32_patch[i].name = MT32_PresetTimbreMaps[number + 64].name; 
+	  MT32_patch[i].name = MT32_PresetTimbreMaps[number + 64].name;
           MIDI_mapping[i].gm_instr = MT32_PresetTimbreMaps[number + 64].gm_instr;
 	  break;
         case 2:
@@ -1041,7 +1041,7 @@ mapMIDIInstruments(void)
     }
     SCIsdebug("MIDI mapping magic: MT-32 Rhythm Channel Note Map\n", memtimbres);
   }
-  
+
   if (logfile)
     fclose(logfile);
   return 0;

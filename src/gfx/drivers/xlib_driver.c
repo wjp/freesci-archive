@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+#include <sci_memory.h>
 #include <gfx_driver.h>
 #ifndef X_DISPLAY_MISSING
 #include <gfx_tools.h>
@@ -106,7 +107,7 @@ static int check_for_xshm(Display *display)
       return (pixmaps == True) ? 2 : 1 ;
     } else {
       return 0;
-    } 
+    }
   }
   return 0;
 
@@ -268,7 +269,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int i;
 
 	if (!S)
-		S = malloc(sizeof(struct _xlib_state));
+		S = sci_malloc(sizeof(struct _xlib_state));
 
 	flags = SCI_XLIB_INSERT_MODE;
 
@@ -350,7 +351,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	class_hint = XAllocClassHint();
 	class_hint->res_name = "FreeSCI";
 	class_hint->res_class = "FreeSCI";
-	XSetIconName(S->display, S->window, "FreeSCI");	
+	XSetIconName(S->display, S->window, "FreeSCI");
 	XSetClassHint(S->display, S->window, class_hint);
 	XFree(class_hint);
 	size_hints = XAllocSizeHints();
@@ -374,14 +375,14 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	foo_image = XCreateImage(S->display, DefaultVisual(S->display,
 							   DefaultScreen(S->display)),
-				 bytespp << 3, ZPixmap, 0, malloc(23), 2, 2, 8, 0);
+				 bytespp << 3, ZPixmap, 0, sci_malloc(23), 2, 2, 8, 0);
 
 	bytespp_physical = foo_image->bits_per_pixel >> 3;
 #ifdef WORDS_BIGENDIAN
 	reverse_endian = foo_image->byte_order == LSBFirst;
 #else
 	reverse_endian = foo_image->byte_order == MSBFirst;
-#endif	
+#endif
 	XDestroyImage(foo_image);
 
 #ifdef HAVE_MITSHM
@@ -391,7 +392,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	  x11_error = 0;
 	  old_handler = XSetErrorHandler(xlib_error_handler);
-	  
+
 	  foo_image = XShmCreateImage(S->display, DefaultVisual(S->display,
 								DefaultScreen(S->display)),
 				      bytespp_physical << 3, ZPixmap, 0, &shminfo, 2, 2);
@@ -406,7 +407,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    perror("reason");
 	    foo_image = NULL;
 	  } else {
-	  
+
 		  shminfo.shmaddr = (char *) shmat(shminfo.shmid, 0, 0);
 		  if ((void *) -1 == shminfo.shmaddr) {
 			  ERROR("Could not attach shared memory segment\n");
@@ -415,10 +416,10 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 				  XDestroyImage(foo_image);
 			  return GFX_FATAL;
 		  }
-	  
+
 		  foo_image->data = shminfo.shmaddr;
 		  shminfo.readOnly = False;
-	  
+
 		  XShmAttach(S->display, &shminfo);
 		  XSync(S->display, False);
 		  shmctl(shminfo.shmid, IPC_RMID, 0);
@@ -435,7 +436,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  }
 	}
 
-#endif	   
+#endif
 
 
 	alpha_mask = xvisinfo.red_mask | xvisinfo.green_mask | xvisinfo.blue_mask;
@@ -461,21 +462,21 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    perror("reason");
 	    have_shmem = 0;
 	  }
-	  
+
 	  if (have_shmem) {
 	    old_handler = XSetErrorHandler(xlib_error_handler);
-	    
-	    if ((S->shm[i] = malloc(sizeof(XShmSegmentInfo))) == 0) {
+
+	    if ((S->shm[i] = sci_malloc(sizeof(XShmSegmentInfo))) == 0) {
 	      ERROR("AIEEEE!  Malloc failed!\n");
 	      return GFX_FATAL;
 	    }
 	    memset(S->shm[i], 0, sizeof(XShmSegmentInfo));
-	    
-	    S->shm[i]->shmid = shmget(IPC_PRIVATE, xsize * ysize * 
+
+	    S->shm[i]->shmid = shmget(IPC_PRIVATE, xsize * ysize *
 				      bytespp_physical,
 				      IPC_CREAT | IPC_EXCL | 0666);
 	    S->shm[i]->readOnly = False;
-	    
+
 	    if (S->shm[i]->shmid == -1) {
 	      have_shmem = 0;
 	      ERROR("System does not support SysV IPC, disabling XSHM\n");
@@ -498,13 +499,13 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    shmctl(S->shm[i]->shmid, IPC_RMID, 0);
 	  }
 
-	  if (have_shmem && !x11_error) {	    
-	    S->visual[i] = XShmCreatePixmap(S->display, S->window, 
+	  if (have_shmem && !x11_error) {
+	    S->visual[i] = XShmCreatePixmap(S->display, S->window,
 					    S->shm[i]->shmaddr,
-					    S->shm[i], xsize, ysize, 
+					    S->shm[i], xsize, ysize,
 					    bytespp << 3);
 	    XSync(S->display, False);
-	    
+
 	    if (x11_error || !S->visual[i]) {
 	      ERROR("Shared Memory Pixmaps not supported on this system. Disabling!\n");
 		have_shmem = 0;
@@ -514,17 +515,17 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		S->visual[i] = 0;
 		x11_error = 0;
 		shmdt(S->shm[i]->shmaddr);
-		free(S->shm[i]);
+		sci_free(S->shm[i]);
 
 	    }
 
 	  }
 	  XSetErrorHandler(old_handler);
-	  
+
 	  if (!have_shmem)
 #endif
 	    S->visual[i] = XCreatePixmap(S->display, S->window, xsize, ysize, bytespp << 3);
-	  
+
 	  XFillRectangle(S->display, S->visual[i], S->gc, 0, 0, xsize, ysize);
 	}
 
@@ -619,7 +620,7 @@ xlib_init(struct _gfx_driver *drv)
 {
 	int i;
 
-	for (i = 4; i > 0; i--) 
+	for (i = 4; i > 0; i--)
 		if (!xlib_init_specific(drv, 2, 2, i))
 			return GFX_OK;
 
@@ -647,10 +648,10 @@ xlib_exit(struct _gfx_driver *drv)
 
 		    if (S->shm[i]->shmid >=0)
 		      shmctl(S->shm[i]->shmid, IPC_RMID, 0);
-		    if (S->shm[i]->shmaddr)		    
+		    if (S->shm[i]->shmaddr)
 		      shmdt(S->shm[i]->shmaddr);
 
-		    free(S->shm[i]);
+		    sci_free(S->shm[i]);
 		    S->shm[i] = NULL;
 		  } else
 #endif
@@ -661,7 +662,7 @@ xlib_exit(struct _gfx_driver *drv)
 		XDestroyWindow(S->display, S->window);
 		XCloseDisplay(S->display);
 		XSetErrorHandler((XErrorHandler) (S->old_error_handler));
-		free(S);
+		sci_free(S);
 		S = NULL;
 		gfx_free_mode(drv->mode);
 	}
@@ -758,9 +759,9 @@ xlib_draw_filled_rect_RENDER(struct _gfx_driver *drv, rect_t rect,
 		{ /* Ugly hack: Based on Keith Packard's HelloX patch's hack */
 			XRenderPictFormat *format;
 			Picture            pict;
-			
+
 			format = XRenderFindVisualFormat (S->display, DefaultVisual(S->display, DefaultScreen(S->display)));
-			
+
 			pict =  XRenderCreatePicture (S->display,
 						      (Drawable) S->visual[1], format, 0, 0);
 			XRenderFillRectangle(S->display,PictOpOver,pict,&(&fg)->color,
@@ -876,7 +877,7 @@ xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 					       src.xl, src.yl, 0xffffffff, ZPixmap);
 		pxm->internal.handle = SCI_XLIB_PIXMAP_HANDLE_GRABBED;
 		pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
-		free(pxm->data);
+		sci_free(pxm->data);
 		pxm->data = (byte *) ((XImage *)(pxm->internal.info))->data;
 		break;
 
@@ -953,7 +954,7 @@ xlib_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
 	int lines = pointer->yl;
 	int xc, yc;
 	int xfact = drv->mode->xfact;
-	byte *data = calloc(linewidth, lines);
+	byte *data = sci_calloc(linewidth, lines);
 	byte *linebase = data, *pos;
 	byte *src = pointer->index_data;
 
@@ -998,7 +999,7 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 
 	for (i = 0; i < 2; i++)
 		if (S->pointer_data[i]) {
-			free(S->pointer_data[i]);
+			sci_free(S->pointer_data[i]);
 			S->pointer_data[i] = NULL;
 		}
 
@@ -1026,7 +1027,7 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 		S->pointer_data[1] = NULL;
 		visual = XCreateBitmapFromData(S->display, S->window, (char *) visual_data, real_xl, pointer->yl);
 		mask = XCreateBitmapFromData(S->display, S->window, (char *) mask_data, real_xl, pointer->yl);
-		
+
 
 		S->mouse_cursor =
 			XCreatePixmapCursor(S->display, visual, mask,
@@ -1035,8 +1036,8 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 
 		XFreePixmap(S->display, visual);
 		XFreePixmap(S->display, mask);
-		free(mask_data);
-		free(visual_data);
+		sci_free(mask_data);
+		sci_free(visual_data);
 	}
 
 	XDefineCursor(S->display, S->window, S->mouse_cursor);
@@ -1152,7 +1153,7 @@ x_map_key(gfx_driver_t *drv, int keycode)
 	case XK_Shift_R:/* S->buckystate |= SCI_EVM_RSHIFT; return 0; */
 		return 0;
 
-	
+
 	case XK_KP_Add: return '+';
 	case XK_KP_Divide: return '/';
 	case XK_KP_Subtract: return '-';

@@ -163,7 +163,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	if (ggiInit() < 0)
 		return GFX_FATAL;
 
-	meta = calloc(sizeof(gfx_ggi_struct_t), 1);
+	meta = sci_calloc(sizeof(gfx_ggi_struct_t), 1);
 
 	if (!(meta->vis = ggiOpen(NULL))) {
 		DEBUG_BASIC("ggiOpen() failed!\n");
@@ -213,7 +213,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	}
 
 	if (frames < 2) {
-		meta->alt_back_buffer = malloc(bpp * 320 * 200 * xres * yres);
+		meta->alt_back_buffer = sci_malloc(bpp * 320 * 200 * xres * yres);
 		meta->back_vis = ggiOpen("memory:pointer", meta->alt_back_buffer, NULL);
 		if (ggiSetSimpleMode(meta->back_vis, xres * 320, yres * 200, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual failed\n");
@@ -221,7 +221,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	} else meta->alt_back_buffer = NULL;
 
 	if (frames < 3) {
-		meta->static_buffer = malloc(bpp * 320 * 200 * xres * yres);
+		meta->static_buffer = sci_malloc(bpp * 320 * 200 * xres * yres);
 		meta->static_vis = ggiOpen("memory:pointer", meta->static_buffer, NULL);
 		if (ggiSetSimpleMode(meta->static_vis, xres * 320, yres * 200, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual #2 failed\n");
@@ -230,7 +230,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 
 	init_input_ggi();
 	flags = 0;
-	
+
 	return GFX_OK;
 }
 
@@ -253,7 +253,7 @@ ggi_init(gfx_driver_t *drv)
 	if (ggiInit() < 0)
 		return GFX_FATAL;
 
-	meta = calloc(sizeof(gfx_ggi_struct_t), 1);
+	meta = sci_calloc(sizeof(gfx_ggi_struct_t), 1);
 
 	if (!(meta->vis = ggiOpen(NULL))) {
 		DEBUG_BASIC("ggiOpen() failed!\n");
@@ -309,7 +309,7 @@ ggi_init(gfx_driver_t *drv)
 		}
 
 		ggiSetOrigin(meta->vis, (x_blank >> 1), (y_blank >> 1));
-		
+
 		mode.virt.x = mode.size.x = mode.visible.x -= x_blank;
 		mode.virt.y = mode.size.y = mode.visible.y -= y_blank;
 	} else
@@ -346,7 +346,7 @@ ggi_init(gfx_driver_t *drv)
 	}
 
 	if (meta->frames < 2) {
-		meta->alt_back_buffer = malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
+		meta->alt_back_buffer = sci_malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
 		meta->back_vis = ggiOpen("memory:pointer", meta->alt_back_buffer, NULL);
 		if (ggiSetSimpleMode(meta->back_vis, mode.visible.x, mode.visible.y, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual failed\n");
@@ -354,7 +354,7 @@ ggi_init(gfx_driver_t *drv)
 	} else meta->alt_back_buffer = NULL;
 
 	if (meta->frames < 3) {
-		meta->static_buffer = malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
+		meta->static_buffer = sci_malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
 		meta->static_vis = ggiOpen("memory:pointer", meta->static_buffer, NULL);
 		if (ggiSetSimpleMode(meta->static_vis, mode.visible.x, mode.visible.y, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual #2 failed\n");
@@ -543,7 +543,7 @@ ggi_draw_filled_rect(gfx_driver_t *drv, rect_t box, gfx_color_t color1, gfx_colo
 /**************/
 
 int
-ggi_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority, 
+ggi_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 		rect_t src, rect_t dest, gfx_buffer_t buffer)
 {
 	ggi_visual_t vis = VISUAL;
@@ -704,7 +704,7 @@ ggi_update(gfx_driver_t *drv, rect_t src, point_t dest, gfx_buffer_t buffer)
 		}
 
 		ggiCrossBlit(STATE->static_vis, sx, sy, xl, yl, STATE->back_vis, dx, dy);
-    
+
 		break;
 
 	default:
@@ -786,13 +786,13 @@ ggi_get_event(gfx_driver_t *drv)
 	struct timeval temptime = {0,0};
 	gfx_ggi_struct_t *meta = (gfx_ggi_struct_t *) drv->state;
 	int modifiers;
-  
+
 	while (1) {
 
 		if (ggiEventPoll(VISUAL, emAll, &temptime)) {
 			ggi_event event;
 			sci_event_t retval;
-      
+
 			ggiEventRead(VISUAL, &event, emAll);
 
 			if (flags & SCI_GGI_SWAP_CTRL_CAPS
@@ -911,7 +911,7 @@ ggi_get_event(gfx_driver_t *drv)
 				}
 #endif
 				continue;
-	
+
 			case evPtrButtonPress:
 				retval.type = SCI_EVT_MOUSE_PRESS;
 				retval.data = event.pbutton.button;
@@ -923,7 +923,7 @@ ggi_get_event(gfx_driver_t *drv)
 				if (event.pbutton.button == GII_PBUTTON_RIGHT)
 					retval.buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
 				return retval;
-	
+
 			case evPtrButtonRelease:
 				retval.type = SCI_EVT_MOUSE_RELEASE;
 				retval.data = event.pbutton.button;
@@ -935,13 +935,13 @@ ggi_get_event(gfx_driver_t *drv)
 				if (event.pbutton.button == GII_PBUTTON_RIGHT)
 					retval.buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
 
-				return retval; 
-      
+				return retval;
+
 			case evPtrAbsolute:
 				drv->pointer_x = event.pmove.x - STATE->x_blank2;
 				drv->pointer_y = event.pmove.y - STATE->y_blank2;
 				continue;
-	
+
 			case evPtrRelative:
 				drv->pointer_x += event.pmove.x;
 				drv->pointer_y += event.pmove.y;

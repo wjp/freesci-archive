@@ -62,7 +62,7 @@ memtest(char *where, ...)
 
 	fprintf(stderr,"\n");
 	for (i = 0; i < MEMTEST_HARDNESS; i++) {
-		blocks[i] = malloc(1 + i);
+		blocks[i] = sci_malloc(1 + i);
 #ifdef HAVE_MEMFROB
 		memfrob(blocks[i], 1 + i);
 #else
@@ -73,7 +73,7 @@ memtest(char *where, ...)
 		free(blocks[i]);
 
 	for (i = 0; i < MEMTEST_HARDNESS; i++) {
-		blocks[i] = malloc(5 + i*5);
+		blocks[i] = sci_malloc(5 + i*5);
 #ifdef HAVE_MEMFROB
 		memfrob(blocks[i], 5 + i*5);
 #else
@@ -84,7 +84,7 @@ memtest(char *where, ...)
 		free(blocks[i]);
 
 	for (i = 0; i < MEMTEST_HARDNESS; i++) {
-		blocks[i] = malloc(5 + i*100);
+		blocks[i] = sci_malloc(5 + i*100);
 #ifdef HAVE_MEMFROB
 		memfrob(blocks[i], 5 + i*100);
 #else
@@ -95,7 +95,7 @@ memtest(char *where, ...)
 		free(blocks[i]);
 
 	for (i = 0; i < MEMTEST_HARDNESS; i++) {
-		blocks[i] = malloc(5 + i*1000);
+		blocks[i] = sci_malloc(5 + i*1000);
 #ifdef HAVE_MEMFROB
 		memfrob(blocks[i], 5 + i * 1000);
 #else
@@ -287,8 +287,8 @@ sci_find_first(sci_dir_t *dir, char *mask)
 	{
 		switch (errno)
 		{
-			case ENOENT: 
-			{ 
+			case ENOENT:
+			{
 				printf("_findfirst errno = ENOENT: no match\n");
 				break;
 			}
@@ -359,7 +359,7 @@ sci_find_first(sci_dir_t *dir, char *mask)
 		return NULL;
 	}
 
-	dir->mask_copy = strdup(mask);
+	dir->mask_copy = sci_strdup(mask);
 
 	return sci_find_next(dir);
 }
@@ -420,7 +420,7 @@ sci_init_queue(sci_queue_t *queue)
 sci_queue_t *
 sci_add_to_queue(sci_queue_t *queue, void *data, int type)
 {
-	sci_queue_node_t *node = malloc(sizeof(sci_queue_node_t));
+	sci_queue_node_t *node = sci_malloc(sizeof(sci_queue_node_t));
 
 	node->next = NULL;
 	node->data = data;
@@ -495,7 +495,7 @@ _fcaseseek(char *fname, sci_dir_t *dir)
 	}
 
 	if (strlen(fname) > 12) /* not a DOS file? */
-		buf = malloc(strlen(fname) + 1);
+		buf = sci_malloc(strlen(fname) + 1);
 	else
 		buf = _buf;
 

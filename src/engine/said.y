@@ -111,7 +111,7 @@ yylex(void);
 static int
 yyerror(char *s)
 {
-	said_parse_error = strdup(s);
+	said_parse_error = sci_strdup(s);
 	return 1; /* Abort */
 }
 

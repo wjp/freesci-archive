@@ -87,8 +87,8 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 	basic_style.line_mode = GFX_LINE_MODE_CORRECT;
 	basic_style.brush_mode = GFX_BRUSH_MODE_SCALED;
 
-	style.line_mode = state->options->pic0_line_mode; 
-	style.brush_mode = state->options->pic0_brush_mode; 
+	style.line_mode = state->options->pic0_line_mode;
+	style.brush_mode = state->options->pic0_brush_mode;
 
 	if (!res || !res->data)
 		return GFX_ERROR;
@@ -109,7 +109,7 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 		gfxr_remove_artifacts_pic0(scaled_pic, unscaled_pic);
 
 	if (!scaled_pic->undithered_buffer)
-		scaled_pic->undithered_buffer = malloc(scaled_pic->undithered_buffer_size);
+		scaled_pic->undithered_buffer = sci_malloc(scaled_pic->undithered_buffer_size);
 
 	memcpy(scaled_pic->undithered_buffer, scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer_size);
 
@@ -197,7 +197,7 @@ gfxr_interpreter_get_resources(gfx_resource_types_t type, int version, int *entr
 
 	}
 
-	resources = malloc(sizeof(int) * top);
+	resources = sci_malloc(sizeof(int) * top);
 
 	for (i = 0; i < top; i++)
 		if (findResource(restype, i))

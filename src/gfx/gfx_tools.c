@@ -56,7 +56,7 @@ gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned 
 	     unsigned int blue_mask, unsigned int alpha_mask, int red_shift, int green_shift,
 	     int blue_shift, int alpha_shift, int palette, int flags)
 {
-	gfx_mode_t *mode = malloc(sizeof(gfx_mode_t));
+	gfx_mode_t *mode = sci_malloc(sizeof(gfx_mode_t));
 
 	mode->xfact = xfact;
 	mode->yfact = yfact;
@@ -72,9 +72,9 @@ gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned 
 	mode->flags = flags;
 
 	if (palette) {
-		mode->palette = malloc(sizeof(gfx_palette_t));
+		mode->palette = sci_malloc(sizeof(gfx_palette_t));
 		mode->palette->max_colors_nr = palette;
-		mode->palette->colors = calloc(sizeof(gfx_palette_color_t), palette); /* Initialize with empty entries */
+		mode->palette->colors = sci_calloc(sizeof(gfx_palette_color_t), palette); /* Initialize with empty entries */
 	} else mode->palette = NULL;
 
   return mode;
@@ -119,7 +119,7 @@ gfx_copy_pixmap_box_i(gfx_pixmap_t *dest, gfx_pixmap_t *src, rect_t box)
 gfx_pixmap_t *
 gfx_new_pixmap(int xl, int yl, int resid, int loop, int cel)
 {
-	gfx_pixmap_t *pxm = malloc(sizeof(gfx_pixmap_t));
+	gfx_pixmap_t *pxm = sci_malloc(sizeof(gfx_pixmap_t));
 
 	pxm->alpha_map = pxm->data = pxm->internal.info = pxm->colors = NULL;
 	pxm->internal.handle = 0;
@@ -196,7 +196,7 @@ gfx_pixmap_alloc_index_data(gfx_pixmap_t *pixmap)
 	if (!size)
 		size = 1;
 
-	pixmap->index_data = malloc(size);
+	pixmap->index_data = sci_malloc(size);
 	return pixmap;
 }
 
@@ -237,7 +237,7 @@ gfx_pixmap_alloc_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 	if (!size)
 		size = 1;
 
-	pixmap->data = malloc(size);
+	pixmap->data = sci_malloc(size);
 	return pixmap;
 }
 
@@ -273,7 +273,7 @@ gfx_alloc_color(gfx_palette_t *pal, gfx_pixmap_color_t *color)
 		return GFX_ERROR;
 	}
 
-	
+
 	if (color->global_index != GFX_COLOR_INDEX_UNMAPPED) {
 #if 0
 		GFXDEBUG("Attempt to allocate color twice: index 0x%d (%02x/%02x/%02x)!\n",
@@ -388,7 +388,7 @@ gfx_pixmap_scale_index_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 	xl = pixmap->index_xl;
 	yl = pixmap->index_yl;
 	linewidth = xfact * xl;
-	initial_new = new = malloc(linewidth * yfact * yl);
+	initial_new = new = sci_malloc(linewidth * yfact * yl);
 
 	for (yc = 0; yc < yl; yc++) {
 

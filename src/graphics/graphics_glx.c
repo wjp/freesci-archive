@@ -63,7 +63,7 @@ static unsigned short glx_palette_s[256]; /* Stencil */
 
 int x_buckystate = SCI_EVM_INSERT; /* "bucky bits */
 
-gfx_driver_t gfx_driver_glx = 
+gfx_driver_t gfx_driver_glx =
 {
   "glx",
   glx_init,
@@ -249,7 +249,7 @@ glx_init(state_t *s, picture_t pic)
   XVisualInfo *xvisinfo;
   XSetWindowAttributes win_attr;
   int default_screen, num_aux_buffers;
-  glx_state_t *x = malloc(sizeof(glx_state_t));
+  glx_state_t *x = sci_malloc(sizeof(glx_state_t));
 
   s->graphics.glx_state = NULL;
 
@@ -305,7 +305,7 @@ glx_init(state_t *s, picture_t pic)
   glXMakeCurrent(x->glx_display, x->glx_window, x->glx_context);
 
   glShadeModel(GL_FLAT);
-  
+
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 

@@ -70,7 +70,7 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->status_bar_text = NULL;
 
 	if (text)
-		s->status_bar_text = strdup((char *) s->heap + text);
+		s->status_bar_text = sci_strdup((char *) s->heap + text);
 
 	sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text);
 
@@ -179,7 +179,7 @@ about_freesci(state_t *s)
 				       titlefont, s->ega_colors[15], s->ega_colors[0],
 				       _about_freesci_pages[page].title, WINDOW_FLAG_TITLE);
 
-		port->add(GFXWC(port), GFXW(gfxw_new_text(s->gfx_state, gfx_rect(0,0,width,height), bodyfont, 
+		port->add(GFXWC(port), GFXW(gfxw_new_text(s->gfx_state, gfx_rect(0,0,width,height), bodyfont,
 							  _about_freesci_pages[page].body,
 							  ALIGN_CENTER, ALIGN_CENTER, port->color, port->color,
 							  port->bgcolor, 0)
@@ -212,7 +212,7 @@ about_freesci(state_t *s)
 		port->widfree(GFXW(port));
 		s->visual->draw(GFXW(s->visual), gfx_point(0,0));
 		gfxop_update(s->gfx_state);
-    
+
 	}
 }
 
@@ -262,7 +262,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		else if ((type == SCI_EVT_SAID) || message) { /* Don't claim 0 keyboard event */
 			SCIkdebug(SCIkMENU,"Menu: Got %s event: %04x/%04x\n",
 				  ((type == SCI_EVT_SAID)? "SAID":"KBD"), message, modifiers);
-    
+
 			for (menuc = 0; menuc < s->menubar->menus_nr; menuc++)
 				for (itemc = 0; itemc < s->menubar->menus[menuc].items_nr; itemc++) {
 					item = s->menubar->menus[menuc].items + itemc;

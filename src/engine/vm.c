@@ -207,8 +207,8 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
     magic_ofs=2; else
     magic_ofs=0;
 
-  return 
-    add_exec_stack_entry(s, scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)) - magic_ofs, sp, 
+  return
+    add_exec_stack_entry(s, scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)) - magic_ofs, sp,
 			 calling_obj, argc, argp, -1, calling_obj, s->execution_stack_pos,
 			 s->scripttable[script].localvar_offset);
 }
@@ -288,7 +288,7 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
 #endif /* VM_DEBUG_SEND */
 
 		if (++send_calls_nr == (send_calls_allocated - 1))
-			send_calls = realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
+			send_calls = sci_realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
 
 		argc += restmod;
 		restmod = 0; /* Take care that the rest modifier is used only once */
@@ -320,7 +320,7 @@ else
 			case 1:
 #ifndef STRICT_SEND
 			default:
-#endif				
+#endif
 				{ /* Argument is supplied -> Selector should be set */
 
 				if (print_send_action) {
@@ -367,7 +367,7 @@ else
 				sciprintf("[invoke selector]\n");
 				print_send_action = 0;
 			}
- 
+
 			send_calls[send_calls_nr].address = lookupresult; /* register call */
 			send_calls[send_calls_nr].argp = argp;
 			send_calls[send_calls_nr].argc = argc;
@@ -391,7 +391,7 @@ else
 		if (send_calls[send_calls_nr].type == EXEC_STACK_TYPE_VARSELECTOR) /* Write/read variable? */
 			retval = add_exec_stack_varselector(s, work_obj, send_calls[send_calls_nr].argc,
 							    send_calls[send_calls_nr].argp,
-							    send_calls[send_calls_nr].selector, 
+							    send_calls[send_calls_nr].selector,
 							    send_calls[send_calls_nr].address, origin);
 
 		else
@@ -403,7 +403,7 @@ else
 	/* Now check the TOS to execute all varselector entries */
 	if (s->execution_stack_pos >= 0)
 		while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
-		
+
 			/* varselector access? */
 			if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
 
@@ -436,7 +436,7 @@ add_exec_stack_varselector(state_t *s, heap_ptr objp, int argc, heap_ptr argp, i
 
 
 exec_stack_t *
-add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp, 
+add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp,
 		     int selector, heap_ptr sendp, int origin, int localvarp)
 /* Returns new TOS element */
 {
@@ -449,10 +449,10 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
   }
 
   if (!s->execution_stack)
-    s->execution_stack = malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
+    s->execution_stack = sci_malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
 
   if (++(s->execution_stack_pos) == s->execution_stack_size) /* Out of stack space? */
-    s->execution_stack = realloc(s->execution_stack,
+    s->execution_stack = sci_realloc(s->execution_stack,
 				   sizeof(exec_stack_t) * (s->execution_stack_size += 8));
 
   /*  sciprintf("Exec stack: [%d/%d], origin %d, at %p\n", s->execution_stack_pos,
@@ -503,7 +503,7 @@ run_vm(state_t *s, int restoring)
   /* Current execution data: */
   exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
   exec_stack_t *xs_new; /* Used during some operations */
-  
+
   int old_execution_stack_base = s->execution_stack_base;
 
   if (NULL == s)
@@ -512,7 +512,7 @@ run_vm(state_t *s, int restoring)
     return;
   }
 
- 
+
   if (restoring) {
 
 
@@ -521,7 +521,7 @@ run_vm(state_t *s, int restoring)
     s->execution_stack_base = s->execution_stack_pos;
 
   }
-  
+
   /* SCI code reads the zeroeth argument to determine argc */
   PUT_HEAP(xs->variables[VAR_PARAM], xs->argc);
 
@@ -597,7 +597,7 @@ run_vm(state_t *s, int restoring)
       case Script_Word: opparams[temp] = GET_OP_WORD(); break;
       case Script_SWord: opparams[temp] = GET_OP_SIGNED_WORD(); break;
 
-      case Script_Variable: 
+      case Script_Variable:
       case Script_Property:
 
       case Script_Local:
@@ -606,7 +606,7 @@ run_vm(state_t *s, int restoring)
       case Script_Param:
 	      opparams[temp] = GET_OP_FLEX(); break;
 
-      case Script_SVariable: 
+      case Script_SVariable:
       case Script_SRelative:
 	      opparams[temp] = GET_OP_SIGNED_FLEX(); break;
 
@@ -796,7 +796,7 @@ run_vm(state_t *s, int restoring)
 
 	/* Calculate xs again: The kernel function might have spawned a new VM */
 	xs = s->execution_stack + s->execution_stack_pos;
-	
+
 	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
 	  restadjust = s->amp_rest;
 
@@ -923,7 +923,7 @@ run_vm(state_t *s, int restoring)
 	PUSH(getInt16(s->heap + utemp2));
 	utemp2 += 2;
       }
-      
+
       break;
 
     case 0x2d: /* lea */
@@ -945,7 +945,7 @@ run_vm(state_t *s, int restoring)
       break;
 
     case 0x31: /* pToa */
-      s->acc = GET_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0]); 
+      s->acc = GET_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0]);
       break;
 
     case 0x32: /* aTop */
@@ -964,21 +964,21 @@ run_vm(state_t *s, int restoring)
 
     case 0x35: /* ipToa */
       temp = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-      s->acc = GET_HEAP(temp); 
+      s->acc = GET_HEAP(temp);
       ++(s->acc);
       PUT_HEAP(temp, s->acc);
       break;
 
     case 0x36: /* dpToa */
       temp = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-      s->acc = GET_HEAP(temp); 
+      s->acc = GET_HEAP(temp);
       --(s->acc);
       PUT_HEAP(temp, s->acc);
       break;
 
     case 0x37: /* ipTos */
       temp2 = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-      temp = GET_HEAP(temp2); 
+      temp = GET_HEAP(temp2);
       PUT_HEAP(temp2, temp + 1);
       break;
 
@@ -1261,7 +1261,7 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 	/* Number of variable selectors */
 
 	int i;
-  
+
 	if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
 		selectorid&=~1; /* Low bit in this case is read/write toggle */
 	for (i = 0; i < varselector_nr * 2; i += 2)
@@ -1355,7 +1355,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 			memset(s->heap+locals,0,locals_size);
 		/* Old script block */
 		/* There won't be a localvar block in this case */
-/* HEAP CORRUPTOR! */		
+/* HEAP CORRUPTOR! */
 /*
  fprintf(stderr,"script of size %d(+2) -> %04x\n", script->length, script_basepos);
  fprintf(stderr,"   -- memcpying [%04x..%04x]\n", script_basepos + 2, script_basepos + script->length);
@@ -1365,13 +1365,13 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		magic_pos_adder = 2;
 	} else {
 		memcpy(s->heap + script_basepos + 2, script->data, script->length); /* Copy the script */
-		script_basepos += 2; 
+		script_basepos += 2;
 		magic_pos_adder = 0;
 		pos = script_basepos;
 	}
 
 	/* Now do a first pass through the script objects to find the
-	** export table and local variable block 
+	** export table and local variable block
 	*/
 
 	objlength = 0;
@@ -1384,7 +1384,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 		if (objtype == sci_obj_exports)
 			s->scripttable[script_nr].export_table_offset = pos + 4; /* +4 is to step over the header */
-    
+
 		else if (objtype == sci_obj_synonyms) {
 			s->scripttable[script_nr].synonyms_offset = pos + 4; /* +4 is to step over the header */
 			s->scripttable[script_nr].synonyms_nr = (objlength - 4) / 4;
@@ -1450,7 +1450,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 			if (superclass > -1)
 				PUT_HEAP(pos + SCRIPT_SUPERCLASS_OFFSET, get_class_address(s, superclass));
 
-			PUT_HEAP(pos + SCRIPT_SPECIES_OFFSET, 
+			PUT_HEAP(pos + SCRIPT_SPECIES_OFFSET,
 				 get_class_address(s, species));
 
 			functarea += 2 + functions_nr * 2;
@@ -1466,7 +1466,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 			/* Recurse to assure that the superclass is available */
 
 			pos += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back from home to base */
-      
+
 		} /* if object or class */
 		else if (objtype == sci_obj_pointers) { /* A relocation table */
 			int pointerc = GET_HEAP(pos);
@@ -1548,7 +1548,7 @@ script_uninstantiate(state_t *s, int script_nr)
 					script_uninstantiate(s, superclass_script);
 				/* Recurse to assure that the superclass lockers number gets decreased */
 			}
-      
+
 			pos += SCRIPT_OBJECT_MAGIC_OFFSET;
 		} /* if object or class */
 
@@ -1568,7 +1568,7 @@ script_uninstantiate(state_t *s, int script_nr)
 	if ((s->scripttable[script_nr].localvar_offset)&&
 	    (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER))
 		heap_free(s->_heap, s->scripttable[script_nr].localvar_offset-2);
-    
+
 	s->scripttable[script_nr].localvar_offset = 0;
 	s->scripttable[script_nr].export_table_offset = 0;
 
@@ -1608,7 +1608,7 @@ _game_run(state_t *s, int restoring)
 			script_abort_flag = 0;
 			s->restarting_flags = SCI_GAME_WAS_RESTARTED | SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
 
-		} 
+		}
 		else {
 			successor = s->successor;
 			if (successor) {
@@ -1618,7 +1618,7 @@ _game_run(state_t *s, int restoring)
 				s = successor;
 
 				if (!send_calls_allocated)
-					send_calls = calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
+					send_calls = sci_calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
 
 				if (script_abort_flag == SCRIPT_ABORT_WITH_REPLAY) {
 					sciprintf("Restarting with replay()\n");

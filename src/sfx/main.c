@@ -31,7 +31,7 @@ int main()
   unsigned char *patch;
   unsigned int length;
 
-  patch = (unsigned char *)malloc(65536);
+  patch = (unsigned char *)sci_malloc(65536);
 
   fd = open("patch.001", O_RDONLY);
   length = read(fd, patch, 65536);

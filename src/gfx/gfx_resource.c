@@ -271,7 +271,7 @@ _gfx_xlate_pixmap_unfiltered(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 	default:
 		GFXERROR("Invalid mode->bytespp=%d\n", mode->bytespp);
-					
+
 	}
 
 	if (pxm->flags & GFX_PIXMAP_FLAG_SCALED_INDEX) {
@@ -310,7 +310,7 @@ _gfx_xlate_pixmap_linear(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 	default:
 		GFXERROR("Invalid mode->bytespp=%d\n", mode->bytespp);
-					
+
 	}
 
 }
@@ -342,7 +342,7 @@ _gfx_xlate_pixmap_trilinear(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 	default:
 		GFXERROR("Invalid mode->bytespp=%d\n", mode->bytespp);
-					
+
 	}
 
 }
@@ -372,13 +372,13 @@ gfx_xlate_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode, gfx_xlate_filter_t filter)
 
 
 	if (!pxm->data) {
-		pxm->data = malloc(mode->xfact * mode->yfact * pxm->index_xl * pxm->index_yl * mode->bytespp + 1);
+		pxm->data = sci_malloc(mode->xfact * mode->yfact * pxm->index_xl * pxm->index_yl * mode->bytespp + 1);
 		/* +1: Eases coying on BE machines in 24 bpp packed mode */
 		/* Assume that memory, if allocated already, will be sufficient */
 
 		/* Allocate alpha map */
 		if (!mode->alpha_mask && pxm->colors_nr < GFX_PIC_COLORS)
-			pxm->alpha_map = malloc(mode->xfact * mode->yfact * pxm->index_xl * pxm->index_yl + 1);
+			pxm->alpha_map = sci_malloc(mode->xfact * mode->yfact * pxm->index_xl * pxm->index_yl + 1);
 	} else
 		was_allocated = 1;
 

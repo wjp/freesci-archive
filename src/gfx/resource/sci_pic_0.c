@@ -91,7 +91,7 @@ gfxr_init_static_palette()
 gfxr_pic_t *
 gfxr_init_pic(gfx_mode_t *mode, int ID)
 {
-	gfxr_pic_t *pic = malloc(sizeof(gfxr_pic_t));
+	gfxr_pic_t *pic = sci_malloc(sizeof(gfxr_pic_t));
 
 	pic->mode = mode;
 
@@ -275,7 +275,7 @@ _gfxr_auxbuf_propagate_changes(gfxr_pic_t *pic, int bitmask)
 	/* Propagates all filled bits into the planes described by bitmask */
 	unsigned long *data = (unsigned long *) pic->aux_map;
 	unsigned long clearmask = 0x07070707;
-	unsigned long andmask = 
+	unsigned long andmask =
 		(bitmask << 3)
 		| (bitmask << (3+8))
 		| (bitmask << (3+16))
@@ -333,7 +333,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 			++xr;
 		}
 
-		if ((ytotal + xr) > 64000) { fprintf(stderr,"AARGH-%d\n", __LINE__); 
+		if ((ytotal + xr) > 64000) { fprintf(stderr,"AARGH-%d\n", __LINE__);
 		BREAKPOINT();
 		}
 
@@ -475,7 +475,7 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 	*max_x = *max_y = -1;
 	*min_x = *min_y = 320;
 
-	if (!fillmagc) {  
+	if (!fillmagc) {
 		fprintf(stderr,"------------------------------------------------\n");
 		fprintf(stderr,"LineID:   ");
 		for (i = 0; i < 5; i++)
@@ -1272,7 +1272,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 			while (xl < proj_xr_bound && (bounds[ytotal + xl] != legalcolor))
 				++xl;
 
-    
+
 #ifdef FILL_RECURSIVE_DEBUG
 		if (!fillmagc)
 			fprintf(stderr,"<%d,", xl);
@@ -1961,28 +1961,28 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 								int aux = pic->aux_map[x + y*320];
 								int pix = (aux & 0xf);
 								int i;
-								
+
 								if (aux & 0x40) {
 									if (x == 0 || !(pic->aux_map[x-1 + y * 320] & 0x40))
 										for (i = 0; i < pic->mode->yfact; i++)
 											pic->visual_map->index_data[(x + ((y*pic->mode->yfact)+i)*320) * pic->mode->xfact] ^= 0xff;
-									
+
 									if (x == 319 || !(pic->aux_map[x+1 + y * 320] & 0x40))
 										for (i = 0; i < pic->mode->yfact; i++)
 											pic->visual_map->index_data[pic->mode->xfact - 1 +(x + ((y*pic->mode->yfact)+i)*320) * pic->mode->xfact] ^= 0xff;
-									
+
 									if (y == 0 || !(pic->aux_map[x + (y-1) * 320] & 0x40))
 										for (i = 0; i < pic->mode->yfact; i++)
 											pic->visual_map->index_data[i+(x + ((y*pic->mode->yfact))*320) * pic->mode->xfact] ^= 0xff;
-									
+
 									if (y == 199 || !(pic->aux_map[x + (y+1) * 320] & 0x40))
 										for (i = 0; i < pic->mode->yfact; i++)
 											pic->visual_map->index_data[i+(x + ((y*pic->mode->yfact)+pic->mode->yfact - 1)*320) * pic->mode->xfact] ^= 0xff;
 								}
-								
+
 								pix |= (aux & 0x40) >> 4;
 								pix |= (pix << 4);
-								
+
 								pic->visual_map->index_data[x + y*320*pic->mode->xfact] = pix;
 							}
 					return;
@@ -2147,7 +2147,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			return;
 		}
 	}
-  
+
 	GFXWARN("Reached end of pic resource %04x\n", resid);
 }
 
