@@ -1101,7 +1101,6 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 
 #define IS_FILL_BOUNDARY(x) (((x) & legalmask) != legalcolor)
 
-
 #ifdef WITH_PIC_SCALING
 
 #define TEST_POINT(xx, yy) \

@@ -1,3 +1,15 @@
+2005-01-21  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/resource/sci_picfill.c (IS_BOUNDARY): Fixed correctness
+	for iceman pic.002, where we did not consider the effects of
+	dithering for determining fill boundaries.
+
+	* src/gfx/resmgr.c (gfxr_get_pic): Added some #ifdef'd code for
+	timing pic drawing
+
+	* src/engine/scriptdebug.c (script_debug): Forward-ported the
+	"sleep" command
+
 2005-01-11  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kpathing.c: Add polygon type constants.

@@ -3189,6 +3189,14 @@ c_sci_version(state_t *s)
 	return 0;
 }
 
+
+int
+c_sleep(state_t *s)
+{
+        sleep(cmd_params[0].val);
+        return 0;
+}
+
 void
 script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *objp,
 	     unsigned int *restadjust, 
@@ -3548,6 +3556,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  sfx-01-track <song> <offset>\n\n"
 					 "SEE ALSO\n\n"
 					 "  sfx-01-header.1\n\n");
+                        con_hook_command(c_sleep, "sleep", "i", "Suspends everything for the\n"
+					 " specified number of seconds");
 
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
@@ -3646,6 +3656,4 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 		sfx_suspend(&s->sound, 0);
 	}
 }
-
-
 

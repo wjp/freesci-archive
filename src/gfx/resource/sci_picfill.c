@@ -42,8 +42,14 @@
 
 #ifdef DRAW_SCALED
 #  define SCALED_CHECK(x) (x)
+#  define IS_BOUNDARY(x, y, index)  (((index) & legalmask) != legalcolor)
 #else
 #  define SCALED_CHECK(x) 1
+#  define IS_BOUNDARY(x, y, index) (								\
+	(((x)+(y)) & 1)? /* figure out which part of the mask to use, to simulate dithering */	\
+	   ((((index)) & ((legalmask) )) != ((legalcolor) & ((legalmask)))) /* odd coordinate */			\
+	 : ((((index)) & ((legalmask) >> 8)) != ((legalcolor) & ((legalmask) >> 8))) /* even coordinate */			\
+	)
 #endif
 
 static void
@@ -142,11 +148,11 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 		/* Now we have the projected limits, get the real ones: */
 
 		xl = (old_xl > proj_xl_bound)? old_xl : proj_xl_bound;
-		if (!IS_FILL_BOUNDARY(bounds[ytotal + xl])) { /* go left as far as possible */
-			while (xl > proj_xl_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + xl - 1])))
+		if (!IS_BOUNDARY(xl, y+1, bounds[ytotal + xl])) { /* go left as far as possible */
+			while (xl > proj_xl_bound && (!IS_BOUNDARY(xl-1, y+1, bounds[ytotal + xl - 1])))
 				--xl;
 		} else /* go right until the fillable area starts */
-			while (xl < proj_xr_bound && (IS_FILL_BOUNDARY(bounds[ytotal + xl])))
+			while (xl < proj_xr_bound && (IS_BOUNDARY(xl, y+1, bounds[ytotal + xl])))
 				++xl;
 
 
@@ -159,12 +165,12 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 		}
 
 		xr = (xl > old_xl)? xl : old_xl;
-		while (xr < proj_xr_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + xr + 1])))
+		while (xr < proj_xr_bound && (!IS_BOUNDARY(xr+1, y+1, bounds[ytotal + xr + 1])))
 			++xr;
 
 		PRINT_DEBUG1("%d> -> ", xr);
 
-		if (IS_FILL_BOUNDARY(bounds[ytotal + xl])) {
+		if (IS_BOUNDARY(xl, y+1,  bounds[ytotal + xl])) {
 			PRINT_DEBUG0("ABRT because xl illegal\n");
 			return;
 		}
@@ -194,7 +200,7 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 		state = 0;
 		xcont = xr + 1;
 		while (xcont <= old_xr) {
-			if (IS_FILL_BOUNDARY(bounds[ytotal + xcont]))
+			if (IS_BOUNDARY(xcont, y+1, bounds[ytotal + xcont]))
 				state = xcont;
 			else if (state) { /* recurse */
 				PRINT_DEBUG4("[%d[%d,%d],%d]: ", old_xl, xl, xr, old_xr);
@@ -212,7 +218,7 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 		if (xl < old_xl - 1) {
 			state = 0;
 			for (xcont = old_xl-1; xcont >= xl; xcont--) {
-				if (IS_FILL_BOUNDARY(bounds[oldytotal + xcont]))
+				if (IS_BOUNDARY(xcont, y, bounds[oldytotal + xcont]))
 					state = xcont;
 				else if (state) { /* recurse */
 					PRINT_DEBUG4("[%d[%d,%d],%d]: ", old_xl, xl, xr, old_xr);
@@ -229,7 +235,7 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 		if (xr > old_xr + 1) {
 			state = 0;
 			for (xcont = old_xr + 1; xcont <= xr; xcont++) {
-				if (IS_FILL_BOUNDARY(bounds[oldytotal + xcont]))
+				if (IS_BOUNDARY(xcont, y, bounds[oldytotal + xcont]))
 					state = xcont;
 				else if (state) { /* recurse */
 					PRINT_DEBUG4("[%d[%d,%d],%d]: ", old_xl, xl, xr, old_xr);
@@ -310,9 +316,13 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 		else
 			legalcolor = 0xf0; /* Only check the second color */
 #endif
-
+#ifdef DRAW_SCALED
 		legalcolor = 0xff;
 		legalmask = legalcolor;
+#else
+		legalmask = 0x0ff0;
+		legalcolor = 0xff;
+#endif
 	} else if (drawenable & GFX_MASK_PRIORITY) {
 		bounds = pic->priority_map->index_data;
 		legalcolor = 0;
@@ -323,7 +333,7 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 		legalmask = 0xf;
 	}
 
-	if (!bounds || IS_FILL_BOUNDARY(bounds[ytotal + x]))
+	if (!bounds || IS_BOUNDARY(x, y, bounds[ytotal + x]))
 		return;
 
 	if (bounds) {
@@ -365,10 +375,10 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 		proj_xr_bound += pic->mode->xfact -1;
 #endif
 		xl = x;
-		while (xl > proj_xl_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + xl -1])))
+		while (xl > proj_xl_bound && (!IS_BOUNDARY(xl-1, y, bounds[ytotal + xl -1])))
 			--xl;
 
-		while (x < proj_xr_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + x + 1])))
+		while (x < proj_xr_bound && (!IS_BOUNDARY(x+1, y, bounds[ytotal + x + 1])))
 			++x;
 		xr = x;
 
@@ -400,6 +410,7 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 
 
 #undef SCALED_CHECK
+#undef IS_BOUNDARY
 
 #ifndef DRAW_SCALED
 #  undef proj_xl_bound

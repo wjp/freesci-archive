@@ -33,6 +33,8 @@
 #include <gfx_resmgr.h>
 #include <gfx_state_internal.h>
 
+#define TIME_PICDRAWING
+
 /* Invalid hash mode: Used to invalidate modified pics */
 #define MODE_INVALID -1
 
@@ -324,6 +326,11 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 			gfxr_interpreter_clear_pic(state->version, unscaled_pic,
 						   state->misc_payload);
 		}
+#ifdef TIME_PICDRAWING
+		{long start_sec, start_usec;
+		long end_sec, end_usec;
+		sci_gettime(&start_sec, &start_usec);
+#endif
 		if (gfxr_interpreter_calculate_pic(state, pic, unscaled_pic, flags,
 						   default_palette, nr,
 						   state->misc_payload)) {
@@ -333,6 +340,12 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 
 			return NULL;
 		}
+#ifdef TIME_PICDRAWING
+		sci_gettime(&end_sec, &end_usec);
+		printf("\nTIME:	%d	for drawing pic.%03d\n",
+			(end_sec - start_sec) * 1000000 + (end_usec - start_usec), nr);
+		}
+#endif
 
 		if (state->options->pic0_unscaled)
 			pic->priority_map = gfx_pixmap_scale_index_data(pic->priority_map, state->driver->mode);
