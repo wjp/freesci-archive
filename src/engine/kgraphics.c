@@ -1461,8 +1461,8 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 		SCIkdebug(SCIkGRAPHICS, "drawing button %04x to %d,%d\n", obj, x, y);
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_button_control(s->port, obj, area, text, font_nr,
-								  (char)(state & CONTROL_STATE_FRAMED),
-								  (char)inverse, (char)(state & CONTROL_STATE_GRAY)));
+								  (gint8)(state & CONTROL_STATE_FRAMED),
+								  (gint8)inverse, (gint8)(state & CONTROL_STATE_GRAY)));
 		break;
 
 	case K_CONTROL_TEXT:
@@ -1472,8 +1472,8 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 		ADD_TO_CURRENT_BG_WIDGETS(
 			sciw_new_text_control(s->port, (int)obj, area, text, font_nr, mode,
-								(char)(!!(state & CONTROL_STATE_DITHER_FRAMED)),
-								(char)inverse));
+								(gint8)(!!(state & CONTROL_STATE_DITHER_FRAMED)),
+								(gint8)inverse));
 		break;
 
 	case K_CONTROL_EDIT:
@@ -1489,7 +1489,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 			update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
 
 		update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
-		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr, (unsigned)cursor, (char)inverse));
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr, (unsigned)cursor, (gint8)inverse));
 		break;
 
 	case K_CONTROL_ICON:
@@ -1497,7 +1497,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y -1);
 
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_icon_control(s->port, obj, area, view, loop, cel,
-							  (char)(state & CONTROL_STATE_FRAMED), (char)inverse));
+							  (gint8)(state & CONTROL_STATE_FRAMED), (gint8)inverse));
 		break;
 
 	case K_CONTROL_CONTROL: {
@@ -1533,7 +1533,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		}
 
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_list_control(s->port, obj, area, font_nr, entries_list, entries_nr,
-							  list_top, selection, (char)inverse));
+							  list_top, selection, (gint8)inverse));
 		if (entries_nr)
 			free(entries_list);
 	}

@@ -1,5 +1,9 @@
 2002-03-16  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sound/polled_ss_unix.c (sound_unix_get_data): Fixed treatment
+	of trivial get_data()s
+	(sound_unix_init): Handle failure to init PCM device gracefully
+
 	* src/include/resource.h: Define _Win32 on Win32 to work around
 	a problem with some versions of flex
 

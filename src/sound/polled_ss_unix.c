@@ -223,12 +223,13 @@ sound_unix_init(state_t *s, int flags)
 		memset(&sss, 0, sizeof(sound_server_state_t));
 
 
-	  if (pcmout_open() < 0)
-	    return -1;
+		if (pcmout_open() < 0) {
+			fprintf(stderr, "Disabling PCM sound output\n");
+			pcmout_disable();
+		}
 
-	  if (init_midi_device(s) < 0)
-	    return -1;
-
+		if (init_midi_device(s) < 0)
+			return -1;
 
 		x_fd_in = fd_in[0];
 		x_fd_out = fd_out[1];
@@ -387,7 +388,8 @@ sound_unix_get_data(byte **data_ptr, int *size)
 	fflush(stdout);
 
 	remaining_size = *size;
-	data_ptr_pos = *data_ptr = sci_malloc(*size);
+	data_ptr_pos = *data_ptr = sci_malloc((*size) ?
+					      *size : 1);
 
 	while (remaining_size) {
 		GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};

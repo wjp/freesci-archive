@@ -53,6 +53,11 @@ extern DLLEXTERN pcmout_driver_t *pcmout_drivers[];
 int pcmout_open();
 int pcmout_close();
 int mix_sound();
+void pcmout_disable(void);
+/* Disables PCM output by setting the 'null' driver
+** Returns   : (void)
+** Modifies  : Active PCM driver
+*/
 
 struct _pcmout_driver *pcmout_find_driver(char *name);
 
