@@ -1079,7 +1079,7 @@ char *yytext;
 #ifdef _MSC_VER
 #  include <ctype.h>
 #  include <direct.h>
-
+#  define YY_NO_UNISTD_H
 #  define strcasecmp stricmp
 #  define PATH_MAX 255
 

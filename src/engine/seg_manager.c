@@ -232,6 +232,9 @@ void sm_destroy (seg_manager_t* self) {
 		if (self->heap[i])
 			_sm_deallocate(self, i, 0);
 	}
+
+	free_int_hash_map(self->id_seg_map);
+
 	sci_free (self->heap);
 	self->heap = NULL;
 };
@@ -365,6 +368,8 @@ _sm_deallocate (seg_manager_t* self, int seg, int recursive)
 
 	free(mobj);
 	self->heap[seg] = NULL;
+
+	return 1;
 }
 
 int sm_deallocate_script (seg_manager_t* self, struct _state *s, int script_nr) {
@@ -440,6 +445,10 @@ static void sm_free_script ( mem_obj_t* mem ) {
 		free( mem->data.script.objects );
 		mem->data.script.objects = NULL;
 		mem->data.script.objects_nr = 0;
+	}
+
+	if (NULL != mem->data.script.code) {
+		sci_free(mem->data.script.code);
 	}
 };
 

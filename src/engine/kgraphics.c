@@ -2318,6 +2318,7 @@ kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 	}
 
+	return NULL_REG;
 }
 
 

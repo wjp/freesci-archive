@@ -448,7 +448,7 @@ con_gfx_init()
 	con_set_pixmap_callback(con_gfx_insert_pixmap);
 	con.input_prompt = NULL;
 	con.input_text = NULL;
-	con.input_window = con.input_prompt_pos = -strlen(CON_GFX_PROMPT);
+	con.input_window = con.input_prompt_pos = -(int)strlen(CON_GFX_PROMPT);
 	con.cursor_position = 0;
 	con.input_precursor = NULL;
 	con.input_postcursor = NULL;
