@@ -26,6 +26,7 @@
 #ifndef _MSC_VER
 #  include <SDL/SDL.h>
 #  include <SDL/SDL_thread.h>
+#  include <sys/timeb.h>
 #else
 #  include <SDL.h>
 #  include <SDL_thread.h>
@@ -148,7 +149,11 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 	sound_event_t *event	= NULL;
 
 	if (!sound_eq_peek_event(&inqueue)) {
-	  sci_sched_yield();
+#ifdef _MSC_VER
+	  Sleep(0);
+#else
+	  usleep(0);
+#endif
 	  return NULL;
 	}
 

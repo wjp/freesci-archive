@@ -33,6 +33,7 @@
 #endif
 #ifdef _MSC_VER
 #  include <sys/timeb.h>
+#define sleep Sleep
 #endif
 
 
@@ -425,17 +426,13 @@ sci_get_from_queue(sci_queue_t *queue, int *type)
 
 /*-- Yielding to the scheduler --*/
 
-/* 
 #ifdef HAVE_SCHED_YIELD
 #  include <sched.h>
-*/
 
-#ifndef _WIN32
 void
 sci_sched_yield()
 {
-  /*sched_yield();*/
-  usleep(0);
+  sched_yield();
 }
 
 #else
