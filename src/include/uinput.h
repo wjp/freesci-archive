@@ -95,9 +95,6 @@ typedef struct {
 #define SCI_EVM_INSERT          (1<<7)
 
 
-extern int sci_have_pointer;
-/* Is 0 if no pointing device is present */
-
 extern long sci_clock_time;
 /* Time (in microseconds) in between two 'heart beats' */
 extern long sci_redraw_time;

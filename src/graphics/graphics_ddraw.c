@@ -268,7 +268,7 @@ ddraw_init(state_t *s, struct _picture *pic)
   wc.cbWndExtra    = 0;
   wc.hInstance     = NULL;
   wc.hIcon         = LoadIcon (NULL, IDI_APPLICATION);
-  wc.hCursor       = LoadCursor (NULL, IDC_ARROW);
+  wc.hCursor       = NULL; /*LoadCursor (NULL, IDC_ARROW)*/;
   wc.hbrBackground = GetStockObject (BLACK_BRUSH);
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = "freesci.WndClass";
@@ -525,8 +525,7 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_SETCURSOR:
-    if (bFullscreen && bActive)
-      SetCursor (NULL);
+    SetCursor (NULL);
     break;
 
   case WM_MOVE:
@@ -549,6 +548,7 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   case WM_MOUSEMOVE:
     _s->pointer_x = LOWORD (lParam) / scale;
     _s->pointer_y = HIWORD (lParam) / scale;
+    _s->gfx_driver->Redraw (_s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0, 0, 0, 0);
     break;
 
   case WM_LBUTTONDOWN: add_mouse_event (SCI_EVT_MOUSE_PRESS, 1, wParam);   break;

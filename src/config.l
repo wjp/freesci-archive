@@ -111,6 +111,15 @@ gfx_driver[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (our_section) {
   conf->gfx_driver = _parse_gfx_driver(yytext);
 }
 
+debug_mode[[:blank:]]*"="[::blank:]]*.+  if (our_section) {
+  yytext = strchr(yytext, '=') + 1;
+
+  while (isspace(*yytext))
+    yytext++;
+
+  strcpy (conf->debug_mode, yytext);
+}
+
 [[:alnum:]]+"."[[:alnum:]]+[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (our_section) {
   char *p=yytext;
   char *p2;
@@ -171,6 +180,7 @@ config_init(config_entry_t *_conf, char *_name, char *conffile)
   conf->gfx_driver = graph_get_default_driver();
 
   conf->console_log = NULL;
+  conf->debug_mode [0] = '\0';
 /**** Default config ends */
 
   if (conffile)

@@ -1,3 +1,25 @@
+1999-08-29  Dmitry Jemerov  <yole@exch.nnz.spb.su>
+
+        * src/core/vm.c: Breakpoints on object methods do not trigger on
+        super calls.
+
+        * src/core/scriptdebug.c (c_backtrace): Super calls are now
+        shown correctly in the back trace.
+        (c_stepover, script_debug) New debugger command 'so' to step over
+        sends and calls.
+        (c_disasm) disasm command always printed one more command than
+        requested. Now disasm stops after a 'ret' is encountered instead
+        of printing a series of bnot's. If the first argument of disasm
+        is less or equal than 0, it is treated as an offset from pc.
+        (c_bpdel, script_debug) New debugger command 'bpdel' to delete
+        breakpoints.
+
+        * src/config.l: Brought back the debug_mode parameter.
+
+        * src/graphics/graphics_ddraw.c (WndProc): Mouse cursor is redrawn
+        during waits. Windows mouse cursor is not shown over the freesci
+        window.
+
 1999-08-28  Dmitry Jemerov  <yole@exch.nnz.spb.su>
 
         * src/core/scriptdebug.c (c_snk): Now it's possible to specify

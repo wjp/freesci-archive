@@ -43,6 +43,7 @@ int _debug_seek_special = 0; /* Used for special seeks */
 #define _DEBUG_SEEK_LEVEL_RET 2 /* Step forward until returned from this level */
 #define _DEBUG_SEEK_SPECIAL_CALLK 3 /* Step forward until a /special/ callk is found */
 #define _DEBUG_SEEK_LOGGING 4 /* Seek nothing special, but display code while executing */
+#define _DEBUG_SEEK_SO 5 /* Step forward until specified PC (after the send command) and stack depth */
 
 state_t *_s;
 heap_ptr *_pc;
@@ -90,6 +91,50 @@ c_step(void)
   _debugstate_valid = 0;
   if (cmd_paramlength && (cmd_params[0].val > 0))
     _debug_step_running = cmd_params[0].val;
+  return 0;
+}
+
+int 
+c_stepover(void)
+{
+  int opcode, opnumber;
+  
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  _debugstate_valid = 0;
+  opcode = _s->heap [*_pc];
+  opnumber = opcode >> 1;
+  if (opnumber == 0x22 /* callb */ || opnumber == 0x23 /* calle */ || 
+      opnumber == 0x25 /* send */ || opnumber == 0x2a /* self */ || 
+      opnumber == 0x2b /* super */) 
+  {
+    _debug_seeking = _DEBUG_SEEK_SO;
+    _debug_seek_level = script_exec_stackpos;
+    /* Store in _debug_seek_special the offset of the next command after send */
+    switch (opcode)
+    {
+    case 0x46: /* calle W */
+      _debug_seek_special = *_pc + 5; break;
+
+    case 0x44: /* callb W */
+    case 0x47: /* calle B */
+    case 0x56: /* super W */
+      _debug_seek_special = *_pc + 4; break;
+
+    case 0x45: /* callb B */
+    case 0x57: /* super B */
+    case 0x4A: /* send W */
+    case 0x54: /* self W */
+      _debug_seek_special = *_pc + 3; break;
+
+    default:
+      _debug_seek_special = *_pc + 2;
+    }
+  }
+
   return 0;
 }
 
@@ -345,7 +390,7 @@ c_backtrace(void)
     int paramc, totalparamc;
 
     if (call->selector >= -1) {/* Normal function */
-      namepos = getInt16(_s->heap + *(call->objpp) + SCRIPT_NAME_OFFSET);
+      namepos = getInt16(_s->heap + *(call->sendpp) + SCRIPT_NAME_OFFSET);
       sciprintf(" %x:  %s::%s(", i, _s->heap + namepos, (call->selector == -1)? "<call[be]?>":
 		_s->selector_names[call->selector]);
     }
@@ -416,22 +461,28 @@ int
 c_disasm(void)
 {
   int vpc = cmd_params[0].val;
+  int op_count;
 
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
-  if (vpc < 0)
-    return 0;
+  if (vpc <= 0)
+    vpc = *_pc + vpc;
 
   if (cmd_paramlength > 1)
+  {
     if (cmd_params[1].val < 0)
       return 0;
+    op_count = cmd_params[1].val;
+  }
+  else
+    op_count = 1;
 
   do {
     vpc = disassemble(_s, vpc);
-  } while ((vpc < 0xfff2) && (cmd_paramlength > 1) && (cmd_params[1].val--));
+  } while ((vpc > 0) && (vpc < 0xfff2) && (cmd_paramlength > 1) && (--op_count));
   return 0;
 }
 
@@ -823,6 +874,8 @@ c_accobj(void)
     objinfo(_s->acc);
 }
 
+/*** Breakpoint commands ***/
+
 int
 c_bpx(void)
 {
@@ -878,6 +931,51 @@ c_bplist(void)
   return 0;
 }
 
+int c_bpdel(void)
+{
+  breakpoint_t *bp, *bp_next, *bp_prev;
+  int i = 0, found = 0;
+  int type;
+
+  /* Find breakpoint with given index */
+  bp_prev = NULL;
+  bp = _s->bp_list;
+  while (bp && i < cmd_params [0].val)
+  {
+    bp_prev = bp;
+    bp = bp->next;
+    i++;
+  }
+  if (!bp)
+  {
+    sciprintf ("Invalid breakpoint index %i\n", cmd_params [0].val);
+    return 1;
+  }
+
+  /* Delete it */
+  bp_next = bp->next;
+  type = bp->type;
+  if (type == BREAK_EXECUTE) free (bp->data);
+  free (bp);
+  if (bp_prev)
+    bp_prev->next = bp_next;
+  else
+    _s->bp_list = bp_next;
+
+  /* Check if there are more breakpoints of the same type. If not, clear
+     the respective bit in _s->have_bp. */
+  for (bp = _s->bp_list; bp; bp=bp->next)
+    if (bp->type == type)
+    {
+      found = 1;
+      break;
+    }
+
+  if (!found) _s->have_bp &= ~type;
+
+  return 0;
+}
+
 void
 script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp, int *restadjust, int bp)
 {
@@ -916,6 +1014,10 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       break;
     }
 
+    case _DEBUG_SEEK_SO:
+      if (*pc != _debug_seek_special || script_exec_stackpos != _debug_seek_level) return;
+      break;
+
     } /* switch(_debug_seeking) */
 
     _debug_seeking = _DEBUG_SEEK_NOTHING; /* OK, found whatever we were looking for */
@@ -944,6 +1046,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_debuginfo, "registers", "", "Displays all current register values");
       cmdHook(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
 	      "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");
+      cmdHook(c_stepover, "so", "", "Executes one operation skipping over sends");
       cmdHook(c_heapdump, "heapdump", "ii", "Dumps data from the heap\n"
 	      "\nEXAMPLE\n\n    heapdump 0x1200 42\n\n  Dumps 42 bytes starting at heap address\n"
 	      "  0x1200");
@@ -983,6 +1086,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_slog, "slog", "i*", "Step forward while printing\n  acc and the next instruction");
       cmdHook(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of specified method.\n");
       cmdHook(c_bplist, "bplist", "", "Lists all breakpoints.\n");
+      cmdHook(c_bpdel, "bpdel", "i", "Deletes a breakpoint with specified index.");
       cmdHook(c_go, "go", "", "Executes the script.\n");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");

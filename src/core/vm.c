@@ -146,7 +146,8 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
     return;
   }
 
-  execute(s, scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)), sp, calling_obj, argc, argp, -1);
+  execute(s, scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)), sp, 
+    calling_obj, argc, argp, -1, calling_obj);
 }
 
 void
@@ -225,7 +226,7 @@ sciprintf("Funcselector(");
  }
 sciprintf(")\n");
 #endif /* VM_DEBUG_SEND */
-      execute(s, lookupresult, sp, work_obj, argc, argp, selector);
+      execute(s, lookupresult, sp, work_obj, argc, argp, selector, send_obj);
       break;
     } /* switch(lookup_selector()) */
 
@@ -236,7 +237,8 @@ sciprintf(")\n");
 }
 
 void
-execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp, int selector)
+execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp, 
+        int selector, heap_ptr sendp)
 {
   gint16 temp, temp2, temp3;
   gint16 opparams[4]; /* Opcode parameters */
@@ -255,6 +257,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
   /* Start entering debug information into call stack debug blocks */
   ++script_exec_stackpos;
   script_exec_stack[script_exec_stackpos].objpp = &objp;
+  script_exec_stack[script_exec_stackpos].sendpp = &sendp;
   script_exec_stack[script_exec_stackpos].pcp = &pc;
   script_exec_stack[script_exec_stackpos].spp = &sp;
   script_exec_stack[script_exec_stackpos].ppp = &fp;
@@ -269,7 +272,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     char method_name [256];
 
     sprintf (method_name, "%s::%s",
-      s->heap + getUInt16 (s->heap + objp + SCRIPT_NAME_OFFSET),
+      s->heap + getUInt16 (s->heap + sendp + SCRIPT_NAME_OFFSET),
       s->selector_names [selector]);
 
     bp = s->bp_list;
@@ -479,7 +482,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x20: /* call */
       temp = opparams[1] + 2 + (restadjust*2);
       execute(s, pc + opparams[0], sp, objp, GET_HEAP(sp - temp) + restadjust,
-	      sp - temp, -1);
+	      sp - temp, -1, objp);
       sp -= temp;
       restadjust = 0; /* Used up the &rest adjustment */
       break;

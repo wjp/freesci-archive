@@ -28,8 +28,6 @@
 #include <uinput.h>
 #include <engine.h>
 
-int sci_have_pointer = 0;
-
 long sci_clock_time = SCI_INPUT_DEFAULT_CLOCKTIME;
 long sci_redraw_time = SCI_INPUT_DEFAULT_REDRAWTIME;
 

@@ -153,6 +153,7 @@ typedef struct {
 
 typedef struct {
   heap_ptr *objpp;
+  heap_ptr *sendpp;
   heap_ptr *pcp;
   heap_ptr *spp;
   heap_ptr *ppp;
@@ -223,7 +224,7 @@ send_selector(struct _state *s, heap_ptr send_obj, heap_ptr work_obj,
 
 void
 execute(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp,
-	int selector);
+	int selector, heap_ptr sendp);
 /* Executes the code on s->heap[pc] until it hits a 'ret' command
 ** Parameters: (state_t *) s: The state with which to execute
 **             (heap_ptr) pc: The initial program counter
@@ -232,6 +233,8 @@ execute(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, hea
 **             (int) argc: Number of parameters to call with
 **             (heap_ptr) argp: Heap pointer to the first parameter
 **             (int) selector: The selector over which it was called or -1 if n.a. For debugging.
+**             (heap_ptr) sendp: Pointer to the object to which the message was sent.
+**             Equal to objp for anything but super.
 ** This function will execute SCI bytecode. It requires s to be set up
 ** correctly.
 */
