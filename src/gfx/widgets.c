@@ -356,6 +356,7 @@ gfxw_remove_widget_from_container(gfxw_container_t *container, gfxw_widget_t *wi
 
 	*seekerp = widget->next; /* Remove it */
 	widget->parent = NULL;
+	widget->next = NULL;
 }
 
 static int
@@ -898,15 +899,15 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 	else
 		yalignmod = 0;
 
+	widget->pos.y -= z;
+	widget->z = z;
+
 	widget->draw_bounds = gfx_rect(widget->pos.x - xalignmod,
 				       widget->pos.y - yalignmod, width, height);
 	widget->bounds = gfx_rect(widget->pos.x - offset.x - xalignmod,
 				  widget->pos.y - offset.y - yalignmod, width, height);
 
 	widget->flags |= GFXW_FLAG_VISIBLE;
-
-	widget->pos.y += z;
-	widget->z = z;
 
 	_gfxw_set_ops(GFXW(widget), _gfxwop_dyn_view_draw,
 		      _gfxwop_basic_free,

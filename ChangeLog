@@ -1,3 +1,12 @@
+2000-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c: Allowed dynviews and picviews to be relocated
+	into ports
+	(kAnimate): Added automatic dynview/picview relocation when the port they
+	were contained in is removed
+
+	* src/gfx/widgets.c (gfxw_new_dyn_view): Fixed z coordinate support
+
 2000-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (assert_primary_widget_lists): Fixed OB1 bug for

@@ -60,7 +60,7 @@
   if (s->port) \
        s->port->add(GFXWC(s->port), GFXW(widget)); \
   else \
-       s->picture_port->add(GFXWC(s->visual), GFXW(widget));
+       s->picture_port->add(GFXWC(s->picture_port), GFXW(widget));
 
 #define FULL_REDRAW()\
   if (s->visual) \
@@ -110,7 +110,7 @@ assert_primary_widget_lists(state_t *s)
 		bounds.yl--;
 
 		if (!s->pic_views) {
-			s->pic_views = gfxw_new_list(s->picture_port->bounds, 0);
+			s->pic_views = gfxw_new_list(bounds, 0);
 			ADD_TO_CURRENT_PICTURE_PORT(s->pic_views);
 		}
 
@@ -122,6 +122,19 @@ assert_primary_widget_lists(state_t *s)
 		s->dyn_views = gfxw_new_list(bounds, GFXW_LIST_SORTED);
 		ADD_TO_CURRENT_PICTURE_PORT(s->dyn_views);
 	}
+}
+
+void
+reparentize_primary_widget_lists(state_t *s, gfxw_port_t *newport)
+{
+	if (!newport)
+		newport = s->picture_port;
+
+	gfxw_remove_widget_from_container(s->pic_views->parent, GFXW(s->pic_views));
+	gfxw_remove_widget_from_container(s->dyn_views->parent, GFXW(s->dyn_views));
+
+	newport->add(GFXWC(newport), GFXW(s->pic_views));
+	newport->add(GFXWC(newport), GFXW(s->dyn_views));
 }
 
 
@@ -1445,9 +1458,11 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 					SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
 					BREAKPOINT();
 				}
-
-				if ((widget->flags & GFXW_FLAG_VISIBLE) && s->bg_widgets)
+				if ((widget->flags & GFXW_FLAG_VISIBLE) && s->bg_widgets) {
+					widget->draw_bounds.y += s->dyn_views->bounds.y - s->bg_widgets->bounds.y;
+					widget->draw_bounds.x += s->dyn_views->bounds.x - s->bg_widgets->bounds.x;
 					s->bg_widgets->add(GFXWC(s->bg_widgets), GFXW(widget));
+				}
 				else widget->free(GFXW(widget));
 			}
 		}
@@ -1850,6 +1865,9 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return;
 	}
 
+	if (GFXWC(s->dyn_views->parent) == GFXWC(goner))
+		reparentize_primary_widget_lists(s, (gfxw_port_t *) goner->parent);
+
 	pred = gfxw_remove_port(s->visual, goner);
 
 	if (goner == s->port) /* Did we kill the active port? */
@@ -1953,11 +1971,16 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	open_animation = (s->pic_is_new) && (s->pic_not_valid);
 
-	if (open_animation)
+	if (open_animation) {
 		gfxop_clear_box(s->gfx_state, gfx_rect(0, 10, 320, 190)); /* Propagate pic */
+		s->visual->add_dirty_abs(GFXWC(s->visual), gfx_rect_fullscreen, 0);
+		/* Mark screen as dirty so picviews will be drawn correctly */
+	}
 
 	assert_primary_widget_lists(s);
-	s->visual->add_dirty_abs(GFXWC(s->visual), gfx_rect_fullscreen, 0);
+
+	if (GFXWC(s->dyn_views->parent) != GFXWC(s->port)) /* Port switch */
+		reparentize_primary_widget_lists(s, s->port);
 
 	if (!cast_list)
 		s->dyn_views->tag(GFXW(s->dyn_views));
