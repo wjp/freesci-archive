@@ -55,6 +55,9 @@ void usleep(unsigned long usec);
 /* Function declaration in mirkoSDK's header file contains a typo. */
 int smc_createdir(char *dirname);
 
+/* Function declaration missing from mirkoSDK. */
+short gp_initFramebufferBP(void *addr,u16 bitmode,u16 refreshrate);
+
 /* The renamed main() in main.c. */
 int freesci_main(int argc, char** argv);
 

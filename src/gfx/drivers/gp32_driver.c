@@ -29,26 +29,31 @@
 #include <gfx_driver.h>
 #include <gfx_tools.h>
 #include <ctype.h>
+
 #include "keyboard.h"
 #include "wrap.h"
 
 /* Event queue */
 
 #define EVENT_BUFFER_SIZE 16
-static sci_event_t event_buffer[EVENT_BUFFER_SIZE];
-static int event_total;
+static volatile sci_event_t event_buffer[EVENT_BUFFER_SIZE];
+static volatile int event_total;
+
+#define CB_BUFFER_SIZE 256
+static char cb_buf[CB_BUFFER_SIZE];
+static int cb_buf_pos;
 
 #define GP32_MODE_VKBD 0
 #define GP32_MODE_KBD 1
 #define GP32_MODE_MOUSE 2
 #define GP32_MODE_NR 3
 
+#define GP32_CB_MODE_NORMAL 0
+#define GP32_CB_MODE_FN 1
+#define GP32_CB_MODE_NR 2
+
 #define GP32_MOUSE_LEFT (1 << 0)
 #define GP32_MOUSE_RIGHT (1 << 1)
-
-/* Chatboard IRQ routines. */
-extern void UART0Rx(void) __attribute__ ((interrupt ("IRQ")));
-extern void UART0Tx(void) __attribute__ ((interrupt ("IRQ")));
 
 struct _gp32_state {
 	/* 0 = static buffer, 1 = back buffer, 2 = front buffer */
@@ -60,10 +65,12 @@ struct _gp32_state {
 	int line_pitch[3];
 
 	/* Virtual mouse pointer */
-	int pointer_dx, pointer_dy;
+	volatile int pointer_dx, pointer_dy;
 
 	/* Input mode */
 	int mode;
+	/* Chatboard mode */
+	int cb_mode;
 
 	/* The current bucky state of the virtual keyboard */
 	int vkbd_bucky;
@@ -81,9 +88,134 @@ struct _gp32_state {
 
 static struct _gp32_state *S;
 
-#define GP32_OPTION_CHATBOARD (1 << 0)
-#define GP32_OPTION_BLU_PLUS (1 << 1)
+#define GP32_OPTION_BLU_PLUS (1 << 0)
 static int options;
+
+/* Chatboard key maps. */
+typedef struct cb_key_map {
+	int key;
+	short bucky;
+	const char *map1;
+	const char *map2;
+} cb_key_map_t;
+
+/* Normal mode. */
+static cb_key_map_t cb_normal_map[] = {
+	{'1', 0, "1\",20\r", "0c1111111111111111\"\r"},
+	{'2', 0, "2\",20\r", "1c222222222\"\r"},
+	{'3', 0, "3\",20\r", "1c333333\"\r"},
+	{'4', 0, "4\",20\r", "1c44444\"\r"},
+	{'5', 0, "5\",20\r", "1c5555\"\r"},
+	{'6', 0, "6\",20\r", "1c66666666\"\r"},
+	{'7', 0, "7\",20\r", "1c777777\"\r"},
+	{'8', 0, "8\",20\r", "1c888888\"\r"},
+	{'9', 0, "9\",20\r", "1c99999\"\r"},
+	{'0', 0, "0\",20\r", "1c0000000000000\"\r"},
+	{SCI_K_ENTER, 0, "eee\"\r", "c\"\r"},
+	{'1', SCI_EVM_LSHIFT, "1111\"\r", "0c1111\"\r"},
+	{'2', SCI_EVM_LSHIFT, "000\"\r", "1c000\"\r"},
+	{'3', SCI_EVM_LSHIFT, "#\"\r", "1c#\"\r"},
+	{'4', SCI_EVM_LSHIFT, "0000000\"\r", "1c0000000\"\r"},
+	{'5', SCI_EVM_LSHIFT, "000000\"\r", "1c000000\"\r"},
+	{'/', SCI_EVM_LSHIFT, "111\"\r", "0c111\"\r"},
+	{'7', SCI_EVM_LSHIFT, "00\"\r", "1c00\"\r"},
+	{'8', SCI_EVM_LSHIFT, "##\"\r", "1c##\"\r"},
+	{'9', SCI_EVM_LSHIFT, "11111111111111\"\r", "0c11111111111111\"\r"},
+	{'0', SCI_EVM_LSHIFT, "111111111111111\"\r", "0c111111111111111\"\r"},
+	{'q', 0, "77\"\r", "1c77\"\r"},
+	{'w', 0, "9\"\r", "1c9\"\r"},
+	{'e', 0, "33\"\r", "1c33\"\r"},
+	{'r', 0, "777\"\r", "1c777\"\r"},
+	{'t', 0, "8\"\r", "1c8\"\r"},
+	{'y', 0, "999\"\r", "1c999\"\r"},
+	{'u', 0, "88\"\r", "1c88\"\r"},
+	{'i', 0, "444\"\r", "1c444\"\r"},
+	{'o', 0, "666\"\r", "1c666\"\r"},
+	{'p', 0, "7\"\r", "1c7\"\r"},
+	{'a', 0, "2\"\r", "1c2\"\r"},
+	{'s', 0, "7777\"\r", "1c7777\"\r"},
+	{'d', 0, "3\"\r", "1c3\"\r"},
+	{'f', 0, "333\"\r", "1c333\"\r"},
+	{'g', 0, "4\"\r", "1c4\"\r"},
+	{'h', 0, "44\"\r", "1c44\"\r"},
+	{'j', 0, "5\"\r", "1c5\"\r"},
+	{'k', 0, "55\"\r", "1c55\"\r"},
+	{'l', 0, "555\"\r", "1c555\"\r"},
+	{'z', 0, "9999\"\r", "1c9999\"\r"},
+	{'x', 0, "99\"\r", "1c99\"\r"},
+	{'c', 0, "222\"\r", "1c222\"\r"},
+	{'v', 0, "888\"\r", "1c888\"\r"},
+	{'b', 0, "22\"\r", "1c22\"\r"},
+	{'n', 0, "66\"\r", "1c66\"\r"},
+	{'m', 0, "6\"\r", "1c6\"\r"},
+	{'.', 0, "111111\"\r", "0c111111\"\r"},
+	{SCI_K_BACKSPACE, 0, "<\"\r", "<\"\r"},
+	{'>', 0, ">\"\r", ">\"\r"},
+	{' ', 0, "1\"\r", "0c1\"\r"},
+	{'q', SCI_EVM_LSHIFT, "2222222\"\r", "1c2222222\"\r"},
+	{'w', SCI_EVM_LSHIFT, "22222222\"\r", "1c22222222\"\r"},
+	{'e', SCI_EVM_LSHIFT, "3333\"\r", "1c3333\"\r"},
+	{'r', SCI_EVM_LSHIFT, "33333\"\r", "1c3333\"\r"},
+	{'t', SCI_EVM_LSHIFT, "4444\"\r", "1c4444\"\r"},
+	{'y', SCI_EVM_LSHIFT, "1111111\"\r", "0c1111111\"\r"},
+	{'u', SCI_EVM_LSHIFT, "6666\"\r", "1c6666\"\r"},
+	{'i', SCI_EVM_LSHIFT, "6666666\"\r", "1c6666666\"\r"},
+	{'o', SCI_EVM_LSHIFT, "77777\"\r", "1c77777\"\r"},
+	{'p', SCI_EVM_LSHIFT, "8888\"\r", "1c8888\"\r"},
+	{'a', SCI_EVM_LSHIFT, "88888\"\r", "1c88888\"\r"},
+	{'s', SCI_EVM_LSHIFT, "2222\"\r", "1c2222\"\r"},
+	{'d', SCI_EVM_LSHIFT, "1111111111\"\r", "0c1111111111\"\r"},
+	{'f', SCI_EVM_LSHIFT, "222222\"\r", "1c222222\"\r"},
+	{'g', SCI_EVM_LSHIFT, "111111111\"\r", "0c111111111\"\r"},
+	{'h', SCI_EVM_LSHIFT, "666666\"\r", "1c666666\"\r"},
+	{'j', SCI_EVM_LSHIFT, "00000000\"\r", "1c00000000\"\r"},
+	{'k', SCI_EVM_LSHIFT, "66666\"\r", "1c66666\"\r"},
+	{'l', SCI_EVM_LSHIFT, "22222\"\r", "1c22222\"\r"},
+	{'z', SCI_EVM_LSHIFT, "0\"\r", "1c0\"\r"},
+	{'x', SCI_EVM_LSHIFT, "11\"\r", "0c11\"\r"},
+	{'c', SCI_EVM_LSHIFT, "00000000000000000\"\r", "1c00000000000000000\"\r"},
+	{'v', SCI_EVM_LSHIFT, "0000000000000000\"\r", "1c0000000000000000\"\r"},
+	{'b', SCI_EVM_LSHIFT, "0000\"\r", "1c0000\"\r"},
+	{'n', SCI_EVM_LSHIFT, "7777777\"\r", "1c7777777\"\r"},
+	{'m', SCI_EVM_LSHIFT, "77777777\"\r", "1c77777777\"\r"},
+	{',', 0, "11111\"\r", "0c11111\"\r"},
+	{0, 0, 0}
+};
+
+/* Function mode. */
+static cb_key_map_t cb_fn_map[] = {
+	{SCI_K_F1, 0, "1\",20\r", "0c1111111111111111\"\r"},
+	{SCI_K_F2, 0, "2\",20\r", "1c222222222\"\r"},
+	{SCI_K_F3, 0, "3\",20\r", "1c333333\"\r"},
+	{SCI_K_F4, 0, "4\",20\r", "1c44444\"\r"},
+	{SCI_K_F5, 0, "5\",20\r", "1c5555\"\r"},
+	{SCI_K_F6, 0, "6\",20\r", "1c66666666\"\r"},
+	{SCI_K_F7, 0, "7\",20\r", "1c777777\"\r"},
+	{SCI_K_F8, 0, "8\",20\r", "1c888888\"\r"},
+	{SCI_K_F9, 0, "9\",20\r", "1c99999\"\r"},
+	{SCI_K_F10, 0, "0\",20\r", "1c0000000000000\"\r"},
+	{SCI_K_ENTER, 0, "eee\"\r", "c\"\r"},
+	{SCI_K_ESC, 0, "33\"\r", "1c33\"\r"},
+	{SCI_K_HOME, 0, "88\"\r", "1c88\"\r"},
+	{SCI_K_UP, 0, "444\"\r", "1c444\"\r"},
+	{SCI_K_PGUP, 0, "666\"\r", "1c666\"\r"},
+	{'`', SCI_EVM_CTRL, "1111111111\"\r", "0c1111111111\"\r"},
+	{SCI_K_LEFT, 0, "5\"\r", "1c5\"\r"},
+	{SCI_K_RIGHT, 0, "55\"\r", "1c55\"\r"},
+	{SCI_K_TAB, 0, "8\"\r", "1c8\"\r"},
+	{SCI_K_END, 0, "66\"\r", "1c66\"\r"},
+	{SCI_K_DOWN, 0, "6\"\r", "1c6\"\r"},
+	{SCI_K_PGDOWN, 0, "111111\"\r", "0c111111\"\r"},
+	{SCI_K_BACKSPACE, 0, "<\"\r", "<\"\r"},
+	{'>', 0, ">\"\r", ">\"\r"},
+	{SCI_K_TAB, SCI_EVM_LSHIFT, "4444\"\r", "1c4444\"\r"},
+	{SCI_K_PLUS, 0, "0\"\r", "1c0\"\r"},
+	{SCI_K_MINUS, 0, "11\"\r", "0c11\"\r"},
+	{0, 0, 0}
+};
+
+static cb_key_map_t *cb_key_maps[GP32_CB_MODE_NR] =
+  {cb_normal_map, cb_fn_map};
 
 static int
 gp32_add_event(sci_event_t *event)
@@ -184,7 +316,7 @@ hide_keyboard()
 
 static void
 show_keyboard()
-/* Displays the virtual keyboard in VRAM rendering mode.
+/* Displays the virtual keyboard.
 ** Parameters: (void)
 ** Returns   : (void)
 */
@@ -194,21 +326,36 @@ show_keyboard()
 }
 
 static void
-input_mode(int mode)
+input_mode(int mode, int cb_mode)
+/* Updates framebuffer for input modes. For mode GP32_MODE_VKBD, the virtual
+** keyboard will be drawn on the screen. Otherwise two characters will be
+** drawn on the screen to indicate the current GP32 and Chatboard input
+** modes.
+** Parameters: (int) mode: GP32 input mode
+**             (int) cb_mode: Chatboard input mode
+** Returns   : (void)
+*/
 {
 	if (mode == GP32_MODE_VKBD)
 		show_keyboard();
 	else if (mode == GP32_MODE_KBD) {
 		hide_keyboard();
-		gp_drawString(312, 212, 1,
-		  "K", 0xFFFE,
+		gp_drawString(312, 212, 1, "K", 0xFFFE,
 		  (unsigned short *) FRAMEBUFFER);
 	}
 	else if (mode == GP32_MODE_MOUSE) {
 		hide_keyboard();
-		gp_drawString(312, 212, 1,
-		  "M", 0xFFFE,
+		gp_drawString(312, 212, 1, "M", 0xFFFE,
 		  (unsigned short *) FRAMEBUFFER);
+	}
+
+	if (mode != GP32_MODE_VKBD) {
+		if (cb_mode == GP32_CB_MODE_NORMAL)
+			gp_drawString(0, 212, 1, "N", 0xFFFE,
+			  (unsigned short *) FRAMEBUFFER);
+		else
+			gp_drawString(0, 212, 1, "F", 0xFFFE,
+			  (unsigned short *) FRAMEBUFFER);
 	}
 }
 
@@ -239,7 +386,7 @@ input_handler(void)
 			S->mode++;
 			if (S->mode == GP32_MODE_NR)
 				S->mode = 0;
-			input_mode(S->mode);
+			input_mode(S->mode, S->cb_mode);
 		}
 		if (S->mode == GP32_MODE_VKBD) {
 			event.type = SCI_EVT_KEYBOARD;
@@ -331,24 +478,6 @@ input_handler(void)
 			S->mstate &= ~GP32_MOUSE_RIGHT;
 		}
 	}
-	if (options & GP32_OPTION_CHATBOARD) {
-		char c = gp_getChatboard();
-		if (c > 0) {
-			event.type = SCI_EVT_KEYBOARD;
-			event.buckybits = 0;
-			if (c == '\r') {
-				event.data = SCI_K_ENTER;
-				gp32_add_event(&event);
-			}
-			else if ((c >= ' ') && (c <= '~')) {
-				event.data = tolower(c);
-				gp32_add_event(&event);
-			}
-			else {
-				sciprintf("Unknown Chatboard key %02x\n", c);
-			}
-		}
-	}
 }
 
 static void
@@ -390,6 +519,144 @@ remove_input_handler()
 	/* Turn timer 3 off. */
 	rTCON = BITCLEAR(rTCON, 16);
 	gp_removeSWIIRQ(13, input_handler);
+	gp_enableIRQ();
+}
+
+static void
+chatboard_send(const char *msg)
+/* Sends a string to the Chatboard.
+** Parameters: (const char *) msg: The string to send.
+** Returns   : (void)
+*/
+{
+	int i = 0;
+
+	while (i < strlen(msg)) {
+		if (((rUFSTAT0 >> 4) & 0x0f) < 16)
+			rUTXH0 = msg[i++];
+	}
+}
+
+static int
+convert_key(const char *key, int map, short *bucky)
+/* Converts a Chatboard AT-string to a FreeSCI keycode.
+** Parameters: (const char *) key: The AT-string to convert.
+**             (int) map: Index of the key map to use.
+**             (short *) bucky: Return argument for buckybits.
+** Returns   : (int) Converted FreeSCI keycode on success, 0 on error.
+*/
+{
+	int i = 0;
+	int len = strlen(key);
+
+	if (len <= 9)
+		return 0;
+
+	/* Verify start of key string. */
+	if (strncmp(key, "AT+CKPD=\"", 9))
+		return 0;
+
+	/* Search for key string. */
+	while (cb_key_maps[map][i].key) {
+		if (!strncmp(cb_key_maps[map][i].map1, key + 9, len - 9))
+			break;
+		if (!strncmp(cb_key_maps[map][i].map2, key + 9, len - 9))
+			break;
+		i++;
+	}
+
+	*bucky = cb_key_maps[map][i].bucky;
+	return cb_key_maps[map][i].key;
+}
+
+static void
+chatboard_receive(void) __attribute__ ((interrupt ("IRQ")));
+
+static void
+chatboard_receive(void)
+/* Handles Chatboard input and adds events to the event queue.
+** Parameters: (void)
+** Returns   : (void)
+*/
+{
+	int chars, i;
+
+	if (rUFSTAT0 & 0x100)
+		/* Buffer full? */
+		chars = 16;
+	else
+		/* Number of characters available */
+		chars = rUFSTAT0 & 0x0F;
+
+	for(i = 0; i < chars; i++) {
+		char c = rURXH0;
+		if (cb_buf_pos < CB_BUFFER_SIZE - 1)
+			cb_buf[cb_buf_pos++] = c;
+		if (c == 13) {
+			sci_event_t event;
+
+			cb_buf[cb_buf_pos] = '\0';
+			chatboard_send("OK\15\12");
+
+			event.type = SCI_EVT_KEYBOARD;
+			event.data = convert_key(cb_buf, S->cb_mode,
+			  &event.buckybits);
+
+			if (event.data == '>') {
+				S->cb_mode = (S->cb_mode + 1) % GP32_CB_MODE_NR;
+				input_mode(S->mode, S->cb_mode);
+			}
+			else if (event.data > 0)
+				gp32_add_event(&event);
+
+			cb_buf_pos = 0;
+		}
+	}
+}
+
+static void
+chatboard_init()
+/* Initializes the Chatboard and installs the IRQ handler.
+** Parameters: (void)
+** Returns   : (void)
+*/
+{
+	int PCLK = gp_getPCLK();
+
+	cb_buf_pos = 0;
+
+	rCLKCON |= 0x100; // Controls PCLK into UART0 block
+
+	/* No IRDA, 8N1 */
+	rULCON0 = 3;
+
+	/* Enable timeout IRQ, set IRQ/polling mode */
+	rUCON0 = (1 << 7) | (1 << 2) | (1 << 0);
+
+	/* Set receive FIFO to 16 bytes, transmit FIFA to 0 bytes and reset
+	FIFO's
+	*/
+	rUFCON0 = (3 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+
+	/* Set baud rate divider */
+	rUBRDIV0 = (int) (PCLK / (9600 * 16)) - 1;
+
+	/* Install interrupt routine */
+	gp_disableIRQ();
+	gp_installSWIIRQ(23, chatboard_receive);
+	gp_enableIRQ();
+}
+
+static void
+chatboard_exit()
+/* Removes the Chatboard IRQ handler.
+** Parameters: (void)
+** Returns   : (void)
+*/
+{
+	/* Remove interrupt routine */
+	gp_disableIRQ();
+	gp_removeSWIIRQ(23, chatboard_receive);
 	gp_enableIRQ();
 }
 
@@ -631,16 +898,12 @@ gp32_init_specific(struct _gfx_driver *drv, int xfact, int yfact,
 	S->vkbd_bmp = sci_malloc(320 * 40 * 2);
 	vkbd_init((guint16 *) S->vkbd_bmp, 320);
 	S->mode = GP32_MODE_KBD;
-	input_mode(S->mode);
+	S->cb_mode = GP32_CB_MODE_NORMAL;
+	input_mode(S->mode, S->cb_mode);
 
 	event_total = 0;
 
-	if (gp_initChatboard()) {
-		sciprintf("Chatboard detected.\n");
-		options |= GP32_OPTION_CHATBOARD;
-	}
-	else
-		options &= ~GP32_OPTION_CHATBOARD;
+	chatboard_init();
 
 	install_input_handler();
 
@@ -662,13 +925,7 @@ gp32_exit(struct _gfx_driver *drv)
 {
 	remove_input_handler();
 
-	/* Remove Chatboard driver. */
-	if (options & GP32_OPTION_CHATBOARD) {
-		gp_disableIRQ();
-		gp_removeSWIIRQ(23, UART0Rx);
-		gp_removeSWIIRQ(28, UART0Tx);
-		gp_enableIRQ();
-	}
+	chatboard_exit();
 
 	if (S) {
 		sciprintf("Freeing graphics buffers\n");

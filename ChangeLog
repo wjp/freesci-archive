@@ -1,3 +1,10 @@
+2005-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/drivers/gp32_driver.c, README.GP32: Added Chatboard
+	support.
+
+	* src/gp32/wrap.h: Added missing function.
+
 2005-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/gp32_driver.c (gp32_exit),

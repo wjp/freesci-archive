@@ -19,7 +19,12 @@ Index
 2.2.1  Controlling the cursor keys
 2.2.2  Controlling the mouse
 2.2.3  The virtual keyboard
+2.3    Chatboard support
+2.3.1  Normal mode
+2.3.1  Function mode
 3      Bugs and other known issues
+3.1    Soundserver
+3.2    Sound
 4      Libraries used in FreeSCI GP32 binaries
 5      newlib license information
 6      Get involved
@@ -174,8 +179,8 @@ There are three input modes, you can cycle between them with the START button.
 This mode is indicated by a 'K' in the lower-right corner of the screen.
 
 Directional pad - Cursor keys
-A or R          - Enter key
-B or L          - Escape key
+A or R          - Enter
+B or L          - Escape
 
 2.2.2  Controlling the mouse
 ----------------------------
@@ -195,9 +200,51 @@ the screen.
 
 Directional pad - Moves key selector
 A               - Press currently selected key
-B               - Backspace key
-R               - Enter key
-L               - Escape key
+B               - Backspace
+R               - Enter
+L               - Escape
+
+2.3    Chatboard support
+------------------------
+
+First of all, we'd like to thank gp32z.com for donating a Chatboard so that
+support for it could be implemented. In order to use the Chatboard you need to
+press the SMS key before typing anything. There are two different input modes,
+you can switch between them by pressing the '>' key.
+
+2.3.1  Normal mode
+------------------
+
+This mode is indicated by an 'N' in the lower-left corner of the screen
+(unless the virtual keyboard mode is active). This mode works like a normal
+keyboard. Letters will be lowercase by default. Holding the shift key will
+result in capitals, not in the characters that are marked above each key.
+
+<-              - Enter
+<               - Backspace
+
+2.3.2  Function mode
+--------------------
+
+This mode is indicated by an 'F' in the lower-left corner of the screen
+(unless the virtual keyboard mode is active).
+
+<-              - Enter
+1 to 0          - F1 to F10
+J               - Left
+K               - Right
+I               - Up
+M               - Down
+U               - Home
+O               - PgUp
+N               - End
+.               - PgDn
+E               - Escape
+T               - Tab
+Shift + T       - Shift + Tab
+Shift + Z       - +
+Shift + X       - -
+Shift + D       - Ctrl + ` (Debug key)
 
 
 3      Bugs and other known issues
@@ -217,21 +264,16 @@ malfunction in some places.
 
 A PCM driver for GP32 hasn't been implemented yet.
 
-3.3    Chatboard
-----------------
-
-Chatboard support is currently broken.
-
 
 4      Libraries used in FreeSCI GP32 binaries
 ----------------------------------------------
 
 The GP32 binaries are statically linked with mirkoSDK and newlib. I will
-provide the complete sourcecode neccessary to build a FreeSCI GP32 binary on
+provide the complete sourcecode necessary to build a FreeSCI GP32 binary on
 request, as required by section 3 of the GNU General Public License. You can
 contact me at <w.f.b.w.v.niftrik@stud.tue.nl>. Note that FreeSCI, mirkoSDK
 and newlib are all free software and that their sourcecode can easily be
-obtained seperately by visiting their respective websites.
+obtained separately by visiting their respective websites.
 
 
 5      newlib license information
