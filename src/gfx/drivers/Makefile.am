@@ -24,6 +24,6 @@ ggi_driver_la_SOURCES = ggi_driver.c
 sdl_driver_la_LDFLAGS = -rpath $(gfxdriverdir) -module -no-undefined \
 			-export-symbols $(srcdir)/EXPORTS_sdl
 sdl_driver_la_LIBADD =  @SDL_LIBS@
-sdl_driver_la_SOURCES = sdl_driver.c SDL_gfxPrimitives.c
+sdl_driver_la_SOURCES = sdl_driver.c
 
 

@@ -1,3 +1,10 @@
+2001-07-18  Solomon Peachy <pizza@shaftnet.org>
+	* src/gfx/driver/sdl_driver.c:  Restored the old sdl linedraw
+        code.  Got rid of sdl_gfxPrimitives which was pretty broken,
+        and added a bounds check on line draws.
+
+	* src/gfx/gfx_test.c:  compilation fixes.
+
 2001-07-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/midi_adlib.c: Patched to cooperate with Rune's patch
