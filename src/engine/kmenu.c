@@ -125,7 +125,7 @@ struct {
 	 "Bas Zoetekouw\nMan pages, debian package management, CVS maintenance\n\n"
 	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"
 	 "Chris Kehler\nMakefile enhancements\n\n"
-	 "Christoph Reichenbach\nProject & Website maintenance, UN*X code\n\n"
+	 "Christoph Reichenbach\nUN*X code, VM/Graphics/Sound/other infrastructure\n\n"
 	 "Christopher T. Lansdown\nOriginal CVS maintainer, Alpha compatibility fixes",
 	 0, 15},
 	{"More FreeSCI hackers and contributors",
@@ -135,27 +135,28 @@ struct {
 	 "Emmanuel Jeandel\nBugfixes and bug reports\n\n"
 	 "Francois-R Boyer\nMT-32 information and mapping code\n\n"
 	 "George Reid\nFreeBSD package management\n\n"
-	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes",
+	 "Johannes Manhave\nDocument format translation\n\n",
 	 0, 15},
 	{"Even more FreeSCI hackers & contributors",
+	 "Lars Skovlund\nProject mainenance, most documentation, bugfixes, SCI1 support",
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
 	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32\n\n"
 	 "Paul David Doherty\nGame version information\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
 	 "Rainer Canavan\nIRIX MIDI driver and bug fixes\n\n"
-	 "Rainer De Temple\nSCI research\n\n"
-	 "Ravi I.\nSCI0 sound resource specification",
+	 "Rainer De Temple\nSCI research\n\n",
 	 0, 15},
 	{"Still more of them",
+	 "Ravi I.\nSCI0 sound resource specification"
 	 "Ruediger Hanke\nPort to the MorphOS platform\n\n"
 	 "Rune Orsval\nConfiguration file editor\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
 	 "Robey Pointer\nBug tracking system hosting\n\n"
-	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
-	 "Solomon Peachy\nSDL ports and much of the sound subsystem",
+	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n",
 	 0, 15},
 	{"And even more",
+	 "Solomon Peachy\nSDL ports and much of the sound subsystem"
 	 "Vyacheslav Dikonov\nConfig script improvements\n\n"
 	 "Walter van Niftrik\nPort to the Dreamcast platform",
 	 0, 15},

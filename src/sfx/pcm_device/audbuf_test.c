@@ -28,7 +28,7 @@
 ***************************************************************************/
 
 #include <sfx_audiobuf.h>
-
+#if 0
 sfx_audio_buf_t buf;
 
 #define MIN_FRAMESIZE 1
@@ -185,3 +185,6 @@ main(int argc, char **argv)
 
 	return 0;
 }
+#else
+int main() {}
+#endif

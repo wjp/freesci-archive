@@ -30,6 +30,7 @@
 #include <sfx_mixer.h>
 #include <time.h>
 
+#if 0
 sfx_pcm_mixer_t *mix;
 
 int dev_init(sfx_pcm_device_t *self);
@@ -345,3 +346,6 @@ main(int argc, char **argv)
 	}
 }
 
+#else
+int main() {}
+#endif

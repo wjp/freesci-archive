@@ -47,6 +47,14 @@
 int
 sci0_palette;
 
+gfx_pixmap_color_t gfx_sci0_image_colors[1][16];
+
+gfx_pixmap_color_t *
+gfxr_interpreter_get_static_palette(gfx_resstate_t *state, int version, int *colors_nr, void *internal)
+{
+	return NULL;
+}
+
 int
 sciprintf(char *fmt, ...)
 {
@@ -537,7 +545,7 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr, void *internal)
 }
 
 gfx_pixmap_color_t *
-gfxr_interpreter_get_palette(int version, int *colors_nr, void *internal)
+gfxr_interpreter_get_palette(gfx_resstate_t *state, int version, int *colors_nr, void *internal, int nr)
 {
 	return NULL;
 }
