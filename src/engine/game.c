@@ -265,6 +265,20 @@ suggested_script(resource_t *res, unsigned int class)
 }
 
 
+int 
+test_cursor_style(state_t *s)
+{
+	int resource_nr = 0;
+	int ok = 0;
+
+	do {
+		ok |= scir_test_resource(s->resmgr, sci_cursor, resource_nr++) != NULL;
+	} while (resource_nr < 1000);
+
+	return ok;
+}
+	
+
 /* Architectural stuff: Init/Unintialize engine */
 int
 script_init_engine(state_t *s, sci_version_t version)
@@ -279,6 +293,12 @@ script_init_engine(state_t *s, sci_version_t version)
 	if (scir_find_resource(s->resmgr, sci_heap, 0, 0))
 	    {
 		sciprintf("SCI1.1 games are not supported yet, sorry!\n");
+		return 1;
+	    }
+
+	if (!test_cursor_style(s))
+	    {
+		sciprintf("The game seems to use SCI1.1-style cursors!\n");
 		return 1;
 	    }
 

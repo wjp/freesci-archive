@@ -1,3 +1,8 @@
+2004-03-18  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/game.c (script_init_engine): Add check for SCI1.0
+	games with SCI1.1 cursors.
+
 2004-03-17  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/gfx_support.c (gfx_crossblit_pixmap): Fix alpha sanity
