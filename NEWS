@@ -1,3 +1,52 @@
+One year in between releases-- we're not really getting better in this
+respect. Anyway, FreeSCI has seen quite a number of changes-- particularly
+bugfixes-- in that year, but also ports to support some previously un-
+supported architectures and platforms, such as Ruediger Hanke's MorphOS
+port, Walter van Niftrik's port to the Dreamcast platform, and Rainer
+Canavan's sound drivers for IRIX. Furthermore, a number of new graphics
+drivers have been added and, most importantly, Solomon introduced a PCM
+based adlib-emulation driven sound output driver-- while this doesn't
+resolve the sound timing problems present on some platforms (these are
+being worked on in our new and unstable development branch).
+  In general, what you should expect from this release should be more
+stability (or initial support for your platform, depending on which kind
+of system you are running on), plus some sound output (if you are using
+a purely PCM-based system).
+  That's it-- share and enjoy!
+
+
+--- 0.3.3 ---
+
+Keeping with the tradition, let's have a look at how long we took this time.
+7 months, approximately; that's a lot of time; about 1/150th of a person's
+average lifetime, time that could have been spent differently... ah, who
+am I fooling, we didn't spend _all_ of these 7 months hacking at the code
+(we need to sleep and eat, too, you know).
+But, back to the matters at hand. You want to know what changed and, to be
+honest, there are few large ones, but an unusually high amount of smaller
+bug fixes and polishments. Many long-standing bugs have been fixed or were
+replaced with more interesting ones. You will find that almost all SCI0
+adventure games have been completed now; many of them were still unbeatable
+in the previous release. Win32 users will see a particularly large
+difference- thanks to Alex Angas' and Matt Hargett's continued attempts,
+this platform now seems to have a sound server that is actually useable,
+meaning that you should now be able to get decent sound support there.
+FreeSCI has also been ported to BeOS by Claudio Matsuoka, and to Linux on
+the Compaq iPaq, by Greg Gilbert. Also, we now have an excellent graphical
+configuration tool that takes all the complexity from editing your
+~/.freesci/config by hand, contributed by Rune Orsval- if you're new to
+FreeSCI, this is probably exactly what you're looking for.
+On the feature front, we have implemented an LRU resource manager- this
+should help a lot with conserving memory, particularly for larger games-
+but the most noticeable change it introduces is a vastly accellerated game
+startup.
+Well, that's about it; I'll leave the list of smaller changes and bug
+fixes for you to discover on your own, it's too long to list it here anyway.
+
+
+
+--- 0.3.2 ---
+
 Slightly more than half the time we needed from 0.3.0 to 0.3.1 has passed,
 and the list has been more active than ever. I guess the dry days of the
 gfx subsystem implementation period are pretty much over; but there's still

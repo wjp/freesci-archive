@@ -26,6 +26,7 @@ gfx/
 	gfx_support.c
 	gfx_test.c
 	gfx_tools.c
+	gfx_console.c
 	menubar.c
 	operations.c
 	resmgr.c
@@ -35,6 +36,9 @@ gfx/
 	drivers/
 		gfx_drivers.c
 		ggi_driver.c
+		xlib_driver.c (parts)
+		directfb_driver.c
+		null_driver.c
 	resources/
 		sci_cursor_0.c
 		sci_font.c
@@ -195,7 +199,10 @@ sound/
 	midiout.c (various changes)
 	midiout_alsaraw.c (various changes)
 	midiout_unixraw.c (various changes)
-	pcmout
+	pcmout.c
+	pcmout_sdl.c
+	pcmout_oss.c
+	pcmout_alsa.c
 	polled_ss_sdl.c
 	soundserver.c (abstaction part)
 	midi_adlibemu.c
@@ -249,6 +256,9 @@ sound/
 	event_ss_win32.c
 	polled_ss.c (parts)
 	polled_ss_sdl.c (parts)
+gfx/
+	drivers/
+		dx_driver.c
 include/
 	sci_memory.h
 
@@ -272,3 +282,8 @@ morphos/
 	morphos.c
 sound/
 	midiout_morphos.c
+
+
+Rainer Canavan:
+sound/
+	midiout_irixmd.c

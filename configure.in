@@ -4,7 +4,7 @@ AC_CONFIG_SRCDIR([acinclude.m4])
 
 AC_CANONICAL_TARGET([])
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.3.4-rc3)
+AM_INIT_AUTOMAKE(freesci, 0.3.4)
 
 AC_PROG_CC
 #AC_LIBTOOL_DLOPEN
@@ -250,7 +250,7 @@ if test "${ac_cv_header_Xm_MwmUtil_h}" = "yes"; then
 	AC_DEFINE(HAVE_XM_MWMUTIL_H)
 fi
 
-AC_PATH_PNG
+#AC_PATH_PNG
 AC_SUBST(ac_png_includes)
 AC_SUBST(ac_png_libraries)
 AM_PROG_LEX

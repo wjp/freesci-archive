@@ -22,7 +22,7 @@
 .\"
 .\" Modified Sun Dec 30 14:55:13 2001 by Bas Zoetekouw`
 .\"
-.TH freesci 6 "Dec 30th, 2001" "FreeSCI 0.3.3" FreeSCI
+.TH freesci 6 "Jan 19th, 2003" "FreeSCI 0.3.4" FreeSCI
 
 .SH NAME
 freesci \- free interpreter for SCI bytecode
@@ -125,21 +125,25 @@ yield the desired effects.
 .BR "\-\-graphics \fIgfx\fR, \-\fBg\fR\fIgfx\fR"
 With this option, you can specify which graphics driver is to be used. 
 .IP
-In this release, \fBsdl\fR, \fBggi\fR and plain \fBxlib\fR are supported.
+In this release, \fBsdl\fR, \fBggi\fR, \fBdfb\fR (DirectFB) and plain \fBxlib\fR are supported,
+a separate \fBnull\fR driver which does not produce visible output is also provided.
 
 .TP
 .BR "\-\-midiout \fIdriver\fR, \-\fBO\fR\fIdriver\fR"
 This is the output driver or interface to use. Currently, 
 \fIunixraw\fR,
-\fIalsaraw\fR, \fInull\fR, \fIossopl3\fR, and \fIossseq\fR (an OSS sequencer
+\fIalsaraw\fR, \fInull\fR, \fIossopl3\fR, \fIadlibemu\fR and \fIossseq\fR (an OSS sequencer
 driver) may be available on your system, ossseq being the default.
+\fIadlibemu\fR uses an OPL/2 emulator to run on top of a PCM device, which
+you may specify separately.
 
 .TP
 .BR "\-\-mididevice \fIdriver\fR, \-\fBM\fR\fIdriver\fR"
 SCI was designed to support a variety of physical output devices. FreeSCI
 currently supports the Rolant MT\-32 (\fImt32\fR, the default), an Adlib
 device (\fIadlib\fR) and it also offers an MT\-32 to General MIDI translation 
-layer (\fImt32gm\fR).
+layer (\fImt32gm\fR). Alternatively, sound may be turned off by using the
+null driver (\fInull\fR).
 
 .TP
 .BR "\-\-sound\-server \fIserver\fR, \-\fBS\fR\fIserver\fR"
@@ -148,6 +152,18 @@ The sound server is an asynchronous process or thread that issues sound
 output events and reports sound cues back to the interpreter; if you have
 both possibilities (\fIunix\fR and \fIsdl\fR) for your system, you may have to
 experiment to find out which works best for you. 
+
+.TP
+.BR "\-\-pcmout \fIdriver\fR, \-\fBP\fR\fIdriver\fR"
+Specifies the PCM output driver to use (this is only relevant for the
+\fIadlibemu\fR midiout driver right now). Popular choices are
+\fIoss\fR, \fIalsa\fR and \fIsdl\fR; you should pick the one corresponding
+to the sound system you are using on your system.
+
+.TP
+.BR "\-\-show\-rooms, \-\fBs\fR"
+Forces FreeSCI to print out room numbers for every room you enter. This
+can be used for teleporting; it is intended to be used for debugging.
 
 .SH CONFIG FILE
 
@@ -289,6 +305,11 @@ to anti\-aliase them, usually improving the overall picture quality. This
 is set to \fBnone\fR by default.
 
 .TP
+.BR "gfx_driver = driver"
+This selects one of the graphics drivers (currently \fBggi\fR, \fBsdl\fR, \fBdfb\fR, \fBxlib\fR or \fBnull\fR
+on UNIXish platforms).
+
+.TP
 .BR "animation_delay = #"
 This chooses the amount of microseconds to wait between
 each sub\-element of a transition animation (also see
@@ -332,12 +353,29 @@ sequencer devices) and \fBwin32mci\fR on Win32 systems.  The default on
 UNIXish systems is \fBossseq\fR.
 
 .TP
+.BR "pcmout_driver = driver"
+Chooses a PCM output driver for use with the \fBadlibemu\fR midiout driver.
+Options are \fBoss\fR, \fBalsa\fR, \fBsdl\fR and \fBnull\fR.
+
+.TP
 .BR "sound_server = server"
 This chooses one of the asynchronous sound servers. For sound output,
 FreeSCI uses an asynchronous process or thread; currently two
 implementations of this mechanism are available: \fBunix\fR, which forks
 off a separate process, and \fBsdl\fR, which uses libsdl's threading
 mechanisms.  Defaults to \fBunix\fR, where available.
+
+.TP
+.BR "pcmout_stereo = 1 | 0"
+Selects whether stereo output should be used (1) or not (0). Defaults
+to using stereo output (this only affects pcm output, i.e. the \fBadlibemu\fR
+output driver).
+
+.TP
+.BR "pcmout_rate = #"
+Selects the output frequency to use for the pcmout driver (this
+defaults to 22050). May be any value from 11025 to 48000 which is
+supported by your sound hardware.
 
 .TP
 DRIVER\-SPECIFIC OPTIONS (GRAPHICS DRIVERS):
@@ -393,7 +431,7 @@ Here is an exemplary configuartion file:
 .nf
 .RS
 # FreeSCI configuration file
-# For FreeSCI version 0.3.2
+# For FreeSCI version 0.3.4
 
 # default values:
 
@@ -499,7 +537,7 @@ listing of all known and current bugs.
 
 .SH AUTHORS
 .P
-FreeSCI is copyright (c) 1999,2000,2001 by the following people:
+FreeSCI is copyright (c) 1999,2000\-2003 by the following people:
 
 .IP \(bu
 .PD 0
@@ -524,6 +562,16 @@ Solomon Peachy <\fIpizza@shaftnet.org\fR>
 Rickard Lind <\fIrpl@dd.chalmers.se\fR>
 .IP \(bu
 Rink Springer <\fIrink@springer.cx\fR>
+.IP \(bu
+Walter van Niftrik <\fIw.f.b.w.v.niftrik@stud.tue.nl\fR>
+.IP \(bu
+Rainer Canavan
+.IP \(bu
+Christopher T. Lansdown
+.IP \(bu
+Alexander Angas
+.IP \(bu
+Ruediger Hanke
 .PD 0.4v
 
 .P

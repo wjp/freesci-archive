@@ -273,11 +273,12 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	PropMotifWmHints motif_hints;
 	Atom prop, proptype;
 #endif
+	struct _xlib_state *S_alt = ((struct _xlib_state *)(drv->state)); /* same as S, workaround for HP-UX cc */
 
 	int i;
 
 	if (!S)
-		S = sci_malloc(sizeof(struct _xlib_state));
+		S_alt = sci_malloc(sizeof(struct _xlib_state));
 
 	flags = SCI_XLIB_INSERT_MODE;
 
@@ -722,7 +723,7 @@ xlib_exit(struct _gfx_driver *drv)
 		XCloseDisplay(S->display);
 		XSetErrorHandler((XErrorHandler) (S->old_error_handler));
 		sci_free(S);
-		S = NULL;
+		/* S \equiv */ drv->state = NULL; /* Could write 'S', but HP-UX doesn't like that */
 		gfx_free_mode(drv->mode);
 	}
 }

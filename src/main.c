@@ -951,11 +951,11 @@ main(int argc, char** argv)
 	getcwd(startdir, PATH_MAX);
 	script_debug_flag = cl_options.script_debug_flag;
 
-	printf("FreeSCI %s Copyright (C) 1999, 2000, 2001, 2002\n", VERSION);
+	printf("FreeSCI %s Copyright (C) 1999, 2000-2003\n", VERSION);
 	printf(" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,\n"
 		   " Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel, Lars Skovlund,\n"
 		   " Rink Springer, Petr Vyhnak, Solomon Peachy, Matt Hargett, Alex Angas,\n"
-		   " Walter van Niftrik, Ruediger Hanke\n"
+		   " Walter van Niftrik, Ruediger Hanke, Rainer Canavan\n"
 	       "This program is free software. You can copy and/or modify it freely\n"
 	       "according to the terms of the GNU general public license, v2.0\n"
 	       "or any later version, at your option.\n"

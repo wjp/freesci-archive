@@ -459,8 +459,21 @@ are hoping to resolve these issues at least partially very soon.
 ==================
 
 Successful builds for the 0.3.4 release were reported for the following
-platforms (in order of appearance):
+platforms:
 - PPC/Debian GNU/Linux/gcc			tested
+- IA32/unknown/Linux/gcc			tested
+- SH4/Dreamcast/unknown/gcc			tested
+- IA32/Red Hat 7.2/Linux/gcc			tested
+- IA32/Sun/Solaris 2.8/gcc			tested
+- SPARC/Sun/Solaris 2.8/gcc			tested
+- Alpha/Red Hat 7.2/Linux/gcc			built
+- hppa/HP/hp-ux11.11/cc				built
+- Alpha/Compaq/OSF5.1/ccc			built
+- IA32//FreeBSD 4.7/gcc				built
+- Alpha//NetBSD 1.6/gcc				built
+- IA32//NetBSD 1.6/gcc				built
+- parisc64/Debian GNU/Linux/gcc			built
+- Itanium/HP/hp-ux11.11/cc			built
 
 The following platform used to be supported, but no longer is:
 
