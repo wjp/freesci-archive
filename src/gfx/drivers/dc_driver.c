@@ -221,7 +221,7 @@ dc_input_thread(struct _gfx_driver *drv)
 	int keystate = DC_KEY_INSERT;
 
 	while (S->run_thread) {
-		maple_device_t *kaddr, *maddr;
+		maple_device_t *kaddr = NULL, *maddr;
 		mouse_state_t *mouse;
 		kbd_state_t *kbd;
 		uint8 key;
@@ -233,8 +233,9 @@ dc_input_thread(struct _gfx_driver *drv)
 		thd_sleep(10);
 
 		/* Keyboard handling */
-		if ((kaddr = maple_enum_type(0, MAPLE_FUNC_KEYBOARD)) &&
-		  (kbd = maple_dev_status(kaddr))) {
+		/* Experimental workaround for the Mad Catz adapter problem */
+		if (!kaddr) kaddr = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
+		if (kaddr && (kbd = maple_dev_status(kaddr))) {
 			key = kbd->cond.keys[0];
 			skeys = kbd->shift_keys;
 		
@@ -277,6 +278,7 @@ dc_input_thread(struct _gfx_driver *drv)
 			}		
 			lastkey = key;
 		}
+		else kaddr = NULL;
 
 		/* Mouse handling */
 		if ((maddr = maple_enum_type(0, MAPLE_FUNC_MOUSE)) &&
@@ -828,7 +830,8 @@ static int
 dc_usec_sleep(struct _gfx_driver *drv, long usecs)
 {
 	/* TODO: wake up on mouse move */
-	thd_sleep(usecs/1000);
+	int ms = usecs/1000;
+	if (ms) thd_sleep(ms);
 	return GFX_OK;
 }
 

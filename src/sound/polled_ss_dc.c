@@ -143,7 +143,7 @@ sound_dc_get_command(GTimeVal *wait_tvp)
 	sem_wait(in_mutex);
 
 	if (!sound_eq_peek_event(&inqueue)) {
-		thd_sleep(0);
+		thd_pass();
 		sem_signal(in_mutex);
 		return NULL;
 	}
@@ -163,13 +163,10 @@ sound_dc_get_data(byte **data_ptr, int *size)
 	void *data = NULL;
 
 	sem_wait(mutex);
-	while (!(data = sci_get_from_queue(queue, size))) {
-		sem_signal(mutex);
-		cond_wait(cond);
-		sem_wait(mutex);
-	}
-
+	while (!(data = sci_get_from_queue(queue, size)))
+		cond_wait(cond, mutex);
 	sem_signal(mutex);
+
 	*data_ptr = (byte *) data;
 	return *size;
 }

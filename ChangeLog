@@ -1,3 +1,23 @@
+2003-02-22  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README.DC: Documentation updated.
+	* src/dc/config.h: VERSION changed to 0.3.4-devel.
+	* src/dc/fs_iso9660.c, src/dc/stdio.c, src/dc/vmu_pkg.c: Removed
+	from repository. The changes that were made to these files are now
+	included in KOS.
+	* src/dc/Makefile: Removed references to the files that were removed
+	and added a `run' target.
+	* src/gfx/drivers/dc_driver.c (dc_usec_sleep),
+	src/sound/polled_ss_dc.c (sound_dc_get_command): Prevent that
+	thd_sleep() is called with a parameter of 0. The new KOS threading
+	implementation sleeps for 1<<32 ms when 0 is used.
+	* src/sound/polled_ss_dc.c (sound_dc_get_data): Adapted condvar usage
+	to new KOS.
+	* src/gfx/drivers/dc_driver.c (dc_input_thread): Experimental
+	workaround for the Mad Catz keyboard adapter issues.
+	* src/scicore/tools.c (sci_gettime): Removed Dreamcast workaround
+	because the bug was fixed in KOS.
+
 2003-01-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/kgraphics.c (_find_view_priority): Corrected a typo.

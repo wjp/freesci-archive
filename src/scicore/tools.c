@@ -215,7 +215,7 @@ _SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *
 }
 
 
-#ifdef HAVE_SYS_TIME_H
+#if defined(HAVE_SYS_TIME_H) || defined(_DREAMCAST)
 void
 sci_gettime(long *seconds, long *useconds)
 {
@@ -249,19 +249,6 @@ void sci_gettime(long *seconds, long *useconds)
 
 	*seconds = tm/1000;
 	*useconds = tm*1000;
-}
-#elif defined (_DREAMCAST)
-/* Warning: This function returns the amount of time that has passed since the
-** start of the program. A gettimeofday() function is available, but it
-** contains a bug. So this will have to do for now.
-*/
-void
-sci_gettime(long *seconds, long *useconds)
-{
-	uint32 s, m;
-	timer_ms_gettime(&s, &m);
-	*seconds = s;
-	*useconds = m*1000;
 }
 #else
 #  error "You need to provide a microsecond resolution sci_gettime implementation for your platform!"
