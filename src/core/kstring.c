@@ -77,12 +77,12 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (s->debug_mode & (1 << SCIkPARSER_NR)) {
     SCIkdebug(SCIkPARSER, "Said block:", 0);
-    vocab_decypher_said_block(s, said_block);
+    vocab_decypher_said_block(s, s->heap + said_block);
   }
 
   SCIkdebug(SCIkSTUB,"stub\n");
   
-  s->acc = 0; /* Never true */
+  s->acc = said(s, s->heap + said_block);
 }
 
 
@@ -153,6 +153,9 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
   result_word_t *words;
   heap_ptr event = UPARAM(1);
   CHECK_THIS_KERNEL_FUNCTION;
+
+  s->parser_valid = 1;
+
   words = vocab_tokenize_string(string, &words_nr,
 				s->parser_words, s->parser_words_nr,
 				s->parser_suffices, s->parser_suffices_nr,
@@ -184,6 +187,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (syntax_fail) {
 
       s->acc = 1;
+      s->parser_valid = 0;
       PUT_SELECTOR(event, claimed, 1);
       invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 2, s->parser_base, stringpos);
       /* Issue warning */
@@ -201,6 +205,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
     PUT_SELECTOR(event, claimed, 1);
     if (error) {
 
+      s->parser_valid = 0;
       strcpy(s->heap + s->parser_base, error);
       SCIkdebug(SCIkPARSER,"Word unknown: %s\n", error);
       /* Issue warning: */

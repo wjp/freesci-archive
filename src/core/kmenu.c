@@ -194,6 +194,20 @@ about_freesci(state_t *s)
 }
 
 
+static inline int
+_menu_go_down(state_t *s, int menu_nr, int item_nr)
+{
+  int seeker, max = s->menubar->menus[menu_nr].items_nr;
+  seeker = item_nr + 1;
+
+  while ((seeker < max) && !menubar_item_valid(s, menu_nr, seeker))
+    ++seeker;
+
+  if (seeker != max)
+    return seeker;
+  else return item_nr;
+}
+
 
 void
 kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -289,7 +303,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	case SCI_K_LEFT:
 	  if (menu_nr > 0) {
 	    --menu_nr;
-	    item_nr = -1;
+	    item_nr = _menu_go_down(s, menu_nr, -1);
 	  }
 	  break;
 
@@ -297,6 +311,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  if (menu_nr < (s->menubar->menus_nr - 1)) {
 	    ++menu_nr;
 	    item_nr = -1;
+	    item_nr = _menu_go_down(s, menu_nr, -1);
 	  }
 	  break;
 
@@ -309,14 +324,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  break;
 
 	case SCI_K_DOWN: {
-	  int seeker, max = s->menubar->menus[menu_nr].items_nr;
-	  seeker = item_nr + 1;
-
-	  while ((seeker < max) && !menubar_item_valid(s, menu_nr, seeker))
-	    ++seeker;
-
-	  if (seeker != max)
-	    item_nr = seeker;
+	  item_nr = _menu_go_down(s, menu_nr, item_nr);
 	}
 	break;
 

@@ -215,6 +215,8 @@ typedef struct _state
   int parser_branches_nr;
   parse_tree_node_t parser_nodes[VOCAB_TREE_NODES]; /* The parse tree */
 
+  int parser_valid; /* If something has been correctly parsed */
+
   synonym_t *synonyms; /* The list of synonyms */
   int synonyms_nr;
 

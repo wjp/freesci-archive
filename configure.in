@@ -24,6 +24,7 @@ if test "no_x" != yes; then
 fi
 
 AM_PROG_LEX
+AC_PROG_YACC
 AM_PATH_GLIB(1.2.0,[
 		CFLAGS="$CFLAGS $GLIB_CFLAGS"
 		LDFLAGS="$LDFLAGS $GLIB_LIBS"

@@ -1,3 +1,7 @@
+1999-12-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/said.y (main): First implementation of the Said grammar
+
 1999-12-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/graphics/engine_graphics.c (graph_draw_selector_icon): Fixed
