@@ -22,6 +22,9 @@
 pcmout_driver_t *pcmout_driver = NULL;
 
 pcmout_driver_t *pcmout_drivers[] = {
+#ifdef HAVE_ALSA
+        &pcmout_driver_alsa,
+#endif
 #ifdef HAVE_SDL
 	&pcmout_driver_sdl,
 #endif
@@ -34,28 +37,30 @@ guint16 pcmout_sample_rate = 22050;
 
 int pcmout_open()
 {
-	snd_buffer = sci_calloc(2, BUFFER_SIZE);
-	memset(snd_buffer, 0xf7, BUFFER_SIZE * 2);
+	snd_buffer = sci_calloc(4, BUFFER_SIZE);
+	memset(snd_buffer, 0x00, BUFFER_SIZE * 4);
 	return pcmout_driver->pcmout_open(snd_buffer, pcmout_sample_rate);
 }
 
 int pcmout_close(void)
 {
-	if (snd_buffer)
-		sci_free(snd_buffer);
+  int retval = pcmout_driver->pcmout_close();
 
-	return pcmout_driver->pcmout_close();
+  if (snd_buffer)
+    sci_free(snd_buffer);
+
+  return retval;
 }
 
-void synth_mixer (void* tmp_bk, int count);
+void synth_mixer (void* tmp_bk, int samples);
 
-/* returns # of samples, not bytes */
+/* returns # of frames, not bytes */
 int mix_sound()
 {
 
-	synth_mixer(snd_buffer, BUFFER_SIZE/2);
+	synth_mixer(snd_buffer, BUFFER_SIZE);
 
-	return BUFFER_SIZE/2;
+	return BUFFER_SIZE;
 }
 
 /* the pcmout_null sound driver */

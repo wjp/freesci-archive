@@ -39,12 +39,13 @@ static void fill_audio (void *udata, guint8 *stream, int len)
   Uint32 p;
   static Uint32 n = 0, s = 0;
   
+  /* mix_sound returns FRAMES, 1 frame = 4 bytes */
   memcpy (stream, (guint8 *) buffer + s, p = n);
   for (n = 0, len -= p; n < len; p += n, len -= n) {
-      n = mix_sound () << 1;
-      memcpy (stream + p, buffer, n);
+    n = mix_sound() << 2;
+    memcpy (stream + p, buffer, n);
   }
-  n = mix_sound () << 1;
+  n = mix_sound () << 2;
   memcpy (stream + p, buffer, s = len);
   n -= s;
 }
@@ -60,9 +61,9 @@ static int pcmout_sdl_open(guint16 *b, guint16 rate) {
   }
   
   a.freq = rate;
-  a.format = (AUDIO_S16);
+  a.format = AUDIO_S16;
   a.channels = 2;
-  a.samples = 2048;
+  a.samples = BUFFER_SIZE * 2;
   a.callback = fill_audio;
   a.userdata = NULL;
   
@@ -71,7 +72,6 @@ static int pcmout_sdl_open(guint16 *b, guint16 rate) {
     return -1;
   }
   
-  printf("Opened SDL PCM device @ %d Hz\n", rate);
   SDL_PauseAudio (0);
   return 0;
 }

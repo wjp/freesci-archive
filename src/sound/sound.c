@@ -208,9 +208,6 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 	}
 
 	case SOUND_COMMAND_SET_MUTE: {
-	  if (s->version == SCI_VERSION_LAST_SCI0) /* Arthur... */
-	    event.value = (event.value == SCI_MUTE_ON) ? SCI_MUTE_OFF : SCI_MUTE_ON ;
-
 		switch (event.value)
 		{
 		case SCI_MUTE_ON:
@@ -241,14 +238,8 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 	/* Intentional fallthrough */
 	case SOUND_COMMAND_GET_MUTE: {
 	  if (s->sound_mute) {
-	    if (s->version == SCI_VERSION_LAST_SCI0) /* Arthur... */
-	      return SCI_MUTE_OFF;
-	    else 
 		return SCI_MUTE_ON;
 	  } else {
-	    if (s->version == SCI_VERSION_LAST_SCI0) /* Arthur... */
-	      return SCI_MUTE_ON;
-	    else
 	      return SCI_MUTE_OFF;
 	  }
 	}

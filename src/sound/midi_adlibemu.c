@@ -498,16 +498,17 @@ midi_device_t midi_device_adlibemu = {
   ADLIB_VOICES  /* Max polyphony */
 };
 
-/* count is # of SAMPLES, not bytes */
+/* count is # of FRAMES, not bytes.
+   We assume 16-bit stereo frames (ie 4 bytes)
+*/
 void synth_mixer (void* buffer, int count)
 {
   int i;
   guint16 *ptr = buffer;
-  guint16 *databuf = sci_malloc(count/2 * sizeof(guint16));
+  guint16 *databuf = sci_malloc(count * sizeof(guint16)); // hold half.
 
-  if (databuf == NULL)
+  if (!databuf)
     return;
-
   if (!buffer)
     return;
   if (!ym3812_L)
@@ -515,9 +516,9 @@ void synth_mixer (void* buffer, int count)
   if (!ym3812_R)  /* if either is uninitialized, bad things happen */
     return;
   
-  YM3812UpdateOne (ym3812_L, databuf, count/2);
+  YM3812UpdateOne (ym3812_L, databuf, count); 
 
-  for (i = 0; i < (count/2) ; i++) {
+  for (i = 0; i < count ; i++) {
     *ptr = databuf[i];
     ptr += 2;
   }
@@ -525,8 +526,8 @@ void synth_mixer (void* buffer, int count)
   ptr = buffer;
   ptr++;
 
-  YM3812UpdateOne (ym3812_R, databuf, count/2);
-  for (i = 0; i < (count/2) ; i++) {
+  YM3812UpdateOne (ym3812_R, databuf, count);
+  for (i = 0; i < count ; i++) {
     *ptr = databuf[i];
     ptr+=2;
   }

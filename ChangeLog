@@ -1,3 +1,15 @@
+2002-03-17  Solomon Peachy <pizza@shaftnet.org>
+	* src/sound/sound.c:  Backed out previous special-case for
+        ARTHUR.  I think the game is simply buggy.
+	* src/sound/pcmout_sdl.c
+	* src/sound/pcmout.c
+	* src/sound/midi_adlibemu.c: Fix the mess of samples vs bytes
+        vs frames -- now all PCM operations work in terms of 'frames',
+        and that is fixed at 16-bit stereo. (ie 4bytes)
+	* src/include/pcmout.h
+	  src/sound/Makefile.am
+	  src/sound/pcmout_alsa.c:  Added an ALSA PCM output driver.
+
 2002-03-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kfile.c (kGetCWD): Used more portable cwd getter

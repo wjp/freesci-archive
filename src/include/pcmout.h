@@ -46,6 +46,9 @@ extern DLLEXTERN guint16 pcmout_sample_rate;
 #ifdef HAVE_SDL
 extern pcmout_driver_t pcmout_driver_sdl;
 #endif
+#ifdef HAVE_ALSA
+extern pcmout_driver_t pcmout_driver_alsa;
+#endif
 
 extern DLLEXTERN pcmout_driver_t *pcmout_drivers[];
 
