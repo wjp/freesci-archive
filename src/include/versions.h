@@ -100,7 +100,7 @@ struct _state;
    clobbered the old songs.
 */
 
-#define SCI_VERSION_FTU_INVERSE_CANBEHERE SCI_VERSION(1,000,300)
+#define SCI_VERSION_FTU_INVERSE_CANBEHERE SCI_VERSION(1,000,510)
 /* FIXME: This shouldn't be a version number.
  * But it'll do for now.
  */

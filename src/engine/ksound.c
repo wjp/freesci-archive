@@ -62,11 +62,11 @@
 #define _K_SCI1_SOUND_MUTE_SOUND 1
 #define _K_SCI1_SOUND_UNUSED1 2
 #define _K_SCI1_SOUND_GET_POLYPHONY 3
-#define _K_SCI1_SOUND_CD_AUDIO 4
-#define _K_SCI1_SOUND_PLAY_HANDLE 5
+#define _K_SCI1_SOUND_GET_AUDIO_CAPABILITY 4
+#define _K_SCI1_SOUND_SUSPEND_SOUND 5
 #define _K_SCI1_SOUND_INIT_HANDLE 6
 #define _K_SCI1_SOUND_DISPOSE_HANDLE 7
-#define _K_SCI1_SOUND_UPDATE_HANDLE 8
+#define _K_SCI1_SOUND_PLAY_HANDLE 8
 #define _K_SCI1_SOUND_STOP_HANDLE 9
 #define _K_SCI1_SOUND_SUSPEND_HANDLE 10 /* or resume */
 #define _K_SCI1_SOUND_FADE_HANDLE 11
@@ -79,6 +79,7 @@
 #define _K_SCI1_SOUND_MIDI_SEND 18 
 #define _K_SCI1_SOUND_REVERB 19 /* Get/Set */
 #define _K_SCI1_SOUND_UPDATE_VOL_PRI 20
+
 
 #define FROBNICATE_HANDLE(reg) ((reg).segment << 16 | (reg).offset)
 #define DEFROBNICATE_HANDLE(handle) (make_reg((handle >> 16) & 0xffff, handle & 0xffff))
@@ -372,7 +373,6 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI01_SOUND_PLAY_HANDLE :
 	{
-
 		int looping = GET_SEL32V(obj, loop);
 		int vol = GET_SEL32V(obj, vol);
 		int pri = GET_SEL32V(obj, pri);
@@ -568,6 +568,10 @@ reg_t
 kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	word command = UKPV(0);
+	reg_t obj = KP_ALT(1, NULL_REG);
+	song_handle_t handle = FROBNICATE_HANDLE(obj);
+
+	CHECK_THIS_KERNEL_FUNCTION;
 
 	switch (command)
 	{
@@ -602,24 +606,49 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		/*s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);*/
 		break;
 	}
-	case _K_SCI1_SOUND_CD_AUDIO :
+	case _K_SCI1_SOUND_GET_AUDIO_CAPABILITY :
 	{
-		break;
+		return NULL_REG;
 	}
 	case _K_SCI1_SOUND_PLAY_HANDLE :
 	{
+		int looping = GET_SEL32V(obj, loop);
+		int vol = GET_SEL32V(obj, vol);
+		int pri = GET_SEL32V(obj, pri);
+
+		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_PLAYING);
+			sfx_song_set_loops(&s->sound,
+					   handle, looping);
+			sfx_song_renice(&s->sound,
+					handle, pri);
+			PUT_SEL32V(obj, handle, handle&0xffff);
+		}
+
 		break;
 	}
 	case _K_SCI1_SOUND_INIT_HANDLE :
 	{
+		int number = GET_SEL32V(obj, number);
+
+		int looping = GET_SEL32V(obj, loop);
+		int vol = GET_SEL32V(obj, vol);
+		int pri = GET_SEL32V(obj, pri);
+
+		if (obj.segment) {
+			sfx_add_song(&s->sound,
+				     build_iterator(s, GET_SEL32V(obj, number),
+						    SCI_SONG_ITERATOR_TYPE_SCI1),
+				     0, handle);
+		}
 		break;
 	}
 	case _K_SCI1_SOUND_DISPOSE_HANDLE :
 	{
-		break;
-	}
-	case _K_SCI1_SOUND_UPDATE_HANDLE :
-	{
+		if (obj.segment) {
+			sfx_remove_song(&s->sound, handle);
+		}
 		break;
 	}
 	case _K_SCI1_SOUND_STOP_HANDLE :
@@ -656,6 +685,43 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI1_SOUND_UPDATE_CUES :
 	{
+		int signal = 0;
+		int min = 0;
+		int sec = 0;
+		int frame = 0;
+		int result = SI_LOOP; /* small hack */
+		int cue;
+
+		while (result == SI_LOOP)
+		       result = sfx_poll(&s->sound, &handle, &cue);
+
+		obj = DEFROBNICATE_HANDLE(handle);
+
+		switch (result) {
+
+		case SI_ABSOLUTE_CUE:
+			signal = cue;
+			fprintf(stderr, "[CUE] "PREG" Absolute Cue: %d\n",
+				PRINT_REG(obj), signal);
+
+			PUT_SEL32V(obj, signal, signal);
+			break;
+
+		case SI_RELATIVE_CUE:
+			fprintf(stderr, "[CUE] "PREG" Relative Cue: %d\n",
+				PRINT_REG(obj), cue);
+
+			PUT_SEL32V(obj, dataInc, cue);
+			PUT_SEL32V(obj, signal, cue + 127);
+			break;
+
+		case SI_FINISHED:
+			PUT_SEL32V(obj, signal, 0xffff);
+			break;
+
+		case SI_LOOP:
+			break; /* Doesn't happen */
+		}
 		break;
 	}
 	case _K_SCI1_SOUND_MIDI_SEND :
@@ -677,9 +743,9 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kDoSound(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	if (s->version>SCI_VERSION_FTU_DOSOUND_VARIANT_2)
+	if (s->version>=SCI_VERSION_FTU_DOSOUND_VARIANT_2)
 		return kDoSound_SCI1(s, funct_nr, argc, argv);
-	else if (s->version>SCI_VERSION_FTU_DOSOUND_VARIANT_1)
+	else if (s->version>=SCI_VERSION_FTU_DOSOUND_VARIANT_1)
 		return kDoSound_SCI01(s, funct_nr, argc, argv);
 	else
 		return kDoSound_SCI0(s, funct_nr, argc, argv);

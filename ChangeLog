@@ -1,3 +1,8 @@
+2004-02-26  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/ksound.c (kDoSound_SCI1): Fix subfunction constants,
+	copy code from SCI01 implementation.
+
 2004-02-25  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/resource/sci_view_1.c (gfxr_draw_cel1): Fix hotspot
