@@ -354,7 +354,7 @@ said(state_t *s, byte *spec)
 
     if (said_parse_spec(s, spec)) {
       sciprintf("Offending spec was: ");
-      vocab_decypher_said_block(s, spec);
+      vocab_decypher_said_block(s, s->heap - spec);
       return 0;
     }
 

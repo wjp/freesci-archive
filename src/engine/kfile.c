@@ -592,6 +592,7 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   free(gfname);
+  s->heap[nametarget] = 0; /* Terminate list */
 }
 
 

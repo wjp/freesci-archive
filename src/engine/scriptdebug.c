@@ -36,7 +36,6 @@ int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? *
 int _debug_seeking = 0; /* Stepping forward until some special condition is met */
 int _debug_seek_level = 0; /* Used for seekers that want to check their exec stack depth */
 int _debug_seek_special = 0; /* Used for special seeks */
-int sci_debug_flags = 0; /* Special flags */
 
 static char oldcommand[SCI_CONSOLE_MAX_INPUT + 1] = ""; /* Stores the last command executed */
 

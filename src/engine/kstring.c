@@ -69,6 +69,44 @@ kernel_lookup_text(state_t *s, int address, int index)
 /* Parser */
 /**********/
 
+#ifdef SCI_SIMPLE_SAID_CODE
+int
+vocab_match_simple(state_t *s, heap_ptr addr)
+{
+  int nextitem;
+  int listpos = 0;
+
+  if (!s->parser_valid)
+    return SAID_NO_MATCH;
+
+  if (s->parser_valid == 2) { /* debug mode: sim_said */
+    do {
+      sciprintf("DEBUGMATCH: ");
+      nextitem = s->heap[addr++];
+
+      if (nextitem < 0xf0) {
+	nextitem = nextitem << 8 | s->heap[addr++];
+	if (s->parser_nodes[listpos].type
+	    || nextitem != s->parser_nodes[listpos++].content.value)
+	  return SAID_NO_MATCH;
+      } else {
+
+	if (nextitem == 0xff)
+	  return (s->parser_nodes[listpos++].type == -1)? SAID_FULL_MATCH : SAID_NO_MATCH; /* Finished? */
+
+	if (s->parser_nodes[listpos].type != 1
+	    || nextitem != s->parser_nodes[listpos++].content.value)
+	  return SAID_NO_MATCH;
+
+      }
+    } while (42);
+  } else { /* normal simple match mode */
+    return vocab_simple_said_test(s, addr);
+  }
+}
+#endif /* SCI_SIMPLE_SAID_CODE */
+
+
 void
 kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {

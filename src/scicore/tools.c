@@ -29,6 +29,8 @@
 #include <engine.h>
 #include <kdebug.h>
 
+int script_debug_flag = 0; /* Defaulting to running mode */
+int sci_debug_flags = 0; /* Special flags */
 
 #ifdef WORDS_BIGENDIAN
 gint16

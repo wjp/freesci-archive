@@ -38,7 +38,6 @@
 /*#define VM_DEBUG_SEND*/
 
 
-int script_debug_flag = 0; /* Defaulting to running mode */
 int script_abort_flag = 0; /* Set to 1 to abort execution */
 int script_error_flag = 0; /* Set to 1 if an error occured, reset each round by the VM */
 int script_checkloads_flag = 0; /* Print info when scripts get (un)loaded */

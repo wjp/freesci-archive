@@ -303,6 +303,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 
       int outf = creat(outfilename, O_RDONLY);
 
+#ifdef HAVE_OBSTACK_H
       if ((stype == sci_sound) && conversion) {
 	int midilength;
 	guint8 *outdata = makeMIDI0(found->data, &midilength);
@@ -316,6 +317,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 	write(outf, outdata, midilength);
 	free(outdata);
       } else {
+#endif /* HAVE_OBSTACK_H */
 	guint8 header = 0x80 | found->type;
 
 	if (with_header) {
@@ -325,7 +327,9 @@ void unpack_resource(int stype, int snr, char *outfilename)
 	}
 
 	write(outf,  found->data, found->length);
+#ifdef HAVE_OBSTACK_H
       }
+#endif /* HAVE_OBSTACK_H */
 
       fchmod(outf, 0644);
       close(outf);

@@ -233,11 +233,20 @@ void
 kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int width, height;
-  heap_ptr heap_text = PARAM(1);
+  heap_ptr heap_text = UPARAM(1);
   char *text = s->heap + heap_text;
-  heap_ptr dest = PARAM(0);
+  heap_ptr dest = UPARAM(0);
   int maxwidth = UPARAM_OR_ALT(3, 0);
   resource_t *fontres = findResource(sci_font, UPARAM(2));
+
+  if (!*text) { /* Empty text */
+    PUT_HEAP(dest + 0, 0);
+    PUT_HEAP(dest + 2, 0);
+    PUT_HEAP(dest + 4, 0);
+    PUT_HEAP(dest + 6, 0);
+
+    return;
+  }
 
   if (!maxwidth)
     maxwidth = MAX_TEXT_WIDTH_MAGIC_VALUE;
@@ -692,8 +701,8 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
   xstart = PARAM(arg);
 
   if (argc > 3) {
-    ylen = PARAM(arg+3) - ystart + 1;
-    xlen = PARAM(arg+2) - xstart + 1;
+    ylen = PARAM(arg+3) - ystart;
+    xlen = PARAM(arg+2) - xstart;
   }
   s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
 
@@ -1123,6 +1132,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
   case K_CONTROL_BUTTON:
 
     font_res  = findResource(sci_font, font_nr);
+    SCIkdebug(SCIkGRAPHICS, "drawing button %04x to %d,%d\n", obj, x, y);
     if (!font_res) {
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       break;
@@ -1133,6 +1143,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
   case K_CONTROL_TEXT:
 
     font_res  = findResource(sci_font, font_nr);
+    SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d\n", obj, x, y);
     if (!font_res) {
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       break;
@@ -1145,6 +1156,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
   case K_CONTROL_EDIT:
 
     font_res  = findResource(sci_font, font_nr);
+    SCIkdebug(SCIkGRAPHICS, "drawing edit control %04x to %d,%d\n", obj, x, y);
     if (!font_res) {
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       break;
@@ -1159,6 +1171,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
   case K_CONTROL_ICON:
 
     view_res = findResource(sci_view, view);
+    SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y);
 
     if (!view_res) {
       SCIkwarn(SCIkERROR, "View.%03d not found!\n", font_nr);
@@ -1177,6 +1190,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
     int selection = 0;
     int i;
 
+    SCIkdebug(SCIkGRAPHICS, "drawing list control %04x to %d,%d\n", obj, x, y);
     cursor = GET_SELECTOR(obj, cursor);
 
     entries_nr = 0;

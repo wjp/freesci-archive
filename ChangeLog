@@ -1,3 +1,12 @@
+2000-05-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kOnControl): Made OnControl cooperate with
+	SQ3
+	(kTextSize): Fixed TextSize() for empty strings (plus some signedness
+	fixes)
+
+	* src : Split core/ into scicore/ and engine/
+
 2000-04-28  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/core/kmath.c (kGetDistance): Implemented optional fifth parameter
