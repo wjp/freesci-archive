@@ -282,7 +282,7 @@ sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 	zone.y = 1;
 
 	sci_gettime(&foo, &draw_cursor);
-	draw_cursor = draw_cursor > 500000;
+	draw_cursor = draw_cursor > 5-00000;
 
 	if (!draw_cursor) {
 		text_handle = gfxw_new_text(port->visual->gfx_state, zone,

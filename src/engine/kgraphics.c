@@ -165,6 +165,20 @@ graph_restore_box(state_t *s, int handle)
 {
 	gfxw_snapshot_t **ptr = kmem(s, handle);
 
+	if (s->dyn_views) {
+		gfxw_container_t *parent = s->dyn_views->parent;
+
+		while (parent && (gfxw_widget_matches_snapshot(*ptr, GFXW(parent))))
+			parent->parent;
+
+		if (!parent) {
+			SCIkwarn(SCIkERROR, "Attempted widget mass destruction by a snapshot\n");
+			BREAKPOINT();
+		}
+
+		reparentize_primary_widget_lists(s, (gfxw_port_t *) parent);
+	}
+
 	if (!ptr) {
 		SCIkwarn(SCIkERROR, "Attempt to restore invalid snaphot with handle %04x!\n", handle);
 		return;
@@ -292,7 +306,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		gfxcolor.mask = !(color & 0x80) | (!(priority & 0x80) << 1) | (!(special & 0x80) << 2);
 
 		redraw_port = 1;
-		ADD_TO_CURRENT_PICTURE_PORT(GFXW(gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL)));
+		ADD_TO_CURRENT_BG_WIDGETS(GFXW(gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL)));
 		
 		break;
 
@@ -546,7 +560,11 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	SCIkdebug(SCIkBRESEN, "t1: %d, t2: %d\n", t1, t2);
  
-	if (t2) x=sqrt((gy*dx*dx)/(2.0*t2));
+	if (t2) {
+		x=sqrt(abs((gy*dx*dx)/(2.0*t2)));
+		if (t2 *dx < 0)
+			x = -x;
+	}
 	y=abs(t1*y);
 	if (dx>=0) y=-y;
 	if ((dy<0)&&(!y)) y=-sqrt(-2*gy*dy);
@@ -1505,7 +1523,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 				if ((widget->flags & GFXW_FLAG_VISIBLE) && s->bg_widgets) {
 					widget->draw_bounds.y += s->dyn_views->bounds.y - s->bg_widgets->bounds.y;
 					widget->draw_bounds.x += s->dyn_views->bounds.x - s->bg_widgets->bounds.x;
-					s->bg_widgets->add(GFXWC(s->bg_widgets), GFXW(widget));
+					s->bg_widgets->add(GFXWC(s->bg_widgets), GFXW(gfxw_set_id(GFXW(widget), GFXW_NO_ID)));
 				}
 				else widget->free(GFXW(widget));
 			}
@@ -1896,7 +1914,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	new_view = gfxw_new_view(s->gfx_state, gfx_point(x, y), view, loop, cel, priority, -1,
 				 ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET);
 
-	ADD_TO_CURRENT_PORT(new_view);
+	ADD_TO_CURRENT_FG_WIDGETS(new_view);
 	FULL_REDRAW();
 }
 
@@ -2519,6 +2537,8 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	else
 		color1 = color0;
 
+	assert_primary_widget_lists(s);
+
 	text_handle = gfxw_new_text(s->gfx_state, area, font_nr, text, halign,
 				    ALIGN_TOP, *color0, *color1, *bg_color, 0);
 
@@ -2543,8 +2563,6 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	SCIkdebug(SCIkGRAPHICS, "Display: Commiting text '%s'\n", text);
 
-	assert_primary_widget_lists(s);
-
 	ADD_TO_CURRENT_FG_WIDGETS(text_handle);
 
 	if ((!s->pic_not_valid)&&update_immediately) { /* Refresh if drawn to valid picture */
@@ -2552,6 +2570,3 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		SCIkdebug(SCIkGRAPHICS, "Refreshing display...\n");
 	}
 }
-
-
-

@@ -336,7 +336,14 @@ _gfxw_set_ops(gfxw_widget_t *widget, gfxw_point_op *draw, gfxw_op *free, gfxw_op
 void
 gfxw_remove_widget_from_container(gfxw_container_t *container, gfxw_widget_t *widget)
 {
-	gfxw_widget_t **seekerp = &(container->contents);
+	gfxw_widget_t **seekerp;
+
+	if (!container) {
+		GFXERROR("Attempt to remove widget from NULL container!\n");
+		BREAKPOINT();
+	}
+
+	seekerp = &(container->contents);
 
 	if (GFXW_IS_LIST(widget) && GFXW_IS_PORT(container)) {
 	        gfxw_port_t *port = (gfxw_port_t *) container;
@@ -1992,28 +1999,42 @@ gfxw_make_snapshot(gfxw_visual_t *visual, rect_t area)
 
 	retval->serial = widget_serial_number_counter++;
 
-fprintf(stderr, "SNAPSHOT %08x\n", retval->serial);
 	retval->area = area;
 
 	return retval;
 }
 
 
+int
+gfxw_widget_matches_snapshot(gfxw_snapshot_t *snapshot, gfxw_widget_t *widget)
+{
+	int free_below = (snapshot->serial < widget_serial_number_counter)? 0: widget_serial_number_counter;
+	int free_above_eq = snapshot->serial;
+	rect_t bounds = widget->bounds;
+
+	if (!GFXW_IS_CONTAINER(widget) && widget->parent) {
+		bounds.x += widget->parent->bounds.x;
+		bounds.y += widget->parent->bounds.y;
+	}
+
+	return ((widget->serial >= free_above_eq
+		 || widget->serial < free_below)
+		&& gfx_rect_subset(bounds, snapshot->area));
+}
+
 void
-_gfxw_free_contents_appropriately(gfxw_container_t *container, rect_t area, int free_above_eq, int free_below)
+_gfxw_free_contents_appropriately(gfxw_container_t *container, gfxw_snapshot_t *snapshot)
 {
 	gfxw_widget_t *widget = container->contents;
 
 	while (widget) {
 		gfxw_widget_t *next = widget->next;
 
-		if ((widget->serial >= free_above_eq
-		     || widget->serial < free_below)
-		    && gfx_rects_overlap(area, widget->bounds))
+		if (gfxw_widget_matches_snapshot(snapshot, widget))
 			widget->free(widget);
 		else {
 			if (GFXW_IS_CONTAINER(widget))
-				_gfxw_free_contents_appropriately(GFXWC(widget), area, free_above_eq, free_below);
+				_gfxw_free_contents_appropriately(GFXWC(widget), snapshot);
 		}
 
 		widget = next;
@@ -2023,12 +2044,12 @@ _gfxw_free_contents_appropriately(gfxw_container_t *container, rect_t area, int 
 gfxw_snapshot_t *
 gfxw_restore_snapshot(gfxw_visual_t *visual, gfxw_snapshot_t *snapshot)
 {
-	_gfxw_free_contents_appropriately(GFXWC(visual), snapshot->area, snapshot->serial,
-					  (snapshot->serial < widget_serial_number_counter)?
-					  /* Treat overflow */
-					  0 : widget_serial_number_counter);
-
+fprintf(stderr, "rest SNAPSHOT %08x (%d,%d) (%dx%d)\n", snapshot->serial, snapshot->area.x, snapshot->area.y,
+	snapshot->area.xl, snapshot->area.yl);
+	_gfxw_free_contents_appropriately(GFXWC(visual), snapshot);
 }
+
+
 
 
 

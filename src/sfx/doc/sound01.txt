@@ -1,0 +1,137 @@
+Early draft of SCI01 sound resources (same as SCI1?)             2000-01-05
+
+Used in:
+Quest for Glory II: Trial by Fire (QfG2)
+Christmas greeting card 1990 (CC1990)
+
+The magic number (84 00) is left out, offset 0 is directly after these two
+bytes. 
+
+If you examine a SCI01 sound resource use "sciunpack --without-header" to
+get the pointers within the file correct for your hex viewer. 
+
+This description is based on my own observations of the SCI01 sound
+resources, the description of SCI0 sound resources and my disassembly of
+MTBLAST.DRV. I have not yet looked at the SCIV.EXE therefore some of my
+guesswork may incorrect. Terminology is mostly made up by me and is
+probably wrong, stupid or just plain silly. 
+
+
+DESCRIPTION
+-----------
+
+The SCI01 sound resource consists of the sequence blocks and the data
+chunks. The sequence blocks tells us how to put the data chunks together
+to play MIDI music, samples or MIDI music with samples (like QfG2 Intro).
+The data chunks either hold one specific MIDI channel track or one digital
+sample. I have yet to figure out how all this data is actually used to
+make a MIDI output.
+
+
+  Sequence Blocks
+  ---------------
+
+  The SCI01 sound resources begin with the Sequence Blocks, they contain
+  Sequence Controls and Track References. It's at least 36 bytes in
+  length, if it could be smaller it will be padded with 0x00.
+
+  At offset 0 is the Sequence Control byte for the first Sequence Block,
+  this byte is always present.
+
+  This byte is followed by Track References and Sequence Controls. A
+  Sequence Control always begin with 0xff otherwise it's a Track Reference.
+
+
+    Track References
+    ----------------
+
+    offset size description
+    -----------------------
+      0    byte unknown !=0xff (always 0 in QfG2 and CC1990)
+      1    byte unknown (always 0 in QfG2 and CC1990)
+      2    word Data Chunk pointer
+      4    word Data Chunk size
+
+
+    Sequence Controls
+    ------------------
+
+    A Sequence Control consists of two bytes, the first, 0xff, signals
+    that it's a sequence control and not a track reference. The second
+    byte is the control byte. In QfG2 and CC1990 the following control
+    bytes have been seen:
+
+    0x00 - unknown
+    0x02 - unknown
+    0x06 - unknown
+    0x08 - unknown
+    0x09 - unknown
+    0x0c - unknown
+    0x12 - unknown
+    0x13 - unknown (always used when a sample is involved)
+    0xff - End of Sequence Blocks
+
+
+  Data Chunks
+  -----------
+
+  In the sound resources of QfG2 and CC1990 I've seen two types of Data
+  Chunks, Sample and MIDI channel track.
+
+
+    Sample Chunk
+    ------------
+
+    offset size description
+    -----------------------
+      0    byte =0xfe
+      1    byte !=0xfe (always 0 in QfG2 and CC1990)
+      2    word Sample rate (Hz)
+      4    word Sample length
+      6    word Sample point 1 (begin?)
+      8    word Sample point 2 (end?)
+     10         Unsigned 8-bit mono sample data
+
+
+    MIDI channel track Chunk
+    ------------------------
+
+    This chunk begins with a 2 byte header. The high nibble of the first
+    byte is either 0 or 1 in QfG2 and CC1990, the low nibble is the MIDI
+    channel. The second byte is unknown but is probably some kind of play
+    flag to mask channels for different synths (like SCI0?). From the
+    third byte and onward is the MIDI track data which looks just like
+    normal SCI0 MIDI track data, but all status bytes are targeted at one
+    specific MIDI channel.
+ 
+
+Example, sound.013 from CC1990 (--without-header)
+-------------------------------------------------
+
+offset  data description
+------------------------
+ 0000     00 Sequence Control for the first Sequence Block 
+ 0001     00 Unknown (always 00?)
+ 0002     00 Unknown (always 00?)
+ 0003   0039 Data Chunk pointer (Little Endian)
+ 0005   0015 Data Chunk length (LE)  
+ 0007  FF 06 Sequence Control - 0x06
+ 0009     00 Unknown (always 00)
+ 000A     00 Unknown (always 00)
+ 000B   0024 Data Chunk pointer (LE)
+ 000D   0015 Data Chunk length (LE)
+ 000F  FF 0C Sequence Control - 0x0c
+ 0011     00 Unknown (always 00)
+ 0012     00 Unknown (always 00)
+ 0013   0024 Data Chunk pointer (LE)
+ 0015   0015 Data Chunk length (LE)
+ 0017  FF FF Sequence Control - End of Sequence Blocks
+ ------------------------------------------------------------
+ 0024     04 MIDI Track channel 4
+ 0025     01 unknown (probably play flag or instrument stuff)
+ 0026        MIDI Track data like SCI0
+ 0039     00 MIDI Track channel 0
+ 0040     01 unknown (probably play flag or instrument stuff)
+ 0041        MIDI Track data like SCI0 
+
+Rickard Lind <rpl@dd.chalmers.se>

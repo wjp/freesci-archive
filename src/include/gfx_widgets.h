@@ -425,6 +425,14 @@ gfxw_make_snapshot(gfxw_visual_t *visual, rect_t area);
 ** This operation also increases the global serial number counter by one.
 */
 
+int
+gfxw_widget_matches_snapshot(gfxw_snapshot_t *snapshot, gfxw_widget_t *widget);
+/* Predicate to test whether a widget would be destroyed by applying a snapshot
+** Parameters: (gfxw_snapshot_t *) snapshot: The snapshot to test against
+**             (gfxw_widget_t *) widget: The widget to test
+** Retunrrs  : (int) An appropriate boolean value
+*/
+
 gfxw_snapshot_t *
 gfxw_restore_snapshot(gfxw_visual_t *visual, gfxw_snapshot_t *snapshot); 
 /* Restores a snapshot to a visual

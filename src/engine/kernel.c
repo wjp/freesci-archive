@@ -481,55 +481,57 @@ kSetDebug(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  struct tm* loc_time;
-  GTimeVal time_prec;
-  time_t the_time;
+	struct tm* loc_time;
+	GTimeVal time_prec;
+	time_t the_time;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  the_time = time(NULL);
-  loc_time = localtime(&the_time);
-  if (s->version<SCI_VERSION_FTU_NEW_GETTIME) /* Use old semantics */
-  {
-    if (argc) { /* Get seconds since last am/pm switch */
-      s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
-      SCIkdebug(SCIkTIME, "GetTime(timeofday) returns %d\n", s->acc);
-    } else { /* Get time since game started */
-      g_get_current_time (&time_prec);
-      s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
-	         (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
-      SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
-    }
-    } else {
-	int mode = UPARAM_OR_ALT(1, 0); /* The same strange method is still used for distinguishing
-					   mode 0 and the others. We assume that this is safe, though */
-	switch (mode) {
-	case _K_NEW_GETTIME_TICKS :
-	  {
-	    g_get_current_time (&time_prec);
-	    s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
-	      (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
-	    SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
-	    break;
-	  }
-	case _K_NEW_GETTIME_TIME_12HOUR :
-	  {
-   	    loc_time->tm_hour %= 12;
-	    s->acc=(loc_time->tm_min<<6)|(loc_time->tm_hour<<12);
-	    break;
-	  }  
-	case _K_NEW_GETTIME_TIME_24HOUR :
-          {
-	    s->acc=(loc_time->tm_min<<5)|(loc_time->tm_sec>>1)|(loc_time->tm_hour<<11);
-	    break;
-	  }
-	case _K_NEW_GETTIME_DATE :
-	  {
-	    s->acc=(loc_time->tm_mon<<5)|loc_time->tm_mday|(loc_time->tm_year<<9);
-	    break;
-	  }
+	the_time = time(NULL);
+	loc_time = localtime(&the_time);
+	if (s->version<SCI_VERSION_FTU_NEW_GETTIME) { /* Use old semantics */
+		if (argc) { /* Get seconds since last am/pm switch */
+			s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
+			SCIkdebug(SCIkTIME, "GetTime(timeofday) returns %d\n", s->acc);
+		} else { /* Get time since game started */
+			g_get_current_time (&time_prec);
+			s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
+				(time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
+			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
+		}
+	} else {
+		int mode = UPARAM_OR_ALT(0, 0); /* The same strange method is still used for distinguishing
+						   mode 0 and the others. We assume that this is safe, though */
+		switch (mode) {
+		case _K_NEW_GETTIME_TICKS : {
+			g_get_current_time (&time_prec);
+			s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
+				(time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
+			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
+			break;
+		}
+		case _K_NEW_GETTIME_TIME_12HOUR : {
+			loc_time->tm_hour %= 12;
+			s->acc=(loc_time->tm_min<<6)|(loc_time->tm_hour<<12)|(loc_time->tm_sec);
+			SCIkdebug(SCIkTIME, "GetTime(12h) returns %d\n", s->acc);
+			break;
+		}  
+		case _K_NEW_GETTIME_TIME_24HOUR : {
+			s->acc=(loc_time->tm_min<<5)|(loc_time->tm_sec>>1)|(loc_time->tm_hour<<11);
+			SCIkdebug(SCIkTIME, "GetTime(24h) returns %d\n", s->acc);
+			break;
+		}
+		case _K_NEW_GETTIME_DATE : {
+			s->acc=(loc_time->tm_mon<<5)|loc_time->tm_mday|(loc_time->tm_year<<9);
+			break;
+			SCIkdebug(SCIkTIME, "GetTime(date) returns %d\n", s->acc);
+		}
+		default: {
+			SCIkdebug(SCIkWARNING, "Attempt to use unknown GetTime mode %d\n", mode);
+			break;
+		}
+		}
 	}
-      }
 }
 
 #define K_MEMORY_ALLOCATE_CRITICAL 	1
