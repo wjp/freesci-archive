@@ -4,8 +4,6 @@ Primary goals:
 	* update calle, callk docs
 	* Auto-detect version number from Sierra's executable
 	* operations.c: Add full support for state->visible_map
-	* optimize pic drawing
-	* Add graphical game selection screen
 
 Secondary goals:
 	+ Change "version dependancies" to global "interpreter type flags"
