@@ -471,7 +471,7 @@ int getResourceNumber(char *resid)
 int
 c_version(state_t *s)
 {
-  sciprintf(""PACKAGE", version "VERSION"\n");
+  sciprintf("FreeSCI, version "VERSION"\n");
   sciprintf("Running %s\n", SCI_Version_Types[sci_version]);
   return 0;
 }

@@ -506,11 +506,11 @@ init_gamestate(state_t *gamestate, sci_version_t version)
 }
 
 static int
-init_gfx(cl_options_t *cl_options, sci_version_t version, gfx_driver_t *driver)
+init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 {
 	gfx_state->driver = driver;
 	gamestate->gfx_state = gfx_state;
-	gfx_state->version = version;
+	gfx_state->version = sci_version;
 
 	if (cl_options->scale_y > 0 && !cl_options->scale_x)
 		cl_options->scale_x = cl_options->scale_y;
@@ -679,7 +679,7 @@ main(int argc, char** argv)
 		return 1;
 	}
 
-	if (init_gfx(&cl_options, version, gfx_driver))
+	if (init_gfx(&cl_options, gfx_driver))
 		return 1;
 
 	if (game_init_graphics(gamestate)) { /* Init interpreter graphics */

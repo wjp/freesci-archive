@@ -1,3 +1,7 @@
+2001-01-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/main.c (init_gfx): Fixed use of interpreter version
+
 2001-01-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kAnimate): No reparentization for non-
