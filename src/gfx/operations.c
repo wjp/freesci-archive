@@ -48,6 +48,7 @@ if (!state->driver) { \
 #define DRAW_POINTER { int __x = _gfxop_draw_pointer(state); if (__x) { GFXERROR("Drawing the mouse pointer failed!\n"); return __x;} }
 #define REMOVE_POINTER { int __x = _gfxop_remove_pointer(state); if (__x) { GFXERROR("Removing the mouse pointer failed!\n"); return __x;} }
 
+#undef DEBUG_DIRTY
 
 /* Internal operations */
 
@@ -376,7 +377,9 @@ _gfxop_update_box(gfx_state_t *state, rect_t box)
 {
 	int retval;
 	_gfxop_scale_rect(&box, state->driver->mode);
-
+#ifdef DEBUG_DIRTY
+fprintf(stderr,"U [%d,%d][%d,%d]\n", box.x, box.x+box.xl, box.y, box.y+box.yl);
+#endif
 	if ((retval = _gfxop_buffer_propagate_box(state, box, GFX_BUFFER_FRONT))) {
 		GFXERROR("Error occured while propagating box (%d,%d,%d,%d) to front buffer\n",
 			 box.x, box.y, box.xl, box.yl);
@@ -414,6 +417,10 @@ gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy)
 
 	if (_gfxop_clip(&box, gfx_rect(0, 0, 320, 200)))
 		return base;
+
+#ifdef DEBUG_DIRTY
+fprintf(stderr,"++ [%d,%d][%d,%d] S%d (%d,%d)\n", box.x, box.x+box.xl, box.y, box.y+box.yl, strategy, GFXOP_DIRTY_FRAMES_ONE, GFXOP_DIRTY_FRAMES_CLUSTERS);
+#endif
 
 	switch (strategy) {
 

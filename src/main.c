@@ -730,8 +730,6 @@ list_savegames(state_t *s)
 				sciprintf("%s\n", filename);
 		}
 		filename = sci_find_next(&dir);
-		fprintf(stderr, "filename = %s \n",filename);
-		fprintf(stderr, "dir.fileinfo.name = %s \n", dir.fileinfo.name);
 	}
 	sciprintf("-----------------\n");
 }

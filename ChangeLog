@@ -2,7 +2,21 @@
 
 	* src/sound/soundserver_sdl.c: Use more sophisticated (but badly
 	granularized) functions for waiting for signals
+	(sound_sdl_get_command): Some cleanups (slow down everything)
+
 	* src/main.c: Applied Matt's anti-warning patch
+
+2001-05-12  Matt Hargett  <matt@use.net>
+
+        * main.c: Cleanup to eliminate "unused variable" warnings on  
+        VC++.
+
+        * sciv.dsp: Update VERSION.
+
+        * freesci.dsp: Update VERSION.
+
+        * soundserver_sdl.c: Another try to fix CPU usage. This time
+        using SDL_CondWaitTimeout().
 
 2001-05-12  Christoph Reichenbach  <jameson@linuxgames.com>
 

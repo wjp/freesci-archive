@@ -24,12 +24,12 @@
 #ifdef HAVE_SDL
 
 #ifndef _MSC_VER
-#include <SDL/SDL.h>
-#include <SDL/SDL_thread.h>
+#  include <SDL/SDL.h>
+#  include <SDL/SDL_thread.h>
 #else
-#include <SDL.h>
-#include <SDL_thread.h>
-#include <windows.h>
+#  include <SDL.h>
+#  include <SDL_thread.h>
+#  include <windows.h>
 #endif
 
 static SDL_Thread *child;
@@ -146,52 +146,36 @@ sound_event_t *
 sound_sdl_get_command(GTimeVal *wait_tvp)
 {
 	sound_event_t *event	= NULL;
-	int ret			= 0;		/* return value */
 
-	/* this will be NULL when restoring a game */
-	if (NULL == wait_tvp)
-	{
-		ret = SDL_CondWait(in_cond, in_mutex);
-
-		if (-1 == ret)
-		{
-			fprintf(stderr, "sound_sdl_get_command(): SDL_CondWait returned error (%d)\n",ret);
-			return NULL;
-		}
-
-	}
-
-	/* SDL_LockMutex(in_mutex); */
+	SDL_LockMutex(in_mutex);
 	if (!sound_eq_peek_event(&inqueue))
 	{
-    /*    SDL_UnlockMutex(in_mutex); */
-		if (wait_tvp)
-		{
-			/* These were attempts to fix CPU usage problem */
-			/*	sci_sched_yield(); */
-			/*  usleep(wait_tvp->tv_usec >> 4); */
+		int ret	= 0; /* return value */
 
-			/* This appears to be the best solution,
-			   the last parameter is in milliseconds, so we convert */
+		if (wait_tvp)
 			ret = SDL_CondWaitTimeout(in_cond, in_mutex, (wait_tvp->tv_usec >> 10));
-	
-			if (ret != 0)
-			{
-				if (ret != SDL_MUTEX_TIMEDOUT)
-				{
-					fprintf(stderr, "sound_sdl_get_command(): SDL_CondWaitTimeout returned error (%d)\n",ret);
-				}
-				return NULL;
+		else
+			ret = SDL_CondWait(in_cond, in_mutex); /* select() semantics */
+
+		/* This appears to be the best solution,
+		   the last parameter is in milliseconds, so we convert */
+
+		if (ret != 0)
+		{
+			SDL_UnlockMutex(in_mutex);
+			if (ret != SDL_MUTEX_TIMEDOUT) {
+				fprintf(stderr, "sound_sdl_get_command(): SDL_CondWait%s returned error (%d)\n", 
+					wait_tvp? "Timeout" : "", ret);
 			}
+			return NULL;
 		}
 	}
 
-  SDL_LockMutex(in_mutex);
-  event = sound_eq_retreive_event(&inqueue);
+	SDL_LockMutex(in_mutex);
+	event = sound_eq_retreive_event(&inqueue);
+	SDL_UnlockMutex(in_mutex);
 
-  SDL_UnlockMutex(in_mutex);
-
-  return event;
+	return event;
 }
 
 int
