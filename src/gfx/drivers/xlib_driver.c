@@ -50,6 +50,7 @@ struct _xlib_state {
 	int buckystate;
 	void *old_error_handler;
 	Cursor mouse_cursor;
+	byte *pointer_data[2];
         int used_bytespp; /* bytes actually used to display stuff, rather than bytes occupied in data space */
 };
 
@@ -281,6 +282,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 
 	S->old_error_handler = XSetErrorHandler(xlib_error_handler);
+	S->pointer_data[0] = NULL;
+	S->pointer_data[1] = NULL;
 
 	return GFX_OK;
 }
@@ -320,6 +323,7 @@ xlib_exit(struct _gfx_driver *drv)
 		XSetErrorHandler(S->old_error_handler);
 		free(S);
 		S = NULL;
+		gfx_free_mode(drv->mode);
 	}
 }
 
@@ -485,6 +489,8 @@ xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 		pxm->internal.handle = SCI_XLIB_PIXMAP_HANDLE_GRABBED;
 
 		pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
+		free(pxm->data);
+		pxm->data = ((XImage *)(pxm->internal.info))->data;
 		break;
 
 	case GFX_MASK_PRIORITY:
@@ -605,7 +611,14 @@ xlib_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
 static int
 xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 {
+	int i;
 	XFreeCursor(S->display, S->mouse_cursor);
+
+	for (i = 0; i < 2; i++)
+		if (S->pointer_data[i]) {
+			free(S->pointer_data[i]);
+			S->pointer_data[i] = NULL;
+		}
 
 	if (pointer == NULL)
 		S->mouse_cursor = x_empty_cursor(S->display, S->window);
@@ -625,8 +638,9 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 			cols[i].blue |= (cols[i].blue << 8);
 		}
 
-		visual_data = xlib_create_cursor_data(drv, pointer, 1);
-		mask_data = xlib_create_cursor_data(drv, pointer, 0);
+		S->pointer_data[0] = visual_data = xlib_create_cursor_data(drv, pointer, 1);
+		S->pointer_data[1] = mask_data = xlib_create_cursor_data(drv, pointer, 0);
+		S->pointer_data[1] = NULL;
 		visual = XCreateBitmapFromData(S->display, S->window, visual_data, real_xl, pointer->yl);
 		mask = XCreateBitmapFromData(S->display, S->window, mask_data, real_xl, pointer->yl);
 		

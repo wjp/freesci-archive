@@ -2,6 +2,7 @@
 
 	* src/gfx/drivers/xlib_driver.c (xlib_draw_line): Fixed typo
 	causing endless loop
+	(xlib_grab_pixmap): Fixed remaining memory holes in xlib driver
 
 2001-02-14  Solomon Peachy <pizza@shaftnet.org>
 
