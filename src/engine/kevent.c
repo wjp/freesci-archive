@@ -36,6 +36,8 @@ kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 	reg_t obj = argv[1];
 	sci_event_t e;
 	int oldx, oldy;
+	int modifier_mask = SCI_VERSION_MAJOR(s->version)==0 ? SCI_EVM_ALL
+	                                                     : SCI_EVM_NO_FOOLOCK;
 
 	if (s->kernel_opt_flags & KERNEL_OPT_FLAG_GOT_2NDEVENT) {
 		/* Penalty time- too many requests to this function without
@@ -111,7 +113,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 				PUT_SEL32V(obj, message, e.character);
 				/* We only care about the translated
 				** character  */
-				PUT_SEL32V(obj, modifiers, e.buckybits);
+				PUT_SEL32V(obj, modifiers, e.buckybits&modifier_mask);
 
 			}
 		} break;
@@ -129,7 +131,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 				PUT_SEL32V(obj, type, e.type);
 				PUT_SEL32V(obj, message, 1);
-				PUT_SEL32V(obj, modifiers, e.buckybits|extra_bits);
+				PUT_SEL32V(obj, modifiers, (e.buckybits|extra_bits)&modifier_mask);
 				s->r_acc = make_reg(0, 1);
 			}
 		} break;
@@ -138,7 +140,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 			s->r_acc = NULL_REG; /* Unknown or no event */
 		}
 		}
-    
+
 	if ((s->r_acc.offset) && (stop_on_event)) {
 		stop_on_event = 0;
 		script_debug_flag = 1;

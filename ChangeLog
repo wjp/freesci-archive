@@ -1,3 +1,8 @@
+2004-03-10  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kevent.c (kGetEvent): In SCI1 games, don't report the
+	foolock modifiers.
+	
 2004-03-09  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/include/uinput.h: Remove SCI_EVT_NONBLOCK flag from

@@ -113,5 +113,7 @@ typedef struct {
 #define SCI_EVM_CAPSLOCK        (1<<6)
 #define SCI_EVM_INSERT          (1<<7)
 
+#define SCI_EVM_NO_FOOLOCK      (~(SCI_EVM_SCRLOCK | SCI_EVM_NUMLOCK | SCI_EVM_CAPSLOCK | SCI_EVM_INSERT))
+#define SCI_EVM_ALL             0xFF
 
 #endif /* _SCI_UINPUT_H */
