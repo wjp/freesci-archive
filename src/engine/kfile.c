@@ -56,21 +56,24 @@ static struct _savegame_index_struct {
 static FILE *
 fcaseopen(char *fname, char *mode)
 {
-	char *name;
+	char *name		= NULL;
 	sci_dir_t dir;
-	FILE *retval = NULL;
+	FILE *retval	= NULL;
+
 	sci_init_dir(&dir);
 	name = sci_find_first(&dir, "*");
 
 	if (strchr(mode, 'w'))
 		return fopen(fname, mode);
 
-	if (strchr(fname, '/')) {
+	if ((strchr(fname, '/')) || (strchr(fname, '\\')))
+	{
 		fprintf(stderr, "fcaseopen() does not support subdirs\n");
 		BREAKPOINT();
 	}
 
-	while (name && !retval) {
+	while (name && !retval) 
+	{
 		if (!strcasecmp(fname, name))
 			retval = fopen(name, mode);
 		if (!retval)
@@ -84,16 +87,18 @@ fcaseopen(char *fname, char *mode)
 static int
 caseopen(char *fname, int mode)
 {
-	char *name;
+	char *name		= NULL;
 	sci_dir_t dir;
-	int retval = 0;
+	int retval		= 0;
 
-	if (strchr(fname, '/')) {
+	if ((strchr(fname, '/')) || (strchr(fname, '\\')))
+	{
 		fprintf(stderr, "caseopen() does not support subdirs\n");
 		BREAKPOINT();
 	}
 
 	sci_init_dir(&dir);
+
 	name = sci_find_first(&dir, "*");
 
 	while (name && !retval) {

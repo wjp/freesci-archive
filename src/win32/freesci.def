@@ -103,5 +103,6 @@ EXPORTS
   sci_get_homedir
   game_restore
   sci_find_next
+  sci_sched_yield
 
    

@@ -1,3 +1,36 @@
+2001-06-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* conf/freesci-config: Added
+
+	* AUTHORS: Added Rune
+
+	* acinclude.m4 (_ac_curses_libnames): Curses check now tests for
+	noecho() rather than initscr() to work around problem on IRIX.
+
+2001-06-13  San Neely  <sam@sam.net>
+
+        * tools.c (sci_find_first): Fix savegame listing bug by
+	skipping over . and .. directory entries.
+
+2001-06-13  Matt Hargett  <matt@use.net>
+
+        * main.c (main): Remove Sleep that didn't fix anything.
+
+        * kfile.c (fcaseopen): Initialize pointers to NULL.
+
+        * (fcaseopen): Initialize pointers to NULL.
+        Add check for Win32 directory separator.
+
+	*(caseopen): Ditto.
+
+        * tools.c (sci_gettime): Add calls to increase timer resolution to
+        1ms. This may help with sound problems.
+
+        * (sci_find_first): Add error output for errno values of
+        _findfirst.
+
+        * freesci.def: Add definition for sci_sched_yield.
+
 2001-06-06  Matt Hargett  <matt@use.net>
 
         * Add checks for return values of all SDL calls.

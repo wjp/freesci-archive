@@ -1,4 +1,4 @@
-dnl aclocal.m4 generated automatically by aclocal 1.4-p2
+dnl aclocal.m4 generated automatically by aclocal 1.4-p4
 
 dnl Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
@@ -230,9 +230,16 @@ AC_ARG_WITH(curses-libname,
     [  _ac_curses_libnames="-l$withval"
     ])
 
-AC_CHECK_INCLUDE_PATH([curses.h],[$_ac_curses_includes],[], ac_curses_includes)
-AC_CHECK_LINK_PATH([initscr();],$_ac_curses_libraries,$_ac_curses_libnames,
-		 [$ac_curses_includes],[#include <curses.h>], ac_curses_libraries)
+CURSHEADER=ncurses.h
+AC_CHECK_INCLUDE_PATH([ncurses.h],[$_ac_curses_includes],[], ac_curses_includes)
+
+if "$ac_curses_includes" = no; then
+	CURSHEADER=curses.h
+	AC_CHECK_INCLUDE_PATH([curses.h],[$_ac_curses_includes],[], ac_curses_includes)
+fi
+
+AC_CHECK_LINK_PATH([noecho();],$_ac_curses_libraries,$_ac_curses_libnames,
+		 [$ac_curses_includes],[#include <$CURSHEADER>], ac_curses_libraries)
 
 if test "$ac_curses_includes" = no || test "$ac_curses_libraries" = no; then
 

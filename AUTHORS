@@ -215,3 +215,8 @@ win32/
 	scriptdump.dsp (updates)
 	vocabdump.dsp (updates)
 
+
+Rune Orsval: <u951663@daimi.au.dk>
+conf/
+	freesci-config
+	config.template

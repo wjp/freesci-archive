@@ -220,9 +220,11 @@ sci_gettime(int *seconds, int *useconds)
 ** There are no known cases where this causes problems, though.  */
 void sci_gettime(int *seconds, int *useconds)
 {
-        unsigned long tm,__stdcall timeGetTime(void);
+        DWORD tm,__stdcall timeGetTime(void);
         
+		timeBeginPeriod(1);
         tm = timeGetTime();
+		timeEndPeriod(1);
         *seconds = tm/1000;
         *useconds = tm*1000;
 }
@@ -254,12 +256,46 @@ sci_init_dir(sci_dir_t *dir)
 char *
 sci_find_first(sci_dir_t *dir, char *mask)
 {
-        dir->search = _findfirst(mask, &(dir->fileinfo));
+	dir->search = _findfirst(mask, &(dir->fileinfo));
 
-        if (dir->search != -1)
-                return dir->fileinfo.name;
-        else
-                return NULL;
+	if (dir->search != -1)
+	{
+		if (dir->fileinfo.name == NULL)
+		{
+			return NULL;
+		}
+
+		if (strcmp(dir->fileinfo.name, ".") == 0 ||
+			strcmp(dir->fileinfo.name, "..") == 0)
+		{
+			if (sci_find_next(dir) == NULL)
+			{
+				return NULL;
+			}
+		}
+
+		return dir->fileinfo.name;
+	}
+       else
+	{
+		switch (errno)
+		{
+			case ENOENT: 
+			{ 
+				printf("_findfirst errno = ENOENT: no match\n");
+				break; 
+			}
+			case EINVAL: 
+			{ 
+				printf("_findfirst errno = EINVAL: invalid filename\n");
+				break; 
+			}
+			default:
+				printf("_findfirst errno = unknown (%d)", errno);
+		}
+	}
+						 
+	return NULL;
 }
 
 char *
@@ -272,7 +308,18 @@ sci_find_next(sci_dir_t *dir)
                 _findclose(dir->search);
                 dir->search = -1;
                 return NULL;
-        } else return dir->fileinfo.name;
+        } 
+
+		if (strcmp(dir->fileinfo.name, ".") == 0 ||
+			strcmp(dir->fileinfo.name, "..") == 0)
+		{
+			if (sci_find_next(dir) == NULL)
+			{
+				return NULL;
+			}
+		}
+
+		return dir->fileinfo.name;
 }
 
 void

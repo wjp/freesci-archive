@@ -125,6 +125,7 @@ struct {
 	 0, 15},
 	{"That's all folks!",
 	 "Ravi I.\nSCI0 sound resource specification\n\n"
+	 "Rune Orsval\nConfiguration file editor\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
 	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"

@@ -1025,9 +1025,7 @@ main(int argc, char** argv)
 			return 1;
 		}
 		sci_sched_yield();
-#ifdef _WIN32
-		Sleep(100);
-#endif
+
 		poly = gamestate->sound_server->command(gamestate, SOUND_COMMAND_TEST, 0, 0);
 
 		printf("Sound server reports polyphony %d\n", poly);

@@ -1,0 +1,156 @@
+[games]
+resource_dir = <text>
+{Read  the  game's resource data from
+the specified location. Must not  be  used  in  the
+generic part of the config file.}
+
+[all]
+version = <text>
+{Emulate SCI version x.yyy.zzz.
+The version number is  sometimes  printed  on  game
+discs,  or  can  be found out by grepping your main
+executable for "0.000." (for  SCI0  games).  It  is
+also  displayed  if  the built-in debugger is activated 
+in the Sierra SCI engine.}
+
+console_log = <text>
+{Sets a logging file for FreeSCI's console
+ output (by default, this is disabled)}
+
+mouse = yes | no
+{Specifies whether the interpreter
+should report to the game that it has a mouse.}
+
+pic0_dither_mode = dither | flat | dither256
+{dither: Draw in 16 colors, same as Sierra SCI.
+flat: Interpolate  colors
+(256  colors).  Improves some graphics.  dither256:
+Dither in 256 colors. A compromise  between  dither
+and flat.}
+
+pic0_dither_pattern = scaled | unscaled
+{scaled:
+Perform picture dithering to blocks with a width of
+the horizontal and a height of the vertical scaling
+factor unscaled:  Dither  single  pixels  (same  as
+scaled if the game is being run unscaled)}
+
+pic0_brush_mode  =  scaled | ellipses | random-ellipses | more-random
+{ Affects  how  semi-random
+brushes  (used  mostly  for  dirt  and foilage) are
+drawn in SCI0 background  pictures:  scaled:  Scale
+every  semi-random  pixel  to  a  rectangular block
+ellipses: Scale every semi-random pixel to a filled
+ellipse  random-ellipses: As ellipses, but slightly
+shift ellipse offset and size more-random: Add more
+random pixels to the whole area.}
+
+pic0_line_mode = correct | fine
+{Specify how
+lines are drawn when background pictures  are  rendered  
+in  SCI0:  correct: Draw lines appropriately
+scaled fine: Don't scale  lines  (thin  lines,  may
+cause problems) half: Draw lines at half width (may
+cause problems)}
+
+dirty_strategy = 1 | clusters
+{ The "dirty strategy"
+is  the  strategy  used to collect modifications to
+the screen content. Modifying this may affect  performance
+  on slow or networked systems.  1: Collect
+everything in one dirty  region  clusters:  Cluster
+non-overlapping  modified  regions  into  a  set of
+regions}
+
+pic0_scaled = yes | no
+{Whether  SCI0  background
+pics  should  be  scaled  (may  look better) or not
+(faster, looks more like the  original  games).  By
+default, it is disabled.}
+
+pic_buffer_size = <text>
+{Number of background pics to
+store in an LRU buffer. Increasing this value  will
+increase the amount of memory used, but may considerably
+ speed up changing back to rooms you  visited
+not too long ago.}
+
+view_filter = none | linear | trilinear
+{Specifies
+the way views (non-background  images)  are  scaled
+(this  obviously  does not affect unscaled images):
+one: No filtering is performed (default)  inear:  A
+simple linear filter is applied rilinear: Views are
+passed through a trilinear filter}
+
+pic_filter = none | linear | trilinear
+{Specifies   scaling   for   background
+images;  see  view_filter  for  a  list of possible
+options.}
+
+cursor_filter = none | linear | trilinear
+{Specifies scaling for  mouse  pointers;
+   see  view_filter  for  a  list  of  possible
+options. This option does  not  apply  to  graphics
+drivers  which  handle the mouse pointer explicitly
+(currently, only the GGI driver is affected).}
+
+text_filter = none | linear | trilinear
+{Specifies  scaling  for   text;   see
+view_filter for a list of possible options.}
+
+pic_antialiasing  =  none  |  simple
+{If activated,
+this option will do an extra pass  over  background
+images  to  anti-aliase them, usually improving the
+overall picture quality. This is set to  'none'  by
+default.}
+
+animation_delay = <text>
+{This   chooses   the  amount  of
+microseconds to wait between each sub-element of  a
+transition  animation  (also  see the next option).
+Setting this to zero will disable transition animations
+ completely.  The default is 5.}
+
+animation_granularity = <text>
+{This  sets  the  amount  of
+steps to execute simultaneously for each transition
+animation.  If  transition animations seem too slow
+on your system but you don't want to  disable  them
+completely,  you  might want to try increasing this
+value.  The default is 4.}
+
+alpha_threshold = <text>
+{When   using   filtered   images
+(specifically  views,  text, and cursors where used
+by the graphics driver),  this  value  is  used  to
+determine  when a part of the image should be drawn
+and when it should be omitted. The definition space
+of  this  value  is  0  to 255, where larger values
+cause more to be drawn.  This value does not affect
+unfiltered images or images drawn with alpha blending.
+  Default is 129.}
+
+midi_device = mt32 | mt32gm
+{Chooses the default MIDI device;  this
+can  be  either  "mt32"  for plain MT-32 output, or
+"mt32gm" to use FreeSCI's MT32 -> General MIDI mapping
+ algorithm.  This defaults to mt32gm.}
+
+midiout_driver = alsaraw | unixraw | ossseq | win32mci
+{Selects  the output device to use.
+Available options are "alsaraw" (using  ALSA's  raw
+MIDI  output  devices), "unixraw" (using /dev/midistyle
+ raw MIDI output devices), "ossseq"  (for  OSS
+sequencer devices) and "win32mci" on Win32 systems.
+The default on UNIXish systems is ossseq.}
+
+sound_server = unix | sdl
+{This chooses one of the  asynchronous
+sound  servers.  For  sound output, FreeSCI uses an
+asynchronous  process  or  thread;  currently   two
+implementations  of  this  mechanism are available:
+"unix", which forks off  a  separate  process,  and
+"sdl",  which  uses  libsdl's threading mechanisms.
+Defaults to 'unix', where available.}

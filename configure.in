@@ -167,6 +167,7 @@ AC_OUTPUT(Makefile    \
 	doc/Makefile \
         doc/misc/Makefile \
         doc/man/Makefile \
+        conf/Makefile \
 	src/Makefile  \
 	src/scicore/Makefile \
 	src/engine/Makefile \
