@@ -61,7 +61,7 @@ static int pcmout_sdl_open(guint16 *b, guint16 rate) {
   
   a.freq = rate;
   a.format = (AUDIO_S16);
-  a.channels = 1;
+  a.channels = 2;
   a.samples = 2048;
   a.callback = fill_audio;
   a.userdata = NULL;

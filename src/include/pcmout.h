@@ -35,8 +35,7 @@ typedef struct _pcmout_driver {
 	int (*pcmout_close)(void);
 } pcmout_driver_t;
 
-#define BUFFER_SIZE 1024  
-/* 410 */
+#define BUFFER_SIZE 2048  
 
 extern DLLEXTERN pcmout_driver_t *pcmout_driver;
 

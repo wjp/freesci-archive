@@ -1,3 +1,8 @@
+2002-03-16  Solomon Peachy <pizza@shaftnet.org>
+	* src/sound/midi_adlibemu.c
+	  src/sound/pcmout_sdl.c
+	  src/include/pcmout.h:  Now we support the adlib in stereo!
+	  
 2002-03-16  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/polled_ss_unix.c (sound_unix_get_data): Fixed treatment
