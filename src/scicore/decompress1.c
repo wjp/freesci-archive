@@ -388,7 +388,7 @@ int decompress1(resource_t *result, int resh, int early)
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
 		memcpy(result->data, buffer, compressedLength);
-		result->status = SCI_STATUS_OK;
+		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
 	case 1: /* LZW */
@@ -399,7 +399,7 @@ int decompress1(resource_t *result, int resh, int early)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_OK;
+		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
 	case 2: /* ??? */
@@ -411,7 +411,7 @@ int decompress1(resource_t *result, int resh, int early)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_OK;
+		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
 	case 3: /* Some sort of Huffman encoding */
@@ -422,7 +422,7 @@ int decompress1(resource_t *result, int resh, int early)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_OK;
+		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
 	case 4: /* NYI */

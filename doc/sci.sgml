@@ -501,6 +501,7 @@ re-use or overload the functions of their superclasses.
               <entry/?/<entry/L.rry.083/</row>
   <row><entry/Freddy Pharkas, Frontier Pharmacist/<entry/?/<entry/1.cfs.081/</row>
   <row><entry/King's Quest VI: To heir is human/<entry/?/<entry/1.cfs.158/</row>
+  <row><entry/Pepper's Adventures/<entry/?/<entry/?/</row>
                </tbody>
            </tgroup>
          </informaltable>
@@ -542,7 +543,7 @@ re-use or overload the functions of their superclasses.
       </para>
     </sect2>
     <sect2>
-      <title>resource.nr</title>
+      <title>resource.&lt;nr&gt;</title>
       <para>
 	SCI0 resource entries start with a four-tuple of little endian 16 bit words,
 	which we will call (<literal/id/, <literal/comp_size/, <literal/decomp_size/, <literal/method/).
@@ -578,7 +579,7 @@ re-use or overload the functions of their superclasses.
       </para>
     </sect2>
     <sect2>
-      <title>resource.nr</title>
+      <title>resource.&lt;nr&gt;</title>
       <para>
 	Later versions of SCI1 changed the resource file structure slightly:
 	The resource header now contains a byte describing the resource's type, and a four-tuple

@@ -1,4 +1,4 @@
-/***************************************************************************
+ /***************************************************************************
  decompress11.c Copyright (C) 1999 The FreeSCI project
 
 
@@ -124,7 +124,7 @@ int decompress11(resource_t *result, int resh)
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
 		memcpy(result->data, buffer, compressedLength);
-		result->status = SCI_STATUS_OK;
+		result->status = SCI_STATUS_ALLOCATED;
 		printf("#################### %d.%s: compression type #%d\n",
 			result->number, resource_type_suffixes[result->type], compressionMethod);
 		break;
@@ -138,7 +138,7 @@ int decompress11(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_OK;
+		result->status = SCI_STATUS_ALLOCATED;
 		break;		
 
 	case 19:

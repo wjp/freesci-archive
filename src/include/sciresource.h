@@ -54,8 +54,11 @@
 
 
 /*** RESOURCE STATUS TYPES ***/
-#define SCI_STATUS_OK 0
-#define SCI_STATUS_NOMALLOC 1
+#define SCI_STATUS_ALLOCATED 0
+#define SCI_STATUS_LOCKED 1 /* Allocated and in use */
+#define SCI_STATUS_NOMALLOC 2
+
+#define SCI_RES_FILE_NR_PATCH -1 /* Resource was read from a patch file rather than from a resource */
 
 
 /*** INITIALIZATION RESULT TYPES ***/
@@ -116,21 +119,46 @@ struct resource_index_struct {
 
 typedef struct resource_index_struct resource_index_t;
 
-struct resource_struct {
+typedef struct resource_struct {
+	unsigned char *data;
+
 	unsigned short number;
 	unsigned short type;
 	guint16 id; /* contains number and type */
 	guint16 length;
-	unsigned char *data;
 	unsigned char status;
-}; /* for storing resources in memory */
+	unsigned char file; /* Number of the resource file this resource is stored in */
 
-typedef struct resource_struct resource_t;
+	int file_offset; /* Offset in file */
+	int lockers; /* Number of places where this resource was locked */
+	struct _resource_struct *next; /* Position marker for the LRU queue */
+	struct _resource_struct *prev;
+} resource_t; /* for storing resources in memory */
+
+
+typedef struct {
+	int max_memory; /* Config option: Maximum total byte number allocated */
+	int sci_version; /* SCI resource version to use */
+
+	int resources_nr;
+	resource_t *resources;
+
+	int memory_locked; /* Amount of resource bytes in locked memory */ 
+	int memory_lru; /* Amount of resource bytes under LRU control */
+
+	char *resource_path; /* Path to the resource and patch files */
+
+	resource_t *lru_first, *lru_last; /* Pointers to the first and last LRU queue entries */
+	/* LRU queue: lru_first points to the most recent entry */
+
+	unsigned char allow_patches;
+} resource_mgr_t;
 
 extern DLLEXTERN resource_t *resource_map;
 
 /**** FUNCTION DECLARATIONS ****/
 
+/**--- Old resource manager ---**/
 
 int loadResources(int version, int allow_patches);
 /* Reads and parses all resource files in the current directory.
@@ -156,6 +184,53 @@ resource_t * findResource(unsigned short type,
 ** Returns   : (resource_t *) pointing to the resource, or NULL
 **             if it could not be found.
 */
+
+/**--- New Resource manager ---**/
+
+resource_mgr_t *
+scir_new_resource_manager(char *dir, int version, char allow_patches, int max_memory);
+/* Creates a new FreeSCI resource manager
+** Parameters: (char *) dir: Path to the resource and patch files (not modified or freed
+**                           by the resource manager)
+**             (int) version: The SCI version to look for; use SCI_VERSION_AUTODETECT
+**                            in the default case.
+**             (char ) allow_patches: Set to 1 if external patches (those look like
+**                                   "view.101" or "script.093") should be applied
+**             (int) max_memory: Maximum number of bytes to allow allocated for resources
+** Returns   : (resource_mgr_t *) A newly allocated resource manager
+** max_memory will not be interpreted as a hard limit, only as a restriction for resources
+** which are not explicitly locked. However, a warning will be issued whenever this limit
+** is exceeded.
+*/
+
+resource_t *
+scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock);
+/* Looks up a resource's data
+** Parameters: (resource_mgr_t *) mgr: The resource manager to look up in
+**             (int) type: The resource type to look for
+**             (int) number: The resource number to search
+**             (int) lock: non-zero iff the resource should be locked
+** Returns   : (resource_t *): The resource, or NULL if it doesn't exist
+** Locked resources are guaranteed not to have their contents freed until
+** they are unlocked explicitly (by scir_unlock_resource).
+*/
+
+void
+scir_unlock_resource(resource_mgr_t *mgr, resource_t *res);
+/* Unlocks a previously locked resource
+** Parameters: (resource_mgr_t *) mgr: The manager the resource should be freed from
+**             (resource_t *) res: The resource to free
+** Returns   : (void)
+*/
+
+void
+scir_free_resource_manager(resource_mgr_t *mgr);
+/* Frees a resource manager and all memory handled by it
+** Parameters: (resource_mgr_t *) mgr: The Manager to free
+** Returns   : (void)
+*/
+
+/**--- Decompression functions ---**/
 
 int decompress0(resource_t *result, int resh);
 /* Decrypts resource data and stores the result for SCI0-style compression.

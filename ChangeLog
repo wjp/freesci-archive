@@ -1,3 +1,7 @@
+2001-08-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/sciresource.h: LRU resmanager initial API definition
+
 2001-08-18  Alex Angas  <wgd@internode.on.net>
 
         * src/scicore/sci_memory.c, src/include/sci_memory.h: Minor
