@@ -2213,12 +2213,12 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
      <Title/The SCI0 Sound Resource Format/
      <para> by <author><firstname/Ravi/<surname/I./</author>
      </para><para>
-	Revision 8, Dec. 21, 2000
+	Revision 9, Jul. 4, 2001
 	</para>
 	<sect2><Title/Preface/
 	<para>
 	   Sierra's SCI0 sound resources contain the music and sound effects played
-	   in the game. With the introduction of SCI, the company took advantage of
+	   during the game. With the introduction of SCI, the company took advantage of
 	   new sound hardware which allowed for far better music than the traditional
 	   PC speaker could ever create. Sierra chose two devices to specifically
 	   target: the MT-32, and the Adlib. The MT-32 is a MIDI synth while the
@@ -2227,11 +2227,9 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	   the Sierra Soundtrack Series (http://www.queststudios.com).
 	</para><para>
 	   Music is stored as a series of MIDI events, and the sound resource is
-	   basically just a MIDI file. Much of what I write here comes from outside
-	   documents, and I would direct anyone seeking more information to a MIDI
-	   specification. The MIDI resource page (http://www.midi.org/resource.htm)
-	   on midi.org has some good links as well as tables with status and
-	   control information.
+	   basically just a MIDI file. The MIDI standard and device implementations
+	   are not covered here in detail, but specifications should be readily
+	   available elsewhere.
 	</para><para>
 	   Some people prefer the one-based numbering system for channel and program
 	   numbers. I personally prefer the zero-based system, and use it here. If
@@ -2249,19 +2247,19 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	   applies to Sierra's IBM games.
 	</para><para>
 	   Please post comments or questions to the SCI webboard:
-	      http://www.InsideTheWeb.com/mbs.cgi/mb173941
+	      http://pub48.bravenet.com/forum/show.asp?usernum=4071584210
 	</para><para>
 	   You can contact me personally at ravi.i@softhome.net, but I would prefer
 	   that SCI messages be posted on the webboard so everyone can see them.
 	</para>
 	</sect2><sect2><Title/Sound Devices/
 	<para>
-	   A gamer's sound hardware greatly affects how the music will sound. Devices
+	   A gamer's sound hardware greatly affects how music will sound. Devices
 	   used by SCI0 can be broken into 3 categories:
 	<variablelist>
 		<varlistentry><term>MIDI Synths</term><listitem><para>
 		   These will generally give the best sound quality. MIDI
-                   synths are polyphonic with defineable instruments through
+                   synths are polyphonic with definable instruments through
                    patch files and full support for MIDI controls. The
                    General MIDI standard had not been written when Sierra
                    began writing SCI games, and as far as I know no SCI0 game
@@ -2273,17 +2271,14 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		   Generally not as good as MIDI synths, but also less
                    expensive. The OPLx family of chips are still very common
                    among home PC users thanks to the Adlib and SoundBlaster
-                   cards. Synths are polyphonic with defineable instruments
+                   cards. Synths are polyphonic with definable instruments
                    through patch files, but drivers must be written to
                    interpret MIDI events and turn them into commands the
                    hardware will recognize. Support for most sound controls
                    gets lost in the process. Furthermore, drivers must map
                    logical, polyphonic MIDI channels to physical, monophonic
-                   hardware channels. A specific control was introduced for
-                   this purpose and will be discussed later. There is no
-                   common way of accessing these devices, so they must be
-                   individually supported. These days, however, most people
-                   have an Adlib compatible card.
+                   hardware channels. A control (4Bh) was introduced for this
+                   purpose and will be discussed later.
 		</para></listitem></varlistentry>
 
 		<varlistentry><term>Beepers</term><listitem><para>
@@ -2308,12 +2303,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	</para><para>
 	   Listed here are devices supported by the SCI0 interpreter with a little
 	   information about each. There could very well be other hardware not listed
-	   here, so please send in any missing information. Also, since the
-	   interpreter is made to be device independent, this list could be easily
-	   expanded. The process would require that a new driver be written and a
-	   patch file created if appropriate. Since the driver is responsible for
-	   choosing which patch file to use and then entering it into the device, the
-	   second step would be quite easy.
+	   here, so please send in any missing information.
 	  </para><para>
 	   <informaltable frame="all">
 	    <tgroup cols="5">
@@ -2362,17 +2352,18 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	                  it out for now/
 	   </simplelist>
 	</para><para>
-	   The driver field is the file name of the driver without the drv extension.
-	   Patch specifies which patch file the driver requests. Poly is the maximum
-	   number of voices which can be playing at once as reported by the driver.
-	   The play flag specifies which channels the device will play and gets
-	   explained in the header section.
+	  The driver column holds the file name of each driver without the .drv
+	  extension. The patch column specifies which patch resource each driver
+	  requests. The poly column is the maximum number of voices which can be
+	  played at once according to the driver. The flag column gives each
+	  device's play flag. Play flags, explained in the header section, determine
+	  which channels a device will play.
 	</para>
 	</sect2><sect2><Title/File Format/
 	<para>
-	   Sound files follow the same format as all extracted SCI0 resources: the
+	   Sound files follow the same format as all extracted SCI0 resources. The
 	   first two bytes of the file contain a magic number identifying the
-	   resource type and the rest of the file contains a dump of the uncompressed
+	   resource type. The rest of the file contains a dump of the uncompressed
 	   data. The identifier is the resource type (04h for sound) OR-ed with 80h
 	   and stored as a word. The result will be 84h 00h in extracted sound files.
 	</para><para>
@@ -2388,20 +2379,20 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		   This byte is only useful for non-MIDI synths which must know how many
 		   hardware channels each logical MIDI channel will need. This value is only
 		   an initial setting. Sound files can request changes to the mapping later
-		  with control changes. Requesting more hardware channels than are actually
-		  available can cause errors on some drivers.
+		   with control changes. Requesting more hardware channels than are actually
+		   available can cause errors on some drivers.
 		</para><para>
-		   The second byte describes how the user's sound harware should treat the
+		   The second byte describes how the user's sound hardware should treat the
 		   channel. It is the combination of bit flags which may be OR-ed together.
 		   If the appropriate bit is set for the currently selected sound device, the
 		   channel will be played. If it is not, the channel will be silent. The
 		   driver decides which bit it will use as the play flag, and the table under
 		   Sound Devices lists the flag used by each driver. Drivers ignore the first
-		   byte (used to request hardware channels) on MIDI channels it won't play.
+		   byte (used to request hardware channels) on MIDI channels they don't play.
 		</para><para>
-		  There is an exception to the above. Channel 9 is the MIDI percussion
-		  channel. The MT-32 (and possibly other MIDI synths) always plays this
-		  channel, regardless of whether or not it is specifically flagged.
+		   The MT-32 always plays channel 9, the MIDI percussion channel, regardless
+		   of whether or not the channel is flagged for the device. Other MIDI
+		   devices may also do this.
 		</para><para>
 		   Before the channel initialization is a byte which specifies whether the
 		   header holds information for 15 or 16 channels. A value of 0 means that
@@ -2421,45 +2412,40 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		    </simplelist>
 		</para><para>
 		   Notice that the space for channel 15's initialization will always be
-		   present. If the number of channels code is 2, the last two bytes of the
-		   header will be ignored, but they are stil in the resource. The header is
-		   always 33 bytes in length.
+		   present. If the sound resource reports data for only 15 channels then the
+		   last two bytes of the header will be ignored, but the header is always 33
+		   bytes long.
 		</para></sect3><sect3><title/Events/
 		<para>
 		   The actual music is stored in a series of events. The generic form for an
 		   event is:
 		<simplelist>
-			<member/&lt;byte - delta time&gt; [byte - status] [byte - p1 [p2]]/
+			<member/&lt;delta time&gt; [byte - status] [byte - p1 [p2]]/
 		</simplelist>
 		</para><para>
 		   Delta time is the number of ticks to wait after executing the previous
-		   event before executing this event. Standard MIDI stores this as a variable
-		  length value. In sound resources, it will generally be one byte and the
-		  most significant bit is in fact used as part of the value. In cases where
-		  a single byte cannot hold a high enough delta time, sound resources use
-		  F8h one or more times in a row. The F8h byte causes a delay of F0h (240
-		  decimal) ticks before continuing playback. The sequence F8 F8 78 FC waits
-		  600 ticks then stops the sequence because of the FCh status. The fact that
-		  F8h waits F0h ticks makes me think that E9h is the largest technically
-		  accepted delta time, even though larger values will work. The only
-		  exception is the FCh status, which can be theoretically given without a
-		  preceding delta time value -- any cases where FCh is listed as a delta
-		  time, the sound should stop playing. Ticks occur at 60 Hz, which is about
-		  16667 microseconds between ticks.
+		  event before executing this event. Ticks occur at 60 Hz. The delta time
+		  value is usually a single byte. However, longer delays can be produced by
+		  using F8h any number of times before the delta time value. Each F8h byte
+		  causes a delay of 240 ticks before continuing playback. For example, the
+		  sequence F8 F8 78 FC waits 600 ticks then stops the sequence because of
+		  the FCh status. The fact that F8h waits F0h ticks makes me think that E9h
+		  is the largest technically allowable delta time.
+		</para><para>
+		  The delta time must be present in most events. The only exception is when
+		  FCh is the status, because FCh is a real-time message. Sierra's resources
+		  seem to have always provided a delta time, though. Note also that FCh
+		  cannot be used as a delta time value - it will be interpreted as a stop
+		  sequence status.
 		</para><para>
 		   The status byte is basically a command. The most significant bit is always
 		   set. This feature is important because the status byte will not always be
-		   present. If you read a byte expecting it to be a status byte but the most
-		   significant bit is not set, that byte is actually a paramater and you
-		   should repeat the last status used. This is known as running status mode
-		   and appears to get used relatively often.
+		  present. A missing status byte is known as running status mode and the
+		  last status gets repreated with the new parameters. Parameters will never
+		  have their most significant bits set.
 		</para><para>
-		   The generic form for a status byte is (in bits) 1xxxcccc - The lower
-		   nibble designates which channel the message affects except when the upper
-		   nibble is 15. The upper nibble is the command, but as stated earlier, the
-		   most significant bit must be 1. That leaves space for 8 messages, most of
-		   which require at least one paramater. Paramaters will never have their
-		   most significant bit set.
+		  The generic form for a status byte is (in bits) 1xxxcccc. The lower nibble
+		  usually specifies a channel. The upper specifies a status.
 		</para>
 		</sect3><sect3><title/Status Reference/
 		<para>
@@ -2468,14 +2454,11 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 			    Note off: Stop playing note n on channel x, releasing the key
 		            with velocity v. If a hold pedal is pressed, the note will
 		            continue to play after this status is received and end when the
-		            pedal is released. A zero velocity note on can also be used to
-		            stop playing a note./
+		            pedal is released.
 			</listitem></varlistentry>
 
 			<varlistentry><term/9x n v/<listitem><para/
-			    Note on: Play note n on with velocity v on channel x. The
-		            velocity is the speed with which the key gets pressed, which
-		            basically means how loud the note should be played. Playing a
+			    Note on: Play note n on with velocity v on channel x. Playing a
 		            note with velocity 0 is a way of turning the note off./
 			</listitem></varlistentry>
 
@@ -2492,17 +2475,14 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 			</para><para>
 		            Controls which handle any value are continuous controllers. They
 		            have a continuous range. Controls which are only on/off are
-		            switches. Their defined range is only 01h (OFF) and 7Fh (ON).
-		            However, in order to respond to all values, 01h-3Fh is treated as
-		            OFF and 40h-7Fh is treated as ON. While in practice they may only
-		            use bit 6 as a flag, my personal opinion is that values between
-		            01h and 7Fh should be avoided for the sake of clarity.
+			    switches. Their defined values are 01h (OFF) and 7Fh (ON).
 			</para><para>
 		            Listed in this reference are the non-standard MIDI controls I've
-		            found in Sierra SCI0 sound files. Not all drivers support all
+		            found in Sierra SCI0 sound files. Standard controls are not
+			    listed here. Not all drivers support all
 		            controls.
 			</para><para>
-		            Control Refrence
+		            Control Reference
 			<variablelist>
 				<varlistentry><term/4Bh/<listitem><para/
 					Channel mapping: When a channel sets this control, it
@@ -2512,11 +2492,11 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 				</listitem></varlistentry>
 
 				<varlistentry><term/4Ch/<listitem><para>
-					Reset on SUSPEND: An on/off switch where a value of
+					Reset on PauseSound: An on/off switch where a value of
 		                        zero is off and a non-zero value is on. Note that
 		                        this is not the same as for standard MIDI control
 		                        switches. When this control is on, calling the sound
-		                        driver's SUSPEND subfunction will reset the sound
+		                        driver's PauseSound subfunction will reset the sound
 		                        position to the beginning. The initial value is set
 		                        to off when a sound gets loaded.</para>
 				</listitem></varlistentry>
@@ -2537,7 +2517,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
                			<varlistentry><term/60h/<listitem><para/
 					Cumulative cue: The interpreter can get cues from the
 		                        sound file, which sets the Sound object's signal
-		                        property. When a sound gets loaded, the inital cue is
+		                        property. When a sound gets loaded, the initial cue is
 		                        set to 127. When a CC60 occurs, the new control value
 		                        is added to the current cue. If the cue were 130, for
 		                        example, a CC60 5 on any channel would make the new
@@ -2550,13 +2530,16 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 				  Program change: Set program (patch / instrument / ect.) to p for
 				  channel x. This is a simple instrument change.
 			</para><para>
-			          Channel 15, however, includes two special cases of this status. If
-			          the new program is less than 127 the Sound object's signal property
-			          is set to the new program, making a non-cumulative cue. If the new
-			          program is equal to 127, then that exact position (not the start of
-			          the current tick) is set as the loop point. Normally, the driver
-			          loops to the beginning of the sound. If an explicit loop point is
-			          set, the sound will be replayed from the marked time instead.
+			  Channel 15, however, includes two special cases of this status. The
+			  first relates to communication with the game interpreter. If p is
+			  less than 127 then the signal property for the game interpreter's
+			  Sound object gets set to p, triggering a non-cumulative cue.
+			</para><para>
+			  If p is equal to 127, then the current position within the sound
+			  resource is remembered as the loop point. Normally the driver
+			  loops to the beginning of the sound when the sequence ends. If an
+			  explicit loop point is set, the sound will be replayed from the
+			  marked point instead.
 			</para><para>
 			          The actual time of the loop point is better explained with a short
 			          diagram:
@@ -2566,7 +2549,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 			              <member/0x00 0x92 0x30 0x10      play a note on channel 2/
 			              <member/  [restart here]/
 			              <member/0x00 0xCF 0x7F           set loop point/
-			              <member/0x00 0xC8 0x05           set to program 5 on channel 8/
+			              <member/0x00 0xC8 0x05           change to program 5 on channel 8/
 			              <member/0x00 0xCF 0x13           set signal to 19/
 			              <member/0x20 0xFC                end of file, loop to marked location/
 				</simplelist>
@@ -2584,9 +2567,8 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 			<varlistentry><term/Ex t b/<listitem><para/
 				    Pitch wheel: Set the pitch wheel to tb. The setting is actually
 			            a 14 bit number with the least significant 7 bits stored in b
-			            and the most significant 7 bits stored in t. (Remember the top
-			            bit can't be used for either byte.) The range of settings is
-			            0000h to 3FFFh. A setting of 2000h means the pitch wheel is
+			            and the most significant 7 bits stored in t. The range of values
+			  	    is 0000h to 3FFFh. A value of 2000h means that the pitch wheel is
 			            centered. Larger values raise pitch and smaller values lower it./
 			</listitem></varlistentry>
 
@@ -2613,6 +2595,14 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	</sect2><sect2><title/Revision history/
   <para>
   <variablelist>
+    <varlistentry><term/Revision 9 - Jul. 4, 2001/
+      <listitem><para>Changed StopSound to PauseSound for control 4Ch</para></listitem>
+      <listitem><para>Updated URL for SCI messageboard</para></listitem>
+      <listitem><para>Added web links for more SCI information<footnote>
+      <para>Editor's note: These are not included in the FreeSCI documentation version
+      </para></footnote></para></listitem>
+      <listitem><para>Did a little proofreading and editing</para></listitem>
+    </varlistentry>
     <varlistentry><term/Revision 8 - Dec. 21, 2000/
       <listitem><para><itemizedlist>
 	<listitem><para>Added suggested limit on delta time values</para></listitem>

@@ -269,8 +269,6 @@ kEmptyList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (!sane_listp(s, list))
 	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
 
-	SCIkdebug(SCIkWARNING, "Warning: EmptyList() was invoked with %d parameters\n", argc);
-
 	if (list)
 		s->acc = !(GET_HEAP(UPARAM(0) + LIST_FIRST_NODE));
 }

@@ -7,5 +7,6 @@ LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ -lm \
 	@SDL_LIBS@
 bin_PROGRAMS = freesci
+bin_SCRIPTS = sciv
 freesci_SOURCES = config.l main.c
 freesci_LDFLAGS = @SCIV_LDFLAGS@

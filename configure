@@ -3056,7 +3056,7 @@ done
 CPPFLAGS=$OLDCPPFLAGS
 
 
-if "$ac_curses_includes" = no; then
+if test x"$ac_curses_includes" = x; then
 	CURSHEADER=curses.h
 	
 OLDCPPFLAGS="$CPPFLAGS"

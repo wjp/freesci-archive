@@ -43,7 +43,8 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /Gm /Gi /GX /Zi /Gf /I "..\..\..\SDL-1.2.0\include" /I "..\include" /I "..\include\win32" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D "HAVE_STRING_H" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /FR /YX /FD /D VERSION=\"0.3.3-BETA\" /c
+# ADD CPP /nologo /MD /W3 /Gm /Gi /GX /Zi /O1 /Gf /I "..\..\..\SDL-1.2.1\include" /I "..\include" /I "..\include\win32" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "NDEBUG" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_DDRAW" /FR /FD /D VERSION=\"0.3.3-BETA\" /c
+# SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
@@ -53,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib winmm.lib ..\..\..\SDL-1.2.0\VisualC\SDL\Release\SDL.lib /nologo /dll /incremental:yes /debug /machine:I386
+# ADD LINK32 wsock32.lib ..\..\..\SDL-1.2.1\VisualC\SDL\Release\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ddraw.lib /nologo /dll /incremental:yes /debug /machine:I386 /out:"..\..\bin\freesci.dll"
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "freesci - Win32 Debug"
@@ -70,7 +71,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /GX /Zi /I "..\..\..\SDL-1.2.0\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /GX /Zi /I "..\..\..\SDL-1.2.0\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_DDRAW" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
@@ -80,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib winmm.lib ..\..\..\SDL-1.2.0\VisualC\SDL\Release\SDL.lib /nologo /dll /incremental:no /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 ..\..\..\SDL-1.2.0\VisualC\SDL\Release\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ddraw.lib /nologo /dll /incremental:no /debug /machine:I386 /pdbtype:sept
 
 !ENDIF 
 
@@ -213,6 +214,14 @@ SOURCE=..\gfx\resource\sci_view_1.c
 # Begin Group "drivers"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\gfx\drivers\dd_driver.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\drivers\dd_driver_line.cpp
+# End Source File
 # Begin Source File
 
 SOURCE=..\gfx\drivers\gfx_drivers.c

@@ -27,6 +27,9 @@
 
 #include <sciresource.h>
 #include <engine.h>
+#ifdef _WIN32
+#	include <windows.h>
+#endif _WIN32
 
 
 sci_kernel_function_t kfunct_mappers[] = {
@@ -498,7 +501,16 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				 | KERNEL_OPT_FLAG_GOT_2NDEVENT);
 
 	the_time = time(NULL);
+#ifdef _WIN32
+	timeBeginPeriod(0);
+#endif _WIN32
+
 	loc_time = localtime(&the_time);
+
+#ifdef _WIN32
+	timeEndPeriod(0);
+#endif _WIN32
+
 	if (s->version<SCI_VERSION_FTU_NEW_GETTIME) { /* Use old semantics */
 		if (argc) { /* Get seconds since last am/pm switch */
 			s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;

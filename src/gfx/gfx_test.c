@@ -27,8 +27,9 @@
 /* gfx driver test and verification program */
 
 #ifndef _MSC_VER
-#  include <unistd.h>
-#  include <sys/time.h>
+#   include <unistd.h>
+#   include <sys/time.h>
+#   include <windows.h>
 #endif
 
 #include <assert.h>
@@ -56,9 +57,17 @@ sci_gettime(int *seconds, int *useconds)
 {
         struct timeval tv;
 
-        assert(!gettimeofday(&tv, NULL));
-        *seconds = time(NULL);
-        *useconds = tv.tv_usec;
+#ifdef _WIN32
+	timeBeginPeriod(0);
+#endif _WIN32
+ 
+         assert(!gettimeofday(&tv, NULL));
+         *seconds = time(NULL);
+         *useconds = tv.tv_usec;
+
+#ifdef _WIN32
+	timeEndPeriod(0);
+#endif _WIN32
 }
 
 

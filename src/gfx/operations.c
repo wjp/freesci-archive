@@ -1450,7 +1450,7 @@ _gfxop_set_pointer(gfx_state_t *state, gfx_pixmap_t *pxm)
 int
 gfxop_set_pointer_cursor(gfx_state_t *state, int nr)
 {
-	gfx_pixmap_t *new_pointer;
+	gfx_pixmap_t *new_pointer = NULL;
 
 	BASIC_CHECKS(GFX_FATAL);
 
@@ -1473,7 +1473,7 @@ gfxop_set_pointer_view(gfx_state_t *state, int nr, int loop, int cel)
 {
 	int real_loop = loop;
 	int real_cel = cel;
-	gfx_pixmap_t *new_pointer;
+	gfx_pixmap_t *new_pointer = NULL;
 
 	BASIC_CHECKS(GFX_FATAL);
 
@@ -1534,7 +1534,7 @@ int
 gfxop_lookup_view_get_loops(gfx_state_t *state, int nr)
 {
 	int loop = 0, cel = 0;
-	gfxr_view_t *view;
+	gfxr_view_t *view = NULL;
 
 	BASIC_CHECKS(GFX_ERROR);
 
@@ -1553,7 +1553,7 @@ int
 gfxop_lookup_view_get_cels(gfx_state_t *state, int nr, int loop)
 {
 	int real_loop = loop, cel = 0;
-	gfxr_view_t *view;
+	gfxr_view_t *view = NULL;
 
 	BASIC_CHECKS(GFX_ERROR);
 
@@ -1610,8 +1610,8 @@ int
 gfxop_get_cel_parameters(gfx_state_t *state, int nr, int loop, int cel,
 			 int *width, int *height, point_t *offset)
 {
-	gfxr_view_t *view;
-	gfx_pixmap_t *pxm;
+	gfxr_view_t *view = NULL;
+	gfx_pixmap_t *pxm = NULL;
 	BASIC_CHECKS(GFX_ERROR);
 
 	if (!(view = gfxr_get_view(state->resstate, nr, &loop, &cel))) {
@@ -1635,8 +1635,8 @@ _gfxop_draw_cel_buffer(gfx_state_t *state, int nr, int loop, int cel,
 {
 	int priority = (color.mask & GFX_MASK_PRIORITY)? color.priority : -1;
 	int control = (color.mask & GFX_MASK_CONTROL)? color.control : -1;
-	gfxr_view_t *view;
-	gfx_pixmap_t *pxm;
+	gfxr_view_t *view = NULL;
+	gfx_pixmap_t *pxm = NULL;
 	int old_x, old_y;
 	BASIC_CHECKS(GFX_FATAL);
 

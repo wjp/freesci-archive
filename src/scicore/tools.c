@@ -220,11 +220,14 @@ sci_gettime(int *seconds, int *useconds)
 ** There are no known cases where this causes problems, though.  */
 void sci_gettime(int *seconds, int *useconds)
 {
-        DWORD tm,__stdcall timeGetTime(void);
+        DWORD tm;
         
-		timeBeginPeriod(1);
+	timeBeginPeriod(0);
+
         tm = timeGetTime();
-		timeEndPeriod(1);
+
+	timeEndPeriod(0);
+
         *seconds = tm/1000;
         *useconds = tm*1000;
 }

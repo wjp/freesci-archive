@@ -263,7 +263,7 @@ gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled, int force, gfx_
 gfxr_pic_t *
 gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_palette, int scaled)
 {
-	gfxr_pic_t *pic;
+	gfxr_pic_t *pic = NULL;
 	int restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;

@@ -37,6 +37,7 @@ HMIDIOUT devicename;				/* global handle to midiOut device */
 MIDIHDR midioutput;					/* used by midiOut* */
 int devicenum			= -1;		/* device number */
 
+
 static unsigned int win32mci_lastwrote = 0;
 
 

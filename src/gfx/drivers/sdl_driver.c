@@ -357,7 +357,7 @@ static void lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
   int dx,dy;
   int sx,sy;
   int swaptmp;
-  Uint8 *pixel;
+  Uint8 *pixel = NULL;
 
   dx = x2 - x1;
   dy = y2 - y1;

@@ -1,3 +1,11 @@
+2001-07-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* acinclude.m4 (CURSHEADER): Fixed (n)curses header file detection
+
+	* src/: Added sciv wrapper script to mark depreciation
+
+	* doc/sci.sgml: Updated sound docs to match Ravi's V9 documentation
+
 2001-07-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (main): Optionalized console file initialization
@@ -46,7 +54,7 @@
 	* acinclude.m4 (_ac_curses_libnames): Curses check now tests for
 	noecho() rather than initscr() to work around problem on IRIX.
 
-2001-06-13  San Neely  <sam@sam.net>
+2001-06-13  Sam Neely  <sam@sam.net>
 
         * tools.c (sci_find_first): Fix savegame listing bug by
 	skipping over . and .. directory entries.

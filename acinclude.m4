@@ -261,7 +261,7 @@ AC_ARG_WITH(curses-libname,
 CURSHEADER=ncurses.h
 AC_CHECK_INCLUDE_PATH([ncurses.h],[$_ac_curses_includes],[], ac_curses_includes)
 
-if "$ac_curses_includes" = no; then
+if test x"$ac_curses_includes" = x; then
 	CURSHEADER=curses.h
 	AC_CHECK_INCLUDE_PATH([curses.h],[$_ac_curses_includes],[], ac_curses_includes)
 fi

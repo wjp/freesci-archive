@@ -1,2 +1,2 @@
-EXTRA_DIST = sciv.6 freesci-tools.6
-man_MANS=sciv.6 freesci-tools.6
+EXTRA_DIST = freesci.6 freesci-tools.6
+man_MANS=freesci.6 freesci-tools.6
