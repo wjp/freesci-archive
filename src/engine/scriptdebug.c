@@ -623,9 +623,7 @@ char *selector_name(state_t *s, int selector)
 int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)
 {
     word species = getInt16(s->heap + objp + SCRIPT_SPECIES_OFFSET);
-    word superclass = getInt16(s->heap + objp + SCRIPT_SUPERCLASS_OFFSET);
     word type = getInt16(s->heap + objp + SCRIPT_INFO_OFFSET);
-    int i;
     byte *selectorIDoffset;
 
     int selectors = getInt16(s->heap + objp + SCRIPT_SELECTORCTR_OFFSET);
@@ -1147,6 +1145,7 @@ c_gfx_print_port(state_t *s)
 	return 0;
 }
 
+int
 c_gfx_priority(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -1184,6 +1183,7 @@ c_gfx_print_visual(state_t *s)
 	return 0;
 }
 
+int
 c_gfx_print_dynviews(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -1199,6 +1199,7 @@ c_gfx_print_dynviews(state_t *s)
 	return 0;
 }
 
+int
 c_gfx_drawpic(state_t *s)
 {
 	int flags = 1, default_palette = 0;
@@ -1224,6 +1225,8 @@ c_gfx_drawpic(state_t *s)
 #ifdef GFXW_DEBUG_WIDGETS
 extern gfxw_widget_t *debug_widgets[];
 extern int debug_widget_pos;
+
+int
 c_gfx_print_widget(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -1328,6 +1331,21 @@ c_gfx_fill_screen(state_t *s)
 	return 0;
 }
 
+
+int
+c_gfx_flush_resources(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	gfxop_set_pointer_cursor(s->gfx_state, GFXOP_NO_POINTER);
+	sciprintf("Flushing resources...\n");
+	s->visual->widfree(GFXW(s->visual));
+	gfxr_free_all_resources(s->gfx_state->driver, s->gfx_state->resstate);
+	return 0;
+}
 
 
 int
@@ -1901,67 +1919,67 @@ c_bplist(state_t *s)
 
 int c_bpdel(state_t *s)
 {
-  breakpoint_t *bp, *bp_next, *bp_prev;
-  int i = 0, found = 0;
-  int type;
+	breakpoint_t *bp, *bp_next, *bp_prev;
+	int i = 0, found = 0;
+	int type;
 
-  /* Find breakpoint with given index */
-  bp_prev = NULL;
-  bp = s->bp_list;
-  while (bp && i < cmd_params [0].val)
-  {
-    bp_prev = bp;
-    bp = bp->next;
-    i++;
-  }
-  if (!bp)
-  {
-    sciprintf ("Invalid breakpoint index %i\n", cmd_params [0].val);
-    return 1;
-  }
+	/* Find breakpoint with given index */
+	bp_prev = NULL;
+	bp = s->bp_list;
+	while (bp && i < cmd_params [0].val)
+		{
+			bp_prev = bp;
+			bp = bp->next;
+			i++;
+		}
+	if (!bp)
+		{
+			sciprintf ("Invalid breakpoint index %i\n", cmd_params [0].val);
+			return 1;
+		}
 
-  /* Delete it */
-  bp_next = bp->next;
-  type = bp->type;
-  if (type == BREAK_SELECTOR) free (bp->data.name);
-  free (bp);
-  if (bp_prev)
-    bp_prev->next = bp_next;
-  else
-    s->bp_list = bp_next;
+	/* Delete it */
+	bp_next = bp->next;
+	type = bp->type;
+	if (type == BREAK_SELECTOR) free (bp->data.name);
+	free (bp);
+	if (bp_prev)
+		bp_prev->next = bp_next;
+	else
+		s->bp_list = bp_next;
 
-  /* Check if there are more breakpoints of the same type. If not, clear
-     the respective bit in s->have_bp. */
-  for (bp = s->bp_list; bp; bp=bp->next)
-    if (bp->type == type)
-    {
-      found = 1;
-      break;
-    }
+	/* Check if there are more breakpoints of the same type. If not, clear
+	   the respective bit in s->have_bp. */
+	for (bp = s->bp_list; bp; bp=bp->next)
+		if (bp->type == type)
+			{
+				found = 1;
+				break;
+			}
 
-  if (!found) s->have_bp &= ~type;
+	if (!found) s->have_bp &= ~type;
 
-  return 0;
+	return 0;
 }
 
 int
 c_gnf(state_t *s)
 {
-  if (!s) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!s) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  vocab_gnf_dump(s->parser_branches, s->parser_branches_nr);
-  return 0;
+	vocab_gnf_dump(s->parser_branches, s->parser_branches_nr);
+	return 0;
 }
 
 int
 c_se(state_t *s)
 {
-  stop_on_event=1;
-  _debugstate_valid = script_debug_flag = script_error_flag = 0;
-  return 0;
+	stop_on_event=1;
+	_debugstate_valid = script_debug_flag = script_error_flag = 0;
+	return 0;
 }
 
 void
@@ -2119,6 +2137,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"
 					 "  With parameters, it lists the\n  widget corresponding to the\n  numerical index specified (for\n  each parameter).");
 #endif
+			con_hook_command(c_gfx_flush_resources, "gfx_flush_resources", "", "Frees all dynamically allocated\n  resources\n");
 			con_hook_command(c_gfx_current_port, "gfx_current_port", "", "Determines the current port number");
 			con_hook_command(c_gfx_print_port, "gfx_print_port", "i*", "Displays all information about the\n  specified port,"
 					 " or the current port\n  if no port was specified.");

@@ -296,6 +296,7 @@ void killlist(struct singly_linked_resources_struct *rs)
 {
 	if (rs->next) {
 		killlist(rs->next);
+		free(rs->resource);
 		free(rs->next);
 		rs->next = NULL;
 	}

@@ -587,7 +587,6 @@ int
 gfxop_exit(gfx_state_t *state)
 {
 	BASIC_CHECKS(GFX_ERROR);
-
 	gfxr_free_resource_manager(state->driver, state->resstate);
 	state->driver->exit(state->driver);
 	return GFX_OK;

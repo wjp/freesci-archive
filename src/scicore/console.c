@@ -65,6 +65,8 @@ FILE *con_file = NULL;
 
 static int _lists_need_sorting = 0;
 
+void
+con_init_dmalloc();
 
 /* Output buffer */
 char con_outputbuf[SCI_CONSOLE_OUTPUT_BUFFER][SCI_CONSOLE_LINE_WIDTH];
@@ -141,6 +143,8 @@ con_init(void)
     con_hook_command(&c_selectornames, "selectornames", "", "Displays all selector names and numbers.");
     con_hook_command(&c_kernelnames, "kernelnames", "", "Displays all syscall names and numbers.");
     con_hook_command(&c_dissectscript, "dissectscript", "i", "Examines a script.");
+
+    con_init_dmalloc();
 
     con_hook_int(&con_passthrough, "con_passthrough", "scicon->stdout passthrough");
     con_hook_int(&sci_version, "sci_version", "Interpreter version (see resource.h)");
@@ -288,7 +292,8 @@ con_parse(state_t *s, char *command)
   }
 
   free(_cmd);
-  free(cmd_params);
+  if (cmd_params)
+	  free(cmd_params);
   cmd_params = NULL;
 
 }
@@ -730,4 +735,112 @@ c_dissectscript(state_t *s)
   return 0;
 }
 
+
+#ifdef WITH_DMALLOC
+int
+c_dm_log_heap(state_t *s)
+{
+	dmalloc_log_heap_map();
+	return 0;
+}
+
+int
+c_dm_stats(state_t *s)
+{
+	dmalloc_log_stats();
+	return 0;
+}
+
+int
+c_dm_log_unfreed(state_t *s)
+{
+	dmalloc_log_unfreed();
+	return 0;
+}
+
+int
+c_dm_verify(state_t *s)
+{
+	unsigned long pointer_var;
+	void *ptr;
+
+	pointer_var = strtoul(cmd_params[0].str, NULL, 0);
+	ptr = (void *) pointer_var;
+
+	dmalloc_verify(ptr);
+
+	return 0;
+}
+
+int
+c_dm_debug(state_t *s)
+{
+	if (cmd_paramlength) {
+		long newval = strtol(cmd_params[0].str, NULL, 0);
+
+		sciprintf("Setting dmalloc_debug(%ld)\n", newval);
+		dmalloc_debug(newval);
+	} else sciprintf("dmalloc_debug is at 0x%lx\n", dmalloc_debug_current());
+	return 0;
+}
+
+int
+c_dm_mark(state_t *s)
+{
+	unsigned long mark = dmalloc_mark();
+
+	dmalloc_message("------------- MARK 0x%lx ---------------\n", mark);
+	sciprintf("mark 0x%lx\n", mark);
+	return 0;
+}
+
+int
+c_dm_chmark(state_t *s)
+{
+	unsigned long mark = strtoul(cmd_params[0].str, NULL, 0);
+	sciprintf("Checking mark 0x%lx\n", mark);
+	dmalloc_message("--- Mark 0x%lx:\n", mark);
+	dmalloc_log_changed(mark, 1, 1, 1);
+	return 0;
+}
+
+int
+c_dm_print(state_t *s)
+{
+	int i;
+	for (i = 0; i < cmd_paramlength; i++)
+		dmalloc_message("%s", cmd_params[i].str);
+	return 0;
+}
+
+void
+con_init_dmalloc()
+{
+	con_hook_command(c_dm_log_heap, "dm_log_heap", "", "Dumps the heap state to\n  the dmalloc output file\n\nUSAGE\n\n  dm_log_heap");
+	con_hook_command(c_dm_stats, "dm_stats", "", "Prints memory usage stats\n  to the dmalloc output file\n\n  dm_stats");
+	con_hook_command(c_dm_log_unfreed, "dm_log_unfreed", "", "Prints unfreed pointer\n  information to the dmalloc\n  output file\n\n"
+			 "USAGE\n\n  dm_log_unfreed");
+	con_hook_command(c_dm_verify, "dm_verify", "s", "Verifies one pointer,\n  prints output to dmalloc file\n\nUSAGE\n\n"
+			 "  dm_verify <ptr>\n  dm_verify 0\n\n  'dm_verify 0' will verify\n  ALL current pointers.\n");
+	con_hook_command(c_dm_debug, "dm_debug", "s*", "Sets the dmalloc debug\n  state or displays it\n\nUSAGE\n\n  dm_debug <mode>\n  dm_debug");
+	con_hook_command(c_dm_mark, "dm_mark", "", "Gets a mark describing\n  the current heap state\n\nUSAGE\n\n  dm_mark\n\n"
+			 "  The mark is written to the\n  dmalloc output file and\n  to sci output.\n\nSEE ALSO\n\n  cm_chmark");
+	con_hook_command(c_dm_chmark, "dm_chmark", "s", "Checks changes in the\n  heap state since a certain\n  mark was retreived\n\n"
+			 "USAGE\n\n  c_dm_chmark <mark>\n\n  Output is written to the\n  dmalloc output file.\n\n  Use dm_mark to retreive a\n"
+			 "  mark.\n\nSEE ALSO\n\n  c_dm_mark");
+	con_hook_command(c_dm_print, "dm_print", "s*", "Prints something to the\n  dmalloc ouput file\n\nUSAGE\n\n  dm_print <output>");
+	con_hook_command(c_dm_print, "dm_print", "s*", "Prints something to the\n  dmalloc output.\n\nUSAGE\n\n  dm_print <text>");
+}
+#else /* !DMALLOC */
+
+void
+con_init_dmalloc()
+{
+}
+#endif
+
 #endif /* SCI_CONSOLE */
+
+
+
+

@@ -207,6 +207,13 @@ void vocabulary_free_snames(char **snames_list);
  */
 opcode* vocabulary_get_opcodes();
 
+void
+vocabulary_free_opcodes(opcode *opcodes);
+/* Frees a previously allocated list of opcodes
+** Parameters: (opcode *) opcodes: Opcodes to free
+** Returns   : (void)
+*/
+
 /**
  * Returns a null terminated array of kernel function names.
  *

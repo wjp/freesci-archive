@@ -208,40 +208,54 @@ vocabulary_free_snames(char **snames_list)
 
 opcode* vocabulary_get_opcodes()
 {
-  opcode* o;
-  int count, i=0;
-  resource_t* r=findResource(sci_vocab, 998);
+	opcode* o;
+	int count, i=0;
+	resource_t* r=findResource(sci_vocab, 998);
 
-  /* if the resource couldn't be loaded, leave */
-  if (r == NULL) {
-    fprintf(stderr,"unable to load vocab.998\n");
-    return NULL;
-  }
+	/* if the resource couldn't be loaded, leave */
+	if (r == NULL) {
+		fprintf(stderr,"unable to load vocab.998\n");
+		return NULL;
+	}
 
-  count=getInt(r->data);
+	count=getInt(r->data);
 
-  o=malloc(sizeof(opcode)*256);
-  for(i=0; i<count; i++)
-    {
-      int offset=getInt(r->data+2+i*2);
-      int len=getInt(r->data+offset)-2;
-      o[i].type=getInt(r->data+offset+2);
-      o[i].number=i;
-      o[i].name=malloc(len+1);
-      memcpy(o[i].name, r->data+offset+4, len);
-      o[i].name[len]='\0';
+	o=malloc(sizeof(opcode)*256);
+	for(i=0; i<count; i++)
+		{
+			int offset=getInt(r->data+2+i*2);
+			int len=getInt(r->data+offset)-2;
+			o[i].type=getInt(r->data+offset+2);
+			o[i].number=i;
+			o[i].name=malloc(len+1);
+			memcpy(o[i].name, r->data+offset+4, len);
+			o[i].name[len]='\0';
 #ifdef VOCABULARY_DEBUG
-      printf("Opcode %02X: %s, %d\n", i, o[i].name, o[i].type);
+			printf("Opcode %02X: %s, %d\n", i, o[i].name, o[i].type);
 #endif
-    }
-  for(i=count; i<256; i++)
-    {
-      o[i].type=0;
-      o[i].number=i;
-      o[i].name=malloc(strlen("undefined")+1);
-      strcpy(o[i].name, "undefined");
-    }
-  return o;
+		}
+	for(i=count; i<256; i++)
+		{
+			o[i].type=0;
+			o[i].number=i;
+			o[i].name=malloc(strlen("undefined")+1);
+			strcpy(o[i].name, "undefined");
+		}
+	return o;
+}
+
+void
+vocabulary_free_opcodes(opcode *opcodes)
+{
+	int i;
+	if (!opcodes)
+		return;
+
+	for (i = 0; i < 256; i++) {
+		if (opcodes[i].name)
+			free(opcodes[i].name);
+	}
+	free(opcodes);
 }
 
 

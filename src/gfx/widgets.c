@@ -120,11 +120,13 @@ _gfxw_print_widget(gfxw_widget_t *widget, int indentation)
 	sciprintf(" ");
 }
 
-static
+static int
 _gfxwop_print_empty(gfxw_widget_t *widget, int indentation)
 {
 	_gfxw_print_widget(widget, indentation);
 	sciprintf("<untyped #%d>", widget->type);
+
+	return 0;
 }
 
 
@@ -166,7 +168,7 @@ verify_widget(gfxw_widget_t *widget)
 #endif /* GFXW_DEBUG_WIDGETS */
 		return 1;
 	} else if (widget->magic != GFXW_MAGIC_VALID) {
-		if (widget->magic = GFXW_MAGIC_INVALID) {
+		if (widget->magic == GFXW_MAGIC_INVALID) {
 			GFXERROR("Attempt to use invalidated widget\n");
 		} else {
 			GFXERROR("Attempt to use non-widget\n");
@@ -202,37 +204,6 @@ _gfxw_unallocate_widget(gfx_state_t *state, gfxw_widget_t *widget)
 	widget->magic = GFXW_MAGIC_INVALID;
 	free(widget);
 	_gfxw_debug_remove_widget(widget);
-}
-
-static inline void
-tabulate(int c)
-{
-	while (c--)
-		sciprintf(" ");
-}
-
-static rect_t no_rect = {-1, -1, -1, -1}; /* Never matched by gfx_rects_overlap() */
-static rect_t fullscreen_rect = {0, 0, 320, 200};
-
-static inline rect_t
-gfxw_rects_merge(rect_t a, rect_t b)
-{
-	if (a.xl == -1) /* no_rect */
-		return b;
-	if (b.xl == -1) /* no_rect */
-		return a;
-
-	return gfx_rects_merge(a, b);
-}
-
-static inline int
-gfxw_rect_isin(rect_t a, rect_t b)
-     /* Returns whether forall x. x in a -> x in b */
-{
-	return b.x >= a.x
-		&& b.y >= a.y
-		&& (b.x + b.xl) <= (a.x + a.xl)
-		&& (b.y + b.yl) <= (a.y + a.yl);
 }
 
 #define GFX_ASSERT(__x) \
@@ -533,9 +504,9 @@ gfxw_new_box(gfx_state_t *state, rect_t area, gfx_color_t color1, gfx_color_t co
 
 	widget->flags |= GFXW_FLAG_VISIBLE;
 
-	if (color1.mask & GFX_MASK_VISUAL
-	    && (state && (state->driver->mode->palette))
-		|| (!color1.alpha && !color2.alpha))
+	if ((color1.mask & GFX_MASK_VISUAL)
+	    && ((state && (state->driver->mode->palette))
+		|| (!color1.alpha && !color2.alpha)))
 		widget->flags |= GFXW_FLAG_OPAQUE;
 
 	_gfxw_set_ops_BOX(GFXW(widget));
@@ -1101,29 +1072,6 @@ _gfxwop_text_compare_to(gfxw_widget_t *widget, gfxw_widget_t *other)
 	return 1;
 }
 
-static inline int
-_calc_needmove(gfx_alignment_t align, int estsize, int realsize)
-{
-	switch (align) {
-	case ALIGN_TOP:
-		return 0;
-		break;
-
-	case ALIGN_CENTER:
-		return (estsize - realsize) / 2; /* need sign */
-		break;
-
-	case ALIGN_BOTTOM:
-		return estsize - realsize;
-		break;
-
-	default:
-		GFXERROR("Unexpected alignmend %d\n", align);
-		BREAKPOINT();
-		return -1;
-	}
-}
-
 void
 _gfxw_set_ops_TEXT(gfxw_widget_t *widget)
 {
@@ -1142,8 +1090,6 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 	      gfx_alignment_t valign, gfx_color_t color1, gfx_color_t color2,
 	      gfx_color_t bgcolor, int text_flags)
 {
-	int canclip;
-	int canmove;
 	gfxw_text_t *widget = (gfxw_text_t *)
 		_gfxw_new_widget(sizeof(gfxw_text_t), GFXW_TEXT);
 
@@ -1240,7 +1186,6 @@ __gfxwop_container_print_contents(char *name, gfxw_widget_t *widget, int indenta
 static int
 __gfxwop_container_print(gfxw_widget_t *widget, int indentation)
 {
-	gfxw_widget_t *seeker;
 	gfx_dirty_rect_t *dirty;
 	gfxw_container_t *container = (gfxw_container_t *) widget;
 	if (!GFXW_IS_CONTAINER(widget)) {
@@ -1419,7 +1364,7 @@ _gfxwop_container_set_visual(gfxw_widget_t *widget, gfxw_visual_t *visual)
 
 	container->visual = visual;
 	if (widget->parent) {
-		DDIRTY(stderr,"set_visual::DOWNWARDS abs(%d,%d,%d,%d, 1)\n", widget->bounds);
+		DDIRTY(stderr,"set_visual::DOWNWARDS abs(%d,%d,%d,%d, 1)\n", GFX_PRINT_RECT(widget->bounds));
 		widget->parent->add_dirty_abs(widget->parent, widget->bounds, 1);
 	}
 
@@ -1633,7 +1578,6 @@ _gfxwop_list_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
      /* Requires identical order of list elements. */
 {
 	gfxw_list_t *wlist, *olist;
-	gfxw_widget_t *wseeker, *oseeker;
 
 	if (widget->type != other->type)
 		return 0;
@@ -1772,7 +1716,7 @@ _gfxwop_visual_draw(gfxw_widget_t *widget, point_t pos)
 		if (err) {
 			GFXERROR("Error while clearing dirty rect (%d,%d,(%dx%d))\n", dirty->rect.x,
 				 dirty->rect.y, dirty->rect.xl, dirty->rect.yl);
-			if (err = GFX_FATAL)
+			if (err == GFX_FATAL)
 				return err;
 		}
 
@@ -1900,13 +1844,15 @@ _visual_find_free_ID(gfxw_visual_t *visual)
 	return id;
 }
 
+static int
 _gfxwop_add_dirty_rects(gfxw_container_t *dest, gfx_dirty_rect_t *src)
 {
-	DDIRTY(stderr, "Adding multiple dirty to #d\n", dest->ID);
+	DDIRTY(stderr, "Adding multiple dirty to #%d\n", dest->ID);
 	if (src) {
 		dest->dirty = gfxdr_add_dirty(dest->dirty, src->rect, GFXW_DIRTY_STRATEGY);
 		_gfxwop_add_dirty_rects(dest, src->next);
 	}
+	return 0;
 }
 
 /*-------------*/

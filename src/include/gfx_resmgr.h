@@ -28,8 +28,8 @@
 #ifndef _GFX_RESMGR_H_
 #define _GFX_RESMGR_H_
 
-#include <sbtree.h>
 #include <gfx_resource.h>
+#include <sbtree.h>
 
 typedef enum {
 	GFX_RESOURCE_TYPE_VIEW = 0,
@@ -100,6 +100,15 @@ gfxr_free_resource_manager(gfx_driver_t *driver, gfx_resstate_t *state);
 **                                      are installed in a driver-specific registry
 **             (gfx_resstate_t *) state: The state manager to free
 ** Return    : (void)
+*/
+
+void
+gfxr_free_all_resources(gfx_driver_t *driver, gfx_resstate_t *state);
+/* Frees all resources currently allocated
+** Parameter: (gfx_driver_t *) driver: The driver to free with
+**            (gfx_resstate_t *) state: The state to do this on
+** Returns  : (void)
+** This function is intended to be used primarily for debugging.
 */
 
 void

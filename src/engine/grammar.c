@@ -37,7 +37,7 @@
 #define TOKEN_NON_NT (TOKEN_OPAREN | TOKEN_TERMINAL_CLASS | TOKEN_TERMINAL_GROUP | TOKEN_STUFFING_WORD)
 #define TOKEN_TERMINAL (TOKEN_TERMINAL_CLASS | TOKEN_TERMINAL_GROUP)
 
-static int _allocd_rules = 0;
+ int _allocd_rules = 0;
 
 static void
 vocab_print_rule(parse_rule_t *rule)
@@ -233,6 +233,7 @@ _vbuild_rule(parse_tree_branch_t *branch)
   }
 
   rule = malloc(sizeof(int) * (4 + tokens));
+
   ++_allocd_rules;
   rule->id = branch->id;
   rule->specials_nr = tokenpos >> 1;
@@ -309,199 +310,206 @@ _vsatisfy_rule(parse_rule_t *rule, result_word_t *input)
 }
 
 /************** Rule lists **************/
-/* Slow recursive implementations ahead */
-/****************************************/
 
 void
 vocab_free_rule_list(parse_rule_list_t *list)
 {
-  if (list) {
-    _vfree(list->rule);
-    vocab_free_rule_list(list->next); /* Yep, this is slow and memory-intensive. */
-    free(list);
-  }
+	if (list) {
+		_vfree(list->rule);
+		vocab_free_rule_list(list->next); /* Yep, this is slow and memory-intensive. */
+		free(list);
+	}
 }
 
 static inline int
 _rules_equal_p(parse_rule_t *r1, parse_rule_t *r2)
 {
-  if ((r1->id != r2->id)
-      || (r1->length != r2->length)
-      || (r1->first_special != r2->first_special))
-    return 0;
+	if ((r1->id != r2->id)
+	    || (r1->length != r2->length)
+	    || (r1->first_special != r2->first_special))
+		return 0;
 
-  return !(memcmp(r1->data, r2->data, sizeof(int) * r1->length));
+	return !(memcmp(r1->data, r2->data, sizeof(int) * r1->length));
 }
 
 static parse_rule_list_t *
 _vocab_add_rule(parse_rule_list_t *list, parse_rule_t *rule)
 {
-  parse_rule_list_t *new_elem;
-  int term;
+	parse_rule_list_t *new_elem;
+	int term;
 
-  if (!rule)
-    return list;
+	if (!rule)
+		return list;
 
-  new_elem = malloc(sizeof(parse_rule_list_t));
-  term = rule->data[rule->first_special];
+	new_elem = malloc(sizeof(parse_rule_list_t));
+	term = rule->data[rule->first_special];
 
-  new_elem->rule = rule;
-  new_elem->next = NULL;
-  new_elem->terminal = term = ((term & TOKEN_TERMINAL)? term : 0);
+	new_elem->rule = rule;
+	new_elem->next = NULL;
+	new_elem->terminal = term = ((term & TOKEN_TERMINAL)? term : 0);
 
-  if (!list)
-    return new_elem;
-  else/* if (term < list->terminal) {
-      new_elem->next = list;
-      return new_elem;
-      } else*/ {
-    parse_rule_list_t *seeker = list;
+	if (!list)
+		return new_elem;
+	else/* if (term < list->terminal) {
+	       new_elem->next = list;
+	       return new_elem;
+	       } else*/ {
+		parse_rule_list_t *seeker = list;
 
-    while (seeker->next/* && seeker->next->terminal <= term*/) {
-      if (seeker->next->terminal == term)
-	if (_rules_equal_p(seeker->next->rule, rule)) {
-	  _vfree(rule);
-	  return list; /* No duplicate rules */
+		while (seeker->next/* && seeker->next->terminal <= term*/) {
+			if (seeker->next->terminal == term)
+				if (_rules_equal_p(seeker->next->rule, rule)) {
+					_vfree(rule);
+					free(new_elem);
+					return list; /* No duplicate rules */
+				}
+			seeker = seeker->next;
+		}
+
+		new_elem->next = seeker->next;
+		seeker->next = new_elem;
+		return list;
 	}
-      seeker = seeker->next;
-    }
-
-    new_elem->next = seeker->next;
-    seeker->next = new_elem;
-    return list;
-  }
 }
 
 static void
 _vprl(parse_rule_list_t *list, int pos)
 {
-  if (list) {
-    sciprintf("R%03d: ", pos);
-    vocab_print_rule(list->rule);
-    sciprintf("\n");
-    _vprl(list->next, pos+1);
-  } else {
-    sciprintf("%d rules total.\n", pos);
-  }
+	if (list) {
+		sciprintf("R%03d: ", pos);
+		vocab_print_rule(list->rule);
+		sciprintf("\n");
+		_vprl(list->next, pos+1);
+	} else {
+		sciprintf("%d rules total.\n", pos);
+	}
 }
 
 void
 vocab_print_rule_list(parse_rule_list_t *list)
 {
-  _vprl(list, 0);
+	_vprl(list, 0);
 }
 
 static parse_rule_list_t *
 _vocab_split_rule_list(parse_rule_list_t *list)
 {
-  if (!list->next
-      || (list->next->terminal)) {
-    parse_rule_list_t *tmp = list->next;
-    list->next = NULL;
-    return tmp;
-  }
-  else return _vocab_split_rule_list(list->next);
+	if (!list->next
+	    || (list->next->terminal)) {
+		parse_rule_list_t *tmp = list->next;
+		list->next = NULL;
+		return tmp;
+	}
+	else return _vocab_split_rule_list(list->next);
+}
+
+static void
+_vocab_free_empty_rule_list(parse_rule_list_t *list)
+{
+	if (list->next)
+		_vocab_free_empty_rule_list(list->next);
+
+	free(list);
 }
 
 static parse_rule_list_t *
 _vocab_merge_rule_lists(parse_rule_list_t *l1, parse_rule_list_t *l2)
 {
-  parse_rule_list_t *retval = l1, *seeker = l2;
-  while (seeker) {
-    retval = _vocab_add_rule(retval, seeker->rule);
-    seeker = seeker->next;
-  }
+	parse_rule_list_t *retval = l1, *seeker = l2;
+	while (seeker) {
+		retval = _vocab_add_rule(retval, seeker->rule);
+		seeker = seeker->next;
+	}
+	_vocab_free_empty_rule_list(l2);
 
-  return retval;
+	return retval;
 }
 
 static int
 _vocab_rule_list_length(parse_rule_list_t *list)
 {
-  return ((list)? _vocab_rule_list_length(list->next) + 1 : 0);
+	return ((list)? _vocab_rule_list_length(list->next) + 1 : 0);
 }
 
 
 static parse_rule_list_t *
 _vocab_clone_rule_list_by_id(parse_rule_list_t *list, int id)
 {
-  parse_rule_list_t *result = NULL;
-  parse_rule_list_t *seeker = list;
+	parse_rule_list_t *result = NULL;
+	parse_rule_list_t *seeker = list;
 
-  while (seeker) {
-    if (seeker->rule->id == id) {
-      result = _vocab_add_rule(result, _vdup(seeker->rule));
-    }
-    seeker = seeker->next;
-  }
+	while (seeker) {
+		if (seeker->rule->id == id) {
+			result = _vocab_add_rule(result, _vdup(seeker->rule));
+		}
+		seeker = seeker->next;
+	}
   
-  return result;
+	return result;
 }
 
 
 parse_rule_list_t *
 _vocab_build_gnf(parse_tree_branch_t *branches, int branches_nr, int verbose)
 {
-  int i;
-  int iterations = 0;
-  int last_termrules, termrules = 0;
-  int ntrules_nr;
-  parse_rule_list_t *ntlist = NULL;
-  parse_rule_list_t *tlist, *new_tlist;
+	int i;
+	int iterations = 0;
+	int last_termrules, termrules = 0;
+	int ntrules_nr;
+	parse_rule_list_t *ntlist = NULL;
+	parse_rule_list_t *tlist, *new_tlist;
 
-  for (i = 1; i < branches_nr; i++) { /* branch rule 0 is treated specially */
-    parse_rule_t *rule = _vbuild_rule(branches + i);
-    ntlist = _vocab_add_rule(ntlist, rule);
-  }
+	for (i = 1; i < branches_nr; i++) { /* branch rule 0 is treated specially */
+		parse_rule_t *rule = _vbuild_rule(branches + i);
+		ntlist = _vocab_add_rule(ntlist, rule);
+	}
 
-  tlist = _vocab_split_rule_list(ntlist);
-  ntrules_nr = _vocab_rule_list_length(ntlist);
+	tlist = _vocab_split_rule_list(ntlist);
+	ntrules_nr = _vocab_rule_list_length(ntlist);
 
-  new_tlist = tlist;
-  tlist = NULL;
+	if (verbose)
+		sciprintf("Starting with %d rules\n", ntrules_nr);
 
-  do {
-    parse_rule_list_t *new_new_tlist = NULL;
-    parse_rule_list_t *ntseeker, *tseeker;
-    last_termrules = termrules;
+	new_tlist = tlist;
+	tlist = NULL;
 
-    ntseeker = ntlist;
-    while (ntseeker) {
-      tseeker = new_tlist;
+	do {
+		parse_rule_list_t *new_new_tlist = NULL;
+		parse_rule_list_t *ntseeker, *tseeker;
+		last_termrules = termrules;
 
-      while (tseeker) {
-	parse_rule_t *newrule = _vinsert(ntseeker->rule, tseeker->rule);
-	if (newrule)
-	  new_new_tlist = _vocab_add_rule(new_new_tlist, newrule);
-	tseeker = tseeker->next;
-      }
+		ntseeker = ntlist;
+		while (ntseeker) {
+			tseeker = new_tlist;
 
-      ntseeker = ntseeker->next;
-    }
+			while (tseeker) {
+				parse_rule_t *newrule = _vinsert(ntseeker->rule, tseeker->rule);
+				if (newrule)
+					new_new_tlist = _vocab_add_rule(new_new_tlist, newrule);
+				tseeker = tseeker->next;
+			}
 
-    /*    new_tlist = _vocab_merge_rule_lists(new_tlist, tlist);
-    if (tlist)
-    free(tlist);*/
-    tlist = _vocab_merge_rule_lists(tlist, new_tlist);
-    if (new_tlist)
-      free(new_tlist);
+			ntseeker = ntseeker->next;
+		}
 
-    new_tlist = new_new_tlist;
+		tlist = _vocab_merge_rule_lists(tlist, new_tlist);
 
-    termrules = _vocab_rule_list_length(new_new_tlist);
+		new_tlist = new_new_tlist;
 
-    if (verbose)
-      sciprintf("After iteration #%d: %d new term rules\n", ++iterations, termrules);
-  } while (termrules && (iterations < 30));
+		termrules = _vocab_rule_list_length(new_new_tlist);
 
-  vocab_free_rule_list(ntlist);
+		if (verbose)
+			sciprintf("After iteration #%d: %d new term rules\n", ++iterations, termrules);
+	} while (termrules && (iterations < 30));
 
-  if (verbose) {
-    sciprintf("\nGNF rules:\n");
-    vocab_print_rule_list(tlist);
-  }
+	vocab_free_rule_list(ntlist);
 
-  return tlist;
+	if (verbose) {
+		sciprintf("\nGNF rules:\n");
+		vocab_print_rule_list(tlist);
+	}
+
+	return tlist;
 }
 
 parse_rule_list_t *

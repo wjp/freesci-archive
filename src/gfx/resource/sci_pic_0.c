@@ -1197,14 +1197,14 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 	int proj_y;
 	int proj_ytotal;
 	int proj_x;
-	int proj_xl_bound;
-	int proj_xr_bound;
+	int proj_xl_bound = 0;
+	int proj_xr_bound = 0;
 
 	do {
 		int ytotal = oldytotal + (linewidth * dy);
 		int xcont;
 		int state;
-		int dx;
+
 		y += dy;
 		proj_y = y / pic->mode->yfact;
 
@@ -1492,9 +1492,6 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 	int bitmask;
 	byte *bounds = NULL;
 	int legalcolor;
-	int dx, dy, delta;
-	int rdelta_x = -1;
-	int rdelta_y = -1;
 	int min_x, min_y, max_x, max_y;
 
 	if (pic->control_map->index_data[y_200 * 320 + x_320] != 0)
@@ -1527,7 +1524,7 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 	} else if (drawenable & GFX_MASK_PRIORITY) {
 		bounds = pic->priority_map->index_data;
 		legalcolor = 0;
-	}
+	} else legalcolor = 0;
 
 	if (bounds[ytotal + x] != legalcolor)
 		return;
@@ -1672,7 +1669,7 @@ _gfxr_vismap_remove_artifacts_old(gfxr_pic_t *pic)
 								vismap[offset] = vismap[offset + linewidth];
 								primap[offset] = primap[offset + linewidth];
 							} else {
-								vismap[offset] = vismap[offset + linewidth] & 0x0f | vismap[offset - linewidth] & 0xf0;
+								vismap[offset] = (vismap[offset + linewidth] & 0x0f) | (vismap[offset - linewidth] & 0xf0);
 								primap[offset] = (primap[offset + linewidth] + primap[offset - linewidth]) >> 1;
 							}
 						}
@@ -1689,7 +1686,7 @@ _gfxr_vismap_remove_artifacts_old(gfxr_pic_t *pic)
 								vismap[offset] = vismap[offset + 1];
 								primap[offset] = primap[offset + 1];
 							} else {
-								vismap[offset] = vismap[offset + 1] & 0x0f | vismap[offset - 1] & 0xf0;
+								vismap[offset] = (vismap[offset + 1] & 0x0f) | (vismap[offset - 1] & 0xf0);
 								primap[offset] = (primap[offset + 1] + primap[offset - 1]) >> 1;
 							}
 						}

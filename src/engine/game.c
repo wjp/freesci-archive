@@ -56,8 +56,10 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 		/* Now build a GNF grammar out of this */
 		s->parser_rules = vocab_build_gnf(s->parser_branches, s->parser_branches_nr);
 
-	} else
+	} else {
 		sciprintf("Assuming that this game does not use a parser.\n");
+		s->parser_rules = NULL;
+	}
 
 
 	s->opcodes = vocabulary_get_opcodes();
@@ -76,7 +78,7 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 	return 0;
 }
 
-
+extern int _allocd_rules;
 static void
 _free_vocabulary(state_t *s)
 {
@@ -86,12 +88,15 @@ _free_vocabulary(state_t *s)
 		vocab_free_words(s->parser_words, s->parser_words_nr);
 		vocab_free_suffices(s->parser_suffices, s->parser_suffices_nr);
 		vocab_free_branches(s->parser_branches);
+fprintf(stderr,"Allocd-rules pre %d\n", _allocd_rules);
 		vocab_free_rule_list(s->parser_rules);
+fprintf(stderr,"Allocd-rules post %d\n", _allocd_rules);
 	}
 
 	vocabulary_free_snames(s->selector_names);
 	vocabulary_free_knames(s->kernel_names);
-	free(s->opcodes);
+	vocabulary_free_opcodes(s->opcodes);
+	s->opcodes = NULL;
 
 	s->selector_names = NULL;
 	s->kernel_names = NULL;
@@ -116,7 +121,7 @@ static int
 _reset_graphics_input(state_t *s)
 {
 	resource_t *resource;
-	int i, font_nr;
+	int font_nr;
 	gfx_color_t transparent;
 	sciprintf("Initializing graphics\n");
 
@@ -191,8 +196,6 @@ game_init_graphics(state_t *s)
 static void
 _free_graphics_input(state_t *s)
 {
-	int i;
-
 	sciprintf("Freeing graphics\n");
 
 	s->visual->widfree(GFXW(s->visual));

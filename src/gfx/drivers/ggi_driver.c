@@ -141,7 +141,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	if (ggiInit() < 0)
 		return GFX_FATAL;
 
-	meta = malloc(sizeof(gfx_ggi_struct_t));
+	meta = calloc(sizeof(gfx_ggi_struct_t), 1);
 
 	if (!(meta->vis = ggiOpen(NULL))) {
 		DEBUG_BASIC("ggiOpen() failed!\n");
@@ -228,7 +228,7 @@ ggi_init(gfx_driver_t *drv)
 	if (ggiInit() < 0)
 		return GFX_FATAL;
 
-	meta = malloc(sizeof(gfx_ggi_struct_t));
+	meta = calloc(sizeof(gfx_ggi_struct_t), 1);
 
 	if (!(meta->vis = ggiOpen(NULL))) {
 		DEBUG_BASIC("ggiOpen() failed!\n");
@@ -348,6 +348,8 @@ ggi_exit(gfx_driver_t *drv)
 
 	if (FRAMES < 2)
 		free(STATE->alt_back_buffer);
+
+	free(drv->state);
 }
 
 

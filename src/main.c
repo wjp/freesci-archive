@@ -761,10 +761,12 @@ main(int argc, char** argv)
 	wait(NULL); /* Wait for sound server process to die, if neccessary */
 	printf(" OK.\n");
 #endif
+	free(gamestate);
 
 	gfxop_exit(gfx_state);
 
-	free(gamestate);
-
+#ifdef WITH_DMALLOC
+	dmalloc_log_unfreed();
+#endif
 	return 0;
 }
