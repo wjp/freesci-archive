@@ -1,3 +1,7 @@
+2002-02-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/main.c (init_gfx): Don't ignore -c when -x or -y isn't used
+
 2002-02-04  Max Horn  <max@quendi.de>
 
 	* src/scicore/tools.c (sci_get_homedir): Fixed compilation on Mac OS X

@@ -723,6 +723,9 @@ init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_t *driver, r
 	if (cl_options->color_depth > 0)
 		color_depth = cl_options->color_depth;
 
+	if (cl_options->color_depth > 0 && scale_x == 0)
+		scale_x = scale_y = 2; /* Some default setting */
+
 	if (scale_x > 0) {
 
 		if (color_depth > 0) {
