@@ -32,7 +32,7 @@
 #include <versions.h>
 #include <gfx_options.h>
 
-#define FREESCI_DRIVER_SUBSYSTEMS_NR 3
+#define FREESCI_DRIVER_SUBSYSTEMS_NR 1
 
 #define FREESCI_DRIVER_SUBSYSTEM_GFX 0
 #define FREESCI_DRIVER_SUBSYSTEM_PCM 1

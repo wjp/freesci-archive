@@ -55,7 +55,7 @@ sci_res_read_entry(byte *buf, resource_t *res, int use_sci_01v)
 	}
 
 #if 0
-	fprintf(stderr, "Read [%08x] %6d.%s\tresource.%03d, %08x\n",
+	fprintf(stderr, "Read [%04x] %6d.%s\tresource.%03d, %08x\n",
 		res->id, res->number,
 		sci_resource_type_suffixes[res->type],
 		res->file, res->file_offset);

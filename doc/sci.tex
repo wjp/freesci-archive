@@ -2063,19 +2063,73 @@ Lars Skovlund
 
 Version 1.0, 6. July 1999
 
-Note that the observations made in this document are generally based on SCI version 0.000.572 (the one that comes with LSL3), but should be valid even for SCI01 and SCI1, as well. I know already about some differences in the port system from SCI0 to SCI1, but I feel we should have an interpreter running for SCI0 before dealing with SCI1.
+Note that the observations made in this document are generally based
+on SCI version 0.000.572 (the one that comes with LSL3), but should be
+valid even for SCI01 and SCI1, as well. I know already about some
+differences in the port system from SCI0 to SCI1, but I feel we should
+have an interpreter running for SCI0 before dealing with SCI1.
 
-This article discusses a key data structure in SCI graphics handling; this data structure is called a port, and it is involved in most graphics-related operations. The port is basically a graphics state record, storing things like pen color, current font, cursor position etc. Each port also has an origin and a size. The actual port data structure has remained absolutely unchanged from SCI0 up to the latest versions of SCI1.
+This article discusses a key data structure in SCI graphics handling;
+this data structure is called a port, and it is involved in most
+graphics-related operations. The port is basically a graphics state
+record, storing things like pen color, current font, cursor position
+etc. Each port also has an origin and a size. The actual port data
+structure has remained absolutely unchanged from SCI0 up to the latest
+versions of SCI1.
 
-The port can be viewed as a rectangle in which things are drawn. Every drawing operation (even KDrawPic) is executed relative to the origin coordinates of the current port (depending on the kernel function, other parameters in the port structure are used as well), such that coordinate (0, 0) in the "picture window" (such a thing really exists in SCI!) is {\em{not}} the top of the screen, but rather the leftmost point underneath the menu bar. The coordinate set (0,0) is called the local coordinates, and its physical position on the screen, (0, 10), is called the global coordinates. Kernel calls exist to ease conversion between the two coordinate systems, but they are, it appears, meant for event handlers to use, and not generally usable (I think they take a pointer to an Event object as a parameter).
+The port can be viewed as a rectangle in which things are drawn. Every
+drawing operation (even KDrawPic) is executed relative to the origin
+coordinates of the current port (depending on the kernel function,
+other parameters in the port structure are used as well), such that
+coordinate (0, 0) in the "picture window" (such a thing really exists
+in SCI!) is {\em{not}} the top of the screen, but rather the leftmost
+point underneath the menu bar. The coordinate set (0,0) is called the
+local coordinates, and its physical position on the screen, (0, 10),
+is called the global coordinates. Kernel calls exist to ease
+conversion between the two coordinate systems, but they are, it
+appears, meant for event handlers to use, and not generally usable (I
+think they take a pointer to an Event object as a parameter).
 
-At least three ports are created and managed automatically by the SCI interpreter. These are the "window manager" port, the menu port, and the picture port (which is actually a window, see later). The latter two should be fairly easy to understand. The menu bar is drawn in the menu port, and the current room is drawn in the picture port. What may be less obvious is that the window manager port is an "invisible" port, on which the window backgrounds are drawn, although the windows have a port themselves. If you are familiar with Windows\texttrademark{} programming, the term "client rectangle" may ring a bell here - SCI draws the window backgrounds, using values in the window manager port, while the window's own port controls what is drawn inside it. The window manager port covers the same bounding rectangle as the picture window, but it is transparent so it doesn't mess up the graphics.
+At least three ports are created and managed automatically by the SCI
+interpreter. These are the "window manager" port, the menu port, and
+the picture port (which is actually a window, see later). The latter
+two should be fairly easy to understand. The menu bar is drawn in the
+menu port, and the current room is drawn in the picture port. What may
+be less obvious is that the window manager port is an "invisible"
+port, on which the window backgrounds are drawn, although the windows
+have a port themselves. If you are familiar with
+Windows\texttrademark{} programming, the term "client rectangle" may
+ring a bell here - SCI draws the window backgrounds, using values in
+the window manager port, while the window's own port controls what is
+drawn inside it. The window manager port covers the same bounding
+rectangle as the picture window, but it is transparent so it doesn't
+mess up the graphics.
 
-I feel compelled to mention windows for a bit here, not in depth - they are the subject of a later article - but just to mention that the structure used to manage windows is just an extension of the port structure. Whenever an SCI system call needs a pointer to a port structure, a pointer to a window structure will do. This implicates that the SysWindow class (which implements windows) has no "port" property. Instead, its "window" property points to the extended port/window structure which can safely be passed to KSetPort. Not surprisingly, many of KNewWindow's arguments end up in the port part of the window structure.
+I feel compelled to mention windows for a bit here, not in depth -
+they are the subject of a later article - but just to mention that the
+structure used to manage windows is just an extension of the port
+structure. Whenever an SCI system call needs a pointer to a port
+structure, a pointer to a window structure will do. This implicates
+that the SysWindow class (which implements windows) has no "port"
+property. Instead, its "window" property points to the extended
+port/window structure which can safely be passed to KSetPort. Not
+surprisingly, many of KNewWindow's arguments end up in the port part
+of the window structure.
 
-An SCI program can't directly instantiate a port. If a program wants to access a specific part of the screen using ports, it has to instantiate a transparent window. In fact, SCI creates the picture window using RNewWindow, the same function that the kernel call KNewWindow ends up calling, asking for an untitled window with a transparent background - but more on that in a later article.
+An SCI program can't directly instantiate a port. If a program wants
+to access a specific part of the screen using ports, it has to
+instantiate a transparent window. In fact, SCI creates the picture
+window using RNewWindow, the same function that the kernel call
+KNewWindow ends up calling, asking for an untitled window with a
+transparent background - but more on that in a later article.
 
-It must be stressed that ports are purely internal structures. Although a program can select different ports to draw in, the data structures themselves are absolutely off-limits to SCI code. KNewWindow fills a port structure with user-supplied data, but there is no way of changing that data, short of disposing the window and instantiating it again. The structure is frequently changed by SCI itself, though.
+It must be stressed that ports are purely internal
+structures. Although a program can select different ports to draw in,
+the data structures themselves are absolutely off-limits to SCI
+code. KNewWindow fills a port structure with user-supplied data, but
+there is no way of changing that data, short of disposing the window
+and instantiating it again. The structure is frequently changed by SCI
+itself, though.
 
 Only two kernel calls deal directly with ports:
 

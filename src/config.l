@@ -1,5 +1,5 @@
 /***************************************************************************
- config.l (C) 1999 Christoph Reichenbach, TU Darmstadt
+ config.l (C) 1999 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

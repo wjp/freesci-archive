@@ -1043,7 +1043,7 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "config.l"
 /***************************************************************************
- config.l (C) 1999 Christoph Reichenbach, TU Darmstadt
+ config.l (C) 1999 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

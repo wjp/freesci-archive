@@ -55,7 +55,7 @@ const char* sci_version_types[] = {
 	"SCI WIN/32"
 };
 
-const int sci_max_resource_nr[] = {65536, 1000, 1000, 8192, 8192, 8192, 8192, 65536};
+const int sci_max_resource_nr[] = {65536, 1000, 1000, 1024, 8192, 8192, 8192, 65536};
 
 const char* sci_error_types[] = {
 	"No error",
@@ -582,15 +582,26 @@ scir_test_resource(resource_mgr_t *mgr, int type, int number)
 resource_t *
 scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock)
 {
-	resource_t *retval = scir_test_resource(mgr, type, number);
+	resource_t *retval;
+
+	if (number >= sci_max_resource_nr[mgr->sci_version]) {
+		int modded_number = number % sci_max_resource_nr[mgr->sci_version];
+		sciprintf("[resmgr] Requested invalid resource %s.%d, mapped to %s.%d\n",
+			  sci_resource_types[type], number,
+			  sci_resource_types[type], modded_number);
+		number = modded_number;
+	}
+
+	retval = scir_test_resource(mgr, type, number);
 
 	if (!retval)
 		return NULL;
 
 	if (!retval->status)
 		_scir_load_resource(mgr, retval);
+
 	else if (retval->status == SCI_STATUS_ENQUEUED)
-			_scir_remove_from_lru(mgr, retval);
+		_scir_remove_from_lru(mgr, retval);
 	/* Unless an error occured, the resource is now either
 	** locked or allocated, but never queued or freed.  */
 
