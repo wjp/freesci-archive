@@ -1,3 +1,7 @@
+2004-08-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* configure.in: Corrected a problem caused by my previous commit.
+
 2004-08-14  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* acconfig.h: Removed from repository.
