@@ -238,13 +238,13 @@ sci_finish_find(sci_dir_t *dirent);
 ** the second operation is guaranteed to be a no-op.
 */
 
-void
+int
 sciprintf(char *fmt, ...);
 #define gfxprintf sciprintf
 /* Prints a string to the console stack
 ** Parameters: fmt: a printf-style format string
 **             ...: Additional parameters as defined in fmt
-** Returns   : (void)
+** Returns   : (int) 1
 ** Implementation is in src/scicore/console.c
 */
 

@@ -557,16 +557,23 @@ run_vm(state_t *s, int restoring)
       case Script_Temp:
       case Script_Global:
       case Script_Param:
-        opparams[temp] = GET_OP_FLEX(); break;
+	      opparams[temp] = GET_OP_FLEX(); break;
 
       case Script_SVariable: 
       case Script_SRelative:
-        opparams[temp] = GET_OP_SIGNED_FLEX(); break;
+	      opparams[temp] = GET_OP_SIGNED_FLEX(); break;
 
+      case Script_None:
+      case Script_End:
+	      break;
+
+      case Script_Invalid:
       default:
-	break; /* Required for some compilers */
+	      sciprintf("opcode %02x: Invalid!", opcode);
+	      script_debug_flag = script_error_flag = 1;
 
       }
+
 
     switch (opnumber) {
 

@@ -1,5 +1,10 @@
 2001-04-05  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/scicore/console.c (sciprintf): Returns 'int' again to fix
+	compilation problems
+
+	* src/engine/vm.c (run_vm): Additional checks
+
 	* configure.in: Ungnuified pre-XSHM X11 check
 
 	* src/gfx/sci_widgets.c (un_prioritize): Changed menus to be drawn
