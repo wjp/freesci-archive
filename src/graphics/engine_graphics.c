@@ -350,11 +350,51 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
 
 void
 graph_draw_selector_edit(struct _state *s, port_t *port, int state,
-			 int x, int y, int xl, int yl,
+			 int x, int y, int xl, int yl, int cursor,
 			 char *text, byte *font)
 {
+  char *temp = malloc(strlen(text) +1);
+  int textwidth;
+  int textheight;
+
   graph_draw_selector_text(s, port, state,
 			   x, y, xl, yl, text, font, ALIGN_TEXT_LEFT);
+
+  if (time(NULL) & 1) { /* Blink cursor in 1s intervals */
+    strncpy(temp, text, cursor);
+    temp[cursor] = 0;
+
+    get_text_size(temp, font, -1, &textwidth, &textheight);
+
+    if (cursor == strlen(text))
+      graph_fill_box_custom(s, x + port->xmin + textwidth, y+port->ymin,
+			    1, textheight, port->color, -1, -1, 1);
+    /* Draw thin line */
+    else { /* Single character */
+      int charwidth;
+      int oldcol = port->color;
+
+      temp[0] = temp[cursor];
+      temp[1] = 0; /* Isolate the "blinking" char */
+
+      charwidth = get_text_width(temp, font);
+      graph_fill_box_custom(s, x + port->xmin + textwidth, y + port->ymin,
+			    charwidth, textheight, port->color, -1, -1, 1);
+
+
+      port->color = port->bgcolor;
+      port->x += x + textwidth;
+      port->y += y;
+      text_draw(s->pic, port, text, xl);
+      port->x -= x + textwidth;
+      port->y -= y;
+      port->color = oldcol;
+    }
+
+
+  }
+
+  free(temp);
 }
 
 

@@ -42,6 +42,7 @@ int _debug_seek_special = 0; /* Used for special seeks */
 #define _DEBUG_SEEK_CALLK 1 /* Step forward until callk is found */
 #define _DEBUG_SEEK_LEVEL_RET 2 /* Step forward until returned from this level */
 #define _DEBUG_SEEK_SPECIAL_CALLK 3 /* Step forward until a /special/ callk is found */
+#define _DEBUG_SEEK_LOGGING 4 /* Seek nothing special, but display code while executing */
 
 state_t *_s;
 heap_ptr *_pc;
@@ -455,6 +456,22 @@ c_snk(void)
 }
 
 int
+c_slog(void)
+{
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  if (cmd_paramlength && (cmd_params[0].val > 0))
+    _debug_step_running = cmd_params[0].val;
+  else _debug_step_running = -1;
+
+  _debug_seeking = _DEBUG_SEEK_LOGGING;
+  _debugstate_valid = 0;
+}
+
+int
 c_sret(void)
 {
   _debug_seeking = _DEBUG_SEEK_LEVEL_RET;
@@ -515,7 +532,7 @@ c_listclones(void)
 void
 set_debug_mode (struct _state *s, int mode, char *areas)
 {
-  char modechars[] = "ulgcmfbad"; /* Valid parameter chars */
+  char modechars[] = "ulgcmfbads"; /* Valid parameter chars */
   char *parser;
   int seeker;
   char frob;
@@ -780,6 +797,20 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 
     switch (_debug_seeking) {
 
+    case _DEBUG_SEEK_LOGGING:
+      sciprintf("acc=%04x  ", _s->acc & 0xffff);
+      _debugstate_valid = 1;
+      disassemble(s, *pc);
+
+      if (_debug_step_running > 0)
+	_debug_step_running--;
+
+      if (_debug_step_running) {
+	_debugstate_valid = 0;
+	return;
+      }
+      break;
+
     case _DEBUG_SEEK_SPECIAL_CALLK:
       if (paramb1 != _debug_seek_special)
 	return;
@@ -853,12 +884,12 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	      "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values for x:\n"
 	      "  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n  c: Character"
 	      " handling\n  m: Memory management\n  f: Function call checks\n  b: Bresenham details\n"
-	      "  a: Audio\n  *: Everything\n\n"
+	      "  a: Audio\n  d: System gfx management\n  s: Base setter\n  *: Everything\n\n"
 	      "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
       cmdHook(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 	      "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
       cmdHook(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
-      cmdHook(c_simsoundcue, "simsoundcue", "i", "Simulates a sound cue \n  of the specified type.\n");
+      cmdHook(c_slog, "slog", "i*", "Step forward while printing\n  acc and the next instruction");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

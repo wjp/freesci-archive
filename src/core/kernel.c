@@ -290,6 +290,15 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
 }
 
 
+int
+is_object(state_t *s, heap_ptr offset)
+{
+  if (offset < 1000)
+    return 0;
+  else
+    return (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER);
+}
+
 
 #define GET_SELECTOR(_object_, _selector_) read_selector(s, _object_, s->selector_map._selector_)
 #define UGET_SELECTOR(_object_, _selector_) \
@@ -455,62 +464,63 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
   while ((event = s->sfx_driver->get_event(s))) {
     heap_ptr obj = event->handle;
 
-    switch (event->signal) {
-    case SOUND_SIGNAL_CUMULATIVE_CUE: {
-      int signal = GET_SELECTOR(obj, signal);
-      SCIkdebug(SCIkSOUND,"Received cumulative cue for %04x\n", obj);
+    if (is_object(s, obj))
+      switch (event->signal) {
+      case SOUND_SIGNAL_CUMULATIVE_CUE: {
+	int signal = GET_SELECTOR(obj, signal);
+	SCIkdebug(SCIkSOUND,"Received cumulative cue for %04x\n", obj);
 
-      PUT_SELECTOR(obj, signal, signal + 1);
-    }
-    break;
-
-    case SOUND_SIGNAL_LOOP:
-
-      SCIkdebug(SCIkSOUND,"Received loop signal for %04x\n", obj);
-      PUT_SELECTOR(obj, loop, event->value);
-      PUT_SELECTOR(obj, signal, -1);
+	PUT_SELECTOR(obj, signal, signal + 1);
+      }
       break;
 
-    case SOUND_SIGNAL_FINISHED:
+      case SOUND_SIGNAL_LOOP:
 
-      SCIkdebug(SCIkSOUND,"Received finished signal for %04x\n", obj);
-      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_STOPPED);
-      PUT_SELECTOR(obj, loop, -1);
-      break;
+	SCIkdebug(SCIkSOUND,"Received loop signal for %04x\n", obj);
+	PUT_SELECTOR(obj, loop, event->value);
+	PUT_SELECTOR(obj, signal, -1);
+	break;
 
-    case SOUND_SIGNAL_PLAYING:
+      case SOUND_SIGNAL_FINISHED:
 
-      SCIkdebug(SCIkSOUND,"Received playing signal for %04x\n", obj);
-      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PLAYING);
-      break;
+	SCIkdebug(SCIkSOUND,"Received finished signal for %04x\n", obj);
+	PUT_SELECTOR(obj, state, _K_SOUND_STATUS_STOPPED);
+	PUT_SELECTOR(obj, loop, -1);
+	break;
 
-    case SOUND_SIGNAL_PAUSED:
+      case SOUND_SIGNAL_PLAYING:
 
-      SCIkdebug(SCIkSOUND,"Received pause signal for %04x\n", obj);
-      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
-      break;
+	SCIkdebug(SCIkSOUND,"Received playing signal for %04x\n", obj);
+	PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PLAYING);
+	break;
 
-    case SOUND_SIGNAL_RESUMED:
+      case SOUND_SIGNAL_PAUSED:
 
-      SCIkdebug(SCIkSOUND,"Received resume signal for %04x\n", obj);
-      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
-      break;
+	SCIkdebug(SCIkSOUND,"Received pause signal for %04x\n", obj);
+	PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
+	break;
 
-    case SOUND_SIGNAL_INITIALIZED:
+      case SOUND_SIGNAL_RESUMED:
 
-      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_INITIALIZED);
-      SCIkdebug(SCIkSOUND,"Received init signal for %04x\n", obj);
-      break;
+	SCIkdebug(SCIkSOUND,"Received resume signal for %04x\n", obj);
+	PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
+	break;
 
-    case SOUND_SIGNAL_ABSOLUTE_CUE:
+      case SOUND_SIGNAL_INITIALIZED:
 
-      SCIkdebug(SCIkSOUND,"Received absolute cue %d for %04x\n", event->value, obj);
-      PUT_SELECTOR(obj, signal, event->value);
-      break;
+	PUT_SELECTOR(obj, state, _K_SOUND_STATUS_INITIALIZED);
+	SCIkdebug(SCIkSOUND,"Received init signal for %04x\n", obj);
+	break;
 
-    default:
-      SCIkwarn(SCIkERROR, "Unknown sound signal: %d\n", event->signal);
-    }
+      case SOUND_SIGNAL_ABSOLUTE_CUE:
+
+	SCIkdebug(SCIkSOUND,"Received absolute cue %d for %04x\n", event->value, obj);
+	PUT_SELECTOR(obj, signal, event->value);
+	break;
+
+      default:
+	SCIkwarn(SCIkERROR, "Unknown sound signal: %d\n", event->signal);
+      }
 
     free(event);
   }
@@ -700,12 +710,7 @@ kDisposeScript(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr offset = PARAM(0);
-
-  if (offset < 800)
-    s->acc = 0;
-  else
-    s->acc = (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER);
+  s->acc = is_object(s, UPARAM(0));
 }
 
 
@@ -1203,7 +1208,7 @@ kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kRandom(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = PARAM(0) + (int) ((PARAM(1) + 1 - PARAM(0)) * rand() / (RAND_MAX + 1.0));
+  s->acc = PARAM(0) + (int) ((PARAM(1) + 1.0 - PARAM(0)) * (rand() / (RAND_MAX + 1.0)));
 }
 
 
@@ -2039,7 +2044,7 @@ kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (loop >= maxloops) {
     SCIkwarn(SCIkWARNING, "With view.%03d: loop %d > maxloop %d\n", view, loop, maxloops);
-    loop = -1;
+    loop = 0;
   }
 
   PUT_SELECTOR(obj, loop, loop);
@@ -2369,7 +2374,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int x, y, xstep, ystep, xsize, ysize;
+  int x, y, ystep, xsize, ysize;
   int xbase, ybase, xend, yend;
   int view, loop, cell;
   resource_t *viewres;
@@ -2379,7 +2384,6 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   x = GET_SELECTOR(object, x);
   y = GET_SELECTOR(object, y);
-  xstep = GET_SELECTOR(object, xStep);
   ystep = GET_SELECTOR(object, yStep);
   view = GET_SELECTOR(object, view);
   loop = GET_SELECTOR(object, loop);
@@ -2392,30 +2396,26 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
   else {
     xsize = view0_cel_width(loop, cell, viewres->data);
     ysize = view0_cel_height(loop, cell, viewres->data);
+    /*    view0_base_modify(loop,cell,viewres->data, &x, &y); */
   }
 
   if ((xsize < 0) || (ysize < 0))
     xsize = ysize = 0; /* Invalid view/loop */
 
-
-  /*  if (xstep)
-      xsize = xstep;*/ /* FIXME */
-
-  if (ystep)
-    ysize = ystep;
-
   xbase = x - xsize / 2;
-  ybase = y - ysize / 2;
-
   xend = xbase + xsize;
-  yend = ybase + ysize;
+  yend = y;
+  ybase = yend - ystep;
 
   PUT_SELECTOR(object, brLeft, xbase);
   PUT_SELECTOR(object, brRight, xend);
   PUT_SELECTOR(object, brTop, ybase);
   PUT_SELECTOR(object, brBottom, yend);
 
-  SCIkdebug(SCIkGRAPHICS, "BaseSetter done.\n");
+  if (s->debug_mode & (1 << SCIkBASESETTER_NR)) {
+    graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(y));
+    (*s->gfx_driver->Wait)(100000);
+  }
 
 } /* kBaseSetter */
 
@@ -2444,6 +2444,19 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+#define _K_EDIT_DELETE \
+ if (cursor < textlen) { \
+  memmove(text + cursor, text + cursor + 1, textlen - cursor +1); \
+}
+
+#define _K_EDIT_BACKSPACE \
+ if (cursor) { \
+  --cursor;    \
+  memmove(text + cursor, text + cursor + 1, textlen - cursor +1); \
+}
+
+
+
 void
 kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -2467,11 +2480,12 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	  int font_nr = GET_SELECTOR(obj, font);
 	  char *text = s->heap + UGET_SELECTOR(obj, text);
+	  int textlen = strlen(text);
 
 	  port_t *port = s->ports[s->view_port];
 
-	  if (cursor > strlen(text))
-	    cursor = strlen(text);
+	  if (cursor > textlen)
+	    cursor = textlen;
 
 	  graph_fill_box_custom(s, x + port->xmin, y + port->ymin,
 				xl, yl, port->bgcolor, -1, 0, 1); /* Clear input box background */
@@ -2483,14 +2497,67 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	  if (modifiers & SCI_EVM_CTRL) {
 
+	    switch (key) {
+	    case 'a': cursor = 0; break;
+	    case 'e': cursor = textlen; break;
+	    case 'f': if (cursor < textlen) ++cursor; break;
+	    case 'b': if (cursor > 1) --cursor; break;
+	    case 'k': text[cursor] = 0; break; /* Terminate string */
+	    case 'h': _K_EDIT_BACKSPACE; break;
+	    case 'd': _K_EDIT_DELETE; break;
+	    }
+	    PUT_SELECTOR(event, claimed, 1);
 
 	  } else if (modifiers & SCI_EVM_ALT) { /* Ctrl has precedence over Alt */
 
+	    switch (key) {
+	    case 'f': while ((cursor < textlen) && (text[cursor++] != ' ')); break;
+	    case 'b': while ((cursor > 0) && (text[--cursor - 1] != ' ')); break;
+	    }
+	    PUT_SELECTOR(event, claimed, 1);
 
-	  } else
-	    if ((key < 128) && (strlen(text) < max)) {
-	      text[cursor++] = key;
-	      text[cursor] = 0; /* Terminate string */
+	  } else if (modifiers & SCI_EVM_NUMLOCK) { /* Used for cursor keys */
+
+	    switch(key) {
+	    case SCI_K_HOME: cursor = 0; break;
+	    case SCI_K_END: cursor = textlen; break;
+	    case SCI_K_RIGHT: if (cursor + 1 < textlen) ++cursor; break;
+	    case SCI_K_LEFT: if (cursor > 1) --cursor; break;
+	    }
+	    PUT_SELECTOR(event, claimed, 1);
+
+	  } else if (key < 31) {
+
+	    PUT_SELECTOR(event, claimed, 1);
+
+	    switch(key) {
+	    case SCI_K_BACKSPACE: _K_EDIT_BACKSPACE; break;
+	    case SCI_K_DELETE: _K_EDIT_DELETE; break;
+	    default:
+	      PUT_SELECTOR(event, claimed, 0);
+	    }
+
+	  } if ((key > 31) && (key < 128)) {
+	      int inserting = modifiers & SCI_EVM_INSERT;
+
+	      if (cursor == textlen) {
+		if (textlen < max) {
+		  text[cursor++] = key;
+		  text[cursor] = 0; /* Terminate string */
+		}
+	      } else if (inserting) {
+		if (textlen < max) {
+		  int i;
+
+		  for (i = textlen + 2; i--; i >= cursor)
+		    text[i] = text[i - 1];
+		  text[cursor++] = key;
+
+		}
+	      } else { /* Overwriting */
+		text[cursor++] = key;
+	      }
+
 	      PUT_SELECTOR(event, claimed, 1);
 
 	      PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
@@ -2521,6 +2588,7 @@ _k_draw_control(state_t *s, heap_ptr obj)
 
   int type = GET_SELECTOR(obj, type);
   int state = GET_SELECTOR(obj, state);
+  int cursor;
 
   resource_t *font_res;
   resource_t *view_res;
@@ -2556,7 +2624,11 @@ _k_draw_control(state_t *s, heap_ptr obj)
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       return;
     }
-    graph_draw_selector_edit(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
+
+    cursor = GET_SELECTOR(obj, cursor);
+
+    graph_draw_selector_edit(s, s->ports[s->view_port], state, x, y, xl, yl, cursor,
+			     text, font_res->data);
     break;
 
   case K_CONTROL_ICON:

@@ -432,6 +432,41 @@ void plotpattern(picture_t buffers, int x, int y,
 }
 
 int
+view0_base_modify(int loop, int cel, byte *data, int *xvar, int *yvar)
+{
+  int loops_nr = getInt16(data);
+  int lookup, cels_nr;
+  int addr;
+  int reversed = (getInt16(data + 2) >> loop) & 1;
+  int xoffs, yoffs;
+
+  if ((loop >= loops_nr) || (loop < 0))
+    return -1;
+
+  lookup = getInt16(data+8+(loop<<1));
+  cels_nr = getInt16(data + lookup);
+
+  if ((cel < 0) || (cel >= cels_nr))
+    return -1;
+
+  lookup += 4 + (cel << 1);
+
+  addr = getInt16(data + lookup);
+
+  xoffs = (gint8) data[addr + 4];
+  yoffs = (gint8) data[addr + 4];
+
+  if (reversed)
+    *xvar += xoffs;
+  else
+    *xvar -= xoffs;
+
+  *yvar -= yoffs;
+
+  return 0;
+}
+
+int
 view0_cel_width(int loop, int cel, byte *data)
 {
   int loops_nr = getInt16(data);
@@ -453,7 +488,6 @@ view0_cel_width(int loop, int cel, byte *data)
 
   return getInt16(data + addr);
 }
-
 
 int
 view0_cel_height(int loop, int cel, byte *data)

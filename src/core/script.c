@@ -91,11 +91,11 @@ opcode_format formats[128][4]={
   /*2C*/
   {Script_SVariable, 0}, {Script_SVariable, Script_Variable, 0}, {Script_None}, {Script_Invalid},
   /*30*/
-  {Script_None}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_None}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*34*/
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*38*/
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_None},
+  {Script_Variable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_None},
   /*3C*/
   {Script_None}, {Script_None}, {Script_None}, {Script_Invalid},
   /*40-4F*/

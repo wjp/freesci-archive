@@ -335,6 +335,16 @@ view0_cel_count(int loop, byte *data);
 */
 
 
+int
+view0_base_modify(int loop, int cel, byte *data, int *xvar, int *yvar);
+/* Retrieves the view position modifiers and applies them to two variables
+** Parameters: (int) loop: The loop to examine
+**             (int) cel: The cell
+**             (byte *) data: The view data
+**             (int *) xvar, yvar: The variables to modify
+** Returns   : (int) 0 on success, 1 otherwise
+*/
+
 void draw_box(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
 void draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
 /* Draws a simple box.
@@ -595,7 +605,7 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
 
 void
 graph_draw_selector_edit(struct _state *s, port_t *port, int state,
-			 int x, int y, int xl, int yl,
+			 int x, int y, int xl, int yl, int cursor,
 			 char *text, byte *font);
 /* Draws an edit frame selector.
 ** Parameters: (state_t *) s: The state to operate on
@@ -603,6 +613,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 **             (int) state: The selector state to use; a combination of the SELECTOR_STATE_* flags
 **             (int) x,y: The upper left corner of the selector
 **             (int) xl,yl: Height and width of the selector in question
+**             (int) cursor: Cursor position
 **             (char *) text: The text inside the edit box
 **             (byte *) font: Pointer to the font to use
 ** Returns   : (void)
