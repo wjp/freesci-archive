@@ -1,3 +1,8 @@
+2002-07-14  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/font.c (gfxr_font_calculate_size): Removed my own
+	warning from yesterday (Oops! :-) 
+
 2002-07-13  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/said.y: Fixed compiler errors by adding semicolons at

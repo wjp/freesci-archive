@@ -265,8 +265,6 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 
 	fragments[current_fragment-1].length = text - fragments[current_fragment-1].offset - 1;
 
-	printf("Used %d fragments\n", current_fragment);
-
 	return fragments;
 }
 
