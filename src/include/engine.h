@@ -45,6 +45,7 @@
 #include <versions.h>
 #include <kernel.h>
 #include <gfx_state_internal.h>
+#include <seg_manager.h>
 
 #define FREESCI_SAVEGAME_VERSION 5
 
@@ -89,7 +90,6 @@ typedef struct {
 	int nr;
 	int palette;
 } drawn_pic_t;
-
 
 typedef struct _state
 {
@@ -242,7 +242,9 @@ typedef struct _state
 	int classtable_size; /* Number of classes in the table- for debugging */
 	class_t *classtable; /* Table of all classes */
 	script_t scripttable[1000]; /* Table of all scripts */
-
+	
+	seg_manager_t seg_manager;
+	
 	heap_ptr clone_list[SCRIPT_MAX_CLONES];
 
 	int selector_names_nr; /* Number of selector names */
@@ -261,6 +263,7 @@ typedef struct _state
 	struct _state *successor; /* Successor of this state: Used for restoring */
 
 } state_t;
+
 
 #define STATE_T_DEFINED
 

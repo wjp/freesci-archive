@@ -32,7 +32,6 @@
 #include <vocabulary.h>
 #include <versions.h>
 
-
 #ifndef _SCI_VM_H
 #define _SCI_VM_H
 
@@ -132,7 +131,12 @@ typedef struct {
 } calls_struct_t;
 
 
+
+
 typedef struct {
+	reg_t* locals;
+	char* buf;
+
 	heap_ptr heappos; /* Script position on the heap or 0 if not yet loaded */
 	heap_ptr localvar_offset; /* Abs. offset of the local variable block or 0 if not present */
 	heap_ptr export_table_offset; /* Abs. offset of the export table or 0 if not present */
@@ -140,6 +144,14 @@ typedef struct {
 	int synonyms_nr; /* Number of entries in the synonyms block */
 	int lockers; /* Number of classes and objects that require this script */
 } script_t;
+
+typedef struct {
+	int type;
+        int size;
+	union {
+		script_t script;
+	} data;
+} mem_obj_t;
 
 typedef struct {
 	int init; /* Init function */

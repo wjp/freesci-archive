@@ -216,7 +216,8 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
 //		     heap_ptr argp, int selector, heap_ptr sendp, int origin, int localvarp);
     add_exec_stack_entry(s, (heap_ptr)(scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)) - magic_ofs),
 		sp, calling_obj, (int)argc, argp, -1, calling_obj, s->execution_stack_pos,
-		s->scripttable[script].localvar_offset);
+		s->scripttable[script].heappos/*.localvar_offset -- changed to fix  VM compilation for
+						CSCI 5573 changes*/);
 }
 
 

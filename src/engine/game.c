@@ -261,6 +261,9 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->min_version = 0; /* Set no real limits */
 	s->version = SCI_VERSION_DEFAULT_SCI0;
 	s->kernel_opt_flags = 0;
+	
+	s->seg_manager.init = sm_init;
+	s->seg_manager.init (&s->seg_manager);
 
 
 	if (!version) {
