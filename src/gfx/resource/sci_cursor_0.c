@@ -36,6 +36,8 @@
 #define GFX_SCI01_CURSOR_COLORS_NR 3
 #define GFX_SCI0_CURSOR_COLORS_NR 2
 
+#define GFX_CURSOR_TRANSPARENT 255
+
 gfx_pixmap_color_t gfx_sci01_cursor_colors[GFX_SCI01_CURSOR_COLORS_NR] = {
 	{GFX_COLOR_INDEX_UNMAPPED, 0x00, 0x00, 0x00},
 	{GFX_COLOR_INDEX_UNMAPPED, 0xff, 0xff, 0xff},
@@ -45,7 +47,7 @@ gfx_pixmap_color_t gfx_sci01_cursor_colors[GFX_SCI01_CURSOR_COLORS_NR] = {
 static gfx_pixmap_t *
 _gfxr_draw_cursor(int id, byte *resource, int size, int sci01)
 {
-	int colors[4] = {0, 1, GFX_COLOR_INDEX_TRANSPARENT, 1};
+	int colors[4] = {0, 1, GFX_CURSOR_TRANSPARENT, 1};
 	int line;
 	byte *data;
 	gfx_pixmap_t *retval;
@@ -62,6 +64,7 @@ _gfxr_draw_cursor(int id, byte *resource, int size, int sci01)
 	retval->colors = gfx_sci01_cursor_colors;
 	retval->colors_nr = sci01? GFX_SCI01_CURSOR_COLORS_NR : GFX_SCI0_CURSOR_COLORS_NR;
 	retval->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+	retval->color_key = GFX_CURSOR_TRANSPARENT;
 
 	if (sci01) {
 		retval->xoffset = get_int_16(resource);

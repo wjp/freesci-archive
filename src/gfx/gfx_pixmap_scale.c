@@ -41,7 +41,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	byte *src = pxm->index_data;
 	byte *dest = pxm->data;
 	byte *alpha_dest = pxm->alpha_map;
-	int using_alpha = pxm->colors_nr < GFX_PIC_COLORS;
+	int using_alpha = pxm->color_key != GFX_PIXMAP_COLOR_KEY_NONE;
 	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
 
 	if (mode->flags & GFX_MODE_FLAG_REVERSE_ALPHA) {
@@ -55,7 +55,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 		alpha_dest = pxm->alpha_map = sci_malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
 
 	if (!separate_alpha_map)
-		result_colors[GFX_COLOR_INDEX_TRANSPARENT] = alpha_color;
+		result_colors[pxm->color_key] = alpha_color;
 
 	/* Calculate all colors */
 	for (i = 0; i < pxm->colors_nr; i++) {
@@ -79,7 +79,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 		for (x = 0; x < pxm->index_xl; x++) {
 			int isalpha;
 			SIZETYPE col = result_colors[isalpha = *src++] << (EXTRA_BYTE_OFFSET * 8);
-			isalpha = (isalpha == 255) && using_alpha;
+			isalpha = (isalpha == pxm->color_key) && using_alpha;
 
 			/* O(n) loops. There is an O(ln(n)) algorithm for this, but its slower for small n (which we're optimizing for here).
 			** And, anyway, most of the time is spent in memcpy() anyway. */
@@ -191,7 +191,7 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	byte *src = pxm->index_data;
 	byte *dest = pxm->data;
 	byte *alpha_dest = pxm->alpha_map;
-	int using_alpha = pxm->colors_nr < GFX_PIC_COLORS;
+	int using_alpha = pxm->color_key != GFX_PIXMAP_COLOR_KEY_NONE;
 	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
 	unsigned int masks[4], shifts[4], zero[3];
 	int x,y;
@@ -236,7 +236,7 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 			ctexel[0] = ctexel[1] = ctexel[2] = ctexel[3] = 0;
 
 #define MAKE_PIXEL(cond, rec, other, nr) \
-			if ((cond) || (using_alpha && nr == 255)) { \
+			if ((cond) || (using_alpha && nr == pxm->color_key)) { \
 				rec[0] = other[0] - ctexel[0]; \
 				rec[1] = other[1] - ctexel[1]; \
 				rec[2] = other[2] - ctexel[2]; \
@@ -319,7 +319,7 @@ gfx_apply_delta(unsigned int *color, int *delta, int factor)
 #endif
 
 #define MAKE_PIXEL_TRILINEAR(cond, rec, nr) \
-			if (!(cond) || (using_alpha && nr == 255)) { \
+			if (!(cond) || (using_alpha && nr == pxm->color_key)) { \
 				rec[0] = 0; \
 				rec[1] = 0; \
 				rec[2] = 0; \
@@ -344,7 +344,7 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	byte *src = pxm->index_data;
 	byte *dest = pxm->data;
 	byte *alpha_dest = pxm->alpha_map;
-	int using_alpha = pxm->colors_nr < GFX_PIC_COLORS;
+	int using_alpha = pxm->color_key != GFX_PIXMAP_COLOR_KEY_NONE;
 	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
 	unsigned int masks[4], shifts[4];
 	unsigned int pixels[4][4];

@@ -52,8 +52,8 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 	gfx_pixmap_t *retval = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xl, yl, id, loop, cel));
 	byte *dest = retval->index_data;
 
-	retval->xoffset = xhot;
-	retval->yoffset = yhot;
+	retval->xoffset = (mirrored)? xhot : -xhot;
+	retval->yoffset = -yhot;
 
 	if (view) {
 		retval->colors = view->colors;
@@ -105,7 +105,7 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 				if (op) {
 					if (op & V1_RLE_BG) {
 						writepos--;
-						*(dest + writepos) = GFX_COLOR_INDEX_TRANSPARENT;
+						*(dest + writepos) = retval->color_key;
 					} else {
 						writepos--;
 						*(dest + writepos) = color;
@@ -153,7 +153,7 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 
 			if (op) {
 				if (op & V1_RLE_BG)
-					memset(dest + writepos, GFX_COLOR_INDEX_TRANSPARENT, bytes);
+					memset(dest + writepos, retval->color_key, bytes);
 				else {
 					int color = resource[pos++];
 					memset(dest + writepos, color, bytes);

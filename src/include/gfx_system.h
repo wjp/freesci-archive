@@ -277,9 +277,8 @@ gfx_rect_translate(rect_t rect, point_t offset)
 }
 
 #define GFX_RESID_NONE -1
-#define GFX_COLOR_INDEX_TRANSPARENT 0xff
 
-#define GFX_PIC_COLORS 0x100
+#define GFX_PIC_COLORS 256
 
 #define GFX_PIXMAP_FLAG_SCALED_INDEX      (1<<0) /* Index data is scaled already */
 #define GFX_PIXMAP_FLAG_EXTERNAL_PALETTE  (1<<1) /* The colors pointer points to an external palette */
@@ -288,6 +287,8 @@ gfx_rect_translate(rect_t rect, point_t offset)
 #define GFX_PIXMAP_FLAG_PALETTE_SET       (1<<4) /* Palette has been propagated to the driver */
 #define GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE (1<<5) /* Used by text, which uses preallocated colors */
 #define GFX_PIXMAP_FLAG_PALETTIZED	  (1<<6) /* Indicates a palettized view */
+
+#define GFX_PIXMAP_COLOR_KEY_NONE -1 /* No transpacency colour key */
 
 typedef struct { /* gfx_pixmap_t: Pixel map */
 
@@ -325,6 +326,8 @@ typedef struct { /* gfx_pixmap_t: Pixel map */
 	byte *alpha_map; /* Byte map with alpha values. It is used only if the
 			 ** graphics mode's alpha_mask is zero.
 			 */
+
+	int color_key;
 
 	/*** Data reserved for gfx_driver use ***/
 	struct pixmap_internal { /* Internal state management data for use by drivers */

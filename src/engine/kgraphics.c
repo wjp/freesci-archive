@@ -378,7 +378,9 @@ void
 _k_graph_rebuild_port_with_color(state_t *s, gfx_color_t newbgcolor)
 {
 	gfxw_port_t *port = s->port;
-	gfxw_port_t *newport = sciw_new_window(s, port->zone, port->font_nr, port->color, newbgcolor,
+	gfxw_port_t *newport;
+	
+	newport = sciw_new_window(s, port->zone, port->font_nr, port->color, newbgcolor,
 					       s->titlebar_port->font_nr, s->ega_colors[15], s->ega_colors[8],
 					       port->title_text, port->port_flags & ~WINDOW_FLAG_TRANSPARENT);
 
@@ -3170,7 +3172,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 		case K_DISPLAY_SET_FONT:
 
 			font_nr = KP_UINT(argv[argpt++]);
-
+			
 			SCIkdebug(SCIkGRAPHICS, "Display: set_font(\"font.%03d\")\n", font_nr);
 			break;
 

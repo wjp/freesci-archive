@@ -52,6 +52,8 @@ gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 	gfx_pixmap_t *retval = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xl, yl, id, loop, cel));
 	byte *dest = retval->index_data;
 
+	retval->color_key = 255; /* Pick something larger than 15  */
+
 	retval->xoffset = mirrored? xhot : -xhot;
 	retval->yoffset = -yhot;
 
@@ -83,7 +85,7 @@ gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 				color = view->translation[color];
 
 			if (color == color_key)
-				color = GFX_COLOR_INDEX_TRANSPARENT;
+				color = retval->color_key;
 
 			while (count) {
 				int pixels = writepos - line_base;
@@ -113,7 +115,7 @@ gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 				color = view->translation[color];
 
 			if (color == color_key)
-				color = GFX_COLOR_INDEX_TRANSPARENT;
+				color = retval->color_key;
 
 			if (writepos + count > pixmap_size) {
 				GFXERROR("View %02x:(%d/%d) writes RLE data over its designated end at rel. offset 0x%04x\n", id, loop, cel, pos);

@@ -346,17 +346,17 @@ gfxr_draw_font(gfx_bitmap_font_t *font, char *stext, int characters,
 	if (fg0) {
 		memcpy(pxm->colors + i, fg0, sizeof(gfx_pixmap_color_t));
 		fore_0 = i++;
-	} else fore_0 = GFX_COLOR_INDEX_TRANSPARENT;
+	} else fore_0 = pxm->color_key;
 
 	if (fg1) {
 		memcpy(pxm->colors + i, fg1, sizeof(gfx_pixmap_color_t));
 		fore_1 = i++;
-	} else fore_1 = GFX_COLOR_INDEX_TRANSPARENT;
+	} else fore_1 = pxm->color_key;
 
 	if (bg) {
 		memcpy(pxm->colors + i, bg, sizeof(gfx_pixmap_color_t));
 		back = i++;
-	} else back = GFX_COLOR_INDEX_TRANSPARENT;
+	} else back = pxm->color_key;
 
 	offset = pxm->index_data;
 

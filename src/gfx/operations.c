@@ -179,7 +179,7 @@ _gfxop_draw_control(gfx_pixmap_t *map, gfx_pixmap_t *pxm, int color, point_t pos
 
 	for (y = 0; y < drawrect.yl; y++) {
 		for (x = 0; x < drawrect.xl; x++)
-			if (pxm->index_data[read_offset++] < GFX_COLOR_INDEX_TRANSPARENT)
+			if (pxm->index_data[read_offset++] != pxm->color_key)
 				map->index_data[offset++] = color;
 
 		offset = base_offset += 320;

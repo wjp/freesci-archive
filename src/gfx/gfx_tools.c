@@ -166,6 +166,8 @@ gfx_new_pixmap(int xl, int yl, int resid, int loop, int cel)
 
 	pxm->flags = 0;
 
+	pxm->color_key = 0xff;
+
 	return pxm;
 }
 
