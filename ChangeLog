@@ -1,5 +1,8 @@
 2001-04-16  Christoph Reichenbach  <jameson@linuxgames.com>
-	
+
+	* src/engine/kgraphics.c (kCanBeHere): Added collission checks against
+	the dynview list
+
 	* src/gfx/drivers/xlib_driver.c (xlib_init_specific): Used physical
 	display depth in a few places.
 

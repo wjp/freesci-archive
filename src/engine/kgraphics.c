@@ -804,16 +804,24 @@ static inline abs_rect_t
 nsrect_clip(state_t *s, int y, abs_rect_t retval, int priority);
 
 static int
-collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int argc, heap_ptr argp)
+collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, int funct_nr, int argc, heap_ptr argp)
 {
 	int other_signal = UGET_SELECTOR(other_obj, signal);
 	int other_priority = UGET_SELECTOR(other_obj, priority);
 	int y = GET_SELECTOR(other_obj, y);
 	abs_rect_t other_area;
-	other_area.x = UGET_SELECTOR(other_obj, nsLeft);
-	other_area.xend = UGET_SELECTOR(other_obj, nsRight);
-	other_area.y = UGET_SELECTOR(other_obj, nsTop);
-	other_area.yend = UGET_SELECTOR(other_obj, nsBottom);
+
+	if (use_nsrect) {
+		other_area.x = UGET_SELECTOR(other_obj, nsLeft);
+		other_area.xend = UGET_SELECTOR(other_obj, nsRight);
+		other_area.y = UGET_SELECTOR(other_obj, nsTop);
+		other_area.yend = UGET_SELECTOR(other_obj, nsBottom);
+	} else {
+		other_area.x = UGET_SELECTOR(other_obj, brLeft);
+		other_area.xend = UGET_SELECTOR(other_obj, brRight);
+		other_area.y = UGET_SELECTOR(other_obj, brTop);
+		other_area.yend = UGET_SELECTOR(other_obj, brBottom);
+	}
 
 	other_area = nsrect_clip(s, y, other_area, other_priority);
 
@@ -875,6 +883,22 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return; /* Can'tBeHere */
 	}
 
+	s->acc = 0;
+
+	/* Check against static places on the control map */
+	if (s->dyn_views) {
+		gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) s->dyn_views->contents;
+
+		SCIkdebug(SCIkBRESEN, "Checking vs dynviews:\n");
+
+	        while (widget) {
+			if (widget->ID && widget->ID != obj)
+				if (collides_with(s, abs_zone, widget->ID, 1, funct_nr, argc, argp))
+					return;
+			widget = (gfxw_dyn_view_t *) widget->next;
+		}
+	}
+
 	if (signal & GASEOUS_VIEW_MASK) {
 		s->acc= signal & GASEOUS_VIEW_MASK; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
 		SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
@@ -890,7 +914,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			heap_ptr other_obj = UGET_HEAP(node + LIST_NODE_VALUE);
 			if (other_obj != obj) { /* Clipping against yourself is not recommended */
 
-				if (collides_with(s, abs_zone, other_obj, funct_nr, argc, argp)) {
+				if (collides_with(s, abs_zone, other_obj, 0, funct_nr, argc, argp)) {
 					SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
 					return;
 				}
@@ -899,20 +923,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			node = GET_HEAP(node + LIST_NEXT_NODE); /* Move on */
 		}
 	}
-	/*
-	if (s->dyn_views) {
-		gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) s->dyn_views->contents;
 
-		SCIkdebug(SCIkBRESEN, "Checking vs dynviews:\n");
-
-	        while (widget) {
-			if (widget->ID && widget->ID != obj)
-				if (collides_with(s, abs_zone, widget->ID, funct_nr, argc, argp))
-					return;
-			widget = (gfxw_dyn_view_t *) widget->next;
-		}
-	}
-	*/
 	if (!s->acc)
 		s->acc = 1;
 	SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
