@@ -1,3 +1,7 @@
+1999-12-07  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/sound/sound.c: Added handling of NULL handle property
+
 1999-12-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c: Added HiliteControl()

@@ -223,6 +223,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 {
   sound_event_t event = {handle, command, parameter};
 
+  if (!handle) return 0;
   switch (command) {
   case SOUND_COMMAND_INIT_SONG: {
     resource_t *song = findResource(sci_sound, parameter);
