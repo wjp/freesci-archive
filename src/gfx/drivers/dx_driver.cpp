@@ -468,16 +468,17 @@ dx_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 		// Calculate colour value for line pixel
 		UINT lineColor = (color.alpha << 24) | (color.visual.r << 16) | (color.visual.g << 8) | color.visual.b;
 		RECT r = { line.x, line.y, line.x + line.xl + xf, line.y + line.yl + yf };
+		RECT lr = r;
 
-		/*** HACK ***/
-		if (r.left == r.right)
-			r.right++;
-		if (r.top == r.bottom)
-			r.bottom++;
+		// Fix bounds
+		if (lr.left == lr.right)
+			lr.right++;
+		if (lr.top == lr.bottom)
+			lr.bottom++;
 		if (r.right > dx_state->xsize)
-			r.right = dx_state->xsize;
+			lr.right = r.right = dx_state->xsize;
 		if (r.bottom > dx_state->ysize)
-			r.bottom = dx_state->ysize;
+			lr.bottom = r.bottom = dx_state->ysize;
 //sciprintf("%08X  %i,%i -> %i,%i\n", lineColor, r.left, r.top, r.right, r.bottom);
 
 		DODX( (dx_state->visuals[BACK_VIS]->LockRect(0, &lockedRect, &r, 0)), dx_draw_line );

@@ -2360,6 +2360,8 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	      <entry/     Casio CSM-1      /<entry/          /<entry/   007   /<entry/        /<entry//
 	     </row><row>
 	      <entry/  Roland D110,D10,D20   /<entry/          /<entry/   000   /<entry/        /<entry//
+	     </row><row>
+	      <entry/  PAULA (Amiga)   /<entry/          /<entry/      /<entry/        /<entry/40h/
 	      </row>
 	     </tbody>
 	    </tgroup>

@@ -1,3 +1,21 @@
+2003-01-18  Alexander Angas  <wgd@internode.on.net>
+
+	* ./README.Win32: Updated to reflect current status.
+
+	* src/gfx/drivers/dx_driver.cpp: Tidy up in draw_line bounds
+	checking.
+
+	* src/gfx/drivers/gfx_driver.c: Made SDL default graphics driver
+	on Win32.
+
+	* src/include/win32/sci_win32.h: Fixed event sound server lock up.
+
+	* src/win32/fsci_dll.dsp: Fixed SDL link path to reflect
+	original written in README.Win32. Fixed linking DirectX in Release
+	configuration.
+
+	* src/win32/sciv.dsp: Updated version number of FreeSCI.
+	
 2003-01-18  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/games.h (sci_games): Added SQ3 v1.0.
