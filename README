@@ -366,7 +366,17 @@ Options:
 - device: MCI Device number (as output my FreeSCI during initialization).
   This defaults to the last MCI MIDIout device found in the system, but
   can be set in the config file using "midiout.win32mci.device = x". 
- 
+
+2.1.2.5 OSS Sequencer/OPL3 driver
+---------------------------------
+This driver (ID 'ossopl3') abuses the MT-32/GM target and uses the OPL3
+FM chip commonly found on soundcards to play the music.
+
+Options:
+- device: Defaults to /dev/sequencer
+- patchpath:  Location to the instrument data (drums.o3, std.o3).
+              Defaults to /etc/midi
+
 
 2.2 Config file example:
 ------------------------
@@ -378,8 +388,8 @@ pic_antialiasing = simple
 text_filter = trilinear
 midiout.alsaraw.card = 1
 midiout.alsaraw.device = 2
-
 # default to interpolated color mode and interpreter version 0.000.685
+midiout.ossopl3.patchpath = /etc/midi
 
 [Glory]
 

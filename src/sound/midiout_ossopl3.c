@@ -63,7 +63,6 @@ Fmplay includes the following notice:
 /*  output is based on the general MIDI data derived from the MT32 patches.  */
 
 #include <midiout.h>
-
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -78,10 +77,10 @@ Fmplay includes the following notice:
 
 #define SEQUENCER_PATH	"/dev/sequencer"
 #define MIDI_PATH       "/dev/midi"
-#define O3MELODIC	"/usr/local/share/games/freesci/std.o3"
-#define O3DRUMS		"/usr/local/share/games/freesci/drums.o3"
-#define SBMELODIC	"/usr/local/share/games/freesci/std.sb"
-#define SBDRUMS		"/usr/local/share/games/freesci/drums.sb"
+#define O3MELODIC	"std.o3"
+#define O3DRUMS		"drums.o3"
+#define SBMELODIC	"std.sb"
+#define SBDRUMS		"drums.sb"
 
 #define FALSE  0
 #define TRUE   1
@@ -145,13 +144,13 @@ SEQ_DEFINEBUF (2048);
 SEQ_PM_DEFINES; /* patch manager stuff */
 
 static char *devicename = "/dev/sequencer";
+static char *patchpath = "/etc/midi";
 
 static int ossopl3_lastwrote = 0;
 
 /*
  * The function seqbuf_dump() must always be provided
  */
-
 void seqbuf_dump ()
 {
   if (_seqbufptr)
@@ -167,7 +166,9 @@ static int
 midiout_ossopl3_set_parameter(struct _midiout_driver *drv, char *attribute, char *value)
 {
 	if (!strcasecmp(attribute, "device")) {
-		devicename = value;
+	  devicename = value;
+	} else if (!strcasecmp(attribute, "patchpath")) {
+	  patchpath = value;
 	} else
 		sciprintf("Unknown ossopl3 option '%s'!\n", attribute);
 
@@ -275,7 +276,7 @@ void loadfm()
     int voice_size; 
     int data_size;
 
-    char buf[60];
+    char buf[160];
     struct sbi_instrument instr;
 
     for (i = 0; i < 256; i++)
@@ -285,13 +286,15 @@ void loadfm()
     if (wantopl3) 
     {
 	 voice_size = 60;
-	 sbfd = open(O3MELODIC, O_RDONLY, 0);
+	 sprintf(buf,"%s/%s", patchpath, O3MELODIC);
     } 
     else 
     {
 	 voice_size = 52;
-	 sbfd = open(SBMELODIC, O_RDONLY, 0);
+	 sprintf(buf,"%s/%s", patchpath, SBMELODIC);
     }
+
+    sbfd = open(buf, O_RDONLY, 0);
 
     if (sbfd == -1)
       {
@@ -328,12 +331,13 @@ void loadfm()
     close(sbfd);
     
     if (wantopl3)
-	 sbfd = open(O3DRUMS, O_RDONLY, 0);
+	 sprintf(buf,"%s/%s", patchpath, O3DRUMS);
     else
-	 sbfd = open(SBDRUMS, O_RDONLY, 0);
+	 sprintf(buf,"%s/%s", patchpath, SBDRUMS);
+
+    sbfd = open(buf, O_RDONLY, 0);
     
-    for (i = 128; i < 175; i++) 
-    {
+    for (i = 128; i < 175; i++)    {
 	 if (read(sbfd, buf, voice_size) != voice_size)
 	      printf("Read error\n");
 	 instr.channel = i;
