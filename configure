@@ -929,7 +929,7 @@ fi
 
 # Define the identity of the package.
 PACKAGE=freesci
-VERSION=0.3.2-devel
+VERSION=0.3.3-devel
 cat >> confdefs.h <<EOF
 #define PACKAGE "$PACKAGE"
 EOF

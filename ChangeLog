@@ -1,3 +1,16 @@
+2002-01-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/midiout_alsaraw.c: Better detection for ALSA 0.9
+
+2002-01-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kAddToPic): Respect control value
+
+	* configure.in: Changed version number to 0.3.3-devel
+
+	* src/engine/kgraphics.c (_k_update_signals_in_view_list): Changed
+	back to 0.3.3 behaviour.
+
 2002-02-10  Solomon Peachy <pizza@shaftnet.org>
 	* src/sound/midi_adlib.c:  Fixed a VERY stupid bug.  Should
         actually produce decent-sounding output now!

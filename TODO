@@ -11,9 +11,11 @@ Primary goals:
 Secondary goals:
 	* docs: Mention words with class set to zero (no word).
 	* grammar.c: Replace proto-Earley parser with backtracking Earley
+	* Don't crash when loading SCI1 resources
 
 Bonus goals:
 	+ Add glx graphics driver
+	* modify Cygwin setup for use as win32 installer
 
 
 *: Normal goal

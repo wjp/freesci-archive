@@ -28,7 +28,7 @@
 #include <sys/asoundlib.h>
 
 #include <midiout.h>
-#if SND_LIB_VERSION > 0x000900
+#if SND_LIB_VERSION >= 0x000900
 #  define ALSA_09
 #endif
 
@@ -43,7 +43,7 @@ static int
 midiout_alsaraw_set_parameter(struct _midiout_driver *drv, char *attribute, char *value)
 {
 	char *testptr;
-
+	
 	if (!strcasecmp(attribute, "card")) {
 		card = strtol(value, &testptr, 0);
 		if (*testptr) {

@@ -2002,10 +2002,12 @@ _k_update_signals_in_view_list(gfxw_list_t *old_list, gfxw_list_t *new_list)
 
 			if ((new_widget->pos.x != old_widget->pos.x)
 			    || (new_widget->pos.y != old_widget->pos.y)
+			    /* ** No idea why this is supposed to be bad **
 			    || (new_widget->z != old_widget->z)
 			    || (new_widget->view != old_widget->view)
 			    || (new_widget->loop != old_widget->loop)
 			    || (new_widget->cel != old_widget->cel)
+			    */
 			    )
 				carry = 0;
 
@@ -2180,7 +2182,8 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			SCIkwarn(SCIkERROR, "Attempt to single-add invalid picview (%d/%d/%d)\n", view, loop, cel);
 		} else {
 			widget->ID = -1;
-			draw_to_control_map(s, (gfxw_dyn_view_t *) widget, funct_nr, argc, argp);
+			if (control >= 0)
+				draw_to_control_map(s, (gfxw_dyn_view_t *) widget, funct_nr, argc, argp);
 			ADD_TO_CURRENT_PICTURE_PORT(gfxw_picviewize_dynview((gfxw_dyn_view_t *) widget));
 		}
 
