@@ -1,22 +1,38 @@
 TODO for 0.3.2:
 
-Note: Yes, somehow that's almost the same as the TODO for 0.3.1.
-We'll take it more seriously next time, I hope.
+Primary goals:
+	* Win32 port
+	* Implement sound servers that actually make some sound
 
-- Implement sound servers that actually make some sound
-- Merge Magnus' Python class browser into the main tree
-- docs: Update grammar section to mention 0x400 (special words) and add the
-  missing said() rule
-- fix invalid (but consistent) shifting for word classes (is w[0] << 4 | (w[1] & 0xf0) >> 4, but should be w[0] | w[1] << 4).
-- docs: Mention words with class set to zero (no word).
-- docs: Mention special semantics of the "anyword" (0xfff)
+Secondary goals:
+	+ Fix DoAvoider
+	+ Fix DoBresen in the HQ and CB1 intros
+	+ Refactor resource.h and move the portability stuff into a different
+	  header file
+	+ Add any gfx driver of the following: glx, Xlib, SDL
+	* LRU resource manager
+	* fix invalid (but consistent) shifting for word classes
+	  (is w[0] << 4 | (w[1] & 0xf0) >> 4, but should be w[0] | w[1] << 4).
+	* docs: Mention words with class set to zero (no word).
+	* Re-implement on-screen console
+
+	GFX subsystem:
+
+	* operations.c: Remove the scroll offset (it's obsolete now)
+	* operations.c: Add full support for state->visible_map
 
 
-GFX subsystem:
+Bonus goals:
+	+ pic_0.c: Fix artifact removal to check surrounding pixels for
+	  occurences of	white before removing a white pixel
+	+ pic_0.c: Fix white spots in QfG1 forest
+	+ pic_0.c: Fix black line on left side in Erana's Peace
+	* bi- or trilinear pixmap filter
+	* pic_0.c: Add SCI01 support (priority palettes and embedded views)
+	* pal_1.c: Fix palettes not to compress colors (doing this is pointless
+	  and wrong)
+	* grammar.c: Replace proto-Earley parser with backtracking Earley
 
-- pic_0.c: Fix artifact removal to check surrounding pixels for occurences of
-	white before removing a white pixel
-- pic_0.c: Add SCI01 support (priority palettes and embedded views)
-- pal_1.c: Fix palettes not to compress colors (doing this is pointless and wrong)
-- operations.c: Remove the scroll offset (it's obsolete now)
-- operations.c: Add full support for state->visible_map
+
+*: Normal goal
++: If not met for 0.3.1, the goal will rise up one class

@@ -1015,93 +1015,6 @@ WARNING(fixme!)
 
 
 int
-c_showfont(state_t *s)
-{
-WARNING(fixme!)
-#if 0
-  resource_t *font;
-  port_t port;
-  int characters;
-  int fontheight;
-  char textbuf[12];
-  int fontwidth = 18;
-  sci_event_t e;
-  int i, y, x;
-
-  if (!s) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
-
-  font = findResource(sci_font, cmd_params[0].val);
-
-  if (!font) {
-    sciprintf("font.%03d not found\n", cmd_params[0].val);
-    return 1;
-  }
-
-  
-  if (s->onscreen_console) {
-    con_restore_screen(s, s->osc_backup); /* Restore screen... */
-    s->osc_backup = con_backup_screen(s); /* and grab it for later use */
-  }
-
-  characters = get_font_entries_nr(font->data);
-  fontheight = get_font_height(font->data);
-
-  sciprintf("font.%03d: %d characters, %d pixels high\n", cmd_params[0].val, characters, fontheight);
-  sprintf(textbuf, "font.%03d", cmd_params[0].val);
-
-  port.ymin = 30;
-  port.xmin = 160 - (fontwidth * 9);
-  port.ymax = 34 + (fontheight + 3) * (1+((characters + 0xf) / 0x10));
-  port.xmax = 160 + (fontwidth * 9);
-  port.flags = WINDOW_FLAG_TITLE;
-  port.priority = -1;
-  port.color = 15;
-  port.bgcolor = 0;
-  port.font = font->data;
-  port.alignment = ALIGN_TEXT_CENTER;
-  draw_window(s->pic, &port, port.bgcolor, port.priority, textbuf, font->data, port.flags);
-
-  for (i = 0; i < 0x10; i++) {
-    sprintf(textbuf, "%x", i);
-    draw_text0(s->pic, &port, (i+2) * fontwidth, 3, textbuf, font->data, 0xc);
-  }
-
-  fontheight += 3;
-  y = 3;
-  for (i = 0; i < characters; i++) {
-    if (!(i & 0xf)) {
-      x = fontwidth << 1;
-      y += fontheight;
-      sprintf(textbuf, "%x0", i >> 4);
-      draw_text0(s->pic, &port, 3, y, textbuf, font->data, 0xc);
-      textbuf[1] = 0;
-    }
-
-    textbuf[0] = i;
-    draw_text0_without_newline(s->pic, &port, x, y, textbuf, font->data, 0xf);
-    x += fontwidth;
-  }
-
-  graph_update_box(s, 0, 0, 320, 200);
-
-  do {
-    e = getEvent(s);
-    s->gfx_driver->Wait(s, 25000);
-  } while ((e.type != SCI_EVT_KEYBOARD) && (e.type != SCI_EVT_MOUSE_RELEASE));
-
-  if (s->onscreen_console) {
-    con_restore_screen(s, s->osc_backup); /* Restore screen again... */
-    s->osc_backup = con_backup_screen(s); /* ...grab for onscreen display removal */
-  }
-#endif
-  return 0;
-}
-
-
-int
 c_gfx_current_port(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -2105,7 +2018,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"
 					 "  c: Character handling\n  m: Memory management\n  f: Function call checks\n"
 					 "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter"
-					 "\n  p: Parser\n  M: The menu system\n  \n  S: Said specs\n  F: File I/O\n  *: Everything\n\n"
+					 "\n  p: Parser\n  M: The menu system\n  S: Said specs\n  F: File I/O\n  t: GetTime\n"
+					 "*: Everything\n\n"
 					 "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
 			con_hook_command(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 					 "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
@@ -2133,7 +2047,6 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gnf, "gnf", "", "Displays the Parse grammar\n  in strict GNF");
 			con_hook_command(c_set_parse_nodes, "set_parse_nodes", "s*", "Sets the contents of all parse nodes.\n"
 					 "  Input token must be separated by\n  blanks.");
-			con_hook_command(c_showfont, "showfont", "i", "Displays all characters of the specified font");
 			con_hook_command(c_objs, "objs", "", "Lists all objects and classes from all\n  currently loaded scripts, plus\n"
 					 "  all clones.\n  Objects are not marked; clones are marked\n  with a preceeding '*', and classes\n"
 					 "  with a preceeding '%'\n"

@@ -92,8 +92,8 @@
     </Othercredit>
 
     <Abstract><Para>
-      This book describes the Sierra Creative Interpreter, versions 0.xxx, 1.xxx,
-      and 2.xxx to the extent known to the general public, as well as the
+      This book describes the Sierra Creative Interpreter, versions 0.xxx and 1.xxx
+      to the extent known to the general public, as well as the
       FreeSCI interpreter for those games.
       Please contact the author if you find that anything is being described
       incorrectly or missing.
@@ -107,7 +107,7 @@
 
     <LegalNotice>
      <Para>
-     Copyright (C) 1999, 2000 by the authors
+     Copyright (C) 1999, 2000, 2001 by the authors
      </Para>
      <Para>
    Permission is hereby granted, free of charge, to any person obtaining a
@@ -144,7 +144,7 @@
     Sierra Creative Interpreter, in any version. SCI0 will refer to all games using the
     SCI version 0.xxx, except for those games who use the 'in-between' game engine
     referred to as SCI01 (such as Quest for Glory 2). SCI1 will refer to the interpreter
-    version 1.xxx, and SCI2 to interpreter version 2.xxx.
+    version 1.xxx.
     FreeSCI will refer specifically to either implementation details of the FreeSCI
     engine or to extensions of the original SCI engine specific to FreeSCI.
    </para>
@@ -163,30 +163,31 @@
  <Chapter>
  <Title/Introduction/
 <sect1>
-<Title/The basics/
-<para>
-The Sierra Creative Interpreter is a complete virtual machine. It cointains
-functionality for displaying graphics, playing sound, receiving input, writing
-data to the hard disk, and handling complex logical functions.
-In version 0.xxx of the interpreter, Sierra split the game data into nine
-different types of information:
-<simpleList>
-<member/script data/
-<member/vocab data/
-<member/patch data/
-<member/sound data/
-<member/cursor data/
-<member/view data/
-<member/pic data/
-<member/font data/
-<member/text data/
-</simpleList>
+  <Title/The basics/
+    <para>
+      The Sierra Creative Interpreter is a stack-based virtual machine ("P-Machine"). In addition
+      to its roughly 125 basic opcodes, it provides a set of extended functions
+      for displaying graphics, playing sound, receiving input, writing and reading
+      data to and from the hard disk, and handling complex arithmetical and logical functions.
+      In version 0.xxx of the interpreter, Sierra split the game data into nine
+      different types of information:
+      <simplelist>
+	<member>script data: SCI scripts and local data</member>
+	<member>vocab data: Parser data and debug information</member>
+	<member>patch data: Information pertaining to specific audio output devices</member>
+	<member>sound data: MIDI music tracks</member>
+	<member>cursor data: Mouse pointer shapes</member>
+	<member>view data: Sets of sets of image and hotspot information</member>
+	<member>pic data: Background images and metadata</member>
+	<member>font data: Bitmap fonts</member>
+	<member>text data: Plain text information</member>
+      </simplelist>
 </para>
 <para>
 Each game may contain up to 1000 different elements of each data type; these
 elements are referred to as "resources". The index numbers of the various
 resources need not be in sequence; they are usually assigned arbitrarily.
-<Footnote><para>With several notable exceptions, used mainly by the debugger.</para></Footnote>
+<footnote><para>With several notable exceptions, such as script 0 and most vocab resources.</para></footnote>
 </para>
 </sect1>
 <sect1>
@@ -219,7 +220,7 @@ version 0.2.2.
 The resource files, however, are more complicated. Each of them contains a
 sequence of resources preceeded by a header; these resources may be compressed.
 It is, also, quite common to find resources shared by several resource files.
-The reason for this obviously is that, back when hard disks were rare and hard
+The reason for this appears to be that that, back when hard disks were rare and hard
 to come by, the games had to be playable from floppy disks. To prevent
 unneccessary disk-jockeying, common stuff was placed in several resource files,
 each of which was then stored on one disk.
@@ -243,36 +244,40 @@ resources deserve further discussion.
 </para>
 <sect2>
 <Title/Graphical resources summarized/
-<para>
-The screen graphics are compromised of the four graphics resources. The
-background pictures are drawn using vector-oriented commands from at least one
-pic resource (several resources may be overlaid). The fact that vector graphics
-were used for SCI0 allows for several interesting picture quality improvements.
-Pic resources also include two additional "screens": The priority screen, which
-marks parts of the pictures with a certain priority, so that other things with
-less priority can be fully or partially covered by them even if they are drawn
-at a later time, and the special screen, which delimits the walking area and
-some special places used by the game logic. FreeSCI uses a fourth auxiliary
-screen for during drawing time (this is a heritage from Carl Muckenhoupt's
-original code).
-</para>
-<para>
-The view resources compromise the bitmaps of the game. They are somewhat
-compressed, and include transparency information. Also, each view resource may
-contain several animation "loops" consisting of one or more "cells", each of
-which is an image.
-</para>
-<para>
-View resources are used for foreground images as well as for background images
-(for example, the "Spielburg" sign in QfG1 (EGA) is stored in a view resource
-and added to the background picture after it is drawn).
-The cursor resource contains simple bitmaps for drawing the mouse pointer. It
-only allows for black, white, and transparent pixels in SCI0.
-The fourth graphics resource is font data. It contains bitmapped fonts which
-are used to draw most of the text in the games. Text is used in one of four
-places: Text boxes, Text input fields, the title bar menu, and (rarely)
-on-screen.
-</para>
+  <para>
+    The screen graphics are compromised of the four graphics resources. The
+    background pictures are drawn using vector-oriented commands from at least one
+    pic resource (several resources may be overlaid). The fact that vector graphics
+    were used for SCI0 allows for several interesting picture quality improvements.
+    Pic resources also include two additional "screens": The priority screen, which
+    marks parts of the pictures with a certain priority, so that other things with
+    less priority can be fully or partially covered by them even if they are drawn
+    at a later time, and the control screen, which delimits the walking area and
+    some special places used by the game logic. FreeSCI uses a fourth auxiliary
+    screen for during drawing time (this is a heritage from Carl Muckenhoupt's
+    original code).
+  </para>
+  <para>
+    View resources contain most of the games' pixmaps (multi-color bitmaps). Each
+    view contains a list of loops, and each loop contains a list of cels. The cels
+    themselves contain the actual image information: RLE encoded pixmaps with
+    transparency information, and relative offsets.
+  </para>
+  <para>
+    View resources are used for foreground images as well as for background images
+    (for example, the "Spielburg" sign in QfG1 (EGA) is stored in a view resource
+    and added to the background picture after it is drawn).
+  </para>
+  <para>
+    The cursor resource contains simple bitmaps for drawing the mouse pointer. It
+    only allows for black, white, and transparent pixels in SCI0.
+  </para>
+  <para>
+    The fourth graphics resource is font data. It contains bitmapped fonts which
+    are used to draw most of the text in the games. Text is used in one of four
+    places: Text boxes, Text input fields, the title bar menu, and occasionally
+    on-screen.
+  </para>
 </sect2>
 <sect2>
 <Title/Sound resources summarized/
@@ -288,11 +293,6 @@ the General Midi (GM) standard (which was, to my knowledge, written several
 years after the first SCI0 game was released), though later SCI versions may do
 so.
 </para>
-<para>
-Since FreeSCI currently only takes advantage of GM output, it maps the
-instruments according to strings taken from patch resource 002 (Used by the
-IMF/FB01 sound device, whatever that may be). This works almost adequately.
-</para>
 </sect2>
 
 <sect2>
@@ -304,27 +304,18 @@ though; they provide information required by the debugger, including the help
 text for the debugger help menu and the names of the various SCI opcodes
 and kernel functions.
 </para><para>
-Script resources are the heart (or, rather, the brains) of the game. They
-contain commands to load and display resources, to react on certain actions,
-and generally to find out what happens next.
+Script resources are the heart (or, rather, the brains) of the game. Consqeuently,
+they also are its most complex aspects, containing class and object information,
+local data, pointer relocation tables, and, of course, SCI bytecode.
 </para><para>
-To be more precise, scripts are composed of classes and class data.
-To run the game, scripts are instantiated on the SCI stack, where their
-functions are executed by a virtual machine. They use a set of 0x7d opcodes,
+To run the game, scripts are loaded on the SCI stack, their pointers are relocated
+appropriately, and their functions are executed by a virtual machine. They use a set of 0x7d opcodes,
 which may take either 8 or 16 bit parameters (so, effectively, there is twice
 the amount of commands). The functions may refer to global data, local temporary
 data, local function parameter data, or object data (selectors). They may,
 additionally, indirectly refer to "hunk" data, which is stored outside of the
 SCI heap. Since the whole design is object oriented, functions may
-re-use or overload the functions of their superclass, which allows for a quite
-powerful design.
-</para><para>
-One of the most powerful things functions can do is to call a kernel command.
-This is the SCI equivalent to a system call as provided by traditional
-operating systems. These kernel commands are practically unexplored, but we can
-safely assume that they are used to perform tasks like playing a song, drawing
-an image, waiting for a key, changing the mouse pointer appearance, or loading
-a save game file.
+re-use or overload the functions of their superclasses.
 </para>
 </sect2>
 </sect1>
@@ -335,7 +326,7 @@ a save game file.
   SCI01 differs only in very few respects: It uses different compression
   algorithms (all of which are supported since FreeSCI 0.2.1), and a
   different type of sound resources, which may contain digitized sound effects
-  (samples). The basic music data, however, still resembles MIDI data.
+  (PCM data). The basic music data, however, still resembles MIDI data.
 </para>
 <para>
   Also, scripts are split into two parts when loaded: A dynamic part, which
@@ -418,7 +409,7 @@ a save game file.
   <row><entry/Space Quest 3: The Pirates of Pestulon/<entry/SQ3/<entry/0.000.453, 0.000.685/</row>
   <row><entry/King's Quest IV: The Perils of Rosella/<entry/KQ4/<entry/0.000.502/</row>
   <row><entry/Fun Seeker's Guide/<entry/emc/<entry/0.000.506/</row>
-  <row><entry/Hoyle's Book of Games 1/<entry/?/<entry/0.000.530/</row>
+  <row><entry/Hoyle's Book of Games 1/<entry/cardGames/<entry/0.000.530, 0.000.685/</row>
   <row><entry/Hero's Quest: So you want to be a hero/<entry/HQ/<entry/0.000.566/</row>
   <row><entry/Leisure Suit Larry 3: Passionate Patti In Pursuit Of The Pulsating Pectorals!/
              <entry/LSL3/<entry/0.000.572/</row>
@@ -739,11 +730,98 @@ a save game file.
 	  WriteMe.
       </para>
     </sect2>
-    <sect2>
+    <sect2 id="decomp-huffman">
       <title>Decompression algorithm HUFFMAN</title>
       <para>
-	<!-- fixme -->
-	  WriteMe.
+	This is an implementation of a simple huffman token decoder, which looks up tokens in a huffman tree.
+	A <emphasis>huffman tree</emphasis> is a hollow binary search tree. This means that all inner nodes, usually
+	including the root, are empty, and have two siblings. The tree's leaves contain the actual information.
+	<programlisting>
+FUNCTION get_next_bit(): Boolean;
+/* This function reads the next bit from the input stream. Reading starts at the MSB. */
+
+
+FUNCTION get_next_byte(): Byte
+VAR
+    i: Integer;
+    literal: Byte;
+BEGIN
+    literal := 0;
+    FOR i := 0 to 7 DO
+        literal := (literal << 1) | get_next_bit();
+    OD
+    RETURN literal;
+END
+
+
+FUNCTION get_next_char(nodelist : Array of Nodes, index : Integer): (Char, Boolean)
+VAR
+    left, right: Integer;
+    literal : Char;
+    node : Node;
+BEGIN
+    Node := nodelist[index];
+
+    IF node.siblings == 0 THEN
+	RETURN (node.value, False);
+    ELSE BEGIN
+       left := (node.siblings & 0xf0) >> 4;
+       right := (node.siblings & 0x0f);
+
+       IF get_next_bit() THEN BEGIN
+	   IF right == 0 THEN /* Literal token */
+	       literal := ByteToChar(get_next_byte());
+
+	       RETURN (literal, True);
+	   ELSE
+	       RETURN get_next_char(nodelist, index + right)
+        END ELSE
+	        RETURN get_next_char(nodelist, index + left)
+    END
+END
+	</programlisting>
+	The function get_next_char() is executed until its second return value is True (i.e.
+	if a value was read directly from the input stream) while the first return value equals
+	a certain terminator character, which is the first byte stored in the compressed resource:
+	<informaltable frame="none">
+	  <tgroup cols="3">
+	    <thead>
+	      <row>
+		<entry>Offset</entry>
+		<entry>Name</entry>
+		<entry>Meaning</entry>
+	      </row>
+	    </thead>
+	    <tbody>
+	      <row>
+		<entry>0</entry>
+		<entry>terminator</entry>
+		<entry>Terminator character</entry>
+	      </row>
+	      <row>
+		<entry>1</entry>
+		<entry>nodes</entry>
+		<entry>Number of nodes</entry>
+	      </row>
+	      <row>
+		<entry>2 + i*2</entry>
+		<entry>nodelist[i].value</entry>
+		<entry>Value of node #i (0 &le; i < nodes)</entry>
+	      </row>
+	      <row>
+		<entry>3 + i*2</entry>
+		<entry>nodelist[i].siblings</entry>
+		<entry>Sibling nodes of node #i</entry>
+	      </row>
+	      <row>
+		<entry>2 + nodes*2</entry>
+		<entry>data[]</entry>
+		<entry>The actual compressed data</entry>
+	      </row>
+	    </tbody>
+	  </tgroup>
+	</informaltable>
+	where nodelist[0] is the root node.
       </para>
     </sect2>
     <sect2>
@@ -759,8 +837,7 @@ a save game file.
 	originally by <author><firstname>Petr</firstname> <surname>Vyhnak</surname></author>
       </para>
       <note><para>
-	This algorithm has not yet been implemented in FreeSCI. It matches one or more of the
-	UNKNOWN algorithms.
+	This algorithm matches one or more of the UNKNOWN algorithms.
       </para></note>
       <para>
 	This algorithm is based on the Deflate algorithm described in the Internet RFC 1951 (see also
@@ -821,7 +898,7 @@ END LOOP
 	<sect3>
 	  <title>Huffman Tree #1</title>
 	  <para>
-	    The first huffman tree contains the length values. It is described by the following table:
+	    The first huffman tree (<xref linkend="decomp-huffman">) contains the length values. It is described by the following table:
 
 	    <informaltable>
 	      <tgroup cols="2">
@@ -1357,8 +1434,8 @@ changed by SCI itself, though.
 Only two kernel calls deal directly with ports:
 </para><para>
 <simpleList>
-<member>KGetPort (see <XREF LINKEND="KGetPort">)</member>
-<member>KSetPort (see <XREF LINKEND="KSetPort">)</member>
+<member>KGetPort (see <xref linkend="KGetPort">)</member>
+<member>KSetPort (see <xref linkend="KSetPort">)</member>
 </simplelist>
 </para><para>
 These two functions are often used in pairs (also internally), like:
@@ -1586,6 +1663,319 @@ KSetPort(temp);    /* Reactivate the old port */
  </VariableList>
  </para>
  </sect2>
+</sect1>
+<sect1>
+  <title>The SCI0 and SCI01 pic resource</title>
+  <para>
+    The pic (background picture) resource format used in SCI0 is rather complex in comparison
+    to the other graphical resource formats. It is best described as a sequence of drawing
+    operations on a set of four 320x200 canvases, three of which are later used in the game
+    (visual, priority, and control), and one of which is used during the drawing process for
+    auxiliary purposes<footnote><para>
+    Due to the vector graphics nature of these drawing operations, they are inherently more scaleable
+    than pixmaps.
+    </para></footnote>
+  </para>
+  <para>
+    In order to describe the process, we will first need to define a set of operations
+    we base them on:
+    <programlisting>
+FUNCTION peek_input(): Byte; /* returns the byte pointed to by the input pointer */
+FUNCTION get_input(): Byte; /* works like peek_input(), but also increminates the 
+                            ** input pointer  */
+FUNCTION skip_input(x): Byte; /* skips x input bytes */
+      </programlisting>
+      Using these pre-defined functions, we will now define additional helper functions used for reading
+      specifically encoded data tuples:
+      <programlisting>
+FUNCTION GetAbsCoordinates(): (Integer, Integer)
+VAR
+	x, y, coordinate_prefix : Integer;
+BEGIN
+	coordinate_prefix := get_input();
+	x := get_input();
+	y := get_input();
+	x |= (coordinate_prefix & 0xf0) << 4;
+	y |= (coordinate_prefix & 0x0f) << 8;
+
+	RETURN (x,y)
+END
+
+
+FUNCTION GetRelCoordinates(x : Integer, y: Integer): (Integer, Integer)
+VAR
+	input : Integer;
+BEGIN
+	input := get_input();
+	IF (input & 0x80) THEN
+	        x -= (input >> 4);
+	ELSE
+		x += (input >> 4);
+	FI
+
+	IF (input & 0x08) THEN
+		y -= (input & 0x7);
+	ELSE
+		y += (input & 0x7);
+	FI
+
+	RETURN (x,y)
+END
+
+      </programlisting>
+      We also need some data types based on EGACOLOR and PRIORITY, which can be thought of as integers:
+      <programlisting>
+TYPE Palette = ARRAY[0..39] of EGACOLOR[0..1]
+TYPE Priority_Table = ARRAY[0..39] of PRIORITY
+
+Palette default_palette =
+     &lt;(0,0), (1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7),
+      (8,8), (9,9), (a,a), (b,b), (c,c), (d,d), (e,e), (8,8),
+      (8,8), (0,1), (0,2), (0,3), (0,4), (0,5), (0,6), (8,8),
+      (8,8), (f,9), (f,a), (f,b), (f,c), (f,d), (f,e), (f,f),
+      (0,8), (9,1), (2,a), (3,b), (4,c), (5,d), (6,e), (8,8)&gt;;
+
+#define DRAW_ENABLE_VISUAL   1
+#define DRAW_ENABLE_PRIORITY 2
+#define DRAW_ENABLE_CONTROL  4
+
+#define PATTERN_FLAG_RECTANGLE 0x10
+#define PATTERN_FLAG_USE_PATTERN 0x20
+      </programlisting>
+      And now for the actual algorithm:
+      <programlisting>
+FUNCTION DrawPic (cumulative, fill_in_black : Boolean; default_palette: Integer; visual_map, priority_map, control_map, aux_map : Map): Map^4
+VAR
+	palette : Array [0..3] of Palette;
+	drawenable, priority, col1, col2, pattern_nr, pattern_code : Integer;
+BEGIN
+	palette := (default_palette × 4);
+	drawenable := DRAW_ENABLE_VISUAL | DRAW_ENABLE_PRIORITY
+	priority := 0;
+	col1 := col2 := 0;
+	pattern_nr := 0;
+	pattern_code := 0;
+
+	IF (!cumulative) THEN BEGIN
+		visual_map := (0xf × 320 × 200);
+		map control := map priority := map aux := (0 × 320 × 200);
+	END
+
+	FOREVER DO BEGIN
+
+		opcode := get_input();
+
+		COND opcode:
+			0xf0 &rarr; /* PIC_OP_SET_COLOR */
+				code := get_input();
+				(col1, col2) := palette[default_palette + (code / 40)][code % 40];
+				drawenable |= DRAW_ENABLE_VISUAL;
+
+			0xf1 &rarr; /* PIC_OP_DISABLE_VISUAL */
+				drawenable &= ~DRAW_ENABLE_VISUAL;
+
+			0xf2 &rarr; /* PIC_OP_SET_PRIORITY */
+				code := get_input();
+				priority := code & 0xf;
+				drawenable |= DRAW_ENABLE_PRIORITY;
+
+			0xf3 &rarr; /* PIC_OP_DISABLE_PRIORITY */
+				drawenable &= ~DRAW_ENABLE_PRIORITY;
+
+			0xf4 &rarr; /* PIC_OP_RELATIVE_PATTERNS */
+				IF (pattern_code & PATTERN_FLAG_USE_PATTERN) THEN
+					pattern_nr := (get_input() &gt;&gt; 1) & 0x7f
+				FI
+
+				(x,y) := GetAbsCoordinates();
+
+				DrawPattern(x, y, col1, col2, priority, control, drawenable,
+						 pattern_code & PATTERN_FLAG_USE_PATTERN,
+						 pattern_size, pattern_nr, pattern_code & PATTERN_FLAG_RECTANGLE);
+
+				WHILE (peek_input() < 0xf0) DO BEGIN
+					IF (pattern_code & PATTERN_FLAG_USE_PATTERN) THEN
+						pattern_nr := (get_input() &gt;&gt; 1) & 0x7f
+					FI
+					(x,y) =  GetRelCoordinates(x,y);
+					DrawPattern(x, y, col1, col2, priority, control, drawenable,
+							 pattern_code & PATTERN_FLAG_USE_PATTERN,
+							 pattern_size, pattern_nr, pattern_code & PATTERN_FLAG_RECTANGLE);
+				END
+
+			0xf5 &rarr; /* PIC_OP_RELATIVE_MEDIUM_LINES */
+				(oldx, oldy) := GetAbsCoordinates();
+				WHILE (peek_input() &lt; 0xf0) DO BEGIN
+					temp := get_input();
+					IF (temp & 0x80) THEN
+						y := oldy - (temp & 0x7f)
+					ELSE
+						y := oldy + temp
+					FI
+					x = oldx + get_input();
+					 DitherLine(oldx, oldy, x, y, col1, col2, priority, special, drawenable);
+					(oldx, oldy) := (x, y);
+				END
+
+			0xf6 &rarr; /* PIC_OP_RELATIVE_LONG_LINES */
+				(oldx, oldy) :=  GetAbsCoordinates()
+				WHILE (peek_input() &lt; 0xf0) DO BEGIN
+					(x, y) := GetAbsCoordinates();
+					DitherLine(oldx, oldy, x, y, col1, col2, priority, special, drawenable);
+					(oldx, oldy) := (x, y);
+				END
+
+			0xf7 &rarr; /* PIC_OP_RELATIVE_SHORT_LINES */
+				(oldx, oldy) =  GetAbsCoordinates()
+				WHILE (peek_input() &lt; 0xf0) DO BEGIN
+					(x, y) := GetRelCoordinates(oldx, oldy);
+					DitherLine(oldx, oldy, x, y, col1, col2, priority, special, drawenable);
+					(oldx, oldy) := (x, y);
+				END
+
+			0xf8 &rarr; /* PIC_OP_FILL */
+				IF (fill_in_black) THEN
+					(oldc1, oldc2) := (c1, c2);
+				FI
+
+				WHILE (peek_unput() &lt; 0xf0) DO BEGIN
+					(x, y) := GetAbsCoordinates();
+					DitherFill(x, y, col1, col2, priority, special, drawenable);
+				END
+
+				IF (fill_in_black) THEN
+					(c1, c2) := (oldc1, oldc2);
+				FI
+
+			0xf9 &rarr; /* PIC_OP_SET_PATTERN */
+				pattern_code := get_input() & 0x37;
+				pattern_size := pattern_code & 0x7;
+
+			0xfa &rarr; /* PIC_OP_ABSOLUTE_PATTERNS */
+				WHILE (peek_input() &lt; 0xf0) DO
+					IF (pattern_code & PATTERN_FLAG_USE_PATTERN)
+						pattern_nr := (get_input() >> 1) & 0x7f
+					FI
+					(x, y) := GetAbsCoordinates();
+					DrawPattern(x, y, col1, col2, priority, control, drawenable,
+							 pattern_code & PATTERN_FLAG_USE_PATTERN,
+							 pattern_size, pattern_nr, pattern_code & PATTERN_FLAG_RECTANGLE);
+					END
+
+			0xfb &rarr; /* PIC_OP_SET_CONTROL */
+				control := get_input() & 0x0f;
+				drawenable |= DRAW_ENABLE_CONTROL;
+
+			0xfc &rarr; /* PIC_OP_DISABLE_CONTROL */
+				drawenable &= ~DRAW_ENABLE_CONTROL;
+
+			0xfd &rarr; /* PIC_OP_RELATIVE_MEDIUM_PATTERNS */
+				IF (pattern_code & PATTERN_FLAG_USE_PATTERN) THEN
+					pattern_nr := (get_input() &gt;&gt; 1) & 0x7f;
+				FI
+
+				(oldx, oldy) := GetAbsCoordinates();
+
+				DrawPattern(x, y, col1, col2, priority, control, drawenable,
+						 pattern_code & PATTERN_FLAG_USE_PATTERN,
+						 pattern_size, pattern_nr, pattern_code & PATTERN_FLAG_RECTANGLE);
+
+				WHILE (peek_input() &lt; 0xf0) DO BEGIN
+					IF (pattern_code & PATTERN_FLAG_USE_PATTERN) THEN
+						pattern_nr := (get_input() &gt;&gt; 1) & 0x7f;
+					FI
+			
+					temp := get_input();
+					IF (temp & 0x80)
+						y := oldy - (temp & 0x7f)
+					ELSE
+						y := oldy + temp
+					FI
+					x := oldx + get_input();
+					DrawPattern(x, y, col1, col2, priority, control, drawenable,
+							 pattern_code & PATTERN_FLAG_USE_PATTERN,
+							 pattern_size, pattern_nr, pattern_code & PATTERN_FLAG_RECTANGLE);
+				END
+
+			0xfd &rarr; /* PIC_OP_OPX */
+				COND get_input():
+					0x00 &rarr; /* PIC_OPX_SET_PALETTE_ENTRY */
+						WHILE peek_input() &lt; 0xf0 DO BEGIN
+							index := get_input();
+							color := get_input();
+							palette[index / 40][color % 40] := color;
+						END
+
+					0x01 &rarr; /* PIC_OPX_SET_PALETTE */
+						palette_number := get_input();
+						FOR i := 0 TO 39 DO
+							palette[palette_number][i] := get_input();
+						OD
+
+					0x02 &rarr; /* PIC_OPX_MONO0 */
+						skip_input(41);
+
+					0x03 &rarr; /* PIC_OPX_MONO1 */
+						skip_input(1);
+
+					0x04 &rarr; /* PIC_OPX_MONO2 */
+					0x05 &rarr; /* PIC_OPX_MONO3 */
+						skip_input(1);
+
+					0x06 &rarr; /* PIC_OPX_MONO4 */
+					0x07 &rarr; /* PIC_OPX_EMBEDDED_VIEW */ /* SCI01 operation */
+					0x08 &rarr; /* PIC_OPX_SET_PRIORITY_TABLE */ /* SCI01 operation */
+
+			0xff &rarr; return (visual, control, priority, aux);
+		END OF COND
+      END
+END
+      </programlisting>
+      This algorithm uses three auxiliary algorithms, DrawPattern, DitherLine, and DitherFill, which are sketched below. All of
+      these functions are supposed to take the four maps as implicit parameters.
+      <programlisting>
+PROCEDURE DrawPattern(x, y, col1, col2, priority, control, drawenable : Integer;  solid : Boolean ;  pattern_size, pattern_nr : Integer; rectangle : Boolean)
+
+Alters (x,y) so that 0 &lt;= (x - pattern_size), 319 &gt;= (x + pattern_size), 189 &gt;= (y + pattern_size) and
+0 &lt;= (y - pattern_size), then draws a rectangle or a circle filled with col1, col2, priority, control,
+as determined by drawenable.
+If rectangle is not set, it will draw a rectangle, otherwise a circle of size pattern_size.
+pattern_nr is used to specify the start index in the random bit table (256 random bits)
+
+
+
+PROCEDURE DitherLine(x, y, xend, yend, color1, color2, priority, control, drawenable : Integer)
+
+Draws a dithered line between (x, y+10) and (xend, yend+10). If the appropriate drawenable flags
+are set, it draws 'priority' to the priority map, 'control' to the control map, and 'color1' and 'color2'
+(alternating) to the visual map. The auxiliary map is bitwise-or'd with the drawenable flag while this is
+done.
+
+
+
+PROCEDURE DitherFill(x, y, col0, col1, priority, control, drawenable : Integer)
+Fills all layers for which drawenable is set with the appropriate content.
+Diagonal filling is not allowed.
+Boundaries are determined as follows:
+x&lt;0, x&gt;319, y&lt;10, y&gt;199 are hard boundaries. We now determine the
+'boundary map' bound_map and the allowed color legal_color.
+If bound_map[coordinates] = legal_color, then the pixel may be filled.
+
+IF (drawenable & DRAW_ENABLE_VISUAL)
+	bound_map = visual;
+	legal_color = 0xf;
+ELSIF (drawenable & DRAW_ENABLE_PRIORITY)
+	bound_map = priority;
+	legal_color = 0;
+ELSIF (drawenable & DRAW_ENABLE_CONTROL)
+	bound_map = control;
+	legal_color = 0;
+ELSE
+	return;
+FI
+      </programlisting>
+
+
 </sect1>
 <sect1 ID="LarsWindows">
 <Title/Windows, Dialogs and Controls/
@@ -3334,7 +3724,11 @@ explained more thoroughly, errors corrected, etc. The first 23 instructions
     Since lsp does not support register indirection, we can't just push the
     variables in a loop (as we would in C). Instead this function is used.
     In this case, the instruction would be &amp;rest 2, since we want the copying
-    to start from y, the second parameter.
+    to start from y (inclusive), the second parameter.
+</para><para>
+    Note that the values are copied to the stack <emphasis>immediately</emphasis>.
+    The <literal>&amp;rest_modifier</literal> is set to the number of variables pushed
+    afterwards.
 
 
            </para></listitem>
@@ -6529,7 +6923,11 @@ that, which is imperative)/
 <member/0x040 - adverb/
 <member/0x080 - imperative verb/
 <member/0x100 - number (not found in the vocabulary, set internally)/
-<member/0x800 - ??? (used in the suffix vocabulary)/
+<member/0x200 - special/
+<member/0x400 - special/
+<member>0x800 - special<footnote><para>The three special classes are apparently used for words
+with very specific semantics, such as "if", "not", "and" etc. It is unknown as of yet whether they
+receive special treatment by the parser.</para></footnote></member>
 </simplelist>
 </para><para>
 The group number is used to implement synonyms (words with the same
@@ -7123,6 +7521,8 @@ convenience/speed, and not really needed.
 				&rArr; (144 14f word) recref
 			| < wordset
 				&rArr; (144 14f word)
+		        | < [ wordset ]
+		                &rArr; (152 144 (144 14f wordset))
 
 
 	  recref &rarr;	< wordset recref
@@ -7146,24 +7546,32 @@ convenience/speed, and not really needed.
 		  <blockquote><para>
 	first: Node &rarr; S
 		    first((s, v, n<subscript>0</subscript>, n<subscript/1/ ... n<subscript/i/)) := s
+	    </para><para>
 
 	second : Node &rarr; V
 		    second((s, v, n<subscript>0</subscript>, n<subscript/1/ ... n<subscript/i/)) := v
+	    </para><para>
 
 	word : Node &rarr; &Gamma;
 		    word((s, v, &gamma)) := &gamma;
+	    </para><para>
 
 	children : Node &rarr; Node&lowast;
 		    children((s, v, n<subscript>0</subscript>, n<subscript/1/ ... n<subscript/i/)) := { m | &forall;m.m&isin;{ n<subscript>0</subscript>, n<subscript>1</subscript> ... n<subscript>i</subscript> } &and; m&isin;Node }
+	    </para><para>
 
 	all_children : Node &rarr; Node&lowast;
 		    all_children(n) := children(n) &cup; { m | &exist;l.l&isin;all_children(n).m&isin;l }
+	    </para><para>
 
 	is_word : Node &rarr; B
 		    is_word((s, v, n<subscript>0</subscript>, n<subscript/1/ ... n<subscript/i/) = tt &hArr; (i = 0) &and; n<subscript>0</subscript> &isin; &Gamma;
+	    </para><para>
 
 	contains_word : Node × S × &Gamma; &rarr; B
-		    contains_word(n, s, &gamma;) = tt &hArr; &exist;m.m&isin;all_children(n).(s = second(m)) &and (is_word(m) &and; (word(m) = &gamma))
+		    contains_word(n, s, &gamma;) = tt &gamma = 0xfff<footnote><para>This is the so-called "anyword". Words with
+	      a word group of 0xfff match any other word.</para></footnote> &or; (&hArr; &exist;m.m&isin;all_children(n).(s = second(m)) &and (is_word(m) &and; (word(m) = &gamma)))
+	    </para><para>
 
 	verify_sentence_part_elements : Node × Node &rarr; B
 		    verify_sentence_part_elements(n<subscript/p/, n<subscript/s/) = tt &hArr;
@@ -7174,9 +7582,11 @@ convenience/speed, and not really needed.
 				&and; (&exist;m.m &isin; children(n<subscript/s/).(&exist;o &isin; all_children(n<subscript/s/).(first(o) = first(n<subscript/p/)) &and word(o) = word(m)))
 			) &or; ((second(n<subscript/s/) &isin; {144, 14c})
 				&and; (&exist;m.m &isin; children(n<subscript/s/).verify_sentence_part(m, n<subscript/s/)))
+	    </para><para>
 
 	verify_sentence_part : Node × Node &rarr; B
 		    verify_sentence_part(n<subscript/p/, n<subscript/s/) = tt &hArr; &forall;n.n &isin; children(n<subscript/s/):&exist;m.m&isin;children(n<subscript/p/).(first(m) = first(n)) &and; verify_sentence_part_elements(n, m)
+	    </para><para>
 
 	verify_sentence_part_brackets : Node × Node &rarr; B
 		    verify_sentence_part_brackets(n<subscript/p/, n<subscript/s/) = tt &hArr;
@@ -7387,13 +7797,11 @@ the maps using the cast list created by Animate, whereas the ShowBits call
        </para><para>
           Finally, there is the built-in debugger. Sierra SCI used a quick and efficient design, while
           FreeSCI provides a Command-line interface to the debugger, and several additional commands.
-          <footnote><para>The FreeSCI debugger still lacks some features of Sierra's debugger, like
-          editing variables. These can be refitted easily, though.</para></footnote>
        </para>
      </Sect1>
      <Sect1>
         <Title/The built-in debugger/
-           <Sect2>
+           <sect2>
               <Title/Concepts and basic functionality/
               <para>
                  The built-in debugger takes advantage of a built-in command interpreter (which
@@ -7507,6 +7915,7 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                      <member/c: Character and string handling/
                      <member/d: System graphics display and management/
                      <member/f: Function calls/
+		     <member/F: File IO/
                      <member/g: Graphics/
                      <member/l: List and node handling/
                      <member/m: Memory management/
@@ -7514,6 +7923,7 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                      <member/p: The command parser/
                      <member/s: Base setter: Draws the bases of each actor as colored rectangles/
 		     <member/S: Said specs/
+		     <member/t: Time functions/
                      <member/u: Unimplemented functionality/
                      <member/*: Everything at once. Use with care./
                    </simplelist>
@@ -7549,10 +7959,16 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                   Lists up to <parameter/index/ nodes of the parse tree.
                 </para>
               </sect3>
-	      <sect3><title/dynviews/
-		<para>
-		  Shows a list of all dynamic views which are currently active, plus their underBits.
-		</para>
+	      <sect3><title>dumpwords</title>
+	      <para>
+		Lists all parser words
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_*</title>
+	      <para>
+		The various <emphasis>gfx</emphasis> debug commands interface to the graphics subsystem or the widget
+		subsystem. Please refer to their man pages until these systems have been documented.
+	      </para>
 	      </sect3>
 	      <sect3><title/gnf/
 		<para>
@@ -7569,6 +7985,11 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                 <para>
                    Invoking this function will spit out <parameter/number/ bytes, starting at
                    <parameter/address/.
+                </para>
+              </sect3>
+              <sect3><Title/heapdump_all/
+                <para>
+		  Prints all heap segments, including information whether they are allocated or not.
                 </para>
               </sect3>
               <sect3><Title/heapfree/
@@ -7635,15 +8056,15 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    current base object as opposed to the object indexed by the accumulator.
                 </para>
               </sect3>
+	      <sect3><title/objs/
+		<para>
+		  Lists all objects, classes, and clones that are currently on the stack. They are
+		  identified by their properties, and prefixed with an asterisk ('*') if they are clones,
+		  or a percent sign ('%') if they are classes.
 	      <sect3><title/parse (string)/
 		<para>
 		  Attempts to parse a single string, and displays the word groups, word classes
 		  and the resulting parse tree, if successful.
-		</para>
-	      </sect3>
-	      <sect3><title/picviews/
-		<para>
-		  Displays information about all currently active picture views (picviews).
 		</para>
 	      </sect3>
 	      <sect3><title/print (variable)/
@@ -7662,25 +8083,12 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    redraws everything. It's not inherently useful, though.
                 </para>
               </sect3>
-              <sect3><Title/refresh_screen/
-                <para>
-                   This should never do anything. If it does, it's a bug. Refreshing the screen
-                   calls the graphics_callback function to update the whole screen from the foreground
-                   picture. Both are supposed to be identical, though.
-                </para>
-              </sect3>
               <sect3><Title/registers/
                 <para>
                    This function will show the current values of the program counter, the
                    accumulator, the frame pointer, the stack pointer, the prev register,
                    and the &amp;rest modifier. It will also print the addresses of the current
                    base object, of the global variables, and of the stack.
-                </para>
-              </sect3>
-              <sect3><title/restore_game (name)/
-                <para>
-                  Tries to restore a game state from the specified directory. See <xref
-                  linkend="freesci-savegames"> for details about this.
                 </para>
               </sect3>
               <sect3><Title/resource_id (number)/
@@ -7694,6 +8102,12 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 		  Forces a restart of the current game. The string parameter is meaningless now.
 		</para>
 	      </sect3>
+              <sect3><title/restore_game (name)/
+                <para>
+                  Tries to restore a game state from the specified directory. See <xref
+                  linkend="freesci-savegames"> for details about this.
+                </para>
+              </sect3>
               <sect3><Title/s [number]/
                 <para>
                    This function will execute <parameter/number/ steps, or one if number was not
@@ -7711,6 +8125,11 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 		<para>
 		  Lists all scripts that have been loaded, their positions in memory, and the position
 		  of their local variables and exports.
+		</para>
+	      </sect3>
+	      <sect3><title>se</title>
+		<para>
+		  Steps forward until an SCI keyboard event is received.
 		</para>
 	      </sect3>
 	      <sect3><title/selectornames/
@@ -7748,15 +8167,9 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                         <footnote><para/Not really meaningful; only used while pic
                                         resources are drawn./</footnote></member>
                   </simplelist>
-                  This function does not automatically redraw the screen.
+		  This function is a no-op in FreeSCI 0.3.1.
                 </para>
               </sect3>
-	      <sect3><title/showfont (fontnr)/
-		<para>
-		  This function will show all characters contained in a font and wait for a
-		  key or mouse button press.
-		</para>
-	      </sect3>
               <sect3><title/simkey (keynr)/
                 <para>
                   Simulates a keypress of a key with the specified key number. Modifiers are
@@ -7857,16 +8270,6 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                identical to SCI heap data (little endian, 16 bit), so it is portable to all platforms.
              </para>
            </sect3>
-           <sect3><Title/buffer*/
-             <para>
-               These are png files containing the various graphical buffers used in the game.
-               buffer_x.1 is the visual buffer, buffer_x.2 is the priority buffer, and buffer_x.4
-               is the control buffer. Any combination of these three buffers is possible.
-             </para>
-             <para>
-               Control and priority buffers contain a grayscale gradient palette.
-             </para>
-           </sect3>
            <sect3><Title/hunk*/
              <para>
                These files contain raw hunk data. SCI code may allocate raw hunk data, but
@@ -7875,7 +8278,25 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                versions.
              </para>
            </sect3>
-           <sect3><Title/*map.png/
+	   <sect3><title>song.*</title>
+	   <para>
+	     Songs stored by the sound subsystem.
+	   </para>
+	 </sect3>
+	   <sect3><title>sound</title>
+	   <para>
+	     Contains the state of the sound subsystem. The syntax is identical to the used in the "state" file.
+	   </para>
+	 </sect3>
+	 <sect3><title>*.id</title>
+	 <para>
+	   Savegame name file for one SCI game. The file names are chosen by taking the game's "unique" identifier and
+	   appending a suffix of ".id". This file contains the savegame name in plain text.
+	 </sect2>
+	 <sect2><title>Obsolete files</title>
+	 <para>
+	   The following files were generated by earlier versions of FreeSCI, but are no longer used:
+	 <sect3><Title/*map.png/
              <para>
                The four maps of the main picture are stored in four separate png files:
                <simplelist>
@@ -7893,7 +8314,17 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                palette.
              </para>
            </sect3>
-        </sect2>
+           <sect3><Title/buffer*/
+             <para>
+               These are png files containing the various graphical buffers used in the game.
+               buffer_x.1 is the visual buffer, buffer_x.2 is the priority buffer, and buffer_x.4
+               is the control buffer. Any combination of these three buffers is possible.
+             </para>
+             <para>
+               Control and priority buffers contain a grayscale gradient palette.
+             </para>
+           </sect3>
+	 </sect2>
         <sect2><Title/Caveats/
            <para>
                FreeSCI's file saving and restoration functionality isn't perfect. Please be aware
@@ -7905,12 +8336,6 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                 the built-in debugger while file handles are still open, you will be warned
                 about this and saving will abort, unless you preceed your save directory name
                 with an underscore ('_').
-              </para>
-           </sect3>
-           <sect3><Title/Audio/
-              <para>
-                The state of the audio subsystem is not written to disk or restored. This is
-                only temporary, though.
               </para>
            </sect3>
            <sect3><Title/Kernel functions/

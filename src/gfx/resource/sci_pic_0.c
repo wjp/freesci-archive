@@ -2130,7 +2130,7 @@ gfxr_dither_pic0(gfxr_pic_t *pic, int dmode, int pattern)
 	int selection = 0;
 	int x, y;
 	byte *data = pic->visual_map->index_data;
-	fprintf(stderr,"Dithering %dx%d to %dx%d blocks\n", xl, yl, xfrob_max, yfrob_max);
+
 	if (dmode == GFXR_DITHER_MODE_F256)
 		return; /* Nothing to do */
 

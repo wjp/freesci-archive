@@ -1,3 +1,11 @@
+2001-02-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci.sgml: Added missing Said() rule
+	Added pic documentation
+	Added Huffman decoding algorithm
+	Mentioned anyword and words with types 0x100, 0x200, 0x400
+	Updated some doc stuff
+
 2001-01-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resmgr.c (gfxr_pic_xlate_common): Return unscaled

@@ -33,6 +33,9 @@
 #include <gfx_tools.h>
 #include <assert.h>
 #include <uinput.h>
+
+#ifdef HAVE_LIBGGI
+
 #include <ggi/ggi.h>
 #include <ctype.h>
 
@@ -959,3 +962,4 @@ gfx_driver_t gfx_driver_ggi = {
 };
 
 
+#endif /* HAVE_LIBGGI */

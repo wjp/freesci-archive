@@ -1,6 +1,6 @@
 SUBDIRS = resource drivers
 INCLUDES = -I$(top_srcdir)/src/include @ac_ggi_includes@ @ac_png_includes@
-EXTRA_DIST = TODO gfx_line.c gfx_crossblit.c gfx_pixmap_scale.c
+EXTRA_DIST = gfx_line.c gfx_crossblit.c gfx_pixmap_scale.c
 
 noinst_LIBRARIES = libscigraphics.a
 libscigraphics_a_LIBADD = drivers/libscidrivers.a resource/libsciresources.a
