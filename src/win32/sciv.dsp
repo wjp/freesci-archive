@@ -42,15 +42,16 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Zi /O2 /I "..\include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_GETOPT_H" /FR /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
-# ADD RSC /l 0x419 /d "NDEBUG"
+# ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib release/freesci.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib release/freesci.lib /nologo /subsystem:console /incremental:yes /debug /machine:I386 /FIXED:NO
+# SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
 
@@ -91,38 +92,7 @@ SOURCE=..\config.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\config.l
-
-!IF  "$(CFG)" == "sciv - Win32 Release"
-
-# Begin Custom Build
-ProjDir=.
-InputPath=..\config.l
-InputName=config
-
-"..\config.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(ProjDir) 
-	cd .. 
-	flex -o$(InputName).c $(InputName).l 
-	
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
-
-# Begin Custom Build
-ProjDir=.
-InputPath=..\config.l
-InputName=config
-
-"..\config.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(ProjDir) 
-	cd .. 
-	flex -o$(InputName).c $(InputName).l 
-	
-# End Custom Build
-
-!ENDIF 
-
+SOURCE=.\getopt.c
 # End Source File
 # Begin Source File
 
@@ -138,10 +108,6 @@ SOURCE=D:\VStudio\VC98\Include\BASETSD.H
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\chardefs.h"
-# End Source File
-# Begin Source File
-
 SOURCE=..\include\console.h
 # End Source File
 # Begin Source File
@@ -154,15 +120,7 @@ SOURCE=..\include\event.h
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\getopt.h"
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\glib.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\glibconfig.h
+SOURCE=c:\cygwin\usr\include\getopt.h
 # End Source File
 # Begin Source File
 
@@ -171,10 +129,6 @@ SOURCE=..\include\graphics.h
 # Begin Source File
 
 SOURCE=..\include\heap.h
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\history.h"
 # End Source File
 # Begin Source File
 
@@ -191,14 +145,6 @@ SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\keymaps.h"
 # Begin Source File
 
 SOURCE=..\include\menubar.h
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\obstack.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\readline.h"
 # End Source File
 # Begin Source File
 

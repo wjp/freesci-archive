@@ -65,13 +65,13 @@ EXPORTS
   printObject
   makeMIDI0
   mapMIDIInstruments
-  using_history DATA
-  add_history
-  readline
-  optind DATA
-  optarg DATA
-  getopt
-  getopt_long
+  ;using_history DATA
+  ;add_history
+  ;readline
+  ;optind DATA
+  ;optarg DATA
+  ;getopt
+  ;getopt_long
     
   gfxop_init
   gfxop_exit

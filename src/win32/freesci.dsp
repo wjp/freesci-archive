@@ -43,17 +43,18 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /GX /Zi /I "..\include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "DONT_HAVE_SDL" /D "HAVE-GETOPT_H" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
-# ADD RSC /l 0x419 /d "NDEBUG"
+# ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib /nologo /dll /machine:I386 /nodefaultlib:"libc.lib"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib /nologo /dll /incremental:yes /debug /machine:I386
+# SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "freesci - Win32 Debug"
 
@@ -69,17 +70,18 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /Zi /I "..\include" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /FR /YX /FD /GZ /c
+# SUBTRACT CPP /O<none>
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
-# ADD RSC /l 0x419 /d "_DEBUG"
+# ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib /nologo /dll /debug /machine:I386 /nodefaultlib:"LIBC" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib /nologo /dll /incremental:no /debug /machine:I386 /nodefaultlib:"LIBC" /pdbtype:sept
 
 !ENDIF 
 
@@ -163,29 +165,7 @@ SOURCE=..\engine\savegame.cfsml
 
 !IF  "$(CFG)" == "freesci - Win32 Release"
 
-# Begin Custom Build
-InputDir=\Src\freesci\src\engine
-InputPath=..\engine\savegame.cfsml
-InputName=savegame
-
-"..\engine\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(InputDir) 
-	"D:\Program Files\perl\bin\perl.exe" cfsml.pl < $(InputName).cfsml > $(InputName).c 
-	
-# End Custom Build
-
 !ELSEIF  "$(CFG)" == "freesci - Win32 Debug"
-
-# Begin Custom Build
-InputDir=\Src\freesci\src\engine
-InputPath=..\engine\savegame.cfsml
-InputName=savegame
-
-"..\engine\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(InputDir) 
-	"D:\Program Files\perl\bin\perl.exe" cfsml.pl < $(InputName).cfsml > $(InputName).c 
-	
-# End Custom Build
 
 !ENDIF 
 
@@ -398,82 +378,6 @@ SOURCE=..\sound\sound.c
 # Begin Group "Libs"
 
 # PROP Default_Filter ""
-# Begin Group "readline"
-
-# PROP Default_Filter ""
-# Begin Group "Source"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\bind.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\complete.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\display.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\funmap.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\history.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\isearch.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\keymaps.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\parens.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\readline.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\rltty.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\search.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\tilde.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\xmalloc.c"
-# End Source File
-# End Group
-# Begin Group "Header"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\rldefs.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\sysdep.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\tilde.h"
-# End Source File
-# End Group
-# End Group
 # Begin Source File
 
 SOURCE=D:\VStudio\VC98\Include\BASETSD.H
@@ -488,32 +392,11 @@ SOURCE=..\..\..\glib\config.h
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\emacs_keymap.c"
-# PROP Exclude_From_Build 1
-# End Source File
-# Begin Source File
-
 SOURCE=..\include\event.h
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\libiberty\getopt.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\getopt.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\libiberty\getopt1.c"
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\glib.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\glibconfig.h
+SOURCE=c:\cygwin\usr\include\getopt.h
 # End Source File
 # Begin Source File
 
@@ -553,47 +436,7 @@ SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\keymaps.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\libiberty\obstack.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\obstack.h"
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\libpng\png.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\libpng\pngconf.h
-# End Source File
-# Begin Source File
-
 SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\readline.h"
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\zlib\zconf.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\zlib\zlib.h
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\glib\glib-1.3.lib"
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Hermes\src\Release\Hermes.lib
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\libpng\libpng.lib
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\zlib\zlib.lib
 # End Source File
 # End Group
 # Begin Group "Header Files"
