@@ -1,3 +1,7 @@
+2002-08-02  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/sound/fmopl.c:  Fixes for 12-voice adlib mode.
+
 2002-08-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/kernel.h, src/engine/kgraphics.c (_find_view_priority):

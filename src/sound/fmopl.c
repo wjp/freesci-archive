@@ -1367,7 +1367,7 @@ static void OPLWriteReg(FM_OPL *OPL, int r, int v)
 			return;
 		}
 		/* keyon,block,fnum */
-		if( (r&0x0f) > 8) return;
+		if( (r&0x0f) >= ADLIB_VOICES) return;
 		CH = &OPL->P_CH[r&0x0f];
 		if(!(r&0x10))
 		{	/* a0-a8 */
@@ -1420,7 +1420,7 @@ static void OPLWriteReg(FM_OPL *OPL, int r, int v)
 		break;
 	case 0xc0:
 		/* FB,C */
-		if( (r&0x0f) > 8) return;
+		if( (r&0x0f) >= ADLIB_VOICES) return;
 		CH = &OPL->P_CH[r&0x0f];
 		CH->FB  = (v>>1)&7 ? ((v>>1)&7) + 7 : 0;
 		CH->CON = v&1;
@@ -1545,6 +1545,12 @@ void YM3812UpdateOne(FM_OPL *OPL, INT16 *buffer, int length)
 		{
 			OPL_CALC_RH(&OPL->P_CH[0], OPL->noise_rng&1 );
 		}
+
+#ifdef TWELVE_VOICE
+		OPL_CALC_CH(&OPL->P_CH[9]);
+		OPL_CALC_CH(&OPL->P_CH[10]);
+		OPL_CALC_CH(&OPL->P_CH[11]);
+#endif
 
 		lt = output[0];
 
