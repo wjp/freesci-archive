@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <sys/asoundlib.h>
+
 #include <midiout.h>
 
 static snd_rawmidi_t *handle;
@@ -56,7 +57,7 @@ int midiout_alsaraw_write(guint8 *buffer, unsigned int count)
 }
 
 midiout_driver_t midiout_driver_alsaraw = {
-  "unixraw",
+  "alsaraw",
   "v0.01",
   NULL,
   &midiout_alsaraw_open,
