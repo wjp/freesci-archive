@@ -1,6 +1,6 @@
 FreeSCI - Dreamcast
 
-Last update: 2003-01-15
+Last update: 2003-01-26
 
 
 Index
@@ -186,7 +186,7 @@ though:
 1) It is highly recommended that you use an empty memorycard for your
    FreeSCI savegames (or one that doesn't contain any savegames you couldn't
    live without).
-2) Due to the large size of SCI savegames only 3 or 4 savegames will fit on an
+2) Due to the large size of SCI savegames only 1 to 4 savegames will fit on an
    official memorycard.
 3) Some games create configuration files. These files are saved on game
    shutdown and loaded on game startup. If you want these files to be saved,
@@ -195,8 +195,13 @@ though:
    game screen has disappeared.
 4) You can switch memorycards to save more games. However, you shouldn't
    switch memorycards while you're at the save or restore screen.
-5) Saving takes several seconds, so be careful not to turn off your
-   Dreamcast while saving is in progress.
+5) Saving takes quite long, so be careful not to turn off your Dreamcast while
+   saving is in progress.
+6) When you're saving over an old save file, the old file will be erased
+   before the write is attempted. If the write fails for some reason, your
+   old save file will be lost. The most likely reason for a write to fail in
+   that case is because the new file is bigger than the old one and doesn't
+   fit on the memorycard.
 
 
 7    Known issues
