@@ -28,13 +28,10 @@
 static pthread_t thread;
 static int run = 1;
 
-static guint16 *buffer;
+static gint16 *buffer;
 
 static snd_pcm_t *pcm_handle;
 
-static snd_pcm_stream_t stream = SND_PCM_STREAM_PLAYBACK;
-static snd_pcm_access_t pcm_access = SND_PCM_ACCESS_RW_INTERLEAVED;
-static snd_pcm_format_t alsa_format = SND_PCM_FORMAT_S16_LE;
 static snd_pcm_hw_params_t *hwparams;
 static snd_pcm_sw_params_t *swparams;
 static snd_output_t *output;
@@ -56,10 +53,17 @@ static void *sound_thread (void *arg)
   pthread_exit(0);
 }
 
-static int pcmout_alsa_open(guint16 *b, guint16 rate) {
+static int pcmout_alsa_open(gint16 *b, guint16 rate) {
   int channels = 2;
   int periods = 8;
   int err;
+  snd_pcm_stream_t stream = SND_PCM_STREAM_PLAYBACK;
+  snd_pcm_access_t pcm_access = SND_PCM_ACCESS_RW_INTERLEAVED;
+#ifdef WORDS_BIGENDIAN
+  snd_pcm_format_t alsa_format = SND_PCM_FORMAT_S16_BE;
+#else
+  snd_pcm_format_t alsa_format = SND_PCM_FORMAT_S16_LE;
+#endif
 
   buffer = b;
 

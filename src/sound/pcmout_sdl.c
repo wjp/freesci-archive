@@ -28,7 +28,7 @@
 #       include <SDL.h>
 #endif
 
-static guint16 *buffer;
+static gint16 *buffer;
 
 /* SDL wants its buffer to be filled completely and we generate sound
  * in smaller chunks. So we fill SDL's buffer and keep the remaining
@@ -52,7 +52,7 @@ static void fill_audio (void *udata, guint8 *stream, int len)
   remain -= offset;
 }
 
-static int pcmout_sdl_open(guint16 *b, guint16 rate) {
+static int pcmout_sdl_open(gint16 *b, guint16 rate) {
   SDL_AudioSpec a;
   
   buffer = b;
@@ -63,7 +63,11 @@ static int pcmout_sdl_open(guint16 *b, guint16 rate) {
   }
   
   a.freq = rate;
-  a.format = AUDIO_S16;
+#ifdef WORDS_BIGENDIAN
+  a.format = AUDIO_S16MSB;
+#else
+  a.format = AUDIO_S16LSB;
+#endif
   a.channels = 2;
   a.samples = BUFFER_SIZE * 2;
   a.callback = fill_audio;

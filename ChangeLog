@@ -1,3 +1,11 @@
+2002-09-14  Solomon Peachy <pizza@shaftnet.org>
+	* src/sound/pcmout_oss.c:  Added an OSS pcmout driver.
+	* src/sound/pcmout.c, src/sound/pcmout_sdl.c,
+	  src/sound/pcmout_alsa.c, src/sound/pcmout_al.c,
+	  src/sound/fmopl.h, src/sound/midi_adlibemu.h,
+	  src/include/pcmout.h:  Make the pcm system use SIGNED buffers
+	to match the output type.  Also use the native endian for output.
+
 2002-09-12  Solomon Peachy <pizza@shaftnet.org>
 
 	* Fixed a pile of compiler warnings in the sound subsystem.

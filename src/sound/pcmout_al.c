@@ -32,8 +32,8 @@ static fd_set alfdset;
 pthread_attr_t althreadattr;
 pthread_t althread;
 
-static guint16 *buffer;
-static guint16 largebuffer[BUFFER_SIZE*4];
+static gint16 *buffer;
+static gint16 largebuffer[BUFFER_SIZE*4];
 
 void* althreadplay(void* arg) 
 {
@@ -59,7 +59,7 @@ void* althreadplay(void* arg)
    pthread_exit(NULL);
 }
 
-static int pcmout_al_open(guint16 *b, guint16 rate) 
+static int pcmout_al_open(gint16 *b, guint16 rate) 
 {
    ALpv alparam;
    int  aldev, alitf;

@@ -25,6 +25,9 @@ pcmout_driver_t *pcmout_drivers[] = {
 #ifdef HAVE_ALSA
         &pcmout_driver_alsa,
 #endif
+#ifdef HAVE_SYS_SOUNDCARD_H
+	&pcmout_driver_oss,
+#endif
 #ifdef HAVE_SDL
 	&pcmout_driver_sdl,
 #endif
@@ -35,7 +38,7 @@ pcmout_driver_t *pcmout_drivers[] = {
 	NULL
 };
 
-static guint16 *snd_buffer = NULL;
+static gint16 *snd_buffer = NULL;
 guint16 pcmout_sample_rate = 44100;
 
 int pcmout_open()
@@ -55,7 +58,7 @@ int pcmout_close(void)
   return retval;
 }
 
-int synth_mixer (void* tmp_bk, int samples);
+int synth_mixer (gint16* tmp_bk, int samples);
 
 /* returns # of frames, not bytes */
 int mix_sound(int count)
@@ -65,7 +68,7 @@ int mix_sound(int count)
 
 /* the pcmout_null sound driver */
 
-int pcmout_null_open(guint16 *b, guint16 rate)
+int pcmout_null_open(gint16 *b, guint16 rate)
 {
 	printf("Opened null pcm device\n");
 	return 0;

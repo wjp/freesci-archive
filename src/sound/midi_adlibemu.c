@@ -519,11 +519,11 @@ midi_device_t midi_device_adlibemu = {
 /* count is # of FRAMES, not bytes.
    We assume 16-bit stereo frames (ie 4 bytes)
 */
-int synth_mixer (void* buffer, int count)
+int synth_mixer (gint16 *buffer, int count)
 {
   int i;
-  guint16 *ptr = buffer;
-  static guint16 databuf[BUFFER_SIZE];
+  gint16 *ptr = buffer;
+  static gint16 databuf[BUFFER_SIZE];
 
   if (count > BUFFER_SIZE)
     count = BUFFER_SIZE;
