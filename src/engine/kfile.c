@@ -343,11 +343,19 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr offset = UPARAM(0);
-  char *targetaddr = (char *) s->heap + offset;
+	char *wd = sci_getcwd();
+	heap_ptr offset = UPARAM(0);
+	char *targetaddr = (char *) s->heap + offset;
 
-  s->acc = offset;
-  getcwd(targetaddr, PATH_MAX + 1);
+	s->acc = offset;
+	strncpy(targetaddr, wd, MAX_SAVE_DIR_SIZE - 1);
+	targetaddr[MAX_SAVE_DIR_SIZE - 1] = 0; /* Terminate */
+
+	SCIkdebug(SCIkFILE, "Copying cwd='%s'(%d chars) to %p"
+		  " (heap starts at %p, offset=%04x)\n",
+		  wd, strlen(wd), targetaddr, s->heap, offset);
+
+	free(wd);
 }
 
 #define K_DEVICE_INFO_GET_DEVICE 0

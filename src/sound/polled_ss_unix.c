@@ -377,10 +377,11 @@ sound_unix_get_data(byte **data_ptr, int *size)
 	FD_ZERO(&fds);
 	FD_SET(fd, &fds);
 
-	select(fd +1, &fds, NULL, NULL, (struct timeval *) &timeout);
-
-	if ((len = read(fd, size, sizeof(int))) < 0) {
-		perror("...");
+	if ((select(fd +1, &fds, NULL, NULL,
+		   (struct timeval *) &timeout) < 0)
+	    ||
+	    ((len = read(fd, size, sizeof(int))) < 0)) {
+		perror("sound_unix_get_data()");
 		return 1;
 	}
 

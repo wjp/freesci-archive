@@ -312,7 +312,7 @@ gfxr_draw_font(gfx_bitmap_font_t *font, char *text, int characters,
 	byte *offset;
 
 	for (i = 0; i < characters; i++) {
-		if (text[i] > font->chars_nr) {
+		if (text[i] >= font->chars_nr) {
 			GFXERROR("Invalid character 0x%02x encountered!\n", text[i]);
 			return NULL;
 		}

@@ -1,3 +1,11 @@
+2002-03-17  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kfile.c (kGetCWD): Used more portable cwd getter
+	Fixed incorrect buffer size
+
+	* src/sound/polled_ss_unix.c (sound_unix_get_data): Handle failed
+	select()
+
 2002-03-17  Alexander R Angas <wgd@internode.on.net>
 
 	* src/sound/event_ss.c: Fixed an error message that should not appear.
