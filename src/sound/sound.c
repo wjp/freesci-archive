@@ -338,6 +338,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
   case SOUND_COMMAND_RESUME_SOUND:
   case SOUND_COMMAND_STOP_ALL:
   case SOUND_COMMAND_GET_NEXT_EVENT:
+  case SOUND_COMMAND_FADE_HANDLE:
     write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
     return 0;
 
