@@ -1,3 +1,8 @@
+2001-05-24  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c: Squashed a localvar allocation bug in 
+	the handling code for old interpreter versions.
+
 2001-05-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* ltconfig: Added bogus ltconfig file

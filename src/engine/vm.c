@@ -1318,7 +1318,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		int locals_size = getUInt16(script->data)*2;
-		int locals = s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size);
+		int locals = s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size)+2;
 		memset(s->heap+locals,0,locals_size);
 		/* Old script block */
 		/* There won't be a localvar block in this case */
@@ -1529,7 +1529,7 @@ script_uninstantiate(state_t *s, int script_nr)
 
 	if ((s->scripttable[script_nr].localvar_offset)&&
 	    (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER))
-		heap_free(s->_heap, s->scripttable[script_nr].localvar_offset);
+		heap_free(s->_heap, s->scripttable[script_nr].localvar_offset-2);
     
 	s->scripttable[script_nr].localvar_offset = 0;
 	s->scripttable[script_nr].export_table_offset = 0;
