@@ -10,6 +10,11 @@
 	  src/sound/Makefile.am
 	  src/sound/pcmout_alsa.c:  Added an ALSA PCM output driver.
 
+	* src/sound/sound.c
+	* src/include/version.h:  If the SCI version is older than
+        0.000.572 (LSL3) stop all playing songs when we initialize a new
+        one. 
+
 2002-03-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kfile.c (kGetCWD): Used more portable cwd getter

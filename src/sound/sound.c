@@ -135,6 +135,10 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 			return 1;
 		}
 
+		if (s->version < SCI_VERSION_RESUME_SUSPENDED_SONG) {
+		  global_sound_server->queue_command(event.handle, SOUND_COMMAND_STOP_ALL, event.value);
+		}
+
 		len = song->size;
 
 		if (!(global_sound_server->flags & SOUNDSERVER_FLAG_PIPED))
