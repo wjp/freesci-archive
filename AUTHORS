@@ -2,9 +2,9 @@ Authors of FreeSCI (source code contributions):
 (see also the file THANKS)
 
 
+
 Carl Muckenhoupt: <carl@wurb.com>
-graphics/
-	graphics.c (parts of pic drawing)
+[Original GFX code]
 scicore/
 	decompress0.c (parts)
 	decompress1.c (parts)
@@ -17,29 +17,44 @@ Christoph Reichenbach: <creichen@rbg.informatik.tu-darmstadt.de>
 [Bug fixes]
 main.c
 config.l (most of it)
-graphics/
-	con_font.c
-	con_io.c
-	engine_graphics.c
+gfx/
 	font.c
-	graphics.c (parts)
-	graphics_ggi.c
-	graphics_glx.c
-	graphics_png.c
-	input.c
-	input_ggi.c
-	mcursor.c
+	gfx_crossblit.c
+	gfx_line.c
+	gfx_pixmap_scale.c
+	gfx_resource.c
+	gfx_support.c
+	gfx_test.c
+	gfx_tools.c
 	menubar.c
-	window.c
+	operations.c
+	resmgr.c
+	sbtree.c
+	sci_widgets.c
+	widgets.c
+	drivers/
+		gfx_drivers.c
+		ggi_driver.c
+	resources/
+		sci_cursor_0.c
+		sci_font.c
+		sci_pal_1.c
+		sci_pic_0.c
+		sci_resmgr.c
+		sci_view_0.c
+		sci_view_1.c
 scicore/
 	console.c
 	decompress0.c (parts)
+	decompress01.c (parts)
 	decompress1.c (parts)
+	decompress11.c
 	resource.c
 	script.c
 	tools.c
 	vocab.c (parts)
 	vocab_debug.c
+	huffmake.pl
 engine/
 	game.c
 	grammar.c
@@ -65,19 +80,30 @@ sound/
 	sound.c
 	soundserver_null.c
 	sfx_save.c
-	midi.c (minor parts)
+	oldmidi.c (minor parts)
+tools/
+	sciunpack.c
+	sciconsole.c
 
 
 
 Dmitry Jemerov: <yole@exch.nnz.spb.su>
 [win32 compatibility fixes all over the place]
 [Bug fixes]
+[Original DirectDraw driver]
 config.l (parts)
-graphics/
-	graphics_ddraw.c
 tools/
 	scidisasm.c
-win32/*
+win32/
+	classes.dsp
+	console.dsp
+	freesci.dsp
+	listwords.dsp
+	scidisasm.dsp
+	sciunpack.dsp
+	sciv.dsp
+	scriptdump.dsp
+	vocabdump.dsp
 
 
 
@@ -111,7 +137,22 @@ tools/
 
 Rickard Lind: <rpl@dd.chalmers.se>
 sound/
-	midi.c (most of it)
+	oldmidi.c (most of it)
+sfx/
+	main.c
+	midi.c
+	midi_mt32.c
+	midiout.c
+	midiout_alsaraw.c
+	midiout_unixraw.c
+	sfx_save.c
+	lists/
+		gm_patches.c
+		mt32_timbres.c
+	mt32_GM_mapping/
+		gm_patches.c
+		main.c
+		mt32_timbres.c
 
 
 
@@ -130,3 +171,26 @@ sound/
 Sergey Lapin: <slapin@karelia.ru>
 scicore/
 	decompress1.c (parts)
+
+
+
+Petr Vyhnak: <pvyhnak@attglobal.net>
+[win32 compatibility fixes all over the place]
+[Bug fixes]
+scicore/
+	hufftree.1
+	hufftree.2
+	hufftree.3
+
+
+Solomon Peachy: <pizza@shaftnet.org>
+sfx/
+	midi_mt32.c (various changes)
+	midiout.c (various changes)
+	midiout_alsaraw.c (various changes)
+	midiout_unixraw.c (various changes)
+
+
+
+
+

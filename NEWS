@@ -1,5 +1,40 @@
+Looking at the previous releases, it would appear that more and more time
+passes between them. However, more and more work gets done between them
+as well. Also, considering the current amount of traffic on the mailing
+list, it seems likely that 0.3.2 will take much less time than 0.3.1.
+OK, let's skip the introspection and auguration; let's get to the
+interesting stuff.
+Some things that used to work in 0.3.0 no longer do so in 0.3.1; this is
+unfortunate in most cases, but I will try to explain why that is.
+Due to a re-design of the graphics subsystem, the on-screen console was
+completely broken. Using the off-screen console, it's still possible to
+debug the game, though, and that should suffice for most people. Also,
+this re-design broke the existing DOS and Win32 drivers, and, ultimately,
+support for these platforms. FreeSCI 0.3.1 is UNIX only, although we're
+working hard to remedy the situation for the next release.
+So much for broken stuff. Of course, FreeSCI didn't just get worse- we
+wouldn't be releasing a new version of it then. Not without a backup plan,
+anyway. This release contains the usual amount of bugfixes- including fixes
+for a huge number of memory leaks- and, as hinted above, a completely re-
+designed graphics subsystem. This new subsystem fixes many of the known bugs
+and problems in a large number of games, increases the overall game speed at
+only a minuscle increase of memory usage, and adds functionality to scale the
+display almost arbitrarily (note that the increase in memory usage may get
+rather less minuscle if you do that too much). Also, several options were
+added to better control the way SCI0 background images are rendered.
+Finally, we are proud to announce that the first SCI game ever has been
+completed on FreeSCI: Ben Esacove finished Space Quest 3 with a post- 0.3.0
+CVS snapshot (and managed to point out a bunch of bugs along the way).
+For the next release, we'll be working on sound, general bugfixing, porting
+to non-UNIXish platforms (any volunteers for DOS? RiscOS? AmigaOS? MacOS?),
+and further reducing memory usage.
+
+
+
+--- 0.3.0 ---
+
 Finally, 0.3.0 has been released! This release took particularly long,
-mostly because of a major break from january to early april. Anyway, it
+mostly because of a major break from january to early april. Anyway, it
 might be argued that it was worth it: This is the first release with
 a fully functional text parser, plus, we have fixed all major (and many
 minor) bugs, implemented the menu bar, added all missing kernel functions-

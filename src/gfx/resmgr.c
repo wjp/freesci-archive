@@ -252,7 +252,7 @@ gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled, int force, gfx_
 	XLATE_AS_APPROPRIATE(GFX_MASK_PRIORITY, priority_map);
 	XLATE_AS_APPROPRIATE(GFX_MASK_CONTROL, control_map);
 
-	return res->scaled_data.pic;
+	return scaled? res->scaled_data.pic : res->unscaled_data.pic;
 }
 #undef XLATE_AS_APPROPRIATE
 
