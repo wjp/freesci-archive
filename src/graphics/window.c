@@ -165,6 +165,13 @@ void draw_window(picture_t dest, port_t *port, char color, char priority,
   int yl = port->ymax - y + 1;
   port_t headerport;
 
+  if (!(flags & WINDOW_FLAG_NOFRAME)) {
+    ++x;
+    ++y;
+    xl -=3;
+    yl -=3;
+  } /* Adjust centerpiece */
+
   color = SCI_MAP_EGA_COLOR(dest, color);
 
   if (!(flags & WINDOW_FLAG_DONTDRAW)) {
@@ -183,25 +190,25 @@ void draw_window(picture_t dest, port_t *port, char color, char priority,
 
     if (!(flags & WINDOW_FLAG_NOFRAME)) {
       int xdrawpos = (x < 1)? 0 : x - 1;
-      int xdrawlen = (x + xl + 2> 319)? 318 - x : xl + 2;
-      int xshadelen = (x + xl + 3 > 319)? 317 - x : xl + 2;
+      int xdrawlen = (x + xl + 2> 319)? 319 - x : xl + 2;
+      int xshadelen = (x + xl + 3 > 319)? 319 - x : xl + 1;
       int ydrawpos = (y < 11)? 10 : y - 1;
-      int ydrawend = (port->ymax + 2 > 199)? 198 - port->ymax : port->ymax + 2;
+      int ydrawend = (port->ymax > 199)? 199 : port->ymax;
       int pos, cn;
 
-      if (y > 10) {
+      if (y >= 10) {
 	memset(&(dest->maps[0][(y-1)*320 + xdrawpos]), 0, xdrawlen);
 	memset(&(dest->maps[1][(y-1)*320 + xdrawpos]), priority, xdrawlen);
       }
 
-      if ((port->ymax) < 199) {
-	memset(&(dest->maps[0][(port->ymax+1)*320 + xdrawpos]), 0, xdrawlen);
-	memset(&(dest->maps[1][(port->ymax+1)*320 + xdrawpos]), priority, xdrawlen);
+      if ((port->ymax) < 201) {
+	memset(&(dest->maps[0][(port->ymax-1)*320 + xdrawpos]), 0, xdrawlen + 1);
+	memset(&(dest->maps[1][(port->ymax-1)*320 + xdrawpos]), priority, xdrawlen + 1);
       }
 
-      if ((port->ymax) < 198) {
-	memset(&(dest->maps[0][(port->ymax+2)*320 + xdrawpos+1]), 0, xshadelen);
-	memset(&(dest->maps[1][(port->ymax+2)*320 + xdrawpos+1]), priority, xshadelen);
+      if ((port->ymax) < 200) {
+	memset(&(dest->maps[0][(port->ymax)*320 + xdrawpos+1]), 0, xshadelen + 1);
+	memset(&(dest->maps[1][(port->ymax)*320 + xdrawpos+1]), priority, xshadelen + 1);
       }
 
       pos = ydrawpos * 320 + xdrawpos;

@@ -175,20 +175,20 @@ song_lib_resort(songlib_t songlib, song_t *song);
 ** Returns   : (void)
 */
 
-struct timeval
-song_sleep_time(struct timeval *lastslept, int ticks);
+GTimeVal
+song_sleep_time(GTimeVal *lastslept, int ticks);
 /* Caluculates the amount of seconds and microseconds to sleep.
-** Parameters: (struct timeval *) lastslept: The time to start counting on
+** Parameters: (GTimeVal *) lastslept: The time to start counting on
 **             (int) ticks: Number of ticks to sleep
-** Returns   : (struct timeval) The amount of time to sleep
+** Returns   : (GTimeVal) The amount of time to sleep
 */
 
-struct timeval
-song_next_wakeup_time(struct timeval *lastslept, int ticks);
+GTimeVal
+song_next_wakeup_time(GTimeVal *lastslept, int ticks);
 /* Calculates the time at which "ticks" have passed, counting from "lastslept".
-** Parameters: (struct timeval *) lastslept: The base to start counting on
+** Parameters: (GTimeVal *) lastslept: The base to start counting on
 **             (int) ticks: Number of ticks to count
-** Returns   : (struct timeval) A structure describing the time at which the
+** Returns   : (GTimeVal) A structure describing the time at which the
 **                              specified number of ticks has passed
 */
 

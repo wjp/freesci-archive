@@ -26,7 +26,7 @@ configure:1294: checking for socketpair
 configure:1294: checking for fork
 configure:1348: checking for ggi
 configure:1482: checking for glib-config
-configure:1517: checking for GLIB - version >= 0.9.7
+configure:1517: checking for GLIB - version >= 1.2.0
 configure:1616: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
 configure:1709: checking for libpng
 configure:1789: checking whether byte ordering is bigendian

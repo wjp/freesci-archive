@@ -311,8 +311,6 @@ void draw_text0_centered(picture_t dest, port_t *port, int x, int y, char *text,
 {
   getTextParams(text, font);
 
-fprintf(stderr,"dt0_centered y=%d, xdiff=%d, rowwidths[0]=%d, xmax=%d, xmin=%d, text=%s\n",
-	port->ymin+y, port->xmax - port->xmin, rowwidths[0], port->xmax, port->xmin, text);
   draw_text0(dest, port,
 	     x + (((port->xmax - port->xmin - rowwidths[0]) >> 1)),
 	     y, text, font, color);

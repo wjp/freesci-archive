@@ -11,7 +11,7 @@ AC_CHECK_HEADERS(dirent.h)
 AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_FUNCS(pipe socketpair fork)
 AC_PATH_GGI
-AM_PATH_GLIB(0.9.7,[
+AM_PATH_GLIB(1.2.0,[
 		CFLAGS="$CFLAGS $GLIB_CFLAGS"
 		LDFLAGS="$LDFLAGS $GLIB_LIBS"
 		AC_SUBST(ac_glib_includes)
@@ -19,7 +19,7 @@ AM_PATH_GLIB(0.9.7,[
 	], 
 	[
 #if glib was't found
-		AC_MSG_ERROR([You must install glib to compile this package!])
+		AC_MSG_ERROR([You must install a recent version of glib to compile this package!])
 	])
 
 AC_PATH_PNG

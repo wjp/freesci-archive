@@ -120,7 +120,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 {
   FILE *ds = fdopen(fd_debug, "w"); /* We want to output text to it */
   fd_set input_fds;
-  struct timeval last_played, wakeup_time, ctime;
+  GTimeVal last_played, wakeup_time, ctime;
   songlib_t songlib;   /* Song library */
   song_t *song = NULL; /* The song we're playing */
   int debugging = 0;   /* Debugging enabled? */
@@ -133,7 +133,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
   fprintf(ds, "NULL Sound server initialized\n");
 
   while (1) {
-    struct timeval wait_tv;
+    GTimeVal wait_tv;
     int ticks = 0; /* Ticks to next command */
     int fadeticks = 0;
 

@@ -1511,7 +1511,7 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-  min_glib_version=0.9.7
+  min_glib_version=1.2.0
   echo $ac_n "checking for GLIB - version >= $min_glib_version""... $ac_c" 1>&6
 echo "configure:1517: checking for GLIB - version >= $min_glib_version" >&5
   no_glib=""
@@ -1695,7 +1695,7 @@ rm -f conftest*
      GLIB_LIBS=""
      
 #if glib was't found
-		{ echo "configure: error: You must install glib to compile this package!" 1>&2; exit 1; }
+		{ echo "configure: error: You must install a recent version of glib to compile this package!" 1>&2; exit 1; }
 	
   fi
   

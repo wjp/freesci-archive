@@ -1059,6 +1059,19 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 /*************************************************************/
+/* Parser */
+/**********/
+
+void
+kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  SCIkdebug(SCIkSTUB,"stub\n");
+  s->acc = 0; /* Never true */
+}
+
+
+/*************************************************************/
 
 void
 kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -1414,7 +1427,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     color = PARAM(5);
     priority = PARAM(6);
     special = PARAM(7);
-    dither_line(s->pic, PARAM(2), PARAM(1), PARAM(4), PARAM(3),
+    dither_line(s->pic, PARAM(2), PARAM(1) , PARAM(4), PARAM(3),
 		color, color, priority, special,
 		!(color & 0x80) | (!(priority & 0x80) << 1) | (!(special & 0x80) << 2));
     break;
@@ -1434,6 +1447,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     graph_clear_box(s, port->xmin, port->ymin,
 		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
 		    port->bgcolor);
+    CHECK_THIS_KERNEL_FUNCTION;
     break;
 
   case K_GRAPH_FILL_BOX_FOREGROUND:
@@ -1441,6 +1455,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     graph_clear_box(s, port->xmin, port->ymin,
 		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
 		    port->color);
+    CHECK_THIS_KERNEL_FUNCTION;
     break;
 
   case K_GRAPH_FILL_BOX_ANY:
@@ -1573,7 +1588,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    case SCI_K_DOWN:	keycode=80; break;
 	    case SCI_K_PGDOWN:	keycode=81; break;
 	    case SCI_K_LEFT:	keycode=75; break;
-	    case SCI_K_CENTER:	keycode=52; break; /*FIXME: this is wrong*/
+	    case SCI_K_CENTER:	keycode=76; break;
 	    case SCI_K_RIGHT:	keycode=77; break;
 	    case SCI_K_HOME:	keycode=71; break;
 	    case SCI_K_UP:	keycode=72; break;
@@ -1669,7 +1684,8 @@ kMapKeyToDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (mover >= 0) {
       PUT_SELECTOR(obj, type, 64);
       PUT_SELECTOR(obj, message, mover);
-    }
+      s->acc = 1;
+    } else s->acc = 0;
   }
 }
 
@@ -1847,6 +1863,15 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  mode = 0;
 	}
 	break;
+
+	case 'c': { /* insert character */
+	  while (str_leng-- > 1)
+	    *target++ = ' '; /* Format into the text */
+
+	  *target++ = arguments[paramindex++];
+	}
+	break;
+
 	case 'd': { /* Copy decimal */
 	  int templen = sprintf(target, "%d", arguments[paramindex++]);
 
@@ -2246,7 +2271,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
   signal = GET_SELECTOR(obj, signal);
 
   s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
-	     & graph_on_control(s, x, y, xl, yl, SCI_MAP_CONTROL));
+	     & graph_on_control(s, x, y + 10, xl, yl, SCI_MAP_CONTROL));
 
   if (s->acc == 0)
     return; /* Can'tBeHere */
@@ -2366,7 +2391,7 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
     ylen = PARAM(3) - ystart + 1;
   }
 
-  s->acc = graph_on_control(s, xstart, ystart, xlen, ylen, map);
+  s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
 
 }
 
@@ -2940,6 +2965,10 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int x = PARAM(3);
   int y = PARAM(4);
   int priority = PARAM(5);
+
+  if (priority < 0)
+    priority = 16;
+
   CHECK_THIS_KERNEL_FUNCTION;
 
   if (!view) {
@@ -2995,24 +3024,18 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   wnd = calloc(sizeof(port_t), 1);
 
-  wnd->ymin = MAX(PARAM(0) + 10, 10);
-  wnd->xmin = MAX(PARAM(1), 1);
-  wnd->ymax = MIN(PARAM(2) + 10, 198); /*  +10 because of the menu bar- SCI scripts don't count it */
-  wnd->xmax = MIN(PARAM(3), 318);
+fprintf(stderr,"Window(%d, %d), (%d, %d)\n", PARAM(1), PARAM(0), PARAM(3), PARAM(2));
+
+  wnd->ymin = PARAM(0) + 10;
+  wnd->xmin = PARAM(1);
+  wnd->ymax = PARAM(2) + 10; /*  +10 because of the menu bar- SCI scripts don't count it */
+  wnd->xmax = PARAM(3) + 1;
   wnd->title = PARAM(4);
   wnd->flags = PARAM(5);
   wnd->priority = PARAM(6);
   wnd->color = PARAM_OR_ALT(7, 0);
   wnd->bgcolor = PARAM_OR_ALT(8, 15);
   wnd->font = s->titlebar_port.font; /* Default to 'system' font */
-
-  /* [DJ] the title bar adjustment should be added only when the window
-     has a title */
-  if (wnd->flags & WINDOW_FLAG_TITLE)
-  {
-    wnd->ymin += 10;
-    wnd->ymax += 10;
-  }
 
   wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
 
@@ -3021,17 +3044,29 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   s->ports[window] = wnd;
 
-  xlo = wnd->xmin - 1;
-  ylo = wnd->ymin - ((wnd->flags & WINDOW_FLAG_TITLE)? 11 : 1);
+  xlo = wnd->xmin;
+  ylo = wnd->ymin - ((wnd->flags & WINDOW_FLAG_TITLE)? 10 : 0);
+  /* Windows with a title bar get positioned in a way ignoring the title bar. */
 
   _k_dyn_view_list_prepare_change(s);
 
-  wnd->bg_handle = graph_save_box(s, xlo, ylo, wnd->xmax - xlo + 3, wnd->ymax - ylo + 3, 3);
+
+  wnd->bg_handle = graph_save_box(s, xlo, ylo, wnd->xmax - xlo + 1, wnd->ymax - ylo + 1, 3);
 
   draw_window(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
 	     s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
 
   _k_dyn_view_list_accept_change(s);
+
+  /* Now sanitize the port values */
+  if (wnd->xmin < 0)
+    wnd->xmin = 0;
+  if (wnd->xmax > 319)
+    wnd->xmin = 319;
+  if (wnd->ymin < 10)
+    wnd->ymin = 10;
+  if (wnd->ymax > 199)
+    wnd->ymax = 199;
 
   graph_update_port(s, wnd); /* Update viewscreen */
 
@@ -3052,7 +3087,7 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
   } else
     draw_titlebar(s->pic, 0);
 
-  graph_update_port(s, &(s->titlebar_port));
+  graph_update_box(s, 0, 0, 320, 10);
 }
 
 void
@@ -3065,7 +3100,7 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
   else
     draw_titlebar(s->pic, 0);
 
-  graph_update_port(s, &(s->titlebar_port));
+  graph_update_box(s, 0, 0, 320, 10);
 }
 
 
@@ -3315,7 +3350,9 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	y = i / 32;
 
 	graph_clear_box(s, x * 10, 10 + y * 10, 10, 10, 0);
-	sci_usleep(s->animation_delay / 8);
+
+	if (remaining_checkers & 1)
+	  sci_usleep(s->animation_delay / 8);
 
 	--remaining_checkers;
       }
@@ -3337,7 +3374,9 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	y = i / 32;
 
 	graph_update_box(s, x * 10, 10 + y * 10, 10, 10);
-	sci_usleep(s->animation_delay / 8);
+
+	if (remaining_checkers & 1)
+	  sci_usleep(s->animation_delay / 8);
 
 	--remaining_checkers;
       }
@@ -3488,8 +3527,8 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   _k_dyn_view_list_prepare_change(s);
 
-  if (s->view_port)
-    graph_fill_port(s, port, port->bgcolor);  /* Only fill if we aren't writing to the main view */
+  /*  if (s->view_port)
+      graph_fill_port(s, port, port->bgcolor); */ /* Only fill if we aren't writing to the main view */
 
   text_draw(s->pic, port, text, width);
 
@@ -3603,9 +3642,10 @@ struct {
   {"MapKeyToDir", kMapKeyToDir },
   {"GlobalToLocal", kGlobalToLocal },
   {"LocalToGlobal", kLocalToGlobal },
+  {"Wait", kWait },
 
   /* Experimental functions */
-  {"Wait", kWait },
+  {"Said", kSaid },
   {"BaseSetter", kBaseSetter},
   {"DoSound", kDoSound },
   {"Graph", kGraph },

@@ -27,6 +27,7 @@
 
 #include <stdarg.h>
 #include <sound.h>
+#include <glib.h>
 #include <soundserver.h>
 #include <sys/types.h>
 #include <engine.h>
@@ -112,8 +113,8 @@ sound_get_event(state_t *s)
 {
   fd_set inpfds;
   int inplen;
-  struct timeval waittime = {0, 0};
-  struct timeval waittime2 = {0, 0};
+  GTimeVal waittime = {0, 0};
+  GTimeVal waittime2 = {0, 0};
   char debug_buf[65];
   sound_event_t *event = xalloc(sizeof(sound_event_t));
 
@@ -208,7 +209,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
   case SOUND_COMMAND_TEST: {
     fd_set fds;
-    struct timeval timeout = {0, SOUND_SERVER_TIMEOUT};
+    GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
     int dummy, success;
 
     write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
@@ -236,10 +237,10 @@ sound_command(state_t *s, int command, int handle, int parameter)
 }
 
 
-struct timeval
-song_sleep_time(struct timeval *lastslept, int ticks)
+GTimeVal
+song_sleep_time(GTimeVal *lastslept, int ticks)
 {
-  struct timeval tv;
+  GTimeVal tv;
   long timetosleep = ticks * SOUND_TICK; /* Time to sleep in us */
   long timeslept; /* Time already slept */
 
@@ -259,10 +260,10 @@ song_sleep_time(struct timeval *lastslept, int ticks)
 }
 
 
-struct timeval
-song_next_wakeup_time(struct timeval *lastslept, int ticks)
+GTimeVal
+song_next_wakeup_time(GTimeVal *lastslept, int ticks)
 {
-  struct timeval retval = {lastslept->tv_sec, lastslept->tv_usec};
+  GTimeVal retval = {lastslept->tv_sec, lastslept->tv_usec};
 
   retval.tv_sec += ticks / 60;
   retval.tv_usec += (ticks % 60) * SOUND_TICK;

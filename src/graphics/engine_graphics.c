@@ -277,9 +277,9 @@ void
 graph_update_port(struct _state *s, port_t *port)
 {
 
-  graph_update_box(s, port->xmin-1, port->ymin - ((port->flags & WINDOW_FLAG_TITLE)? 11 : 1),
-		   port->xmax - port->xmin + 4,
-		   port->ymax - port->ymin + ((port->flags & WINDOW_FLAG_TITLE)? 14 : 4));
+  graph_update_box(s, port->xmin-1, port->ymin - ((port->flags & WINDOW_FLAG_TITLE)? 10 : 1),
+		   port->xmax - port->xmin + 3,
+		   port->ymax - port->ymin + ((port->flags & WINDOW_FLAG_TITLE)? 12 : 2));
 
   (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
 }
@@ -297,7 +297,7 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
     draw_frame(s->pic, port->xmin + x, port->ymin + y -1,
 	       xl - 1, yl - 1, port->color, port->priority);
   else
-    draw_frame(s->pic, port->xmin + x -1, port->ymin + y -1,
+    draw_frame(s->pic, port->xmin + x, port->ymin + y -1,
 	       xl - 1, yl - 1, port->bgcolor, port->priority);
 
   graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);

@@ -448,9 +448,10 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x20: /* call */
-      execute(s, pc + opparams[0], sp, objp, GET_HEAP(sp - opparams[1] - 2) + restadjust,
-	      sp - opparams[1] - 2, -1);
-      sp -= (opparams[1] + (restadjust * 2) + 2);
+      temp = opparams[1] + 2 + (restadjust*2);
+      execute(s, pc + opparams[0], sp, objp, GET_HEAP(sp - temp) + restadjust,
+	      sp - temp, -1);
+      sp -= temp;
       restadjust = 0; /* Used up the &rest adjustment */
       break;
 
@@ -474,15 +475,17 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
 
     case 0x22: /* callb */
       execute_method(s, 0, opparams[0], sp, objp,
-		     GET_HEAP(sp - opparams[1] - 2) + restadjust, sp - opparams[1] - 2);
+		     GET_HEAP(sp - opparams[1] - 2 - (restadjust*2)) + restadjust, sp - opparams[1] - 2
+		     - restadjust * 2);
       sp -= (opparams[1] + (restadjust * 2) + 2);
       restadjust = 0; /* Used up the &rest adjustment */
       break;
 
     case 0x23: /* calle */
+      temp = opparams[2] + 2 + (restadjust*2);
       execute_method(s, opparams[0], opparams[1], sp, objp,
-		     GET_HEAP(sp - opparams[2] - 2) + restadjust, sp - opparams[2] - 2);
-      sp -= (opparams[2] + (restadjust * 2) + 2);
+		     GET_HEAP(sp - temp) + restadjust, sp - temp);
+      sp -= temp;
       restadjust = 0; /* Used up the &rest adjustment */
       break;
 
