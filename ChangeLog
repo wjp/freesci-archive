@@ -1,5 +1,8 @@
 2001-01-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/config.l: Added support for new config options (see README)
+	to enable various features of the new gfx subsystem
+
 	* src/engine/kgraphics.c (kAnimate): Auto-reparentized dynviews
 	in every Animate() step.
 

@@ -104,10 +104,16 @@ time, the configuration file may contain:
   grepping your main executable for "0.000." (for SCI0 games). It is
   also displayed if the built-in debugger is activated in the Sierra SCI
   engine.
-- color_mode = dither | flat | dither256: (only one of those three modes).
+- pic0_dither_mode = dither | flat | dither256: (only one of those three modes).
   dither: Draw in 16 colors, same as Sierra SCI.
   flat: Interpolate colors (256 colors). Improves some graphics.
   dither256: Dither in 256 colors. A compromise between dither and flat.
+- pic0_dither_pattern = scaled | 1
+- pic0_brush_mode = scaled | ellipses | random-ellipses | more-random
+- pic0_line_mode = correct | fast | fine
+- dirty_strategy = 1 | clusters
+- pic0_scaled = yes | no
+- pic_buffer_size = #
 - [GAME_ID]: Commands following this line will only have an effect for
   the game with the specified game ID. (The game ID is printed during
   sciv startup, and is also used to create the save game directory).

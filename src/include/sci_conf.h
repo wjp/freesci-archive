@@ -30,7 +30,7 @@
 #define _SCI_CONFIG_H_
 
 #include <versions.h>
-#include <gfx_resource.h>
+#include <gfx_options.h>
 
 typedef struct {
   char *option;
@@ -39,17 +39,19 @@ typedef struct {
 
 typedef struct {
 
-  char *name; /* Game identifier */
-  sci_version_t version; /* The version to emulate */
-  int color_mode; /* The mode to use for pic drawing */
-  int unknown_count; /* The number of "unknown" kernel functions */ 
-  char *resource_dir; /* Resource directory */
-  char *work_dir;     /* Working directory (save games, additional graphics) */
-  gfx_driver_t *gfx_driver; /* The graphics driver to use */
-  gfx_option_t *gfx_config; /* Graphics subsystem configuration options */
-  int gfx_config_nr; /* Number of options */
-  char *console_log; /* The file to which console output should be echoed */
-  char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
+	char *name; /* Game identifier */
+	sci_version_t version; /* The version to emulate */
+
+	gfx_options_t gfx_options;
+
+	int unknown_count; /* The number of "unknown" kernel functions */ 
+	char *resource_dir; /* Resource directory */
+	char *work_dir;     /* Working directory (save games, additional graphics) */
+	gfx_driver_t *gfx_driver; /* The graphics driver to use */
+	gfx_option_t *gfx_config; /* Graphics subsystem configuration options */
+	int gfx_config_nr; /* Number of options */
+	char *console_log; /* The file to which console output should be echoed */
+	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
 
 } config_entry_t;
 

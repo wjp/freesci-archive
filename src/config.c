@@ -282,23 +282,35 @@ static void yy_fatal_error YY_PROTO(( yyconst char msg[] ));
 	*yy_cp = '\0'; \
 	yy_c_buf_p = yy_cp;
 
-#define YY_NUM_RULES 12
-#define YY_END_OF_BUFFER 13
-static yyconst short int yy_accept[119] =
+#define YY_NUM_RULES 19
+#define YY_END_OF_BUFFER 20
+static yyconst short int yy_accept[227] =
     {   0,
-       11,   11,   13,   11,   10,   10,   11,   11,   11,   11,
-       11,   11,   11,   11,   11,   10,   10,   11,   11,   11,
-       11,   11,   11,   11,   11,   11,    9,   11,    1,   11,
-       11,   11,   11,   11,   11,   11,   11,   11,   11,   11,
-       11,   11,   11,   11,    8,   11,   11,   11,   11,   11,
-       11,    8,   11,   11,   11,   11,   11,   11,   11,   11,
-       11,   11,   11,   11,   11,   11,   11,   11,   11,   11,
-       11,   11,   11,   11,   11,   11,   11,   11,   11,   11,
-       11,   11,   11,   11,   11,   11,   11,   11,   11,   11,
-       11,   11,   11,   11,    2,   11,   11,   11,   11,    6,
+       18,   18,   20,   18,   17,   17,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   17,   17,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   16,
+       18,    1,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   15,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   15,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
 
-       11,   11,    2,    4,    4,    7,    7,    6,   11,   11,
-       11,    5,    5,   11,   11,   11,    3,    0
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,    3,   18,   18,   18,   18,   18,   13,   18,   18,
+       18,   18,   18,   18,   18,   18,    3,   11,   11,   14,
+       14,   18,   13,   18,   18,   18,   18,   18,    8,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,    8,   18,
+       12,   12,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,    7,   18,   18,   18,   18,   18,    6,
+
+       18,   18,   18,    7,   18,    5,   18,   18,   18,    6,
+       18,    9,   10,    5,   18,    2,   18,    9,    2,   18,
+       18,   18,   18,    4,    4,    0
     } ;
 
 static yyconst int yy_ec[256] =
@@ -307,16 +319,16 @@ static yyconst int yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    2,    1,    1,    4,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    5,    1,    6,    6,    6,
-        6,    6,    6,    6,    6,    6,    6,    7,    1,    1,
-        8,    1,    1,    1,    9,    9,    9,    9,    9,    9,
-        9,    9,    9,    9,    9,    9,    9,    9,    9,    9,
-        9,    9,    9,    9,    9,    9,    9,    9,    9,    9,
-       10,    1,   11,    1,   12,    1,   13,   14,   15,   16,
+        1,    1,    1,    1,    1,    5,    1,    6,    7,    7,
+        7,    7,    7,    7,    7,    7,    7,    8,    1,    1,
+        9,    1,    1,    1,   10,   10,   10,   10,   10,   10,
+       10,   10,   10,   10,   10,   10,   10,   10,   10,   10,
+       10,   10,   10,   10,   10,   10,   10,   10,   10,   10,
+       11,    1,   12,    1,   13,    1,   14,   15,   16,   17,
 
-       17,   18,   19,    9,   20,    9,   13,   21,   22,   23,
-       24,    9,    9,   25,   26,    9,   27,   28,    9,   29,
-        9,    9,    1,    1,    1,    1,    1,    1,    1,    1,
+       18,   19,   20,   21,   22,   10,   23,   24,   25,   26,
+       27,   28,   10,   29,   30,   31,   32,   33,   10,   34,
+       35,   36,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -333,139 +345,260 @@ static yyconst int yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst int yy_meta[30] =
+static yyconst int yy_meta[37] =
     {   0,
         1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,    1
     } ;
 
-static yyconst short int yy_base[133] =
+static yyconst short int yy_base[255] =
     {   0,
-        0,    0,  344,    0,   28,   30,    0,   33,   45,   56,
-       45,   18,   48,   53,    0,   71,   73,  340,   80,  318,
-       92,   83,   65,   30,   84,   87,  345,  112,    0,  317,
-      101,   24,   59,  316,  102,   93,  128,  117,  315,  124,
-      322,   91,   85,  148,  160,   74,  123,  133,  312,  148,
-      312,  173,  313,  152,  312,  313,  122,  162,  308,  139,
-      307,  302,  165,  185,  313,  307,  311,  309,  167,  186,
-      190,  308,  300,  306,  297,  305,  193,  315,  195,  300,
-      196,  198,  296,  307,  199,  209,  200,  210,  215,  222,
-      238,  285,  299,  250,  262,  223,  300,  288,  273,  285,
+        0,    0,  754,    0,   35,   37,    0,   40,   53,   65,
+       41,   52,   53,   29,   54,    0,   80,   82,  750,   92,
+      725,  105,   62,   72,   91,   16,   75,   68,   92,  755,
+      121,    0,  724,   81,  104,   97,   33,  129,  723,   85,
+      135,  156,  111,  722,  119,  114,  731,  132,  732,  116,
+      125,  169,  182,  172,  126,  175,  176,  717,  180,  713,
+      169,  717,  210,  718,  174,  717,  711,  718,  710,  716,
+      715,  720,  716,  139,  179,  707,  196,  706,  701,  698,
+      698,  698,  702,  713,  707,  189,  211,  708,  700,  706,
+      693,  701,  686,  694,  694,  683,  686,  204,  170,  222,
 
-      224,  288,  296,    0,  289,    0,  277,  307,  225,  280,
-      271,    0,  269,  262,  259,  253,    0,  345,  252,  246,
-      240,  236,  234,  233,  222,  204,  189,  165,  130,  120,
-       77,   38
+      685,  673,  676,  673,  652,  653,  651,  653,  647,  633,
+      640,  228,  649,  223,  633,  224,  619,  234,  632,  613,
+      616,  621,  619,  603,  233,  235,  244,  245,  256,  258,
+      602,  258,  284,  592,  603,  586,  259,  578,  576,  235,
+      297,  310,  260,  602,  589,  575,  322,  335,  561,  126,
+      566,  261,  347,  558,  262,  268,  360,    0,  577,    0,
+      564,  535,  372,  546,  531,  541,  536,  384,  397,  515,
+      274,  543,  533,  278,  515,  513,  498,  298,  409,  508,
+        0,  518,  271,  311,  421,  323,  495,  477,  336,  434,
+      348,  310,  447,  460,  361,  472,  373,  487,  485,  498,
+
+      385,  510,  335,  523,  535,  548,  398,  560,  475,  573,
+      585,  598,    0,  610,  622,  635,  475,  647,  659,  410,
+      422,  671,  684,  697,  709,  755,  494,  487,  481,  474,
+      469,  466,  465,  462,  456,  449,  443,  436,  415,  414,
+      403,  402,  378,  377,  366,  365,  293,  278,  258,  226,
+      207,  199,  126,   89
     } ;
 
-static yyconst short int yy_def[133] =
+static yyconst short int yy_def[255] =
     {   0,
-      118,    1,  118,  119,  119,  118,  120,  121,  122,  121,
-       10,   10,   10,   10,  119,  119,  118,  120,  123,   10,
-      122,   10,   10,   10,   10,   10,  118,  123,  119,   10,
-       10,   10,   10,   10,   10,  119,  124,   10,   10,   10,
-      119,   10,   10,  124,  125,   10,   10,   10,  119,   10,
-       10,  125,  119,   10,  119,  119,   10,   10,  119,   10,
-      119,  119,   10,   10,  119,  119,  119,  119,   10,  119,
-      119,  119,  119,  119,  119,  119,  119,  119,  119,  119,
-      119,  119,  119,  119,  119,  126,  119,  119,  119,  119,
-      127,  119,  119,  126,  128,  119,  129,  130,  127,  131,
+      226,    1,  226,  227,  227,  226,  228,  229,  230,  229,
+       10,   10,   10,   10,   10,  227,  227,  226,  228,  231,
+       10,  230,   10,   10,   10,   10,   10,   10,   10,  226,
+      231,  227,   10,   10,   10,   10,   10,   10,   10,   10,
+      227,  232,   10,   10,   10,   10,  227,   10,  227,   10,
+       10,  232,  233,   10,   10,   10,   10,  227,  227,  227,
+       10,   10,  233,  227,   10,  227,  227,  227,  227,  227,
+      227,  227,  227,   10,   10,  227,   10,  227,  227,  227,
+      227,  227,  227,  227,  227,   10,   10,  227,  227,  227,
+      227,  227,  227,  227,  227,  227,  227,   10,  227,  227,
 
-      119,  119,  128,  129,  129,  130,  130,  131,  119,  132,
-      119,  132,  132,  119,  119,  119,  119,    0,  118,  118,
-      118,  118,  118,  118,  118,  118,  118,  118,  118,  118,
-      118,  118
+      227,  227,  227,  227,  227,  227,  227,  227,  227,  227,
+      227,  227,  227,  227,  227,  227,  227,  227,  227,  227,
+      227,  227,  227,  227,  227,  227,  234,  227,  227,  227,
+      227,  227,  235,  227,  227,  227,  227,  227,  227,  227,
+      234,  236,  227,  237,  238,  227,  235,  239,  227,  227,
+      227,  227,  240,  227,  227,  227,  236,  237,  237,  238,
+      238,  227,  239,  227,  227,  227,  227,  240,  241,  227,
+      227,  242,  227,  227,  227,  227,  227,  227,  241,  227,
+      242,  242,  227,  227,  243,  227,  227,  227,  227,  244,
+      227,  227,  243,  245,  227,  246,  227,  227,  244,  247,
+
+      227,  248,  227,  245,  246,  249,  227,  250,  227,  247,
+      248,  251,  227,  249,  250,  252,  227,  251,  252,  227,
+      227,  253,  253,  254,  254,    0,  226,  226,  226,  226,
+      226,  226,  226,  226,  226,  226,  226,  226,  226,  226,
+      226,  226,  226,  226,  226,  226,  226,  226,  226,  226,
+      226,  226,  226,  226
     } ;
 
-static yyconst short int yy_nxt[375] =
+static yyconst short int yy_nxt[792] =
     {   0,
-        4,    5,    6,    7,    4,    8,    4,    4,    8,    9,
-        4,    4,    8,    8,   10,   11,    8,    8,   12,    8,
-        8,    8,    8,    8,   13,    8,    8,   14,    8,   16,
-       17,   17,   17,   15,   15,   24,   15,   19,  112,   15,
-       15,   20,   15,   15,   15,   15,   15,   20,   15,   15,
-       40,   15,   15,   20,   15,   15,   15,   15,   33,   15,
-       19,   23,   15,   15,   25,   15,   15,   15,   20,   26,
-       41,   20,   16,   17,   17,   17,   20,  108,   32,   22,
-       15,   15,   20,   15,   15,   53,   15,   15,   20,   15,
-       15,   15,   15,   15,   36,   15,   15,   20,   15,   15,
+        4,    5,    6,    7,    4,    8,    8,    4,    4,    8,
+        9,    4,    4,    8,    8,   10,   11,    8,    8,   12,
+        8,    8,    8,    8,    8,    8,    8,   13,   14,    8,
+        8,    8,   15,    8,    8,    8,   17,   18,   18,   18,
+       16,   16,   21,   16,   20,   47,   28,   16,   16,   37,
+       16,   16,   16,   16,   16,   21,   16,   16,   24,   21,
+       16,   16,   25,   16,   16,   16,   16,   21,   16,   20,
+       26,   29,   16,   16,   27,   16,   16,   16,   21,   21,
+       21,   17,   18,   18,   18,   33,   35,   34,   21,  225,
+       38,   23,   16,   16,   21,   16,   16,   39,   21,   16,
 
-       37,   15,   29,   30,   51,   31,   20,   20,   20,   34,
-       20,   35,   15,   36,   20,   15,   15,   50,   15,   37,
-      106,   15,   15,   15,   20,   20,   39,   43,   15,   44,
-      104,   15,   15,   15,   15,   15,   63,   15,   15,   15,
-       20,   46,   48,   54,   55,   20,   20,   20,   15,   44,
-       66,   15,   15,   15,   15,   15,   20,   15,   15,   15,
-       15,   15,   20,   15,   15,  103,   15,   15,   60,   15,
-       15,   20,   57,   15,   15,   20,   15,   15,   76,   15,
-       15,   69,   15,   15,   64,   20,   70,   70,   20,  100,
-       20,   77,   71,   71,   77,   78,   85,   88,   78,   90,
+       16,   21,   16,   16,   16,   16,   16,   21,   16,   16,
+       44,   21,   16,   16,   51,   16,   32,   21,   21,   36,
+       40,   16,   41,   21,   16,   16,  224,   46,   16,   42,
+       21,   16,   16,   16,   48,   45,   41,   21,   56,   54,
+       21,   49,   21,   42,   59,   21,   62,   61,   57,   65,
+      165,   21,   21,  166,   86,   21,   16,   52,   21,   16,
+       16,   16,   16,   16,   16,   21,   16,   16,   16,   16,
+       52,   99,   16,   16,   16,   16,   16,   16,  100,   16,
+       16,   16,   16,   16,   64,   16,   16,   66,   67,   16,
+       16,   77,   16,   16,   69,   21,   70,   74,   21,  219,
 
-       85,   96,   86,   89,   95,   91,   86,   97,   20,   15,
-       94,   88,   15,   15,   15,   15,   15,   89,   15,   15,
-       15,   98,   52,   90,   96,  109,  109,   98,   98,   91,
-       97,  110,  110,   45,   28,   98,   21,   98,   15,   99,
-       20,   15,   15,   15,   15,   15,   18,   15,   15,   15,
-       15,   94,   15,   15,   15,   15,   15,   15,  117,   15,
-       15,   15,   15,   15,  116,   15,   15,  115,   15,   15,
-      113,   15,   15,   15,   99,  114,   15,   15,   15,   15,
-       15,  113,   15,   15,   15,   15,   15,  107,   15,   15,
-      105,   15,   15,  111,   15,   15,   15,   15,  107,   15,
+       21,   21,   21,   71,   87,   21,   98,  218,   89,   72,
+       16,   16,   99,   16,   16,   21,  111,   16,   16,  100,
+       16,   16,   21,  112,  126,  129,  216,  113,  113,  112,
+       21,  127,  130,  113,  113,  132,  126,   21,  140,  140,
+      156,  156,  133,  127,   16,  141,  143,   16,   16,   16,
+       16,   16,   16,  144,   16,   16,   16,  129,  214,  132,
+      152,  143,  152,  171,  130,  145,  133,  153,  144,  153,
+      172,  145,  145,  173,  173,  171,  192,  192,  212,  184,
+      145,  145,  172,  145,   16,  147,  185,   16,   16,   16,
+       16,   16,   16,  210,   16,   16,   16,   16,  141,  189,
 
-       15,  105,   15,   15,  102,   15,   15,   15,   15,  101,
-       15,   15,   93,   15,   15,   92,   15,   15,   87,   84,
-       83,   82,   81,   80,   79,   75,   74,   73,   72,   68,
-       67,   65,   62,   61,   59,   58,   56,   49,   47,   42,
-       38,   20,   27,  118,    3,  118,  118,  118,  118,  118,
-      118,  118,  118,  118,  118,  118,  118,  118,  118,  118,
-      118,  118,  118,  118,  118,  118,  118,  118,  118,  118,
-      118,  118,  118,  118
+       16,   16,   16,   16,   16,   16,  190,   16,   16,   16,
+       16,   16,  184,   16,   16,  203,  203,   16,   16,  185,
+       16,   16,   16,  147,  195,   16,   16,   16,   16,   16,
+       16,  196,   16,   16,   16,   16,   16,  189,   16,   16,
+      213,  213,   16,   16,  190,   16,   16,   16,  168,  201,
+       16,   16,   16,   16,   16,   16,  202,   16,   16,   16,
+       16,   16,  195,   16,   16,  206,  204,   16,   16,  196,
+       16,   16,   16,   16,  207,   16,   16,  200,  194,   16,
+       16,  208,   16,   16,   16,  168,  201,   16,   16,   16,
+       16,   16,   16,  202,   16,   16,   16,   16,   16,  207,
+
+       16,   16,  181,  179,   16,   16,  208,   16,   16,   16,
+       16,  221,   16,   16,  169,  163,   16,   16,  222,   16,
+       16,   16,  193,  221,   16,   16,   16,   16,   16,   16,
+      222,   16,   16,   16,   16,  199,  160,   16,   16,   16,
+       16,   16,   16,  158,   16,   16,   16,   16,  193,  157,
+       16,   16,   16,   16,   16,   16,  148,   16,   16,   16,
+       16,   16,  142,   16,   16,   63,   53,   16,   16,   31,
+       16,   16,   16,  205,   22,   16,   16,   16,   16,   16,
+       16,   21,   16,   16,   16,   16,  199,   19,   16,   16,
+       16,   16,   16,   16,   16,   16,   16,   16,   16,   16,
+
+      220,   16,   16,  217,  209,   16,   16,  198,   16,   16,
+       16,  211,  197,   16,   16,   16,   16,   16,   16,  182,
+       16,   16,   16,   16,   16,  191,   16,   16,  188,  187,
+       16,   16,  186,   16,   16,   16,  205,  183,   16,   16,
+       16,   16,   16,   16,  182,   16,   16,   16,   16,   16,
+      180,   16,   16,  178,  177,   16,   16,  176,   16,   16,
+       16,  215,  175,   16,   16,   16,   16,   16,   16,  174,
+       16,   16,   16,   16,   16,  161,   16,   16,  159,  170,
+       16,   16,  167,   16,   16,   16,  211,  164,   16,   16,
+       16,   16,   16,   16,  162,   16,   16,   16,   16,   16,
+
+      161,   16,   16,  159,  155,   16,   16,  154,   16,   16,
+       16,   16,  151,   16,   16,  150,  149,   16,   16,  146,
+       16,   16,   16,  215,  139,   16,   16,   16,   16,   16,
+       16,  138,   16,   16,   16,   16,   16,  137,   16,   16,
+      136,  135,   16,   16,  134,   16,   16,   16,   16,  131,
+       16,   16,  128,  125,   16,   16,  124,   16,   16,   16,
+       16,  123,   16,   16,  122,  121,   16,   16,  120,   16,
+       16,   16,  223,  119,   16,   16,   16,   16,   16,   16,
+      118,   16,   16,   16,   16,  223,  117,   16,   16,   16,
+       16,   16,   16,  116,   16,   16,   16,   16,   16,  115,
+
+       16,   16,  114,  110,   16,   16,  109,   16,   16,   16,
+       16,  108,   16,   16,  107,  106,   16,   16,  105,   16,
+       16,  104,  103,  102,  101,   97,   96,   95,   94,   93,
+       92,   91,   90,   88,   85,   84,   83,   82,   81,   80,
+       79,   78,   76,   75,   73,   68,   60,   58,   55,   50,
+       43,   21,   30,  226,    3,  226,  226,  226,  226,  226,
+      226,  226,  226,  226,  226,  226,  226,  226,  226,  226,
+      226,  226,  226,  226,  226,  226,  226,  226,  226,  226,
+      226,  226,  226,  226,  226,  226,  226,  226,  226,  226,
+      226
+
     } ;
 
-static yyconst short int yy_chk[375] =
+static yyconst short int yy_chk[792] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    5,
-        5,    6,    6,    8,    8,   12,    8,    8,  132,    8,
-        8,   12,    8,    8,    8,    9,    9,   32,    9,    9,
-       32,    9,    9,   24,    9,    9,   10,   10,   24,   10,
-       10,   11,   10,   10,   13,   10,   10,   10,   11,   14,
-       33,   13,   16,   16,   17,   17,   14,  131,   23,   10,
-       19,   19,   33,   19,   19,   46,   19,   19,   23,   19,
-       19,   19,   21,   21,   36,   21,   21,   46,   21,   21,
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    1,    1,    1,    1,    1,    5,    5,    6,    6,
+        8,    8,   26,    8,    8,   37,   14,    8,    8,   26,
+        8,    8,    8,    9,    9,   14,    9,    9,   11,   37,
+        9,    9,   11,    9,    9,   10,   10,   11,   10,   10,
+       12,   15,   10,   10,   13,   10,   10,   10,   12,   13,
+       15,   17,   17,   18,   18,   23,   24,   23,   23,  254,
+       27,   10,   20,   20,   28,   20,   20,   28,   24,   20,
 
-       36,   21,   21,   22,   43,   22,   22,   25,   43,   25,
-       26,   26,   28,   28,   42,   28,   28,   42,   28,   28,
-      130,   28,   28,   28,   31,   35,   31,   35,   37,   37,
-      129,   37,   37,   37,   37,   37,   57,   37,   37,   37,
-       38,   38,   40,   47,   48,   57,   47,   40,   44,   44,
-       60,   44,   44,   44,   44,   44,   48,   44,   44,   44,
-       45,   45,   60,   45,   45,  128,   45,   45,   54,   45,
-       45,   50,   50,   52,   52,   54,   52,   52,   69,   52,
-       52,   63,   52,   52,   58,   58,   64,   70,   63,  127,
-       69,   71,   64,   70,   77,   71,   79,   81,   77,   82,
+       20,   27,   20,   20,   20,   22,   22,   34,   22,   22,
+       34,   40,   22,   22,   40,   22,   22,   25,   29,   25,
+       29,   31,   31,   36,   31,   31,  253,   36,   31,   31,
+       35,   31,   31,   31,   38,   35,   41,   43,   45,   43,
+       46,   38,   50,   41,   48,   45,   51,   50,   46,   55,
+      150,   51,   55,  150,   74,   38,   42,   42,   48,   42,
+       42,   42,   42,   42,   42,   74,   42,   42,   42,   52,
+       52,   99,   52,   52,   52,   52,   52,   52,   99,   52,
+       52,   52,   53,   53,   54,   53,   53,   56,   57,   53,
+       53,   65,   53,   53,   59,   61,   59,   61,   54,  252,
 
-       85,   87,   79,   81,  126,   82,   85,   87,   64,   86,
-       86,   88,   86,   86,   86,   86,   86,   88,   86,   86,
-       86,   89,  125,   90,   96,  101,  109,   89,   89,   90,
-       96,  101,  109,  124,  123,   89,  122,   89,   91,   91,
-      121,   91,   91,   91,   91,   91,  120,   91,   91,   91,
-       94,   94,  119,   94,   94,   94,   94,   94,  116,   94,
-       94,   94,   95,   95,  115,   95,   95,  114,   95,   95,
-      113,   95,   95,   99,   99,  111,   99,   99,   99,   99,
-       99,  110,   99,   99,   99,  100,  100,  107,  100,  100,
-      105,  100,  100,  102,  100,  100,  103,  103,   98,  103,
+       65,   56,   57,   59,   75,   75,   86,  251,   77,   59,
+       63,   63,   87,   63,   63,   86,   98,   63,   63,   87,
+       63,   63,   77,  100,  114,  116,  250,  100,  100,  112,
+       98,  114,  116,  112,  112,  118,  126,   87,  125,  125,
+      140,  140,  118,  126,  127,  127,  128,  127,  127,  127,
+      127,  127,  127,  128,  127,  127,  127,  129,  249,  132,
+      137,  143,  152,  155,  129,  130,  132,  137,  143,  152,
+      155,  130,  130,  156,  156,  171,  183,  183,  248,  174,
+      130,  130,  171,  130,  133,  133,  174,  133,  133,  133,
+      133,  133,  133,  247,  133,  133,  133,  141,  141,  178,
 
-      103,   97,  103,  103,   93,  103,  103,  108,  108,   92,
-      108,  108,   84,  108,  108,   83,  108,  108,   80,   78,
-       76,   75,   74,   73,   72,   68,   67,   66,   65,   62,
-       61,   59,   56,   55,   53,   51,   49,   41,   39,   34,
-       30,   20,   18,    3,  118,  118,  118,  118,  118,  118,
-      118,  118,  118,  118,  118,  118,  118,  118,  118,  118,
-      118,  118,  118,  118,  118,  118,  118,  118,  118,  118,
-      118,  118,  118,  118
+      141,  141,  141,  141,  141,  141,  178,  141,  141,  141,
+      142,  142,  184,  142,  142,  192,  192,  142,  142,  184,
+      142,  142,  147,  147,  186,  147,  147,  147,  147,  147,
+      147,  186,  147,  147,  147,  148,  148,  189,  148,  148,
+      203,  203,  148,  148,  189,  148,  148,  153,  153,  191,
+      153,  153,  153,  153,  153,  153,  191,  153,  153,  153,
+      157,  157,  195,  157,  157,  246,  245,  157,  157,  195,
+      157,  157,  163,  163,  197,  163,  163,  244,  243,  163,
+      163,  197,  163,  163,  168,  168,  201,  168,  168,  168,
+      168,  168,  168,  201,  168,  168,  168,  169,  169,  207,
+
+      169,  169,  242,  241,  169,  169,  207,  169,  169,  179,
+      179,  220,  179,  179,  240,  239,  179,  179,  220,  179,
+      179,  185,  185,  221,  185,  185,  185,  185,  185,  185,
+      221,  185,  185,  185,  190,  190,  238,  190,  190,  190,
+      190,  190,  190,  237,  190,  190,  190,  193,  193,  236,
+      193,  193,  193,  193,  193,  193,  235,  193,  193,  193,
+      194,  194,  234,  194,  194,  233,  232,  194,  194,  231,
+      194,  194,  196,  196,  230,  196,  196,  196,  196,  196,
+      196,  229,  196,  196,  196,  199,  199,  228,  199,  199,
+      199,  199,  199,  199,  227,  199,  199,  199,  200,  200,
+
+      217,  200,  200,  209,  198,  200,  200,  188,  200,  200,
+      202,  202,  187,  202,  202,  202,  202,  202,  202,  182,
+      202,  202,  202,  204,  204,  180,  204,  204,  177,  176,
+      204,  204,  175,  204,  204,  205,  205,  173,  205,  205,
+      205,  205,  205,  205,  172,  205,  205,  205,  206,  206,
+      170,  206,  206,  167,  166,  206,  206,  165,  206,  206,
+      208,  208,  164,  208,  208,  208,  208,  208,  208,  162,
+      208,  208,  208,  210,  210,  161,  210,  210,  159,  154,
+      210,  210,  151,  210,  210,  211,  211,  149,  211,  211,
+      211,  211,  211,  211,  146,  211,  211,  211,  212,  212,
+
+      145,  212,  212,  144,  139,  212,  212,  138,  212,  212,
+      214,  214,  136,  214,  214,  135,  134,  214,  214,  131,
+      214,  214,  215,  215,  124,  215,  215,  215,  215,  215,
+      215,  123,  215,  215,  215,  216,  216,  122,  216,  216,
+      121,  120,  216,  216,  119,  216,  216,  218,  218,  117,
+      218,  218,  115,  113,  218,  218,  111,  218,  218,  219,
+      219,  110,  219,  219,  109,  108,  219,  219,  107,  219,
+      219,  222,  222,  106,  222,  222,  222,  222,  222,  222,
+      105,  222,  222,  222,  223,  223,  104,  223,  223,  223,
+      223,  223,  223,  103,  223,  223,  223,  224,  224,  102,
+
+      224,  224,  101,   97,  224,  224,   96,  224,  224,  225,
+      225,   95,  225,  225,   94,   93,  225,  225,   92,  225,
+      225,   91,   90,   89,   88,   85,   84,   83,   82,   81,
+       80,   79,   78,   76,   73,   72,   71,   70,   69,   68,
+       67,   66,   64,   62,   60,   58,   49,   47,   44,   39,
+       33,   21,   19,    3,  226,  226,  226,  226,  226,  226,
+      226,  226,  226,  226,  226,  226,  226,  226,  226,  226,
+      226,  226,  226,  226,  226,  226,  226,  226,  226,  226,
+      226,  226,  226,  226,  226,  226,  226,  226,  226,  226,
+      226
+
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -532,14 +665,90 @@ int cur_section=0; /* Size-1 and current section in conf */
 char *exported_conf_path; /* Path which the config file was found in */
 int dospath; /* Use dos-style paths? */
 
+typedef struct {
+	char *name;
+	int value;
+} name_value_pair;
+
 static int
-_parse_color_mode(char *s); /* Parses the color mode string */
+_parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses a string with a name value pair */
 
 static gfx_driver_t *
 _parse_gfx_driver(char *s); /* Parses a graphics driver */
 
+static name_value_pair valid_modes[] = {
+	{"default", GFXR_DITHER_MODE_D16},
+	{"dither", GFXR_DITHER_MODE_D16},
+	{"dither16", GFXR_DITHER_MODE_D16},
+	{"dither_16", GFXR_DITHER_MODE_D16},
+	{"dither-16", GFXR_DITHER_MODE_D16},
+	{"d16", GFXR_DITHER_MODE_D16},
+	{"flat", GFXR_DITHER_MODE_F256},
+	{"interpol", GFXR_DITHER_MODE_F256},
+	{"interpolate", GFXR_DITHER_MODE_F256},
+	{"dither256", GFXR_DITHER_MODE_D256},
+	{"dither_256", GFXR_DITHER_MODE_D256},
+	{"d256", GFXR_DITHER_MODE_D256},
+	{0, 0} /* Terminator */
+};
 
-#line 543 "lex.yy.c"
+static name_value_pair yesno[] = {
+	{"yes", 1},
+	{"no", 0},
+	{"1", 1},
+	{"0", 0},
+	{"ok", 1},
+	{"enable", 1},
+	{"disable", 0},
+	{"activate", 1},
+	{"deactivate", 0},
+	{"+", 1},
+	{"-", 0},
+	{"on", 1},
+	{"off", 0},
+	{0, 0}
+};
+
+static name_value_pair dither_pattern[] = {
+	{"scaled", GFXR_DITHER_PATTERN_SCALED},
+	{"unscaled", GFXR_DITHER_PATTERN_1},
+	{"one", GFXR_DITHER_PATTERN_1},
+	{"1", GFXR_DITHER_PATTERN_1},
+	{0, 0}
+};
+
+static name_value_pair dirty_strategy[] = {
+	{"1", GFXOP_DIRTY_FRAMES_ONE},
+	{"one", GFXOP_DIRTY_FRAMES_ONE},
+	{"cluster", GFXOP_DIRTY_FRAMES_CLUSTERS},
+	{"clusters", GFXOP_DIRTY_FRAMES_CLUSTERS},
+	{0, 0}
+};
+
+static name_value_pair brush_mode[] = {
+	{"scaled", GFX_BRUSH_MODE_SCALED},
+	{"ellipse", GFX_BRUSH_MODE_ELLIPSES},
+	{"ellipses", GFX_BRUSH_MODE_ELLIPSES},
+	{"rnd_ellipses", GFX_BRUSH_MODE_RANDOM_ELLIPSES},
+	{"rnd-ellipses", GFX_BRUSH_MODE_RANDOM_ELLIPSES},
+	{"random-ellipses", GFX_BRUSH_MODE_RANDOM_ELLIPSES},
+	{"random-ellipses", GFX_BRUSH_MODE_RANDOM_ELLIPSES},
+	{"morerandom", GFX_BRUSH_MODE_MORERANDOM},
+	{"more-random", GFX_BRUSH_MODE_MORERANDOM},
+	{"more_random", GFX_BRUSH_MODE_MORERANDOM},
+	{0, 0}
+};
+
+static name_value_pair line_mode[] = {
+	{"correct", GFX_LINE_MODE_CORRECT},
+	{"normal", GFX_LINE_MODE_CORRECT},
+	{"fast", GFX_LINE_MODE_FAST},
+	{"fine", GFX_LINE_MODE_FINE},
+	{"thin", GFX_LINE_MODE_FINE},
+	{0, 0}
+};
+
+#line 752 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -690,10 +899,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 66 "config.l"
+#line 142 "config.l"
 
 
-#line 697 "lex.yy.c"
+#line 906 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -744,13 +953,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 119 )
+				if ( yy_current_state >= 227 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 345 );
+		while ( yy_base[yy_current_state] != 755 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -778,187 +987,276 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 68 "config.l"
+#line 144 "config.l"
 {
-  ++yytext; /* Get over opening bracket */
+	++yytext; /* Get over opening bracket */
 
-  ++cur_section; /* Start new section */
+	++cur_section; /* Start new section */
 
-  /* Create new entry... */
-  conf = realloc(conf, sizeof(config_entry_t) * (cur_section + 1));
+	/* Create new entry... */
+	conf = realloc(conf, sizeof(config_entry_t) * (cur_section + 1));
 
-  /* ...and initialize it */
-  memcpy(&(conf[cur_section]), &(conf[0]), sizeof(config_entry_t));
-  if (conf[0].console_log)
-    conf[cur_section].console_log = strdup (conf[0].console_log);
-  /* Copy the gfx system init strings */
-  if (conf[cur_section].gfx_config) {
-    conf[cur_section].gfx_config = malloc(sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
-    memcpy(&(conf[cur_section].gfx_config), &(conf[0].gfx_config),
-	   sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
-  }
+	/* ...and initialize it */
+	memcpy(&(conf[cur_section]), &(conf[0]), sizeof(config_entry_t));
+	if (conf[0].console_log)
+		conf[cur_section].console_log = strdup (conf[0].console_log);
+	/* Copy the gfx system init strings */
+	if (conf[cur_section].gfx_config) {
+		conf[cur_section].gfx_config = malloc(sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
+		memcpy(&(conf[cur_section].gfx_config), &(conf[0].gfx_config),
+		       sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
+	}
 
-  while (isspace(*yytext))
-    yytext++;
+	while (isspace(*yytext))
+		yytext++;
 
-  conf[cur_section].name = strdup(yytext);
-  conf[cur_section].name[strlen(yytext)-1] = 0; /* Terminate string at "]" */
-  conf[cur_section].resource_dir = strdup(".");
+	conf[cur_section].name = strdup(yytext);
+	conf[cur_section].name[strlen(yytext)-1] = 0; /* Terminate string at "]" */
+	conf[cur_section].resource_dir = strdup(".");
 
-  if (dospath)
-    conf[cur_section].work_dir = strdup(exported_conf_path);
-  else {
-    char *tmp = malloc(strlen(exported_conf_path) + 1 + strlen(yytext));
-    strcpy(tmp, exported_conf_path);
-    strcat(tmp, "/");
-    strcat(tmp, conf[cur_section].name);
+	if (dospath)
+		conf[cur_section].work_dir = strdup(exported_conf_path);
+	else {
+		char *tmp = malloc(strlen(exported_conf_path) + 1 + strlen(yytext));
+		strcpy(tmp, exported_conf_path);
+		strcat(tmp, "/");
+		strcat(tmp, conf[cur_section].name);
 
-    conf[cur_section].work_dir = tmp;
-    scimkdir(tmp, 0700); /* Make sure that the directory exists. */
-    /* This will be checked later, for the current game. */
-  }
+		conf[cur_section].work_dir = tmp;
+		scimkdir(tmp, 0700); /* Make sure that the directory exists. */
+		/* This will be checked later, for the current game. */
+	}
 }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 108 "config.l"
+#line 184 "config.l"
 {
-  yytext = strchr(yytext, '=') + 1;
+	yytext = strchr(yytext, '=') + 1;
 
-  while (isspace(*yytext))
-    yytext++;
-  conf[cur_section].color_mode = _parse_color_mode(yytext);
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.pic0_dither_mode = 
+		_parse_name(yytext, valid_modes, "color mode", conf[cur_section].gfx_options.pic0_dither_mode);
 }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 116 "config.l"
-{
-  yytext = strchr(yytext, '=') + 1;
+#line 193 "config.l"
+{ /* Deprecated: For backward compatibility */
+	yytext = strchr(yytext, '=') + 1;
 
-  while (isspace(*yytext))
-    yytext++;
-
-  conf[cur_section].version = version_parse(yytext);
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.pic0_dither_mode =
+		_parse_name(yytext, valid_modes, "color mode", conf[cur_section].gfx_options.pic0_dither_mode);
 }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 125 "config.l"
+#line 202 "config.l"
 {
-  yytext = strchr (yytext, '=') + 1;
+	yytext = strchr(yytext, '=') + 1;
 
-  while (isspace(*yytext))
-    yytext++;
-
-  if (conf[cur_section].console_log)
-    free (conf[cur_section].console_log);
-  conf[cur_section].console_log = (char *) malloc (strlen (yytext)+1);
-  strcpy (conf[cur_section].console_log, yytext);
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.pic0_dither_pattern =
+		_parse_name(yytext, dither_pattern, "SCI0 pic dither pattern", conf[cur_section].gfx_options.pic0_dither_pattern);
 }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 137 "config.l"
-if (cur_section) {
-  yytext = strchr(yytext, '=') + 1;
-  while (isspace(*yytext))
-    yytext++;
+#line 211 "config.l"
+{
+	yytext = strchr(yytext, '=') + 1;
 
-  free(conf[cur_section].resource_dir);
-
-  conf[cur_section].resource_dir = strdup(yytext);
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.pic0_brush_mode =
+		_parse_name(yytext, brush_mode, "SCI0 pic brush mode", conf[cur_section].gfx_options.pic0_brush_mode);
 }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 148 "config.l"
+#line 220 "config.l"
 {
-  yytext = strchr(yytext, '=') + 1;
+	yytext = strchr(yytext, '=') + 1;
 
-  while (isspace(*yytext))
-    yytext++;
-
-  conf[cur_section].gfx_driver = _parse_gfx_driver(yytext);
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.pic0_line_mode =
+		_parse_name(yytext, line_mode, "SCI0 pic line mode", conf[cur_section].gfx_options.pic0_line_mode);
 }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 157 "config.l"
+#line 229 "config.l"
 {
-  yytext = strchr(yytext, '=') + 1;
+	yytext = strchr(yytext, '=') + 1;
 
-  while (isspace(*yytext))
-    yytext++;
-
-  strcpy (conf[cur_section].debug_mode, yytext);
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.dirty_frames =
+		_parse_name(yytext, dirty_strategy, "dirty strategy", conf[cur_section].gfx_options.dirty_frames);
 }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 166 "config.l"
+#line 238 "config.l"
 {
-  char *p=yytext;
-  char *p2;
+	yytext = strchr(yytext, '=') + 1;
 
-  yytext = strchr(yytext, '.');
-  *yytext++ = 0;
-  if (!strcasecmp (p, conf->gfx_driver->name))
-  {
-    int newcfg;
-
-    p = yytext;
-    yytext = strchr(yytext, '=');
-    *yytext++ = 0;
-
-    p2 = yytext-2;                    /* trim right spaces */
-    while (p2 > p && isspace (*p2))
-      *p2-- = 0;
-
-    while (isspace(*yytext))
-      yytext++;
-
-    p2=yytext+strlen (yytext);        /* trim right spaces */
-    while (p2 > p && isspace (*p2))
-      *p2-- = 0;
-
-    newcfg = (conf[cur_section].gfx_config_nr)++;
-
-    if (newcfg)
-      conf[cur_section].gfx_config = realloc(conf[cur_section].gfx_config,
-					     (newcfg + 1) * sizeof(gfx_option_t *));
-    else
-      conf[cur_section].gfx_config = malloc(conf[cur_section].gfx_config_nr * sizeof(gfx_option_t *));
-
-    conf[cur_section].gfx_config[newcfg].option = strdup(p);
-    conf[cur_section].gfx_config[newcfg].value = strdup(yytext);
-  }
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.pic0_unscaled =
+		!_parse_name(yytext, yesno, "pic0 scaling", !conf[cur_section].gfx_options.pic0_unscaled);
 }
 	YY_BREAK
 case 9:
+YY_RULE_SETUP
+#line 247 "config.l"
+{
+	int val;
+	yytext = strchr(yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+
+	val = atoi(yytext);
+	if (val < 0) {
+		printf("No negative values allowed for pic buffer size\n");
+	} else conf[cur_section].gfx_options.buffer_pics_nr = val;
+}
+	YY_BREAK
+case 10:
+YY_RULE_SETUP
+#line 260 "config.l"
+{ /***** End of graphics *****/
+
+	yytext = strchr(yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+
+	conf[cur_section].version = version_parse(yytext);
+}
+	YY_BREAK
+case 11:
+YY_RULE_SETUP
+#line 270 "config.l"
+{
+	yytext = strchr (yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+
+	if (conf[cur_section].console_log)
+		free (conf[cur_section].console_log);
+	conf[cur_section].console_log = (char *) malloc (strlen (yytext)+1);
+	strcpy (conf[cur_section].console_log, yytext);
+}
+	YY_BREAK
+case 12:
+YY_RULE_SETUP
+#line 282 "config.l"
+if (cur_section) {
+	yytext = strchr(yytext, '=') + 1;
+	while (isspace(*yytext))
+		yytext++;
+
+	free(conf[cur_section].resource_dir);
+
+	conf[cur_section].resource_dir = strdup(yytext);
+}
+	YY_BREAK
+case 13:
+YY_RULE_SETUP
+#line 293 "config.l"
+{
+	yytext = strchr(yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+
+	conf[cur_section].gfx_driver = _parse_gfx_driver(yytext);
+}
+	YY_BREAK
+case 14:
+YY_RULE_SETUP
+#line 302 "config.l"
+{
+        yytext = strchr(yytext, '=') + 1;
+
+        while (isspace(*yytext))
+                yytext++;
+
+	strcpy (conf[cur_section].debug_mode, yytext);
+}
+	YY_BREAK
+case 15:
+YY_RULE_SETUP
+#line 311 "config.l"
+{
+        char *p=yytext;
+        char *p2;
+
+        yytext = strchr(yytext, '.');
+        *yytext++ = 0;
+        if (!strcasecmp (p, conf->gfx_driver->name)) {
+                int newcfg;
+
+                p = yytext;
+                yytext = strchr(yytext, '=');
+                *yytext++ = 0;
+
+                p2 = yytext-2;                    /* trim right spaces */
+                while (p2 > p && isspace (*p2))
+                        *p2-- = 0;
+
+                while (isspace(*yytext))
+                        yytext++;
+
+                p2=yytext+strlen (yytext);        /* trim right spaces */
+                while (p2 > p && isspace (*p2))
+                *p2-- = 0;
+
+                newcfg = (conf[cur_section].gfx_config_nr)++;
+
+                if (newcfg)
+                conf[cur_section].gfx_config = realloc(conf[cur_section].gfx_config,
+			(newcfg + 1) * sizeof(gfx_option_t *));
+		else
+		        conf[cur_section].gfx_config = malloc(conf[cur_section].gfx_config_nr * sizeof(gfx_option_t *));
+
+                conf[cur_section].gfx_config[newcfg].option = strdup(p);
+                conf[cur_section].gfx_config[newcfg].value = strdup(yytext);
+        }
+}
+	YY_BREAK
+case 16:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 207 "config.l"
+#line 351 "config.l"
 /* Ignore comments */
 	YY_BREAK
-case 10:
+case 17:
 YY_RULE_SETUP
-#line 209 "config.l"
+#line 353 "config.l"
 /* Eat whitespace */
 	YY_BREAK
-case 11:
+case 18:
 YY_RULE_SETUP
-#line 211 "config.l"
+#line 355 "config.l"
 printf("Unrecognized option: %s\n", yytext);
 	YY_BREAK
-case 12:
+case 19:
 YY_RULE_SETUP
-#line 213 "config.l"
+#line 357 "config.l"
 ECHO;
 	YY_BREAK
-#line 962 "lex.yy.c"
+#line 1260 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1250,7 +1548,7 @@ static yy_state_type yy_get_previous_state()
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 119 )
+			if ( yy_current_state >= 227 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1285,11 +1583,11 @@ yy_state_type yy_current_state;
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 119 )
+		if ( yy_current_state >= 227 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 118);
+	yy_is_jam = (yy_current_state == 226);
 
 	return yy_is_jam ? 0 : yy_current_state;
 	}
@@ -1844,182 +2142,174 @@ int main()
 	return 0;
 	}
 #endif
-#line 213 "config.l"
+#line 357 "config.l"
 
 
 int
 yywrap()
 {
-  return 1; /* no further input */
+        return 1; /* no further input */
 }
 
 
 int
 config_init(config_entry_t **_conf, char *conffile)
 {
-  char *homedir = getenv("HOME");
-  char *conf_path;
+	char *homedir = getenv("HOME");
+	char *conf_path;
 
-  conf = malloc(sizeof(config_entry_t));
+	conf = malloc(sizeof(config_entry_t));
 
 /**** Default config: */
-WARNING( fixme)
-  //  conf->color_mode = SCI_COLOR_DITHER;
+	conf->gfx_options.buffer_pics_nr = 0;
+	conf->gfx_options.correct_rendering = 1;
+	conf->gfx_options.pic0_unscaled = 0;
+	conf->gfx_options.pic0_dither_mode = GFXR_DITHER_MODE_D16;
+	conf->gfx_options.pic0_dither_pattern = GFXR_DITHER_PATTERN_SCALED;
+	conf->gfx_options.pic0_brush_mode = GFX_BRUSH_MODE_RANDOM_ELLIPSES;
+	conf->gfx_options.pic0_line_mode = GFX_LINE_MODE_CORRECT;
+	conf->gfx_options.cursor_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.view_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.pic_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 
-  conf->version = 0;
+	conf->version = 0;
 
-WARNING( fixme)
-  conf->gfx_driver = &gfx_driver_ggi;//graph_get_default_driver();
+	conf->gfx_driver = gfx_drivers[0];
 
-  conf->console_log = NULL;
-  conf->debug_mode [0] = '\0';
-  conf->name = NULL;
-  conf->resource_dir = NULL;
-  conf->work_dir = NULL;
-  conf->gfx_config = NULL;
-  conf->gfx_config_nr = 0;
+	conf->console_log = NULL;
+	conf->debug_mode [0] = '\0';
+	conf->name = NULL;
+	conf->resource_dir = NULL;
+	conf->work_dir = NULL;
+	conf->gfx_config = NULL;
+	conf->gfx_config_nr = 0;
 /**** Default config ends */
 
 
-  if (conffile) {
-    exported_conf_path = (char *) malloc(PATH_MAX + 1);
-    getcwd(exported_conf_path, PATH_MAX+1);
+	if (conffile) {
+		exported_conf_path = (char *) malloc(PATH_MAX + 1);
+		getcwd(exported_conf_path, PATH_MAX+1);
 
-    conf_path = strdup(conffile); /* Use config file if supplied */
-  } else {
-    if (!homedir) { /* We're probably not under UNIX if this happens */
+		conf_path = strdup(conffile); /* Use config file if supplied */
+	} else {
+		if (!homedir) { /* We're probably not under UNIX if this happens */
 
-      conf_path = strdup(FREESCI_CONFFILE_DOS); /* Use DOS config style */
+			conf_path = strdup(FREESCI_CONFFILE_DOS); /* Use DOS config style */
 
-      exported_conf_path = (char *) malloc(PATH_MAX + 1);
-      getcwd(exported_conf_path, PATH_MAX+1);
+			exported_conf_path = (char *) malloc(PATH_MAX + 1);
+			getcwd(exported_conf_path, PATH_MAX+1);
 
-      dospath = 1; /* Use DOS-style paths */
+			dospath = 1; /* Use DOS-style paths */
 
-    } else {
+		} else {
 
-      /* So we've got a home directory */
-      if (chdir(homedir)) {
-	fprintf(stderr,"Warning: Could not enter home directory!\n");
-	return 1;
-      }
+			/* So we've got a home directory */
+			if (chdir(homedir)) {
+				fprintf(stderr,"Warning: Could not enter home directory!\n");
+				return 1;
+			}
 
-      if (chdir(FREESCI_GAMEDIR))
-	if (scimkdir(FREESCI_GAMEDIR, 0700)) {
+			if (chdir(FREESCI_GAMEDIR))
+				if (scimkdir(FREESCI_GAMEDIR, 0700)) {
 
-	  fprintf(stderr,"Warning: Could not enter/create ~/"FREESCI_GAMEDIR"\n");
-	  return 1;
+					fprintf(stderr,"Warning: Could not enter/create ~/"FREESCI_GAMEDIR"\n");
+					return 1;
+				}
+
+			conf_path = malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
+			strcpy(conf_path, homedir);
+			strcat(conf_path, "/");
+			strcat(conf_path, FREESCI_GAMEDIR);
+
+			exported_conf_path = strdup(conf_path);
+
+			strcat(conf_path, "/");
+			strcat(conf_path, FREESCI_CONFFILE);
+
+			dospath = 0; /* Use UN*X-style paths */
+		}
+	} /* !conffile */
+
+
+	if (!(yyin = fopen(conf_path, "r"))) {
+		printf("No configuration file found; using defaults.\n");
+		*_conf = conf; /* Set the result variable */
+		free(conf_path);
+		free(exported_conf_path);
+		return 1;
 	}
 
-      conf_path = malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
-      strcpy(conf_path, homedir);
-      strcat(conf_path, "/");
-      strcat(conf_path, FREESCI_GAMEDIR);
+	printf("Parsing config file...\n");
 
-      exported_conf_path = strdup(conf_path);
+	yylex(); /* Parse the file */
 
-      strcat(conf_path, "/");
-      strcat(conf_path, FREESCI_CONFFILE);
+	free(conf_path);
+	free(exported_conf_path);
 
-      dospath = 0; /* Use UN*X-style paths */
-    }
-  } /* !conffile */
-
-
-  if (!(yyin = fopen(conf_path, "r"))) {
-    printf("No configuration file found; using defaults.\n");
-    *_conf = conf; /* Set the result variable */
-    free(conf_path);
-    free(exported_conf_path);
-    return 1;
-  }
-
-  printf("Parsing config file...\n");
-
-  yylex(); /* Parse the file */
-
-  free(conf_path);
-  free(exported_conf_path);
-
-  *_conf = conf; /* Store the result */
-  return cur_section + 1;
+	*_conf = conf; /* Store the result */
+	return cur_section + 1;
 }
 
 
 void
 config_free(config_entry_t **conf, int entries)
 {
-  int i;
+	int i;
 
-  for (i = 1; i < entries; i++) {
-    free ((*conf)[i].name);
-    free ((*conf)[i].work_dir);
-    if ((*conf)[i].resource_dir)
-      free ((*conf)[i].resource_dir);
-    if ((*conf)[i].console_log)
-      free((*conf)[i].console_log);
-    if ((*conf)[i].gfx_config) {
-      int j;
+	for (i = 1; i < entries; i++) {
+		free ((*conf)[i].name);
+		free ((*conf)[i].work_dir);
+		if ((*conf)[i].resource_dir)
+			free ((*conf)[i].resource_dir);
+		if ((*conf)[i].console_log)
+			free((*conf)[i].console_log);
+		if ((*conf)[i].gfx_config) {
+			int j;
 
-      for (j = 0; j < (*conf)[i].gfx_config_nr; j++) {
-	free ((*conf)[i].gfx_config[j].option);
-	free ((*conf)[i].gfx_config[j].value);
-      }
+			for (j = 0; j < (*conf)[i].gfx_config_nr; j++) {
+				free ((*conf)[i].gfx_config[j].option);
+				free ((*conf)[i].gfx_config[j].value);
+			}
 
-      free((*conf)[i].gfx_config);
-    }
-  }
+			free((*conf)[i].gfx_config);
+		}
+	}
 
-  free (*conf);
+	free (*conf);
 }
 
 
 static int
-_parse_color_mode(char *mode) /* Parses the color mode string */
+_parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 {
-WARNING(fixme)
-#if 0
-  struct {
-    char* name;
-    int value;
-  } valid_modes[] = {
-    {"default", SCI_COLOR_DITHER},
-    {"dither", SCI_COLOR_DITHER},
-    {"dither16", SCI_COLOR_DITHER},
-    {"dither_16", SCI_COLOR_DITHER},
-    {"flat", SCI_COLOR_INTERPOLATE},
-    {"interpol", SCI_COLOR_INTERPOLATE},
-    {"interpolate", SCI_COLOR_INTERPOLATE},
-    {"dither256", SCI_COLOR_DITHER256},
-    {"dither_256", SCI_COLOR_DITHER256},
-    {0, 0} /* Terminator */
-  };
-  int i = 0;
+	int i = 0;
 
-  while (valid_modes[i].name) {
-    if (0 == g_strcasecmp(mode, valid_modes[i].name))
-      return valid_modes[i].value;
+	while (nvps[i].name) {
+		if (0 == g_strcasecmp(name, valid_modes[i].name))
+			return nvps[i].value;
 
-    i++;
-  }
-#endif
-  printf("Invalid color mode %s\n", mode);
+		i++;
+	}
 
-  return 0;
+	printf("Invalid %s mode %s\n", what, name);
+
+	return oldval;
 }
 
 
 static gfx_driver_t *
 _parse_gfx_driver(char *driver_name)
 {
-  int i;
+	int i;
 
-  for (i=0; gfx_drivers [i]; i++)
-    if (!strcasecmp (gfx_drivers[i]->name, driver_name))
-      return gfx_drivers [i];
+	for (i=0; gfx_drivers [i]; i++)
+		if (!strcasecmp (gfx_drivers[i]->name, driver_name))
+			return gfx_drivers [i];
 
-  /* not found - return default */
+	/* not found - return default */
 
-  printf ("Unknown graphics driver %s\n", driver_name);
-  return conf->gfx_driver;
+	printf ("Unknown graphics driver %s\n", driver_name);
+	return conf->gfx_driver;
 }
