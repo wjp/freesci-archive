@@ -1,3 +1,9 @@
+2001-03-01  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/sound/Makefile.am
+	  src/sound/midiout_alsaraw.c:  Added ALSA rawmidi out support;
+				        Currently hardwired to c0d0.
+
 2001-03-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/config.l: Simplified config.l management
