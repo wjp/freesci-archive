@@ -1,3 +1,10 @@
+2003-01-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/sci_conf.h: Made pcmout_rate and pcmout_stereo
+	ints to avoid subtle overflow bugs
+
+	* src/config.l: Changed stereo option to use yesno interface
+
 2003-01-26  Rune Orsval  <u951663@daimi.au.dk>
 
 	* src/include/games.h, doc/sci_list.txt: Added game versions.

@@ -42,6 +42,7 @@
 
 #endif
 
+
 #ifdef _DREAMCAST
 #  include <dc.h>
 #  define PATH_MAX 255
@@ -222,6 +223,15 @@ typedef struct {
 #define OPT_STATICREF(NAME, VARNAME, FUNCTN)  {OPTION_TYPE_STATICREF, NAME, 0, 0, NULL, FUNCTN, offsetof (config_entry_t, VARNAME)}
 /* Call FUNCTN() with the specified value, store resulting NULL* */
 
+/*=-------------------------------=*/
+/*** ----- BIG FAT WARNING ----- ***/
+/*                                 */
+/* If you use OPT_INT or OPT_NVP,  */
+/* make sure the structure content */
+/* you are pointing to is an 'int' */
+/* and not a g(u)int*, short, long */
+/* or byte or char!                */
+/*=-------------------------------=*/
 
 standard_option standard_options[] = {
 	OPT_NVP("pic0_dither_mode", gfx_options.pic0_dither_mode, valid_modes),
@@ -247,7 +257,7 @@ standard_option standard_options[] = {
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
         OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
         OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
-        OPT_INT("pcmout_stereo", pcmout_stereo, 0, 1),
+        OPT_NVP("pcmout_stereo", pcmout_stereo, yesno),
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
@@ -280,29 +290,37 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 
 "["[_[:alnum:]]+"]" {
 	char *cleanup;
+
 	++yytext; /* Get over opening bracket */
 
 	++cur_section; /* Start new section */
 
 	/* Create new entry... */
+
 	conf = sci_realloc(conf, sizeof(config_entry_t) * (cur_section + 1));
+
 
 	/* ...and initialize it */
 	memcpy(&(conf[cur_section]), &(conf[0]), sizeof(config_entry_t));
 	if (conf[0].console_log)
 		conf[cur_section].console_log = sci_strdup (conf[0].console_log);
 
+
 	/* Copy the subsystem init strings */
 	copy_subsystem_options(conf + cur_section, conf);
+
 
 	while (isspace(*yytext))
 		yytext++;
 
+
 	cleanup = strchr(yytext, ']');
+
 
 	do {
 		*cleanup-- = 0;
 	} while (isblank(*cleanup));
+
 
 	conf[cur_section].name = sci_strdup(yytext);
 
@@ -320,6 +338,7 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 		scimkdir(tmp, 0700); /* Make sure that the directory exists. */
 		/* This will be checked later, for the current game. */
 	}
+
 }
 
 
@@ -334,6 +353,7 @@ version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} {
 }
 
 resource_dir[[:blank:]]*"="[[:blank:]]*.+	if (cur_section) {
+
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
 		yytext++;
@@ -344,6 +364,7 @@ resource_dir[[:blank:]]*"="[[:blank:]]*.+	if (cur_section) {
 }
 
 debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
+
         yytext = strchr(yytext, '=') + 1;
 
         while (isspace(*yytext))
@@ -359,6 +380,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
         char *driver_name;
 	char *option, *value;
 	char *p2;
+
 
         yytext = strchr(yytext, '.');
         *yytext++ = 0;
@@ -388,6 +410,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 	char *value_str = yytext;
 	int option_str_len;
 
+
 	while (isalnum(*value_str) || *value_str == '_')
 		++value_str;
 
@@ -398,7 +421,9 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
 	value_str = crop_value(value_str);
 
+
 	parse_option(option_str, option_str_len, value_str);
+
 }
 
 
@@ -408,6 +433,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 [[:blank:]\n]+ /* Eat whitespace */
 
 <<EOF>> {
+
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
 }
@@ -578,7 +604,6 @@ config_init(config_entry_t **_conf, char *conffile)
 	}
 
 	printf("Parsing config file...\n");
-
 	yylex(); /* Parse the file */
 
 	fclose(yyin); /* Ignore error conditions- might be lex implementation dependant */
@@ -623,6 +648,8 @@ config_free(config_entry_t **conf, int entries)
 
 	if ((*conf)->console_log)
 		sci_free((*conf)->console_log);
+	if ((*conf)->module_path)
+		sci_free((*conf)->module_path);
 
 	for (i = 0; i < entries; i++) {
 		int j;
@@ -634,8 +661,6 @@ config_free(config_entry_t **conf, int entries)
 				sci_free((*conf)[i].resource_dir);
 			if ((*conf)[i].console_log)
 				sci_free((*conf)[i].console_log);
-			if ((*conf)[i].module_path)
-				sci_free((*conf)[i].module_path);
 		}
 
 		for (j = 0; j < FREESCI_DRIVER_SUBSYSTEMS_NR; j++) {
@@ -733,10 +758,12 @@ parse_option(char *option, int optlen, char *value)
 		else
 			optindex++;
 
+
 	if (!opt) {
 		fprintf(stderr,"Invalid option '%s'\n", option);
 		return;
 	}
+
 
 
 
@@ -746,38 +773,46 @@ parse_option(char *option, int optlen, char *value)
 		char *foo;
 		int int_value = strtol(value, &foo, 0);
 
+
 		if (*foo) {
 			fprintf(stderr, "Option '%s' expects numeric value; encountered '%s'\n",
 				opt->name, value);
 			return;
 		}
 
+
 		if (int_value < opt->min) {
 			fprintf(stderr, "Option '%s' expects value >= %d; encountered '%s'\n", opt->name, opt->min, value);
 			return;
 		}
+
 
 		if (int_value > opt->max) {
 			fprintf(stderr, "Option '%s' expects value <= %d; encountered '%s'\n", opt->name, opt->max, value);
 			return;
 		}
 
+
 		*((int *)(((char *)&(conf[cur_section])) + opt->varoffset)) = int_value; /* Store value */
+
 
 		break;
 	}
 
 	case OPTION_TYPE_STRING: {
 		char **stringref = ((char **)(((char *)&(conf[cur_section])) + opt->varoffset));
+
 		if (*stringref)
 			sci_free(*stringref);
 		*stringref = sci_strdup(value); /* Store value */
+
 		break;
 	}
 
 	case OPTION_TYPE_INVERSE_NVP:
 	case OPTION_TYPE_NVP: {
 		int int_value = parse_name(value, opt->nvp, opt->name, BAD_INT_VALUE);
+
 
 		if (int_value != BAD_INT_VALUE) {
 
@@ -787,17 +822,22 @@ parse_option(char *option, int optlen, char *value)
 /* FUCKED HERE: cur_section = 0, opt->varoffset = 205 */
 			*((int *)(((char*)&(conf[cur_section])) + opt->varoffset)) = int_value; /* Store value */
 		}
+
 		break;
 	}
 
 
 	case OPTION_TYPE_STATICREF: {
+
 		*((void **)(((char *)&(conf[cur_section])) + opt->varoffset)) = opt->parse_funct(value);
+
 		break;
 	}
 
 	default:
+
 		fprintf(stderr, "INTERNAL ERROR in %s, parse_option(), line %d\n", __FILE__, __LINE__);
+
 	}
 }
 
