@@ -331,10 +331,10 @@ sound_command(state_t *s, int command, int handle, int parameter)
     
 		/* set the mute status */
 	case SOUND_COMMAND_SET_MUTE:
-		if (parameter == 0) {  // ie mute
+		if (parameter == 0) { 
 			s->sound_mute = s->sound_volume;
 			s->sound_volume = 0;
-		} else {  // restore sound
+		} else { 
 			if (s->sound_mute > 0)
 				s->sound_volume = s->sound_mute;
 			s->sound_mute = 0;

@@ -122,7 +122,14 @@ sound_null_configure(state_t *s, char *option, char *value)
 void 
 sound_null_queue_event(int handle, int signal, int value)
 {
-  sound_eq_queue_event(&queue, handle, signal, value);
+  sound_event_t event;
+
+  event.handle = handle;
+  event.signal = signal;
+  event.value = value;
+
+  write(x_fd_events, &event, sizeof(sound_event_t));
+
 }
 
 static int get_event_error_counter = 0;
@@ -130,66 +137,43 @@ static int get_event_error_counter = 0;
 sound_event_t *
 sound_null_get_event(state_t *s)
 {
-	fd_set inpfds;
-	int inplen;
-	int success;
-	GTimeVal waittime = {0, 0};
-	GTimeVal waittime2 = {0, SOUND_SERVER_TIMEOUT};
-	char debug_buf[65];
-	sound_event_t *event = xalloc(sizeof(sound_event_t));
+  fd_set inpfds;
+  int inplen;
+  int success;
+  GTimeVal waittime = {0, 0};
+  GTimeVal waittime2 = {0, SOUND_SERVER_TIMEOUT};
+  char debug_buf[65];
+  sound_event_t *event = xalloc(sizeof(sound_event_t));
 
-
-	FD_ZERO(&inpfds);
-	FD_SET(s->sound_pipe_debug[0], &inpfds);
-	while ((select(s->sound_pipe_debug[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime)
-		&& (inplen = read(s->sound_pipe_debug[0], debug_buf, 64)) > 0)) {
-
-		debug_buf[inplen] = 0; /* Terminate string */
-		sciprintf(debug_buf); /* Transfer debug output */
-		waittime.tv_sec = 0;
-		waittime.tv_usec = 0;
-
-		FD_ZERO(&inpfds);
-		FD_SET(s->sound_pipe_debug[0], &inpfds);
-
-	}
-
-	sound_command(s, SOUND_COMMAND_GET_NEXT_EVENT, 0, 0);
-
-	FD_ZERO(&inpfds);
-	FD_SET(s->sound_pipe_events[0], &inpfds);
-	success = select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2);
-
-	if (success && read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
-
-		if (event->signal == SOUND_SIGNAL_END_OF_QUEUE) {
-			free(event);
-			return NULL;
-		}
-      
-		return event;
-
-	} else {
-
-		if (!get_event_error_counter) {
-			if (success)
-				sciprintf("sound_get_event: Warning: sound event was crippled!\n");
-			else
-				sciprintf("sound_get_event: Warning: Sound server did not respond to get_event request\n");
-		}
-
-		if (get_event_error_counter == 100) {
-			sciprintf("sound_get_event: Sound server keeps on failing to respond. Looks like he's dead.\n");
-			get_event_error_counter = 101;
-		} else
-			get_event_error_counter++;
-
-
-		free(event);
-		return NULL;
-
-	}
-
+  
+  FD_ZERO(&inpfds);
+  FD_SET(s->sound_pipe_debug[0], &inpfds);
+  while ((select(s->sound_pipe_debug[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime)
+	  && (inplen = read(s->sound_pipe_debug[0], debug_buf, 64)) > 0)) {
+    
+    debug_buf[inplen] = 0; /* Terminate string */
+    sciprintf(debug_buf); /* Transfer debug output */
+    waittime.tv_sec = 0;
+    waittime.tv_usec = 0;
+    
+    FD_ZERO(&inpfds);
+    FD_SET(s->sound_pipe_debug[0], &inpfds);
+    
+  }
+  
+  FD_ZERO(&inpfds);
+  FD_SET(s->sound_pipe_events[0], &inpfds);
+  
+  success = select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2);
+  
+  if (success && read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
+    
+    return event;
+    
+  } else {
+    free(event);
+    return NULL;
+  }
 }
 void 
 sound_null_queue_command(state_t *s, int handle, int signal, int value)
@@ -230,12 +214,21 @@ sound_null_get_command(struct timeval *wait_tvp)
 void
 sound_null_get_data(byte **data_ptr, int *size, int maxlen)
 {
-
+  
+  /*
+    read(fd, size, sizeof(int));
+    *data_ptr = malloc(size);
+    read(fd, *data_ptr, *size);
+  */
 }
 
 void
 sound_null_send_data(byte *data_ptr, int maxsend) 
 {
+
+  /* write(fd, &maxsend, sizeof(int));
+     write(fd, data_ptr, maxsend);
+  */
 
 }
 sfx_driver_t sound_null = {
@@ -259,20 +252,6 @@ sfx_driver_t sound_null = {
 /************************/
 /***** SOUND SERVER *****/
 /************************/
-
-
-
-static void
-_transmit_event(int fd, sound_eq_t *queue)
-{
-	sound_event_t *event = sound_eq_retreive_event(queue);
-
-	if (event) {
-		write(fd, event, sizeof(sound_event_t));
-		free(event);
-	} else
-		write(fd, &sound_eq_eoq_event, sizeof(sound_event_t));
-}
 
 #define REPORT_STATUS(status) {int _repstat = status; write(fd_out, &_repstat, sizeof(int)); }
 
@@ -746,10 +725,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 					}
 					break;
-
-					case SOUND_COMMAND_GET_NEXT_EVENT:
-						_transmit_event(fd_events, &queue);
-						break;
 
 					case SOUND_COMMAND_STOP_ALL: {
 
