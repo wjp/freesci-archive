@@ -1,3 +1,14 @@
+2001-05-31  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/sci_widgets.c (sciw_new_window): Fixed OB1 buglet in
+	transparent shadows (shadow overdraw)
+
+	* src/include/gfx_resource.h: Re-arranged data structure for 8 byte
+	alignment to avoid unaligned traps on Alpha
+
+	* src/sound/soundserver_sdl.c: Renamed to ev_queue to avoid name
+	confusion with sound server
+
 2001-05-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (main): Added Threading workaround for Win32

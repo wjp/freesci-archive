@@ -72,9 +72,6 @@ typedef struct {
 	gfx_pixmap_t *priority_map;
 	gfx_pixmap_t *control_map;
 
-	void *undithered_buffer; /* copies visual_map->index_data before dithering */
-	int undithered_buffer_size;
-
 	byte aux_map[GFXR_AUX_MAP_SIZE];
 
 /* Auxiliary map details:
@@ -83,6 +80,10 @@ typedef struct {
 ** Bit 2: Ctrl
 ** Bit 3-5: 'filled' (all three bits are set to 1)
 */ 
+
+	void *undithered_buffer; /* copies visual_map->index_data before dithering */
+	int undithered_buffer_size;
+
 
 } gfxr_pic_t;
 

@@ -8,3 +8,4 @@ LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	@SDL_LIBS@
 bin_PROGRAMS = sciv
 sciv_SOURCES = config.l main.c
+sciv_LDFLAGS = @SCIV_LDFLAGS@

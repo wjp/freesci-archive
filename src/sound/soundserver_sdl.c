@@ -50,7 +50,7 @@ static sci_queue_t bulk_queues[2];
 static SDL_cond *bulk_conds[2];
 
 static sound_eq_t inqueue; /* The in-event queue */
-static sound_eq_t queue; /* The event queue */
+static sound_eq_t ev_queue; /* The event queue */
 
 int 
 sdl_soundserver_init(void *args) 
@@ -88,7 +88,7 @@ sound_sdl_init(state_t *s)
   ds = stderr; 
 
   sound_eq_init(&inqueue);
-  sound_eq_init(&queue);
+  sound_eq_init(&ev_queue);
 
   child = SDL_CreateThread( sdl_soundserver_init, s);
 
@@ -107,12 +107,12 @@ sound_sdl_get_event(state_t *s)
   sound_event_t *event = NULL;
   SDL_LockMutex(out_mutex);
 
-  if (!sound_eq_peek_event(&queue)) {
+  if (!sound_eq_peek_event(&ev_queue)) {
 	  SDL_UnlockMutex(out_mutex);
 	  return NULL;
   }
 
-  event = sound_eq_retreive_event(&queue);
+  event = sound_eq_retreive_event(&ev_queue);
 
   SDL_UnlockMutex(out_mutex);
   /*
@@ -127,7 +127,7 @@ sound_sdl_queue_event(int handle, int signal, int value)
 {
   SDL_LockMutex(out_mutex);
 
-  sound_eq_queue_event(&queue, handle, signal, value);
+  sound_eq_queue_event(&ev_queue, handle, signal, value);
   /*  printf("set %04x %d %d\n", handle, signal, value); */
   SDL_UnlockMutex(out_mutex);
 }

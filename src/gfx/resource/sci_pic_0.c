@@ -274,7 +274,7 @@ static void
 _gfxr_auxbuf_propagate_changes(gfxr_pic_t *pic, int bitmask)
 {
 	/* Propagates all filled bits into the planes described by bitmask */
-	long *data = (long *) pic->aux_map;
+	unsigned long *data = (unsigned long *) pic->aux_map;
 	unsigned long clearmask = 0x07070707;
 	unsigned long andmask = 
 		(bitmask << 3)

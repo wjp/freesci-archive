@@ -53,15 +53,18 @@ done
 AC_DEFUN(AC_CHECK_FSCI_DLOPEN,
 [
 dlopen="no"
+SCIV_LDFLAGS=""
 AC_ARG_WITH(modules,
 	[  --without-modules	  Statically link all modules to the executable ])
 
 if test x"$with_modules" != xno; then
 	AC_CHECK_FUNC(dlopen, [
+				SCIV_LDFLAGS="-rdynamic"
 				AC_DEFINE(HAVE_DLOPEN)
 				dlopen="yes"
 			 ])
 fi
+AC_SUBST(SCIV_LDFLAGS)
 ])
 
 # AC_CHECK_INCLUDE_PATH(header.h, "-Ipath1 -Ipath2 -Ipath3", "#include <foo.h>"
@@ -801,7 +804,7 @@ LD="$LD" LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
 LN_S="$LN_S" NM="$NM" RANLIB="$RANLIB" \
 DLLTOOL="$DLLTOOL" AS="$AS" OBJDUMP="$OBJDUMP" \
 ${CONFIG_SHELL-/bin/sh} $ac_aux_dir/ltconfig --no-reexec \
-$libtool_flags --no-verify $ac_aux_dir/ltmain.sh $lt_target \
+$libtool_flags $ac_aux_dir/ltmain.sh $lt_target \
 || AC_MSG_ERROR([libtool configure failed])
 
 # Reload cache, that may have been modified by ltconfig
