@@ -25,6 +25,8 @@
 
 ***************************************************************************/
 
+/* #define HAVE_MITSHM */ /* link in -lXext if this is enabled */
+
 #include <gfx_driver.h>
 #ifndef X_DISPLAY_MISSING
 #include <gfx_tools.h>
@@ -35,6 +37,19 @@
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
 
+#ifdef HAVE_MITSHM
+#define XPUTIMAGE(dpy,dr,gc,xi,a,b,c,d,w,h) \
+    if (have_shmem) \
+       XShmPutImage(dpy,dr,gc,xi,a,b,c,d,w,h,True); \
+    else \
+        XPutImage(dpy,dr,gc,xi,a,b,c,d,w,h)
+#endif
+
+#ifdef HAVE_MITSHM
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <X11/extensions/XShm.h>
+#endif
 
 #define SCI_XLIB_PIXMAP_HANDLE_NORMAL 0
 #define SCI_XLIB_PIXMAP_HANDLE_GRABBED 1
@@ -65,6 +80,28 @@ struct _xlib_state {
 #define DEBUGPXM if (drv->debug_flags & GFX_DEBUG_PIXMAPS && ((debugline = __LINE__))) xldprintf
 #define DEBUGPTR if (drv->debug_flags & GFX_DEBUG_POINTER && ((debugline = __LINE__))) xldprintf
 #define ERROR if ((debugline = __LINE__)) xldprintf
+
+#ifdef HAVE_MITSHM
+
+XShmSegmentInfo shminfo;
+int have_shmem = 0;
+int x11_error = 0;
+
+static int check_for_xshm(Display *display)
+{
+  int major, minor, ignore;
+  Bool pixmaps;
+  if (XQueryExtension(display, "MIT-SHM", &ignore, &ignore, &ignore)) {
+    if (XShmQueryVersion( display, &major, &minor, &pixmaps) == True) {
+      return (pixmaps == True) ? 2 : 1 ;
+    } else {
+      return 0;
+    } 
+  }
+  return 0;
+
+}
+#endif
 
 static int debugline = 0;
 
@@ -173,8 +210,9 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int xsize = xfact * 320;
 	int ysize = yfact * 200;
 	XSizeHints *size_hints;
-        XImage *foo_image;
+        XImage *foo_image = NULL;
 	int i;
+
 
 	if (!S)
 		S = malloc(sizeof(struct _xlib_state));
@@ -190,6 +228,16 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		ERROR("Could not open X connection!\n");
 		return GFX_FATAL;
 	}
+
+#ifdef HAVE_MITSHM
+	have_shmem = check_for_xshm(S->display);
+	if (have_shmem) {
+	  printf("Using the MIT-SHM extension\n");
+	}
+	memset(&shminfo, 0, sizeof(XShmSegmentInfo));
+
+
+#endif
 
 	default_screen = DefaultScreen(S->display);
 
@@ -265,9 +313,57 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		XFillRectangle(S->display, S->visual[i], S->gc, 0, 0, xsize, ysize);
 	}
 
-        foo_image = XCreateImage(S->display, DefaultVisual(S->display, DefaultScreen(S->display)),
-                                 bytespp << 3, ZPixmap, 0, malloc(23), 2,
-                                 2, 8, 0);
+#ifdef HAVE_MITSHM
+	/* set up and test the XSHM extension to make sure it's sane */
+	if (have_shmem) {
+	  void *old_handler;
+
+	  x11_error = 0;
+	  old_handler = XSetErrorHandler(xlib_error_handler);
+	  
+	  foo_image = XShmCreateImage(S->display, DefaultVisual(S->display,
+								DefaultScreen(S->display)),
+				      bytespp << 3, ZPixmap, 0, &shminfo, 2, 2);
+	  if (foo_image)
+	    shminfo.shmid = shmget(IPC_PRIVATE, foo_image->bytes_per_line * foo_image->height,
+				   IPC_CREAT | 0777);
+	  if (-1 == shminfo.shmid) {
+	    have_shmem = 0;
+	    printf("WARNING:  System does not support SysV IPC, disabling XSHM\n");
+	    foo_image = NULL;
+	  }
+	  
+	  shminfo.shmaddr = (char *) shmat(shminfo.shmid, 0, 0);
+	  if ((void *) -1 == shminfo.shmaddr) {
+	      printf("FATAL:  Could not attach shared memory segment\n");
+	      if (foo_image)
+		XDestroyImage(foo_image);
+	      return GFX_FATAL;
+	  }
+	  
+	  foo_image->data = shminfo.shmaddr;
+	  shminfo.readOnly = False;
+	  
+	  XShmAttach(S->display, &shminfo);
+	  XSync(S->display, False);
+	  shmctl(shminfo.shmid, IPC_RMID, 0);
+
+	  if (x11_error) {
+	    have_shmem = 0;
+	    shmdt(shminfo.shmaddr);
+	    XDestroyImage(foo_image);
+	    foo_image = NULL;
+	  }
+	  XSetErrorHandler(old_handler);
+	}
+
+
+#endif	   
+	if (!foo_image)
+	  foo_image = XCreateImage(S->display, DefaultVisual(S->display, 
+							     DefaultScreen(S->display)),
+				   bytespp << 3, ZPixmap, 0, malloc(23), 2, 2, 8, 0);
+
 
 	alpha_mask = xvisinfo.red_mask | xvisinfo.green_mask | xvisinfo.blue_mask;
 	if (foo_image->bits_per_pixel == 32 && (!(alpha_mask & 0xff000000) || !(alpha_mask & 0xff))) {
@@ -288,10 +384,12 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 				 red_shift, green_shift, blue_shift, alpha_shift,
 				 (bytespp == 1)? xvisinfo.colormap_size : 0);
 
+#ifdef HAVE_MITSHM
+	if (have_shmem) 
+	  shmdt(shminfo.shmaddr);
+#endif
         XDestroyImage(foo_image);
         S->used_bytespp = bytespp;
-
-
 	S->old_error_handler = XSetErrorHandler(xlib_error_handler);
 	S->pointer_data[0] = NULL;
 	S->pointer_data[1] = NULL;
