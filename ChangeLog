@@ -1,5 +1,8 @@
 2004-03-28  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kgraphics.c (kDrawPic): Revert bogus change that was
+	not supposed to go into CVS.
+
 	* src/engine/kgraphics.c (kBaseSetter): Add a small note
 	describing the wrong fix for the SQ3 rail bug.
 	* src/engine/kgraphics.c (kDisposeWindow): Make the window

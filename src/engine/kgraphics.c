@@ -946,8 +946,12 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
-	if (SKPV_OR_ALT(2, 0))
-	  add_to_pic = 0;
+	if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
+		if (!SKPV_OR_ALT(2, 0))
+			add_to_pic = 0;
+	} else
+		if (SKPV_OR_ALT(2, 1))
+			add_to_pic = 0;
 
 	gfxop_disable_dirty_frames(s->gfx_state);
 	
