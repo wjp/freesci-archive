@@ -65,7 +65,7 @@ f_open_mirrored(state_t *s, char *fname)
 
 	chdir(s->resource_dir);
 	fd = sci_open(fname, O_RDONLY | O_BINARY);
-	if (!fd) {
+	if (fd < 0) {
 		chdir(s->work_dir);
 		return NULL;
 	}
@@ -744,7 +744,7 @@ update_savegame_indices(char *gfname)
 
 		if (!chdir(dirname)) {
 
-			if ((fd = sci_open(gfname, O_RDONLY)) > 0) {
+			if ((fd = sci_open(gfname, O_RDONLY)) >= 0) {
 				_savegame_indices[_savegame_indices_nr].id = i;
 				_savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
 				close(fd);

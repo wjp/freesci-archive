@@ -344,7 +344,7 @@ sci_open(char *fname, int flags);
 ** Parameters: (char *) fname: Name of the file to open
 **             (int) flags: open(2) flags for the file
 ** Returns   : (int) a file descriptor of the open file,
-**             or 0 on failure
+**             or -1 on failure
 ** Always refers to the cwd, cannot address subdirectories
 */
 
