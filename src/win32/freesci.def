@@ -7,6 +7,7 @@ EXPORTS
   pcmout_open
   pcmout_sample_rate DATA
   pcmout_stereo DATA
+  pcmout_buffer_size DATA
   mix_sound
 
   soundserver_dead
@@ -106,4 +107,14 @@ EXPORTS
   _SCI_STRDUP
   _SCI_FREE
   sci01_priority_table_flags
-  con_gfx_init
+
+  gfxr_get_font
+  gfx_pixmap_alloc_index_data
+  gfx_new_pixmap
+  gfxop_set_clip_zone
+  sci_gettime
+  gfx_free_pixmap
+  gfx_xlate_pixmap
+  gfx_pixmap_alloc_data
+  gfxr_draw_font
+  gfxr_font_calculate_size

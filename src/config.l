@@ -33,6 +33,11 @@
 #include <sci_conf.h>
 #include <stddef.h>
 
+/* unistd override for GNU flex for non-UNIX systems */
+#ifndef HAVE_UNISTD_H
+#  define YY_NO_UNISTD_H
+#endif
+
 #ifdef _MSC_VER
 #  include <ctype.h>
 #  include <direct.h>
@@ -975,5 +980,5 @@ configure_platform(config_entry_t *conf)
 	/* on Windows CE, default to lower audio quality for performance */
 	conf->pcmout_rate = 11025;
 	conf->pcmout_stereo = 0; /* Only one tape recorder in our nose */
-#endif;
+#endif
 }

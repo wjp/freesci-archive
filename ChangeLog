@@ -1,3 +1,7 @@
+2004-10-17  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/config.l: Added Win32 'flex' fix motivated by Jim Albert
+
 2004-09-09  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sound/pcmout_alsa.c: Fixed a bug in the shutdown code.

@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /GR- /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "_WINDOWS" /D "WIN32" /D "_USRDLL" /D "_CONSOLE" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_MEMCHR" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /D "HAVE_DIRECTX" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "_WINDOWS" /D "WIN32" /D "_USRDLL" /D "_CONSOLE" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_MEMCHR" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /D "HAVE_DIRECTX" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "_DEBUG"
@@ -280,6 +280,14 @@ SOURCE=..\gfx\alpha_mvi_crossblit.c
 # Begin Source File
 
 SOURCE=..\gfx\antialias.c
+# End Source File
+# Begin Source File
+
+SOURCE="..\gfx\font-5x8.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\gfx\font-6x10.c"
 # End Source File
 # Begin Source File
 
