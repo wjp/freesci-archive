@@ -168,7 +168,7 @@ xlib_error_handler(Display *display, XErrorEvent *error)
 	return 0;
 }
 
-static int
+int
 string_truep(char *value)
 {
 	return (strcmp(value, "ok") ||
@@ -782,7 +782,7 @@ xlib_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t 
 
   /*** Mouse pointer operations ***/
 
-static byte *
+byte *
 xlib_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
 {
 	int linewidth = (pointer->xl + 7) >> 3;

@@ -26,14 +26,12 @@
 ***************************************************************************/
 
 #include <gfx_driver.h>
-#ifdef 0
-/* HAVE_SDL */
+#ifdef HAVE_SDL
 #include <gfx_tools.h>
 
 #include <SDL/SDL.h>
 
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
 
@@ -44,15 +42,9 @@
 
 int string_truep(char *value); 
 byte *xlib_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode);
-unsigned long xlib_map_color(gfx_driver_t *drv, gfx_color_t color);
-unsigned long xlib_map_pixmap_color(gfx_driver_t *drv, gfx_pixmap_color_t pc);
 
-
-/* XXXX clean out */
 struct _sdl_state {
-  
-        int used_bytespp;
-
+  int used_bytespp;
   gfx_pixmap_t *priority[2];
   SDL_Color colors[256];
   SDL_Surface *visual[3];
@@ -115,8 +107,6 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   int red_shift, green_shift, blue_shift, alpha_shift;
   int xsize = xfact * 320;
   int ysize = yfact * 200;
-  XSizeHints *size_hints;
-  
   int i;
   
   if (!S)
@@ -213,13 +203,13 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 static int
 sdl_init(struct _gfx_driver *drv)
 {
-  int i;
-  
+  int i = 0;
+
   if (SDL_Init(SDL_INIT_VIDEO)) {
     DEBUGB("Failed to init SDL");
     return GFX_FATAL;
   }
-  
+
   for (i = 4; i > 0; i--) {
     /* 320x200 * (2,2) scaling) */
     if (SDL_VideoModeOK(640,400, i << 3, SDL_HWSURFACE | SDL_SWSURFACE))
@@ -228,7 +218,6 @@ sdl_init(struct _gfx_driver *drv)
   }
   DEBUGB("Failed to find visual!\n");
   
-  /* XXX need to add mouse motion ignoring */
   return GFX_FATAL;
 }
 
@@ -250,232 +239,377 @@ sdl_exit(struct _gfx_driver *drv)
 
   /*** Drawing operations ***/
 
-static int
-xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
-               gfx_line_mode_t line_mode, gfx_line_style_t line_style)
+static Uint32 
+sdl_map_color(gfx_driver_t *drv, gfx_color_t color)
 {
-	int linewidth = (line_mode == GFX_LINE_MODE_FINE)? 1:
-		(drv->mode->xfact + drv->mode->yfact) >> 1;
 
-	if (color.mask & GFX_MASK_VISUAL) {
-		S->gc_values.foreground = xlib_map_color(drv, color);
-		S->gc_values.line_width = linewidth;
-		S->gc_values.line_style = (line_style == GFX_LINE_STYLE_NORMAL)?
-			LineSolid : LineOnOffDash;
-		S->gc_values.cap_style = CapProjecting;
+  if (drv->mode->palette)
+    return color.visual.global_index;
 
-		XChangeGC(S->display, S->gc, GCLineWidth | GCLineStyle | GCForeground | GCCapStyle, &(S->gc_values));
+  return SDL_MapRGB(S->primary->format,
+		    color.visual.r,
+		    color.visual.g,
+		    color.visual.b);
 
-		XASS(XDrawLine(S->display, S->visual[1], S->gc, line.x, line.y,
-			       line.x + line.xl, line.y + line.yl));
-	}
+}
 
-	if (color.mask & GFX_MASK_PRIORITY) {
-		int xc, yc;
-		rect_t newline;
+static int lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color)
+{
+  int pixx, pixy;
+  int x,y;
+  int dx,dy;
+  int ax,ay;
+  int sx,sy;
+  int swaptmp;
+  Uint8 *pixel;
+  Uint8 *colorptr;
 
-		newline.xl = line.xl;
-		newline.yl = line.yl;
+  dx = x2 - x1;
+  dy = y2 - y1;
+  sx = (dx >= 0) ? 1 : -1;
+  sy = (dy >= 0) ? 1 : -1;
 
-		linewidth--;
-		for (xc = -linewidth; xc++; xc <= linewidth)
-			for (yc = -linewidth; yc++; yc <= linewidth) {
-				newline.x = line.x + xc;
-				newline.y = line.y + yc;
-				gfx_draw_line_pixmap_i(S->priority[0], newline, color.priority);
-			}
-	}
+  /* Setup color */
+  colorptr=(Uint8 *)&color;
+  if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+    color=SDL_MapRGBA(dst->format, colorptr[0], colorptr[1], colorptr[2], colorptr[3]);
+  } else {
+    color=SDL_MapRGBA(dst->format, colorptr[3], colorptr[2], colorptr[1], colorptr[0]);
+  }
 
-	return GFX_OK;
+  dx = sx * dx + 1;
+  dy = sy * dy + 1;
+  pixx = dst->format->BytesPerPixel;
+  pixy = dst->pitch;
+  pixel = ((Uint8*)dst->pixels) + pixx * (int)x1 + pixy * (int)y1;
+  pixx *= sx;
+  pixy *= sy;
+  if (dx < dy) {
+   swaptmp = dx; dx = dy; dy = swaptmp;
+   swaptmp = pixx; pixx = pixy; pixy = swaptmp;
+  }
+
+/* Draw */
+  x=0;
+  y=0;
+  switch(dst->format->BytesPerPixel) {
+   case 1:
+    for(; x < dx; x++, pixel += pixx) {
+     *pixel = color;
+     y += dy; 
+     if (y >= dx) {
+      y -= dx; pixel += pixy;
+     }
+    }
+    break;
+   case 2:
+    for (; x < dx; x++, pixel += pixx) {
+     *(Uint16*)pixel = color;
+     y += dy; 
+     if (y >= dx) {
+      y -= dx; 
+      pixel += pixy;
+     }
+    }
+    break;
+   case 3:
+    for(; x < dx; x++, pixel += pixx) {
+     if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+      pixel[0] = (color >> 16) & 0xff;
+      pixel[1] = (color >> 8) & 0xff;
+      pixel[2] = color & 0xff;
+     } else {
+      pixel[0] = color & 0xff;
+      pixel[1] = (color >> 8) & 0xff;
+      pixel[2] = (color >> 16) & 0xff;
+     }
+     y += dy; 
+     if (y >= dx) {
+      y -= dx; 
+      pixel += pixy;
+   }
+    }
+    break;
+   default: /* case 4*/
+     for(; x < dx; x++, pixel += pixx) {
+      *(Uint32*)pixel = color;
+      y += dy; 
+      if (y >= dx) {
+       y -= dx; 
+       pixel += pixy;
+      }
+     }
+     break;
+  }
+
 }
 
 static int
-xlib_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
-                      gfx_color_t color1, gfx_color_t color2,
-                      gfx_rectangle_fill_t shade_mode)
+sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
+	      gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
+  Uint32 scolor;
+  int linewidth = (line_mode == GFX_LINE_MODE_FINE)? 1:
+    (drv->mode->xfact + drv->mode->yfact) >> 1;
+  
+  if (color.mask & GFX_MASK_VISUAL) {
+    int xc, yc;
+    rect_t newline;
 
-	if (color1.mask & GFX_MASK_VISUAL) {
-		S->gc_values.foreground = xlib_map_color(drv, color1);
-		XChangeGC(S->display, S->gc, GCForeground, &(S->gc_values));
-		XASS(XFillRectangle(S->display, S->visual[1], S->gc, rect.x, rect.y,
-				    rect.xl, rect.yl));
-	}
+    scolor = sdl_map_color(drv, color);
+    newline.xl = line.xl;
+    newline.yl = line.yl;
 
-	if (color1.mask & GFX_MASK_PRIORITY)
-		gfx_draw_box_pixmap_i(S->priority[0], rect, color1.priority);
+    /* XXXX line_style = 
+       (line_style == GFX_LINE_STYLE_NORMAL)? LineSolid : LineOnOffDash; 
+    and set GFX_CAPABILITY_STIPPLED_LINES */
 
-	return GFX_OK;
+    for (xc = -linewidth; xc++; xc <= linewidth)
+      for (yc = -linewidth; yc++; yc <= linewidth) {
+	newline.x = line.x + xc;
+	newline.y = line.y + yc;
+	lineColor(S->visual[1], line.x, line.y, line.xl, line.yl, scolor);
+      }
+  }
+
+  if (color.mask & GFX_MASK_PRIORITY) {
+    int xc, yc;
+    rect_t newline;
+    
+    newline.xl = line.xl;
+    newline.yl = line.yl;
+    
+    linewidth--;
+    for (xc = -linewidth; xc++; xc <= linewidth)
+      for (yc = -linewidth; yc++; yc <= linewidth) {
+	newline.x = line.x + xc;
+	newline.y = line.y + yc;
+	gfx_draw_line_pixmap_i(S->priority[0], newline, color.priority);
+      }
+  }
+
+  return GFX_OK;
+}
+
+static int
+sdl_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
+		     gfx_color_t color1, gfx_color_t color2,
+		     gfx_rectangle_fill_t shade_mode)
+{
+  Uint32 color;
+  SDL_Rect srect;
+
+  if (color1.mask & GFX_MASK_VISUAL) {
+    color = sdl_map_color(drv, color1);
+
+    srect.x = rect.x;
+    srect.y = rect.y;
+    srect.w = rect.xl;
+    srect.h = rect.yl;
+      
+    XASS(SDL_FillRect(S->visual[1], &srect, color));
+  }
+  
+  if (color1.mask & GFX_MASK_PRIORITY)
+    gfx_draw_box_pixmap_i(S->priority[0], rect, color1.priority);
+  
+  return GFX_OK;
 }
 
   /*** Pixmap operations ***/
 
 static int
-xlib_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
+sdl_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 {
-	if (pxm->internal.info) {
-		ERROR("Attempt to register pixmap twice!\n");
-		return GFX_ERROR;
-	}
-	pxm->internal.info = XCreateImage(S->display, DefaultVisual(S->display, DefaultScreen(S->display)),
-					    S->used_bytespp << 3, ZPixmap, 0, (char *) pxm->data, pxm->xl,
-					    pxm->yl, 8, 0);
+  if (pxm->internal.info) {
+    ERROR("Attempt to register pixmap twice!\n");
+    return GFX_ERROR;
+  }
 
-	DEBUGPXM("Registered pixmap %d/%d/%d at %p (%dx%d)\n", pxm->ID, pxm->loop, pxm->cel,
-		 pxm->internal.info, pxm->xl, pxm->yl);
-	return GFX_OK;
+  pxm->internal.info = SDL_CreateRGBSurfaceFrom(pxm->data, pxm->xl, pxm->yl,
+						S->used_bytespp << 3,
+						(S->used_bytespp << 3)*pxm->xl,
+						S->primary->format->Rmask, 
+						S->primary->format->Gmask,
+						S->primary->format->Bmask, 
+						S->primary->format->Amask);
+  
+  DEBUGPXM("Registered surface %d/%d/%d at %p (%dx%d)\n", pxm->ID, pxm->loop, pxm->cel,
+	   pxm->internal.info, pxm->xl, pxm->yl);
+  return GFX_OK;
 }
 
 static int
-xlib_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
+sdl_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 {
-	DEBUGPXM("Freeing pixmap %d/%d/%d at %p\n", pxm->ID, pxm->loop, pxm->cel,
-		 pxm->internal.info);
+  DEBUGPXM("Freeing surface %d/%d/%d at %p\n", pxm->ID, pxm->loop, pxm->cel,
+	   pxm->internal.info);
+  
+  if (!pxm->internal.info) {
+    ERROR("Attempt to unregister pixmap twice!\n");
+    return GFX_ERROR;
+  }
 
-	if (!pxm->internal.info) {
-		ERROR("Attempt to unregister pixmap twice!\n");
-		return GFX_ERROR;
-	}
-
-	XDestroyImage((XImage *) pxm->internal.info);
-	pxm->internal.info = NULL;
-	pxm->data = NULL; /* Freed by XDestroyImage */
-	return GFX_OK;
+  SDL_FreeSurface((SDL_Surface *) pxm->internal.info);
+  pxm->internal.info = NULL;
+  free(pxm->data);
+  pxm->data = NULL; 
+  return GFX_OK;
 }
 
 static int
-xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
-                 rect_t src, rect_t dest, gfx_buffer_t buffer)
+sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
+		rect_t src, rect_t dest, gfx_buffer_t buffer)
 {
-	int bufnr = (buffer == GFX_BUFFER_STATIC)? 2:1;
-	int pribufnr = bufnr -1;
-	XImage *tempimg;
+  int bufnr = (buffer == GFX_BUFFER_STATIC)? 2:1;
+  int pribufnr = bufnr -1;
+  
+  SDL_Surface *temp;
+  SDL_Rect srect;
+  SDL_Rect drect;
 
-	if (dest.xl != src.xl || dest.yl != src.yl) {
-		ERROR("Attempt to scale pixmap (%dx%d)->(%dx%d): Not supported\n",
-		      src.xl, src.yl, dest.xl, dest.yl);
-		return GFX_ERROR;
-	}
-	fflush(stdout);
-	if (pxm->internal.handle == SCI_XLIB_PIXMAP_HANDLE_GRABBED) {
-		XPutImage(S->display, S->visual[bufnr], S->gc, (XImage *) pxm->internal.info,
-			  src.x, src.y, dest.x, dest.y, dest.xl, dest.yl);
-		return GFX_OK;
-	}
-	fflush(stdout);
-	tempimg = XGetImage(S->display, S->visual[bufnr], dest.x, dest.y,
-			    dest.xl, dest.yl, 0xffffffff, ZPixmap);
+  if (dest.xl != src.xl || dest.yl != src.yl) {
+    ERROR("Attempt to scale pixmap (%dx%d)->(%dx%d): Not supported\n",
+	  src.xl, src.yl, dest.xl, dest.yl);
+    return GFX_ERROR;
+  }
 
-	if (!tempimg) {
-		ERROR("Failed to grab X image!\n");
-		return GFX_ERROR;
-	}
+  srect.x = src.x;
+  srect.y = src.y;
+  srect.w = src.xl;
+  srect.h = src.yl;
+  drect.x = 0;
+  drect.y = 0;
+  drect.w = dest.xl;
+  drect.h = dest.yl;
+  
+  fflush(stdout);
 
-	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest,
-			     (byte *) tempimg->data, tempimg->bytes_per_line,
-			     S->priority[pribufnr]->index_data,
-			     S->priority[pribufnr]->index_xl, 1,
-                             GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
+  if (pxm->internal.handle == SCI_XLIB_PIXMAP_HANDLE_GRABBED) {
+    SDL_BlitSurface((SDL_Surface *)pxm->internal.info, &srect , 
+		    S->visual[bufnr], &drect );
+    return GFX_OK;
+  }
 
-	XPutImage(S->display, S->visual[bufnr], S->gc, tempimg,
-		  0, 0, dest.x, dest.y, dest.xl, dest.yl);
+  fflush(stdout);
 
-	XDestroyImage(tempimg);
-	return GFX_OK;
+  temp = SDL_CreateRGBSurface(SDL_SWSURFACE, drect.w, drect.h,
+			      S->used_bytespp << 3,
+			      S->primary->format->Rmask, 
+			      S->primary->format->Gmask,
+			      S->primary->format->Bmask, 
+			      S->primary->format->Amask);
+  if (!temp) {
+    ERROR("Failed to allocate SDL surface");
+    return GFX_ERROR;
+  }
+
+  SDL_BlitSurface(S->visual[bufnr], &srect, temp, &drect);
+
+  gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest,
+		       (byte *) temp->pixels, temp->pitch,
+		       S->priority[pribufnr]->index_data,
+		       S->priority[pribufnr]->index_xl, 1,
+		       GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
+  
+  SDL_BlitSurface(temp, &drect, S->visual[bufnr], &srect);
+
+  SDL_FreeSurface(temp);
+  return GFX_OK;
 }
 
 static int
-xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
-                 gfx_map_mask_t map)
+sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
+		gfx_map_mask_t map)
 {
 
-	if (src.x < 0 || src.y < 0) {
-		ERROR("Attempt to grab pixmap from invalid coordinates (%d,%d)\n", src.x, src.y);
-		return GFX_ERROR;
-	}
+  if (src.x < 0 || src.y < 0) {
+    ERROR("Attempt to grab pixmap from invalid coordinates (%d,%d)\n", src.x, src.y);
+    return GFX_ERROR;
+  }
 
-	if (!pxm->data) {
-		ERROR("Attempt to grab pixmap to unallocated memory\n");
-		return GFX_ERROR;
-	}
+  if (!pxm->data) {
+    ERROR("Attempt to grab pixmap to unallocated memory\n");
+    return GFX_ERROR;
+  }
 
-	switch (map) {
-
-	case GFX_MASK_VISUAL:
-		pxm->xl = src.xl;
-		pxm->yl = src.yl;
-		pxm->internal.info = XGetImage(S->display, S->visual[1], src.x, src.y,
-					       src.xl, src.yl, 0xffffffff, ZPixmap);
-		pxm->internal.handle = SCI_XLIB_PIXMAP_HANDLE_GRABBED;
-		pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
-		free(pxm->data);
-		pxm->data = (byte *) ((XImage *)(pxm->internal.info))->data;
-		break;
-
-	case GFX_MASK_PRIORITY:
-		ERROR("FIXME: priority map grab not implemented yet!\n");
-		break;
-
-	default:
-		ERROR("Attempt to grab pixmap from invalid map 0x%02x\n", map);
-		return GFX_ERROR;
-	}
-
-	return GFX_OK;
+  switch (map) {
+    
+  case GFX_MASK_VISUAL:
+    ERROR("FIXME: visual mask map grab not implemented yet!\n");
+    break;
+    
+  case GFX_MASK_PRIORITY:
+    ERROR("FIXME: priority map grab not implemented yet!\n");
+    break;
+    
+  default:
+    ERROR("Attempt to grab pixmap from invalid map 0x%02x\n", map);
+    return GFX_ERROR;
+  }
+  
+  return GFX_ERROR;
 }
 
 
   /*** Buffer operations ***/
 
 static int
-xlib_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffer)
+sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffer)
 {
-	int data_source = (buffer == GFX_BUFFER_BACK)? 2 : 1;
-	int data_dest = data_source - 1;
+  int data_source = (buffer == GFX_BUFFER_BACK)? 2 : 1;
+  int data_dest = data_source - 1;
+  SDL_Rect srect, drect;
+  
+  if (src.x != dest.x || src.y != dest.y) {
+    DEBUGU("Updating %d (%d,%d)(%dx%d) to (%d,%d)\n", buffer, src.x, src.y,
+	   src.xl, src.yl, dest.x, dest.y);
+  } else {
+    DEBUGU("Updating %d (%d,%d)(%dx%d)\n", buffer, src.x, src.y, src.xl, src.yl);
+  }
 
+  srect.x = src.x;
+  srect.y = src.y;
+  srect.w = src.xl;
+  srect.h = src.yl;
+  drect.x = dest.x;
+  drect.y = dest.y;
+  drect.w = src.xl;
+  drect.h = src.yl;
+  
+  SDL_BlitSurface(S->visual[data_source], &srect, 
+		  S->visual[data_dest], &drect);
+  
+  if (buffer == GFX_BUFFER_BACK && (src.x == dest.x) && (src.y == dest.y))
+    gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
+  else {
+    gfx_color_t col;
+    col.mask = GFX_MASK_VISUAL;
+    col.visual.r = 0xff;
+    col.visual.g = 0;
+    col.visual.b = 0;
+    
+    SDL_BlitSurface(S->visual[0], &srect, S->primary, &drect);
 
-	if (src.x != dest.x || src.y != dest.y) {
-		DEBUGU("Updating %d (%d,%d)(%dx%d) to (%d,%d)\n", buffer, src.x, src.y,
-		       src.xl, src.yl, dest.x, dest.y);
-	} else {
-		DEBUGU("Updating %d (%d,%d)(%dx%d)\n", buffer, src.x, src.y, src.xl, src.yl);
-	}
-
-	XCopyArea(S->display, S->visual[data_source], S->visual[data_dest], S->gc,
-		  src.x, src.y, src.xl, src.yl, dest.x, dest.y);
-
-	if (buffer == GFX_BUFFER_BACK && (src.x == dest.x) && (src.y == dest.y))
-		gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
-	else {
-		gfx_color_t col;
-		col.mask = GFX_MASK_VISUAL;
-		col.visual.r = 0xff;
-		col.visual.g = 0;
-		col.visual.b = 0;
-
-		/*src.xl = 640;
-		src.yl = 400;
-		src.x = src.y = dest.x = dest.y = 0;*/
-		XCopyArea(S->display, S->visual[0], S->window, S->gc,
-			  dest.x, dest.y, src.xl, src.yl, dest.x, dest.y);
-	}
-
-	return GFX_OK;
+  }
+  
+  return GFX_OK;
 }
 
 static int
-xlib_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t *priority)
+sdl_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t *priority)
 {
 
-	if (!pic->internal.info) {
-		ERROR("Attempt to set static buffer with unregisterd pixmap!\n");
-		return GFX_ERROR;
-	}
-	XPutImage(S->display, S->visual[2], S->gc, (XImage *) pic->internal.info,
-		  0, 0, 0, 0, 320 * XFACT, 200 * YFACT);
-	gfx_copy_pixmap_box_i(S->priority[1], priority, gfx_rect(0, 0, 320*XFACT, 200*YFACT));
+  if (!pic->internal.info) {
+    ERROR("Attempt to set static buffer with unregisterd pixmap!\n");
+    return GFX_ERROR;
+  }
+  XASS(SDL_BlitSurface((SDL_Surface *)pic->internal.info, NULL, 
+		       S->visual[2], NULL));
 
-	return GFX_OK;
+  gfx_copy_pixmap_box_i(S->priority[1], priority, gfx_rect(0, 0, 320*XFACT, 200*YFACT));
+
+  return GFX_OK;
 }
 
   /*** Palette operations ***/
@@ -741,7 +875,6 @@ sdl_get_event(struct _gfx_driver *drv)
 {
 	sci_event_t input;
 
-	/* XXXX write me! */
 	sdl_fetch_event(drv, 0, &input);
 	return input;
 }
@@ -768,21 +901,21 @@ gfx_driver_sdl = {
 	"0.1",
 	NULL,
 	0, 0,
-	GFX_CAPABILITY_STIPPLED_LINES | GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER |
-	GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING,
+	GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER |
+	GFX_CAPABILITY_PIXMAP_REGISTRY,
 	0/*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC*/,
 	sdl_set_parameter,
 	sdl_init_specific,
 	sdl_init,
 	sdl_exit,
-	xlib_draw_line,
-	xlib_draw_filled_rect,
-	xlib_register_pixmap,
-	xlib_unregister_pixmap,
-	xlib_draw_pixmap,
-	xlib_grab_pixmap,
-	xlib_update,
-	xlib_set_static_buffer,
+	sdl_draw_line,
+	sdl_draw_filled_rect,
+	sdl_register_pixmap,
+	sdl_unregister_pixmap,
+	sdl_draw_pixmap,
+	sdl_grab_pixmap,
+	sdl_update,
+	sdl_set_static_buffer,
 	sdl_set_pointer,
 	sdl_set_palette,
 	sdl_get_event,

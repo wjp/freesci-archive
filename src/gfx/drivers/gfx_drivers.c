@@ -26,7 +26,7 @@
 ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+  #include <config.h>
 #endif
 #include <gfx_driver.h>
 
@@ -39,11 +39,13 @@ extern gfx_driver_t gfx_driver_ggi;
 extern gfx_driver_t gfx_driver_xlib;
 #endif
 
-
 #ifdef HAVE_DDRAW
 extern gfx_driver_t gfx_driver_dd;
 #endif
 
+#ifdef HAVE_SDL
+extern gfx_driver_t gfx_driver_sdl;
+#endif
 
 static gfx_driver_t *gfx_drivers[] = {
 #ifdef HAVE_LIBGGI
@@ -51,6 +53,9 @@ static gfx_driver_t *gfx_drivers[] = {
 #endif
 #ifndef X_DISPLAY_MISSING
 	&gfx_driver_xlib,
+#endif
+#ifdef HAVE_SDL
+	&gfx_driver_sdl,
 #endif
 #ifdef HAVE_DDRAW
 	&gfx_driver_dd,

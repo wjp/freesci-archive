@@ -1,3 +1,12 @@
+2001-04-07  Solomon Peachy <pizza@shaftnet.org>
+	
+	* src/gfx/drivers/gfx_drivers.c
+	* src/gfx/drivers/sdl_driver.c
+	* src/gfx/drivers/xlib_driver.c
+
+	Finished coding the SDL driver.  It compiles, but is rather..
+        broken at the moment.    I'm working on it still..
+
 2001-04-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver_null.c (sci_midi_command): Fixed fade-outs
