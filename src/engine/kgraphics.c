@@ -815,7 +815,7 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int
 
 	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
 		  (other_signal & GASEOUS_VIEW_MASK), other_obj);
-	if ((other_signal & (GASEOUS_VIEW_MASK | _K_VIEW_SIG_FLAG_NO_UPDATE)) == 0) {
+	if ((other_signal & (GASEOUS_VIEW_MASK)) == 0) {
 					/* check whether the other object ignores actors */
 
 		SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d,%d)\n",

@@ -62,6 +62,14 @@ fcaseopen(char *fname, char *mode)
 	sci_init_dir(&dir);
 	name = sci_find_first(&dir, "*");
 
+	if (strchr(mode, 'w'))
+		return fopen(fname, mode);
+
+	if (strchr(fname, '/')) {
+		fprintf(stderr, "fcaseopen() does not support subdirs\n");
+		BREAKPOINT();
+	}
+
 	while (name && !retval) {
 		if (!strcasecmp(fname, name))
 			retval = fopen(name, mode);
@@ -79,6 +87,12 @@ caseopen(char *fname, int mode)
 	char *name;
 	sci_dir_t dir;
 	int retval = 0;
+
+	if (strchr(fname, '/')) {
+		fprintf(stderr, "caseopen() does not support subdirs\n");
+		BREAKPOINT();
+	}
+
 	sci_init_dir(&dir);
 	name = sci_find_first(&dir, "*");
 
@@ -640,7 +654,7 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	strcpy(game_id_file, game_id);
 	strcat(game_id_file, FREESCI_ID_SUFFIX);
 
-	if (savedir_nr > 15) {
+	if (savedir_nr > MAX_SAVEGAME_NR-1) {
 		s->acc = 0;
 		free(game_id_file);
 		return;
@@ -706,20 +720,19 @@ update_savegame_indices(char *gfname)
 
 	for (i = 0; i < MAX_SAVEGAME_NR; i++) {
 		char *dirname = _k_get_savedir_name(i);
-		char *gidf_name = malloc(gfname_len + 3 + strlen(dirname));
 		int fd;
 
-		strcpy(gidf_name, dirname);
-		strcat(gidf_name, G_DIR_SEPARATOR_S);
-		strcat(gidf_name, gfname);
+		if (!chdir(dirname)) {
 
-		if ((fd = caseopen(gidf_name, O_RDONLY)) > 0) {
-			_savegame_indices[_savegame_indices_nr].id = i;
-			_savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
-			close(fd);
+			if ((fd = caseopen(gfname, O_RDONLY)) > 0) {
+				_savegame_indices[_savegame_indices_nr].id = i;
+				_savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
+				close(fd);
+			}
+			chdir("..");
 		}
+
 		free(dirname);
-		free(gidf_name);
 	}
 
 	qsort(_savegame_indices, _savegame_indices_nr, sizeof(struct _savegame_index_struct),
@@ -752,37 +765,34 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->acc = 0;
 
 	for (i = 0; i < _savegame_indices_nr; i++) {
-		char *gidf_name = malloc(gfname_len + 3 + strlen(FREESCI_SAVEDIR_PREFIX));
 		char *savedir_name = _k_get_savedir_name(_savegame_indices[i].id);
 		FILE *idfile;
 
-		strcpy(gidf_name, savedir_name);
-		strcat(gidf_name, G_DIR_SEPARATOR_S);
-		strcat(gidf_name, gfname);
+		if (!chdir(savedir_name)) {
 
-		free(savedir_name);
 
-		if ((idfile = fcaseopen(gidf_name, "r"))) { /* Valid game ID file: Assume valid game */
-			char namebuf[SCI_MAX_SAVENAME_LENGTH]; /* Save game name buffer */
-			fgets(namebuf, SCI_MAX_SAVENAME_LENGTH-1, idfile);
-			if (strlen(namebuf) > 0) {
+			if ((idfile = fcaseopen(gfname, "r"))) { /* Valid game ID file: Assume valid game */
+				char namebuf[SCI_MAX_SAVENAME_LENGTH]; /* Save game name buffer */
+				fgets(namebuf, SCI_MAX_SAVENAME_LENGTH-1, idfile);
+				if (strlen(namebuf) > 0) {
 
-				if (namebuf[strlen(namebuf) - 1] == '\n')
-					namebuf[strlen(namebuf) - 1] = 0; /* Remove trailing newline */
+					if (namebuf[strlen(namebuf) - 1] == '\n')
+						namebuf[strlen(namebuf) - 1] = 0; /* Remove trailing newline */
 
-				++s->acc; /* Increase number of files found */
+					++s->acc; /* Increase number of files found */
 
-				PUT_HEAP(nameoffsets, i); /* Write down the savegame number */
-				nameoffsets += 2; /* Make sure the next ID string address is written to the next pointer */
-				strncpy((char *) s->heap + nametarget, namebuf, SCI_MAX_SAVENAME_LENGTH); /* Copy identifier string */
-				s->heap[nametarget + SCI_MAX_SAVENAME_LENGTH - 1] = 0; /* Make sure it's terminated */
-				nametarget += SCI_MAX_SAVENAME_LENGTH; /* Increase name offset pointer accordingly */
+					PUT_HEAP(nameoffsets, i); /* Write down the savegame number */
+					nameoffsets += 2; /* Make sure the next ID string address is written to the next pointer */
+					strncpy((char *) s->heap + nametarget, namebuf, SCI_MAX_SAVENAME_LENGTH); /* Copy identifier string */
+					s->heap[nametarget + SCI_MAX_SAVENAME_LENGTH - 1] = 0; /* Make sure it's terminated */
+					nametarget += SCI_MAX_SAVENAME_LENGTH; /* Increase name offset pointer accordingly */
 
-				fclose(idfile);
+					fclose(idfile);
+				}
 			}
+			chdir("..");
 		}
-
-		free(gidf_name);
+		free(savedir_name);
 	}
 
 	free(gfname);

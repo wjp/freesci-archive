@@ -230,6 +230,8 @@ PARAMTOKEN [[:alpha:]][[:alnum:]_-]*
 SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
 NUMTOKEN {DIGIT}+
 NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
+PATHTOKEN [[:alnum:]"/""\\"]*
+NUMPATHPARAMTOKEN {NUMPARAMTOKEN}|{PATHTOKEN}
 
 %%
 
@@ -321,7 +323,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
-[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
+[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{NUMPATHPARAMTOKEN} {
 /* driver parameters */
         char *subsys_name = yytext;
         char *driver_name;

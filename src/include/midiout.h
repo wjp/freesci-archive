@@ -47,6 +47,7 @@ extern midiout_driver_t midiout_driver_unixraw;
 
 #ifdef HAVE_ALSA
 extern midiout_driver_t midiout_driver_alsaraw;
+/*extern midiout_driver_t midiout_driver_alsaseq;*/
 #endif
 
 extern DLLEXTERN midiout_driver_t *midiout_drivers[];

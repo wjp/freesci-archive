@@ -202,18 +202,22 @@ time, the configuration file may contain:
 Graphics and sound drivers may have additional options specific to them.
 Driver-specific options are set by writing
 
-	<driver>.<option> = <value>
+	<subsystem>.<driver>.<option> = <value>
 
 For example, you would use
 
-	ggi.swap_caps_ctrl = true
+	gfx.ggi.swap_caps_ctrl = true
 
 to activate the GGI driver's feature for swapping CapsLock and the left Ctrl
 key.
 
 All driver-specific options are listed here:
 
-2.1.1 GGI driver:
+2.1.1 Graphics subsystem
+------------------------
+This subsystem uses the prefix 'gfx'.
+
+2.1.1.1 GGI driver:
 -----------------
 - swap_caps_ctrl = true | false
 Determines whether to swap the meanings of the CapsLock and the left Ctrl
@@ -221,10 +225,29 @@ key (relative to a PC-style keyboard layout). The resulting layout resembles
 a Sun keyboard. Default is 'false'.
 
 
-2.1.2 Xlib driver:
-------------------
+2.1.1.2 Xlib driver:
+--------------------
 - swap_caps_ctrl = true | false
-Same as for the GGi driver.
+Same as for the GGI driver.
+
+
+2.1.2 Midiout subsystem
+-----------------------
+This subsystem is responsible for addressing the sound hardware. Its prefix is
+'midiout'.
+
+2.1.2.1 ALSARaw driver:
+-----------------------
+This driver (driver ID 'alsaraw') passes output through to ALSA's raw MIDI output
+devices.
+- card: The sound card number to use. Defaults to 0.
+- device: The sound device within the card to use. Default 0.
+
+2.1.2.2 UNIXRaw driver:
+-----------------------
+This driver (ID 'unixraw') handles output to the traditional /dev/midi* devices,
+such as those provided by OSS/Free.
+- device: The device file to use for output (defaults to /dev/midi00)
 
 
 
@@ -234,6 +257,8 @@ Same as for the GGi driver.
 
 version = 0.000.685
 pic0_dither_mode = flat
+midiout.alsaraw.card = 1
+midiout.alsaraw.device = 2
 
 # default to interpolated color mode and interpreter version 0.000.685
 

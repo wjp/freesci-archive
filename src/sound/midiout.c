@@ -29,6 +29,7 @@ midiout_driver_t *midiout_drivers[] = {
 #endif
 #ifdef HAVE_ALSA
     &midiout_driver_alsaraw,
+/*    &midiout_driver_alsaseq, */
 #endif
     NULL
 };
