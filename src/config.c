@@ -2264,10 +2264,10 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
  * @note If you want to scan bytes that may contain NUL values, then use
  *       yy_scan_bytes() instead.
  */
-YY_BUFFER_STATE yy_scan_string (yyconst char * str )
+YY_BUFFER_STATE yy_scan_string (yyconst char * yy_str )
 {
     
-	return yy_scan_bytes(str,strlen(str) );
+	return yy_scan_bytes(yy_str,strlen(yy_str) );
 }
 
 /** Setup the input buffer state to scan the given bytes. The next call to yylex() will
