@@ -910,7 +910,7 @@ guess_version()
 int
 main(int argc, char** argv)
 {
-	config_entry_t *active_conf;	/* Active configuration used */
+	config_entry_t *active_conf = NULL;	/* Active configuration used */
 	config_entry_t *confs = {0};	/* Configuration read from config file (if it exists) */
 	cl_options_t cl_options;		/* Command line options */
 	int conf_entries	= -1;		/* Number of config entries */
@@ -986,9 +986,13 @@ main(int argc, char** argv)
 
 	sciprintf("Loading resources...\n");
 
-	resmgr = scir_new_resource_manager(resource_dir,
-					   cl_options.res_version,
-					   1, 256*1024);
+	if (active_conf != NULL)
+		resmgr = scir_new_resource_manager(resource_dir,
+						   active_conf->res_version,
+						   1, 256*1024); else
+		resmgr = scir_new_resource_manager(resource_dir,
+						   cl_options.res_version,
+						   1, 256*1024);
 
 	if (!resmgr) {
 		printf("No resources found in '%s'.\nAborting...\n",

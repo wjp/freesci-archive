@@ -260,6 +260,7 @@ standard_option standard_options[] = {
 	OPT_INT("scale_x", x_scale, 1, 256),
 	OPT_INT("scale_y", y_scale, 1, 256),
 	OPT_INT("scale", scale, 1, 256),
+	OPT_INT("resource_version", res_version, 0, 6),
 	OPT_INT("color_depth", color_depth, 8, 32),
 	OPT_END
 };

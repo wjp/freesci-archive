@@ -1,3 +1,8 @@
+2003-02-25  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/config.l, src/main.c: Added configuration option
+	'resource_version'.
+
 2003-02-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/.cvsignore, src/sfx/device/.cvsignore,

@@ -83,7 +83,8 @@ typedef struct {
 	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
 	int mouse; /* Whether the mouse should be active */
 	int reverse_stereo;
-
+	int res_version;
+	
 #ifdef __GNUC__
 #  warning "Re-enable sound stuff"
 #endif
