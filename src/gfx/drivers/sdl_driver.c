@@ -28,8 +28,15 @@
 #ifndef DONT_HAVE_SDL
 #include <gfx_tools.h>
 
-#include <sys/time.h>
-#include <SDL/SDL.h>
+#ifndef _MSC_VER
+#	include <sys/time.h>
+#	include <SDL/SDL.h>
+#endif
+
+#ifdef _MSC_VER
+#	include <winsock2.h>
+#	include <SDL.h>
+#endif
 
 #ifndef SDL_DISABLE
 #  define SDL_DISABLE 0

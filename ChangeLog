@@ -1,4 +1,16 @@
+2001-04-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/main.c (init_directories): Added WINDIR getenv for Win32,
+	as suggested by Matt
+
+	* Added Matt's new dsp files
+
 2001-04-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_make_view_list): List is now traversed
+	forward
+
+	* src/gfx/widgets.c (_gfxwop_dyn_view_compare_to): Fixed.
 
 	* src/engine/kgraphics.c (animate_do_animation): Misc. fixes
 

@@ -369,19 +369,20 @@ else
 						     send_calls[send_calls_nr].selector, send_obj, origin, 0);
 
 	/* Now check the TOS to execute all varselector entries */
-	while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
+	if (s->execution_stack_pos >= 0)
+		while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
 		
-		/* varselector access? */
-		if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
+			/* varselector access? */
+			if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
 
-			word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
-			PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
+				word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
+				PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
 
-		} else /* No, read */
-			s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
+			} else /* No, read */
+				s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
 
-		--(s->execution_stack_pos);
-	}
+			--(s->execution_stack_pos);
+		}
 
 	retval = s->execution_stack + s->execution_stack_pos;
 	return retval;
@@ -1513,7 +1514,10 @@ game_run(state_t **_s)
 	putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
 
 	/* Now: Register the first element on the execution stack- */
-	send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
+	if (!send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base) || script_error_flag) {
+		sciprintf("Failed to run the game! Aborting...\n");
+		return 1;
+	}
 	/* and ENGAGE! */
 
 	do {

@@ -1957,7 +1957,8 @@ objinfo(state_t *s, heap_ptr pos)
 				word value = 0xffff & getUInt16(selectoroffset + i*2);
 				int svalue = getInt16(selectoroffset + i*2);
 
-				sciprintf("  %s[%04x] = %04x ", selectorIDoffset? selector_name(s, selectorID) : "<?>",
+				sciprintf("  %s[%04x] = %04x ", selectorIDoffset?
+					  selector_name(s, selectorID) : "<?>",
 					  selectorID, value);
 				if (value < 0x1000 || (value > 0xf000))
 					sciprintf("(%d)", svalue);

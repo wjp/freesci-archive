@@ -236,6 +236,7 @@ gfxr_interpreter_init_pic(int version, gfx_mode_t *mode, int ID)
 	gfxr_pic_t *pic = malloc(sizeof(gfxr_pic_t));
 
 	pic->mode = mode;
+	pic->undithered_buffer = NULL;
 
 	pic->control_map = gfx_pixmap_alloc_index_data(gfx_new_pixmap(320, 200, ID, 2, 0));
 	pic->priority_map = gfx_pixmap_alloc_index_data(gfx_new_pixmap(320 * mode->xfact,

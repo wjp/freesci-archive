@@ -228,6 +228,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 		int ticks = 0; /* Ticks to next command */
 		int fadeticks = 0;		
 		int old_songpos;
+		song_t *oldsong = song;
 
 		fflush(ds);
 		if (fadeticks) {
@@ -779,7 +780,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			}
 
 		}
-		if (song != newsong) {
+		if (oldsong != newsong) {
 		  if (newsong) {
 		    int i;
 		    for (i = 0; i < MIDI_CHANNELS; i++) {

@@ -408,7 +408,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 		if ((stype == sci_script) && conversion) {
 			sprintf (outfilename, "%03d.script", snr);
                         open_console_file (outfilename);
-			script_dissect(snr, NULL);
+			script_dissect(snr, NULL, 0);
                         close_console_file();
 		} else {
 

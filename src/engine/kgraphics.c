@@ -1881,16 +1881,14 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 	assert_primary_widget_lists(s);
 	/* In case one of the views' doit() does a DrawPic... */
 
-	node = GET_HEAP(list + LIST_LAST_NODE);
-
 	SCIkdebug(SCIkGRAPHICS, "Making list from %04x\n", list);
 
-	if (GET_HEAP(list - 2) != 0x6) { /* heap size check */
+	if (!listp(s, list - 2)) { /* heap size check */
 		SCIkwarn(SCIkWARNING, "Attempt to draw non-list at %04x\n", list);
 		return;
 	}
 
-	node = UGET_HEAP(list + LIST_LAST_NODE);
+	node = UGET_HEAP(list + LIST_FIRST_NODE);
 	while (node) {
 		heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
 		gfxw_dyn_view_t *widget;
@@ -1909,7 +1907,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 		widget = _k_make_dynview_obj(s, obj, options, sequence_nr++, funct_nr, argc, argp);
 		GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
 
-		node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
+		node = UGET_HEAP(node + LIST_NEXT_NODE); /* Next node */
 	}
 
 
@@ -2413,8 +2411,6 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10)));
 	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
 
-	sciprintf("Opening animation 0x%x with granularity %d/%d/%d/%d-- PLEASE REPORT ANY ERRORS ASAP!\n",
-		  s->pic_animate, granularity0, granularity1, granularity2, granularity3);
 	/*SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);*/
 
 	gfxop_enable_dirty_frames(s->gfx_state);

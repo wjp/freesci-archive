@@ -921,7 +921,7 @@ c_dissectscript (state_t * s)
     return -1;
   }
 
-  script_dissect (cmd_params[0].val, s->selector_names);
+  script_dissect (cmd_params[0].val, s->selector_names, s->selector_names_nr);
   return 0;
 }
 

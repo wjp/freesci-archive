@@ -524,6 +524,7 @@ game_init(state_t *s)
 	s->save_dir = heap_allocate(s->_heap, MAX_HOMEDIR_SIZE + strlen(FREESCI_GAMEDIR)
 				    + MAX_GAMEDIR_SIZE + 4); /* +4 for the three slashes and trailing \0 */
 
+	/*	script_dissect(0, s->selector_names, s->selector_names_nr); */
 	game_obj = script0 + GET_HEAP(s->scripttable[0].export_table_offset + 2);
 	/* The first entry in the export table of script 0 points to the game object */
 

@@ -273,6 +273,7 @@ gfx_xlate_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode, gfx_xlate_filter_t filter)
 void
 gfxr_free_pic(gfx_driver_t *driver, gfxr_pic_t *pic)
 {
+	fprintf(stderr,"Freeing pic %p, ditherb %p\n", pic, pic->undithered_buffer);
 	gfx_free_pixmap(driver, pic->visual_map);
 	gfx_free_pixmap(driver, pic->priority_map);
 	gfx_free_pixmap(driver, pic->control_map);
@@ -281,6 +282,7 @@ gfxr_free_pic(gfx_driver_t *driver, gfxr_pic_t *pic)
 	pic->control_map = NULL;
 	if (pic->undithered_buffer)
 		free(pic->undithered_buffer);
+	pic->undithered_buffer = 0;
 	free(pic);
 }
 

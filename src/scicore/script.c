@@ -179,7 +179,7 @@ sci_hexdump(byte *data, int length, int offsetplus)
 }
 
 static void
-script_dump_object(char *data, int seeker, int objsize, char **snames)
+script_dump_object(char *data, int seeker, int objsize, char **snames, int snames_nr)
 {
   int selectors, overloads, selectorsize;
   int species = getInt16((unsigned char *) data + 8 + seeker);
@@ -219,7 +219,8 @@ script_dump_object(char *data, int seeker, int objsize, char **snames)
   while (overloads--) {
     int selector = getInt16((unsigned char *) data + (seeker));
 
-    sciprintf("  [%03x] %s: @", selector & 0xffff, (snames)? snames[selector] : "<?>");
+    sciprintf("  [%03x] %s: @", selector & 0xffff,
+	      (snames && selector >= 0 && selector < snames_nr)? snames[selector] : "<?>");
     sciprintf("%04x\n", getInt16((unsigned char *) data + seeker + selectors*2 + 2) & 0xffff);
 
     seeker += 2;
@@ -227,7 +228,7 @@ script_dump_object(char *data, int seeker, int objsize, char **snames)
 }
 
 static void 
-script_dump_class(char *data, int seeker, int objsize, char **snames)
+script_dump_class(char *data, int seeker, int objsize, char **snames, int snames_nr)
 {
   int selectors, overloads, selectorsize;
   int species = getInt16((unsigned char *) data + 8 + seeker);
@@ -253,7 +254,8 @@ script_dump_class(char *data, int seeker, int objsize, char **snames)
   while (selectors--) {
     int selector = getInt16((unsigned char *) data + (seeker) + selectorsize);
 
-    sciprintf("  [%03x] %s = 0x%x\n", 0xffff & selector, (snames && selector > 0)? snames[selector] : "<?>",
+    sciprintf("  [%03x] %s = 0x%x\n", 0xffff & selector,
+	      (snames && selector >= 0 && selector < snames_nr)? snames[selector] : "<?>",
 	      getInt16((unsigned char *) data + seeker) & 0xffff);
 
     seeker += 2;
@@ -268,8 +270,10 @@ script_dump_class(char *data, int seeker, int objsize, char **snames)
 
   while (overloads--) {
     int selector = getInt16((unsigned char *) data + (seeker));
-
-    sciprintf("  [%03x] %s: @", selector & 0xffff, (snames)? snames[selector] : "<?>");
+    fprintf(stderr,"selector=%d; snames_nr =%d\n", selector, snames_nr);
+    sciprintf("  [%03x] %s: @", selector & 0xffff,
+	      (snames && selector >= 0 && selector < snames_nr)?
+	      snames[selector] : "<?>");
     sciprintf("%04x\n", getInt16((unsigned char *) data + seeker + selectors*2 + 2) & 0xffff);
 
     seeker += 2;
@@ -278,7 +282,7 @@ script_dump_class(char *data, int seeker, int objsize, char **snames)
 
 
 void 
-script_dissect(int res_no, char **snames)
+script_dissect(int res_no, char **snames, int snames_nr)
 {
   int objectctr[11] = {0,0,0,0,0,0,0,0,0,0,0};
   int _seeker = 0;
@@ -302,7 +306,7 @@ script_dissect(int res_no, char **snames)
       sciprintf("End of script object (#0) encountered.\n");
       sciprintf("Classes: %i, Objects: %i, Export: %i,\n Var: %i (all base 10)",
 		objectctr[6], objectctr[1], objectctr[7], objectctr[10]);
-      vocabulary_free_snames(snames);
+      /*vocabulary_free_snames(snames);*/
       vocab_free_words (words, word_count);
       return;
     }
@@ -319,7 +323,7 @@ script_dissect(int res_no, char **snames)
 
     switch (objtype) {
     case sci_obj_object: 
-      script_dump_object ((char *) script->data, seeker, objsize, snames);
+      script_dump_object ((char *) script->data, seeker, objsize, snames, snames_nr);
       break;
 
     case sci_obj_code: {
@@ -381,7 +385,7 @@ script_dissect(int res_no, char **snames)
     break;
 
     case sci_obj_class: 
-      script_dump_class ((char *) script->data, seeker, objsize, snames);
+      script_dump_class ((char *) script->data, seeker, objsize, snames, snames_nr);
       break;
 
     case sci_obj_exports: {
@@ -417,5 +421,5 @@ script_dissect(int res_no, char **snames)
 
   sciprintf("Script ends without terminator\n");
 
-  vocabulary_free_snames(snames);
+  /*vocabulary_free_snames(snames);*/
 }

@@ -2479,6 +2479,7 @@ set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_na
 	} else {
 		*driver_optionsp = malloc(sizeof(driver_option_t));
 		(*driver_optionsp)->option = strdup(option);
+		(*driver_optionsp)->next = NULL;
 	}
 
 	(*driver_optionsp)->value = strdup(value);

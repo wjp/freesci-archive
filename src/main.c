@@ -169,7 +169,13 @@ get_readline_input(void)
 int
 init_directories(char *work_dir, char *game_id)
 {
+#ifdef _WIN32
+	char *homedir = getenv("WINDIR");
+#elif __unix__
 	char *homedir = getenv("HOME");
+#else
+#  error Please add a $HOME policy for your platform!
+#endif
 
 	printf("Initializing directories...\n");
 	if (!homedir) { /* We're probably not under UNIX if this happens */
