@@ -551,6 +551,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			case 'd': { /* Copy decimal */
 				/* int templen; -- unused atm */
 				char *format_string = "%d";
+				int nrlen;
 
 				if (xfer == 'x')
 					format_string = "%x";
@@ -560,7 +561,14 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 						/* sign extend */
 						arguments[paramindex] = (~0xffff) | arguments[paramindex];
 
-				target += sprintf(target, format_string, arguments[paramindex++]);
+				nrlen = sprintf(target, format_string, arguments[paramindex++]);
+				target += nrlen;
+				if (str_leng > nrlen) {
+					int delta = str_leng - nrlen;
+					str_leng = 0;
+					memmove(target - nrlen + delta, target - nrlen, nrlen);
+					memset(target - nrlen, ' ', delta);
+				}
 				CHECK_OVERFLOW1(target, 0);
 
 				unsigned_var = 0;
