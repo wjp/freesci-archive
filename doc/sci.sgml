@@ -515,7 +515,7 @@ re-use or overload the functions of their superclasses.
 <chapter>
   <title>Resource files</title>
   <para>
-  with major contributions from <author><firstname>Petr</firstname> <surname>Vyhnak</surname></author>
+  with significant contributions from <author><firstname>Petr</firstname> <surname>Vyhnak</surname></author> and <author><firstname>Vladimir</firstname> <surname>Gneushev</surname></author>
   </para><para>
     In order to allow games to be both distributeable and playable from
     several floppy disks, SCI was designed to support multi-volume data.
@@ -703,19 +703,23 @@ re-use or overload the functions of their superclasses.
 	    </row>
 	    <row>
 	      <entry>18</entry>
-	      <entry>UNKNOWN-2</entry>
+	      <entry>DCL-EXPLODE</entry>
 	    </row>
 	    <row>
 	      <entry>19</entry>
-	      <entry>UNKNOWN-3</entry>
+	      <entry>DCL-EXPLODE</entry>
 	    </row>
 	    <row>
 	      <entry>20</entry>
-	      <entry>UNKNOWN-4</entry>
+	      <entry>DCL-EXPLODE</entry>
 	    </row>
 	  </tbody>
 	</tgroup>
       </table>
+
+	As reported by Vladimir Gneushev, SCI32 uses DCL-EXPLODE explicitly, determining
+	whether there is a need for compression by comparing the size of the compressed
+	data block with that of the uncompressed.
 
     </para>
     <sect2>
@@ -844,7 +848,8 @@ END
       </para></note>
       <para>
 	This algorithm is based on the Deflate algorithm described in the Internet RFC 1951 (see also
-	RFC 1950 for related material).
+	RFC 1950 for related material). In particular, Vladimir Gneushev reports it is the algorithm
+	described in RFC 1974.
       </para>
       <para>
 	The algorithm is quite similar to the explode algorithm (ZIP method #6 - implode ) but 
@@ -2297,7 +2302,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
      <Title/The SCI0 Sound Resource Format/
      <para> by <author><firstname/Ravi/<surname/I./</author>
      </para><para>
-	Revision 9, Jul. 4, 2001
+	Revision 10, Mar. 11, 2002
 	</para>
 	<sect2><Title/Preface/
 	<para>
@@ -2314,6 +2319,12 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	   basically just a MIDI file. The MIDI standard and device implementations
 	   are not covered here in detail, but specifications should be readily
 	   available elsewhere.
+	</para><para>
+	   SCI0 Sound resources can also contain digital samples, although an SCI
+	   remake of KQ1 is the only DOS game I know of that includes them. These files
+	   still contain MIDI data, but the wave data is appended at the end. The MIDI
+	   data is an approximation of the sound effect for hardware that can't play
+	   digital sound.
 	</para><para>
 	   Some people prefer the one-based numbering system for channel and program
 	   numbers. I personally prefer the zero-based system, and use it here. If
@@ -2339,7 +2350,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	</sect2><sect2><Title/Sound Devices/
 	<para>
 	   A gamer's sound hardware greatly affects how music will sound. Devices
-	   used by SCI0 can be broken into 3 categories:
+	   used by SCI0 can be broken into general categories:
 	<variablelist>
 		<varlistentry><term>MIDI Synths</term><listitem><para>
 		   These will generally give the best sound quality. MIDI
@@ -2377,6 +2388,13 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
                    play a chord on the Tandy, for example, each voice must be
                    put in a separate MIDI channel.
 		</para></listitem></varlistentry>
+
+		<varlistenetry><term>Wave Devices</term><listitem><para>Wave devices play digital sound data. Sierra's versions of
+                   SCI never used them to play music, but they could be used in
+                   conjunction with one of the above devices to add special
+                   sound effects to a game.
+		</para></listitem></varlistentry>
+
 	</variablelist>
 	</para><para>
 	   With such a diverse group of devices to support, Sierra put a lot of the
@@ -2406,17 +2424,17 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	     </row><row>
 	      <entry/     PC Speaker       /<entry/  std     /<entry/    *    /<entry/   1    /<entry/20h/
 	     </row><row>
-	      <entry/  Tandy 1000 or PCJr   /<entry/  jr      /<entry/    *    /<entry/   3    /<entry/+/
+	      <entry/  Tandy 1000 or PCJr   /<entry/  jr      /<entry/    *    /<entry/   3    /<entry/10h/
 	     </row><row>
-	      <entry/  Tandy 1000 SL, TL   /<entry/  tandy   /<entry/    *    /<entry/   3    /<entry/+/
+	      <entry/  Tandy 1000 SL, TL   /<entry/  tandy   /<entry/    *    /<entry/   3    /<entry/10h/
 	     </row><row>
-	      <entry/  IBM Music Feature   /<entry/  imf     /<entry/   002   /<entry/   8    /<entry//
+	      <entry/  IBM Music Feature   /<entry/  imf     /<entry/   002   /<entry/   8    /<entry/+/
 	     </row><row>
-	      <entry/    Yamaha FM-01      /<entry/  fb01    /<entry/   002   /<entry/   8    /<entry//
+	      <entry/    Yamaha FB-01      /<entry/  fb01    /<entry/   002   /<entry/   8    /<entry/02h/
 	     </row><row>
-	      <entry/  CMS or Game Blaster  /<entry/  cms     /<entry/   101   /<entry/   12   /<entry//
+	      <entry/  CMS or Game Blaster  /<entry/  cms     /<entry/   101   /<entry/   12   /<entry/04h/
 	     </row><row>
-	      <entry/  Casio MT540 or CT460   /<entry/  mt540   /<entry/   004   /<entry/   10   /<entry//
+	      <entry/  Casio MT540 or CT460   /<entry/  mt540   /<entry/   004   /<entry/   10   /<entry/08h/
 	     </row><row>
 	      <entry/     Casio CSM-1      /<entry/          /<entry/   007   /<entry/        /<entry//
 	     </row><row>
@@ -2431,9 +2449,9 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	            <member/*  when asked which patch to load, the PC and Tandy
 	                  speaker drivers return FFFFh, which is a signal
 	                  that they do not use patches/
-	            <member/+  the Tandy drivers almost certainly use 10h for their
-	                  play flag, but this is unconfirmed so I'll leave
-	                  it out for now/
+	            <member/+ the imf driver almost certainly uses 02h for the play
+                  flag, but I haven't confirmed this/
+
 	   </simplelist>
 	</para><para>
 	  The driver column holds the file name of each driver without the .drv
@@ -2478,27 +2496,31 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		   of whether or not the channel is flagged for the device. Other MIDI
 		   devices may also do this.
 		</para><para>
-		   Before the channel initialization is a byte which specifies whether the
-		   header holds information for 15 or 16 channels. A value of 0 means that
-		   there will be 16 channels and a value of 2 means that there will be 15
-		   channels. All other values are undefined and will render sound files
-		   unplayable.
+		   A byte at the beginning of the file, before channel initialization,
+		   specifies whether the resource contains a digital sample or not. A value of
+		   0 means that there is only MIDI data. A value of 2 means that there is a
+		   digital sample at the end of the file. In this case, only the first 15 MIDI
+		   channels have header bytes. The two header bytes for the last channel is
+		   replaced with an offset to the digital sound effect. The offset is stored
+		   in big-endian order in the resource. If present, it points to the last byte
+		   before the digital sample header. If the offset is 0, the file must be
+		   searched for the status FCh, and the digital sample header will come next.
+		   There may be two FCh bytes in a row, in which case both will come before
+		   the digital sample header. The digital sample header is discussed in more
+		   detail in the digial sample section.
 		</para><para>
 		   The header format:
 		   <simplelist>
-		      <member/1 byte  - number of channels code (usually 0, can also be 2)/
+		      <member/1 byte  - digital sample flag (0 or 2)/
 		      <member/2 bytes - initialization for channel 0/
 		      <member/2 bytes - initialization for channel 1/
 		      <member/./
 		      <member/./
 		      <member/./
-		      <member/2 bytes - initialization for channel 15/
+		      <member/2 bytes - initialization for channel 15 OR offset to digital sample/
 		    </simplelist>
 		</para><para>
-		   Notice that the space for channel 15's initialization will always be
-		   present. If the sound resource reports data for only 15 channels then the
-		   last two bytes of the header will be ignored, but the header is always 33
-		   bytes long.
+		   The header is always 33 bytes long.
 		</para></sect3><sect3><title/Events/
 		<para>
 		   The actual music is stored in a series of events. The generic form for an
@@ -2563,8 +2585,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 			</para><para>
 		            Listed in this reference are the non-standard MIDI controls I've
 		            found in Sierra SCI0 sound files. Standard controls are not
-			    listed here. Not all drivers support all
-		            controls.
+			    listed here. Not all drivers support all controls.
 			</para><para>
 		            Control Reference
 			<variablelist>
@@ -2676,9 +2697,30 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		</variablelist>
 		</para>
 	</sect3>
+	</sect2><sect2><title/Digial Samples/
+		<para>
+	   The digital sample header is 44 bytes long. Offset 14 in the header contains
+	   the frequency as a short integer. Offset 32 contains the sample length, also
+	   as a short integer. Other fields in the header are unknown (to me) at the
+	   time of writing, but aren't critical to playback.
+		</para><para>
+	   The wave data comes immediately after the header, stored in unsigned 8 bit
+	   PCM format.
+		</para>
 	</sect2><sect2><title/Revision history/
   <para>
   <variablelist>
+   <varlistentry><term/Revision 10 - Mar. 11, 2002/
+	<listitem><para><itemizedlist>
+      <listitem><para>Added section on digital samples (thanks to the FreeSCI developers,
+        Rickard Lind especially)</para></listitem>
+      <listitem><para>Added wave devices to the hardware category list</para></listitem>
+      <listitem><para>Updated header section to cover the header for PCM resources</para></listitem>
+      <listitem><para>Added more play flags to the sound driver table</para></listitem>
+      <listitem><para>Fixed a typo in the sound driver table where I accidentally called the
+        "Yamaha FB-01" the "Yamaha FM-01"</para></listitem>
+      </itemizedlist></para></listitem>
+    </varlistentry>
     <varlistentry><term/Revision 9 - Jul. 4, 2001/
       <listitem><para><itemizedlist>
 	<listitem><para>Changed StopSound to PauseSound for control 4Ch</para></listitem>
