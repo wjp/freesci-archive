@@ -42,6 +42,8 @@ extern "C" {
 #ifdef _WIN32
 
 #include <engine.h>
+#include <dmusicc.h>
+#include <dxerr8.h>
 #include <win32/messages.h>
 
 #define SSWIN_DEBUG 0
@@ -57,7 +59,12 @@ static HINSTANCE hi_main, hi_sound;
 static HANDLE child_thread;
 static HANDLE sound_sem, sound_data_event;
 static DWORD sound_timer;
+
 static IReferenceClock *pRefClock;
+static LPDIRECTMUSIC lpDMusic;
+static LPDIRECTMUSICPORT lpDMusicPort;
+static LPDIRECTSOUND lpds;
+
 static state_t *gs;
 
 static sci_queue_t data_queue;
@@ -155,6 +162,12 @@ sound_win32e_init(struct _state *s, int flags)
 	WNDCLASS wc;
 	DWORD dwChildId;	/* child thread ID */
 	REFERENCE_TIME rtNow;
+	DWORD clockIndex;
+	DMUS_CLOCKINFO clockInfo;
+	DMUS_PORTCAPS portCaps;
+	DMUS_PORTPARAMS dmos;
+	GUID wantedGuid;
+	HRESULT hr;
 
 	/* let app know what sound server we are running and yield to the scheduler */
 	global_sound_server = &sound_server_win32e;
@@ -219,6 +232,15 @@ TODO: fix reverse stereo
 	fprintf(stderr, "sound_win32e_init() main_wnd %i, TID %i\n", main_wnd, GetCurrentThreadId());
 #endif
 
+	sound_sem = CreateSemaphore(NULL, 0, 0x7FFFFFFF, NULL);
+	if (sound_sem == NULL)
+	{
+		fprintf(debug_stream, "sound_win32e_init(): CreateSemaphore() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
+	else
+		fprintf(stderr, "Created sound semaphore\n");
+
 	/*** create thread ***/
 	child_thread = CreateThread( NULL,		/* not inheritable */
 		                         0,			/* use default stack size */
@@ -234,42 +256,208 @@ TODO: fix reverse stereo
 	else
 		fprintf(stderr, "Created sound thread\n");
 
-	/*** start timer ***/
-	sound_sem = CreateSemaphore(NULL, 0, 0x7FFFFFFF, NULL);
-	if (sound_sem == NULL)
-	{
-		fprintf(debug_stream, "sound_win32e_init(): CreateSemaphore() failed, GetLastError() returned %u\n", GetLastError());
-		exit(-1);
-	}
-	else
-		fprintf(stderr, "Created sound semaphore\n");
 
-	if (CoInitialize(NULL) != S_OK)
+	/*** initialise COM ***/
+	hr = CoInitialize(NULL);
+	if (hr != S_OK)
 	{
-		fprintf(debug_stream, "sound_win32e_init(): CoInitialize() failed, GetLastError() returned %u\n", GetLastError());
+		fprintf(debug_stream, "sound_win32e_init(): CoInitialize() failed:\n%s\n", DXGetErrorString8(hr));
 		exit(-1);
 	}
 	else
 		fprintf(stderr, "Initialised COM\n");
 
-	if (CoCreateInstance(CLSID_SystemClock, NULL, CLSCTX_INPROC,
-                         IID_IReferenceClock, (LPVOID*)&pRefClock) != S_OK)
+	/* get interface to IDirectMusic */
+	hr = CoCreateInstance(CLSID_DirectMusic,
+		NULL,
+		CLSCTX_INPROC,
+		IID_IDirectMusic,
+		(LPVOID*)&lpDMusic);
+	if (hr != S_OK)
 	{
-		fprintf(debug_stream, "sound_win32e_init(): CoCreateInstance() failed, GetLastError() returned %u\n", GetLastError());
+		fprintf(debug_stream, "sound_win32e_init(): CoCreateInstance(IDirectMusic) failed:\n%s\n", DXGetErrorString8(hr));
 		exit(-1);
 	}
-	else
-		fprintf(stderr, "Initialised reference clock\n");
+
+#if 0
+	/* initialise DirectSound */
+	hr = CoCreateInstance(CLSID_DirectSound,
+		NULL,
+		CLSCTX_INPROC,
+		IID_IDirectSound,
+		(LPVOID*)&lpds);
+	if (hr != S_OK)
+	{
+		fprintf(debug_stream, "sound_win32e_init(): CoCreateInstance(IDirectSound) failed:\n%s\n", DXGetErrorString8(hr));
+		exit(-1);
+	}
+
+	hr = lpds->Initialize(NULL);
+	if (hr != S_OK)
+	{
+		fprintf(debug_stream, "sound_win32e_init(): IDirectSound->Initialize() failed:\n%s\n", DXGetErrorString8(hr));
+		exit(-1);
+	}
+
+	hr = lpDMusic->SetDirectSound(lpds, sound_wnd);
+	if (hr != S_OK)
+	{
+		fprintf(debug_stream, "sound_win32e_init(): SetDirectSound() failed:\n%s\n", DXGetErrorString8(hr));
+		exit(-1);
+	}
+#endif
+
+
+	/*** find clocks ***/
+	fprintf(stderr, "Searching for clocks that sound server can use...\n");
+
+	/* enumerate possible master clocks */
+	clockIndex = -1;
+	for (;;)
+	{
+		GUID newClockGuid;
+		int i = 0;
+		clockIndex++;
+		ZeroMemory( &clockInfo, sizeof(DMUS_CLOCKINFO) );
+		clockInfo.dwSize = sizeof(DMUS_CLOCKINFO);
+
+		hr = lpDMusic->EnumMasterClock(clockIndex, &clockInfo);
+		if (hr == S_FALSE)
+			break;	/* ran out of clocks */
+		if (hr != S_OK)
+		{
+			fprintf(debug_stream, "sound_win32e_init(): IDirectMusic->EnumMasterClock() failed:\n%s\n", DXGetErrorString8(hr));
+			exit(-1);
+		}
+
+		fprintf(stderr, "Master clock %i: ", clockIndex);
+
+		while (clockInfo.wszDescription[i] != 0)
+			fprintf(stderr, "%c", clockInfo.wszDescription[i++]);
+		fprintf(stderr, "... ");
+
+		/* try set wanted master clock */
+		hr = lpDMusic->SetMasterClock(clockInfo.guidClock);
+		if (hr != S_OK)
+		{
+			fprintf(debug_stream, "no (%s)\n", DXGetErrorString8(hr));
+			continue;
+		}
+
+		/* try pass new clock reference to pointer */
+		hr = lpDMusic->GetMasterClock(&newClockGuid, &pRefClock);
+		if (hr != S_OK)
+		{
+			fprintf(debug_stream, "no (%s)\n", DXGetErrorString8(hr));
+			pRefClock->Release();
+			continue;
+		}
+
+		if (newClockGuid != clockInfo.guidClock)
+		{
+			fprintf(debug_stream, "no (clock guids not equal)\n");
+			pRefClock->Release();
+			continue;
+		}
+
+		fprintf(debug_stream, "maybe\n");
+		wantedGuid = clockInfo.guidClock;
+		/* but keep looking */
+	}
+
+
+#if 0
+	/* enumerate possible ports (which should each have clocks) */
+	clockIndex = 0;
+	for (;;)
+	{
+		int i = 0;
+		ZeroMemory( &portCaps, sizeof(DMUS_PORTCAPS) );
+		portCaps.dwSize = sizeof(DMUS_PORTCAPS);
+
+		hr = lpDMusic->EnumPort(clockIndex, &portCaps);
+		if (hr == S_FALSE)
+			break;	/* ran out of ports */
+		if (hr != S_OK)
+		{
+			fprintf(debug_stream, "sound_win32e_init(): IDirectMusic->EnumPort() failed:\n%s\n", DXGetErrorString8(hr));
+			exit(-1);
+		}
+
+		fprintf(stderr, "Port %i: ", clockIndex);
+
+		while (portCaps.wszDescription[i] != 0)
+			fprintf(stderr, "%c", portCaps.wszDescription[i++]);
+		fprintf(stderr, "\n");
+
+		clockIndex++;
+	}
+
+/*
+	ZeroMemory( &dmos, sizeof(DMUS_PORTPARAMS) );
+	dmos.dwSize = sizeof(DMUS_PORTPARAMS);
+	hr = lpDMusic->CreatePort( wantedGuid, &dmos,
+    &lpDMusicPort, NULL );
+	if (hr != S_OK)
+	{
+		fprintf(debug_stream, "sound_win32e_init(): IDirectMusic->CreatePort() failed:\n%s\n", DXGetErrorString8(hr));
+		exit(-1);
+	}
+*/
+
+
+/*
+	if (hr = lpDMusicPort->GetLatencyClock(&pRefClock) != S_OK)
+	{
+		fprintf(debug_stream, "sound_win32e_init(): IDirectMusic->GetLatencyClock() failed:\n%s\n", DXGetErrorString8(hr));
+		exit(-1);
+	}
+*/
+#endif
+
 
 	/* 10ms = 100000 100-nanoseconds */
-	pRefClock->GetTime(&rtNow);
-	if (pRefClock->AdvisePeriodic(rtNow + 166667, 166667, sound_sem, &sound_timer) != S_OK)
+	ZeroMemory(&rtNow, sizeof(REFERENCE_TIME));
+	hr = pRefClock->GetTime(&rtNow);
+	if (hr != S_OK)
+		fprintf(debug_stream, "sound_win32e_init(): IReferenceClock->GetTime() failed:\n%s\n", DXGetErrorString8(hr));
+
+	/* start periodic timing advisement */
+	hr = pRefClock->AdvisePeriodic(rtNow + 166667,
+		166667,
+		sound_sem,
+		&sound_timer);
+	if (hr != S_OK)
 	{
-		fprintf(debug_stream, "sound_win32e_init(): AdvisePeriodic() failed, GetLastError() returned %u\n", GetLastError());
-		exit(-1);
+		fprintf(debug_stream, "Timer failed for chosen clock (%s), falling back to slow system clock\n", DXGetErrorString8(hr));
+		pRefClock->Release();
+		hr = CoCreateInstance(CLSID_SystemClock,
+			NULL,
+			CLSCTX_INPROC,
+			IID_IReferenceClock,
+			(LPVOID*)&pRefClock);
+		if (hr != S_OK)
+		{
+			fprintf(debug_stream, "Could not access system clock (%s)\n", DXGetErrorString8(hr));
+			exit(-1);
+		}
+
+		ZeroMemory(&rtNow, sizeof(REFERENCE_TIME));
+		hr = pRefClock->GetTime(&rtNow);
+		if (hr != S_OK)
+			fprintf(debug_stream, "sound_win32e_init(): IReferenceClock->GetTime() failed:\n%s\n", DXGetErrorString8(hr));
+
+		hr = pRefClock->AdvisePeriodic(rtNow + 166667,
+			166667,
+			sound_sem,
+			&sound_timer);
+		if (hr != S_OK)
+		{
+			fprintf(debug_stream, "sound_win32e_init(): IReferenceClock->AdvisePeriodic() failed:\n%s\n", DXGetErrorString8(hr));
+			pRefClock->Release();
+			exit(-1);
+		}
 	}
-	else
-		fprintf(stderr, "Started timer\n");
 
 	fprintf(stderr, "Sound server win32e initialised\n");
 
@@ -440,6 +628,7 @@ sound_win32e_exit(struct _state *s)
 	/* kill reference clock and COM */
 	pRefClock->Unadvise(sound_timer);
 	pRefClock->Release();
+	lpDMusic->Release();
 	CoUninitialize();
 
 	/* close handles */

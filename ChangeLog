@@ -1,3 +1,8 @@
+2001-11-28  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss_win32.cpp: Fixed race condition for creation of
+	semaphore. Attempt to add use of faster clock.
+
 2001-11-26  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/include/engine.h: Made sound_volume and sound_mute unsigned.
