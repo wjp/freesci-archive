@@ -50,8 +50,10 @@
 #define GFX_SCI0_IMAGE_COLORS_NR 16
 #define GFX_SCI0_PIC_COLORS_NR 256
 
+extern int sci0_palette;
+
 /* (gfx_pic_0.c) The 16 EGA base colors */
-extern gfx_pixmap_color_t gfx_sci0_image_colors[];
+extern gfx_pixmap_color_t gfx_sci0_image_colors[][16];
 
 /* (gfx_pic_0.c) The 256 interpolated colors (initialized when
 ** gfxr_init_pic() is called for the first time, or when gfxr_init_static_palette() is called)

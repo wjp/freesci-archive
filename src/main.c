@@ -579,6 +579,8 @@ init_console()
 		     "Dirty frames management\n");
 	con_hook_int(&gfx_crossblit_alpha_threshold, "alpha_threshold",
 		     "Alpha threshold for crossblitting\n");
+	con_hook_int(&sci0_palette, "sci0_palette",
+		     "SCI0 palette- 0: EGA, 1:AGI/Amiga, 2:Grayscale\n");
 
 	con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
 
@@ -1104,7 +1106,7 @@ main(int argc, char** argv)
 		gamestate->sound_server->exit(gamestate); /* Shutdown sound daemon first */
 
 	game_exit(gamestate);
-
+SCI_MEMTEST;
 	script_free_engine(gamestate); /* Uninitialize game state */
 
 	scir_free_resource_manager(resmgr);

@@ -363,7 +363,7 @@ typedef struct { /* gfx_bitmap_font_t: Bitmap font information */
 /***********************/
 
 /* Default palettes */
-extern gfx_pixmap_color_t gfx_sci0_image_colors[16];
+extern gfx_pixmap_color_t gfx_sci0_image_colors[][16];
 extern gfx_pixmap_color_t gfx_sci0_pic_colors[256];
 
 /* Return values */

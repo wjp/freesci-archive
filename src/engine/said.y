@@ -53,8 +53,8 @@
 
 
 #undef YYDEBUG /*1*/
-#define SAID_DEBUG
-#define SCI_DEBUG_PARSE_TREE_AUGMENTATION /* uncomment to debug parse tree augmentation*/
+/*#define SAID_DEBUG*/
+/*#define SCI_DEBUG_PARSE_TREE_AUGMENTATION*/ /* uncomment to debug parse tree augmentation*/
 
 
 #ifdef SCI_DEBUG_PARSE_TREE_AUGMENTATION

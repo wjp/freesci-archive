@@ -182,7 +182,7 @@ gfxr_draw_view0(int id, byte *resource, int size)
 	/* Set palette */
 	view->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
 	view->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
-	view->colors = gfx_sci0_image_colors;
+	view->colors = gfx_sci0_image_colors[sci0_palette];
 
 	if (view->loops_nr * 2 + V0_FIRST_LOOP_OFFSET > size) {
 		GFXERROR("View %04x: Not enough space in resource to accomodate for the claimed %d loops\n", id, view->loops_nr);

@@ -44,16 +44,61 @@
 
 #define SCI_PIC0_MAX_FILL 30 /* Number of times to fill before yielding to scheduler */
 
+#define SCI0_MAX_PALETTE 2
+
+int sci0_palette = 0;
+
+
 /* Default color maps */
-gfx_pixmap_color_t gfx_sci0_image_colors[GFX_SCI0_IMAGE_COLORS_NR] = {
-	{GFX_COLOR_SYSTEM, 0x00, 0x00, 0x00}, {GFX_COLOR_SYSTEM, 0x00, 0x00, 0xaa},
-	{GFX_COLOR_SYSTEM, 0x00, 0xaa, 0x00}, {GFX_COLOR_SYSTEM, 0x00, 0xaa, 0xaa},
-	{GFX_COLOR_SYSTEM, 0xaa, 0x00, 0x00}, {GFX_COLOR_SYSTEM, 0xaa, 0x00, 0xaa},
-	{GFX_COLOR_SYSTEM, 0xaa, 0x55, 0x00}, {GFX_COLOR_SYSTEM, 0xaa, 0xaa, 0xaa},
-	{GFX_COLOR_SYSTEM, 0x55, 0x55, 0x55}, {GFX_COLOR_SYSTEM, 0x55, 0x55, 0xff},
-	{GFX_COLOR_SYSTEM, 0x55, 0xff, 0x55}, {GFX_COLOR_SYSTEM, 0x55, 0xff, 0xff},
-	{GFX_COLOR_SYSTEM, 0xff, 0x55, 0x55}, {GFX_COLOR_SYSTEM, 0xff, 0x55, 0xff},
-	{GFX_COLOR_SYSTEM, 0xff, 0xff, 0x55}, {GFX_COLOR_SYSTEM, 0xff, 0xff, 0xff}};
+gfx_pixmap_color_t gfx_sci0_image_colors[SCI0_MAX_PALETTE+1][GFX_SCI0_IMAGE_COLORS_NR] = {
+	{{GFX_COLOR_SYSTEM, 0x00, 0x00, 0x00}, {GFX_COLOR_SYSTEM, 0x00, 0x00, 0xaa},
+	 {GFX_COLOR_SYSTEM, 0x00, 0xaa, 0x00}, {GFX_COLOR_SYSTEM, 0x00, 0xaa, 0xaa},
+	 {GFX_COLOR_SYSTEM, 0xaa, 0x00, 0x00}, {GFX_COLOR_SYSTEM, 0xaa, 0x00, 0xaa},
+	 {GFX_COLOR_SYSTEM, 0xaa, 0x55, 0x00}, {GFX_COLOR_SYSTEM, 0xaa, 0xaa, 0xaa},
+	 {GFX_COLOR_SYSTEM, 0x55, 0x55, 0x55}, {GFX_COLOR_SYSTEM, 0x55, 0x55, 0xff},
+	 {GFX_COLOR_SYSTEM, 0x55, 0xff, 0x55}, {GFX_COLOR_SYSTEM, 0x55, 0xff, 0xff},
+	 {GFX_COLOR_SYSTEM, 0xff, 0x55, 0x55}, {GFX_COLOR_SYSTEM, 0xff, 0x55, 0xff},
+	 {GFX_COLOR_SYSTEM, 0xff, 0xff, 0x55}, {GFX_COLOR_SYSTEM, 0xff, 0xff, 0xff}}, /* "Normal" EGA */
+
+
+	{{GFX_COLOR_SYSTEM, 0x00, 0x00, 0x00}, {GFX_COLOR_SYSTEM, 0x00, 0x00, 0xff},
+	 {GFX_COLOR_SYSTEM, 0x00, 0xaa, 0x00}, {GFX_COLOR_SYSTEM, 0x00, 0xaa, 0xaa},
+	 {GFX_COLOR_SYSTEM, 0xce, 0x00, 0x00}, {GFX_COLOR_SYSTEM, 0xbe, 0x71, 0xde},
+	 {GFX_COLOR_SYSTEM, 0x8d, 0x50, 0x00}, {GFX_COLOR_SYSTEM, 0xbe, 0xbe, 0xbe},
+	 {GFX_COLOR_SYSTEM, 0x55, 0x55, 0x55}, {GFX_COLOR_SYSTEM, 0x00, 0xbe, 0xff},
+	 {GFX_COLOR_SYSTEM, 0x00, 0xce, 0x55}, {GFX_COLOR_SYSTEM, 0x55, 0xff, 0xff},
+	 {GFX_COLOR_SYSTEM, 0xff, 0x9d, 0x8d}, {GFX_COLOR_SYSTEM, 0xff, 0x55, 0xff},
+	 {GFX_COLOR_SYSTEM, 0xff, 0xff, 0x00}, {GFX_COLOR_SYSTEM, 0xff, 0xff, 0xff}}, /* AGI Amiga-ish */
+
+/* RGB and I intensities (former taken from the GIMP) */
+#define GR 30
+#define GG 59
+#define GB 11
+#define GI 15
+
+#define FULL (GR+GG+GB+GI)
+
+#define CC(x) (((x)*255)/FULL),(((x)*255)/FULL),(((x)*255)/FULL)         /* Combines color intensities */
+
+	{{GFX_COLOR_SYSTEM, CC(0)           }, {GFX_COLOR_SYSTEM, CC(GB)          },
+	 {GFX_COLOR_SYSTEM, CC(GG)          }, {GFX_COLOR_SYSTEM, CC(GB+GG)       },
+	 {GFX_COLOR_SYSTEM, CC(GR)          }, {GFX_COLOR_SYSTEM, CC(GB+GR)       },
+	 {GFX_COLOR_SYSTEM, CC(GG+GR)       }, {GFX_COLOR_SYSTEM, CC(GB+GG+GR)    },
+	 {GFX_COLOR_SYSTEM, CC(GI)          }, {GFX_COLOR_SYSTEM, CC(GB+GI)       },
+	 {GFX_COLOR_SYSTEM, CC(GG+GI)       }, {GFX_COLOR_SYSTEM, CC(GB+GG+GI)    },
+	 {GFX_COLOR_SYSTEM, CC(GR+GI)       }, {GFX_COLOR_SYSTEM, CC(GB+GR+GI)    },
+	 {GFX_COLOR_SYSTEM, CC(GG+GR+GI)    }, {GFX_COLOR_SYSTEM, CC(GB+GG+GR+GI) }}}; /* Grayscale */
+
+#undef GR
+#undef GG
+#undef GB
+#undef GI
+
+#undef FULL
+
+#undef C2
+#undef C3
+#undef C4
 
 gfx_pixmap_color_t gfx_sci0_pic_colors[GFX_SCI0_PIC_COLORS_NR]; /* Initialized during initialization */
 
@@ -77,14 +122,15 @@ gfxr_init_static_palette()
 	if (!_gfxr_pic0_colors_initialized) {
 		for (i = 0; i < 256; i++) {
 			gfx_sci0_pic_colors[i].global_index = GFX_COLOR_INDEX_UNMAPPED;
-			gfx_sci0_pic_colors[i].r = INTERCOL(gfx_sci0_image_colors[i & 0xf].r,
-							    gfx_sci0_image_colors[i >> 4].r);
-			gfx_sci0_pic_colors[i].g = INTERCOL(gfx_sci0_image_colors[i & 0xf].g,
-							    gfx_sci0_image_colors[i >> 4].g);
-			gfx_sci0_pic_colors[i].b = INTERCOL(gfx_sci0_image_colors[i & 0xf].b,
-							    gfx_sci0_image_colors[i >> 4].b);
+			gfx_sci0_pic_colors[i].r = INTERCOL(gfx_sci0_image_colors[sci0_palette][i & 0xf].r,
+							    gfx_sci0_image_colors[sci0_palette][i >> 4].r);
+			gfx_sci0_pic_colors[i].g = INTERCOL(gfx_sci0_image_colors[sci0_palette][i & 0xf].g,
+							    gfx_sci0_image_colors[sci0_palette][i >> 4].g);
+			gfx_sci0_pic_colors[i].b = INTERCOL(gfx_sci0_image_colors[sci0_palette][i & 0xf].b,
+							    gfx_sci0_image_colors[sci0_palette][i >> 4].b);
 		}
-		_gfxr_pic0_colors_initialized = 1;
+WARNING("Uncomment me after fixing sci0_palette changes to reset me");
+                /*  _gfxr_pic0_colors_initialized = 1; */
 	}
 }
 
@@ -115,9 +161,9 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 		pic->priority_map->flags |= GFX_PIXMAP_FLAG_SCALED_INDEX;
 	}
 
-	pic->priority_map->colors = gfx_sci0_image_colors;
+	pic->priority_map->colors = gfx_sci0_image_colors[sci0_palette];
 	pic->priority_map->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
-	pic->control_map->colors = gfx_sci0_image_colors;
+	pic->control_map->colors = gfx_sci0_image_colors[sci0_palette];
 	pic->control_map->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
 
 	/* Initialize colors */
@@ -2203,7 +2249,7 @@ gfxr_dither_pic0(gfxr_pic_t *pic, int dmode, int pattern)
 		return; /* Nothing to do */
 
 	if (dmode == GFXR_DITHER_MODE_D16) { /* Limit to 16 colors */
-		pic->visual_map->colors = gfx_sci0_image_colors;
+		pic->visual_map->colors = gfx_sci0_image_colors[sci0_palette];
 		pic->visual_map->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
 	}
 

@@ -102,11 +102,6 @@ _free_vocabulary(state_t *s)
 	s->opcodes = NULL;
 }
 
-static int sci0_palette[16][3] = {
-	{0x00, 0x00, 0x00}, {0x00, 0x00, 0xaa}, {0x00, 0xaa, 0x00}, {0x00, 0xaa, 0xaa},
-	{0xaa, 0x00, 0x00}, {0xaa, 0x00, 0xaa}, {0xaa, 0x55, 0x00}, {0xaa, 0xaa, 0xaa},
-	{0x55, 0x55, 0x55}, {0x55, 0x55, 0xff}, {0x55, 0xff, 0x55}, {0x55, 0xff, 0xff},
-	{0xff, 0x55, 0x55}, {0xff, 0x55, 0xff}, {0xff, 0xff, 0x55}, {0xff, 0xff, 0xff}};
 
 static int
 _init_graphics_input(state_t *s)
@@ -129,8 +124,11 @@ _reset_graphics_input(state_t *s)
 		int i;
 
 		for (i = 0; i < 16; i++) {
-			if (gfxop_set_color(s->gfx_state, &(s->ega_colors[i]), sci0_palette[i][0],
-					    sci0_palette[i][1], sci0_palette[i][2], 0, -1, -1))
+			if (gfxop_set_color(s->gfx_state, &(s->ega_colors[i]),
+					    gfx_sci0_image_colors[sci0_palette][i].r,
+					    gfx_sci0_image_colors[sci0_palette][i].g,
+					    gfx_sci0_image_colors[sci0_palette][i].b,
+					    0, -1, -1))
 				return 1;
 			gfxop_set_system_color(s->gfx_state, &(s->ega_colors[i]));
 		}

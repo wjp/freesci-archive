@@ -1,3 +1,11 @@
+2001-09-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_pic_0.c: Added two alternative palettes,
+	Amiga/AGI and grayscale
+
+	* src/engine/game.c (_reset_graphics_input): Got rid of the EGA
+	palette copy, used that of the gfx resources instead
+
 2001-09-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/midiout_win32mci.c: Stripped ^Ms, ifdef'd for Win32
