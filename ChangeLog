@@ -1,3 +1,12 @@
+2001-11-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sound.c (sound_command_default): Transfer command _before_ data
+	when initializing handle
+
+	* src/sound/polled_ss.c (sci0_polled_ss): Fixed master volume guint8 -> int
+
+	* acinclude.m4 (alsa part): Updated for latest libasound
+
 2001-11-23  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/include/win32/messages.h: Removed SOUND_DATA message.

@@ -2242,9 +2242,9 @@ ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$a
 cross_compiling=$ac_cv_prog_cc_cross
 
 
-echo $ac_n "checking for snd_defaults_card in -lasound""... $ac_c" 1>&6
-echo "configure:2247: checking for snd_defaults_card in -lasound" >&5
-ac_lib_var=`echo asound'_'snd_defaults_card | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for snd_rawmidi_open in -lasound""... $ac_c" 1>&6
+echo "configure:2247: checking for snd_rawmidi_open in -lasound" >&5
+ac_lib_var=`echo asound'_'snd_rawmidi_open | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2256,10 +2256,10 @@ cat > conftest.$ac_ext <<EOF
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
-char snd_defaults_card();
+char snd_rawmidi_open();
 
 int main() {
-snd_defaults_card()
+snd_rawmidi_open()
 ; return 0; }
 EOF
 if { (eval echo configure:2266: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then

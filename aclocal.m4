@@ -524,7 +524,8 @@ exit(0);
 AC_LANG_RESTORE
 
 dnl Now that we know that we have the right version, let's see if we have the library and not just the headers.
-AC_CHECK_LIB([asound], [snd_defaults_card],,
+dnl Changed from snd_defaults_card to snd_rawmidi_open -- Christoph Reichenbach
+AC_CHECK_LIB([asound], [snd_rawmidi_open],,
         [ifelse([$3], , [AC_MSG_ERROR(No linkable libasound was found.)])
          alsa_found=no]
 )

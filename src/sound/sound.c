@@ -138,12 +138,13 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 			return 1;
 		}
 
+		global_sound_server->queue_command(event.handle, event.signal, event.value);
+
 		len = song->size;
 		if (global_sound_server->send_data(song->data, len) != len) {
 			fprintf(debug_stream, "sound_command(): sound_send_data"
 				" returned < count\n");
 		}
-		global_sound_server->queue_command(event.handle, event.signal, event.value);
 
 		return 0;
 

@@ -44,6 +44,7 @@
 #  include <sys/soundcard.h>
 #endif
 
+
 #ifdef DEBUG_SOUND_SERVER
 	int channel_instrument_orig[16] = {-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1};
 	int channel_instrument[16];
@@ -104,7 +105,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	song_t *_songp = NULL;
 	songlib_t songlib = &_songp;   /* Song library */
 	song_t *newsong, *song = NULL; /* The song we're playing */
-	guint8 master_volume = 0;  /* the master volume.. whee */
+	int master_volume = 0;  /* the master volume.. whee */
 	int ccc = 127; /* cumulative cue counter- see SCI sound specs */
 	int suspended = 0; /* Used to suspend the sound server */
 	GTimeVal suspend_time; /* Time at which the sound server was suspended */
@@ -498,14 +499,14 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 										    */
 
 						success = soundsrv_restore_state(debug_stream,
-						  global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
-						  songlib,
-						  &newsong,
-						  &ccc,
-						  &usecs,
-						  &ticks,
-						  &fadeticks_obsolete,
-						  &master_volume);
+										 global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
+										 songlib,
+										 &newsong,
+										 &ccc,
+										 &usecs,
+										 &ticks,
+										 &fadeticks_obsolete,
+										 &master_volume);
 						last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
 						last_played.tv_usec -= (usecs + secs * 1000000);
 
