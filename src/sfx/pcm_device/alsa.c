@@ -32,6 +32,9 @@
 
 #ifdef HAVE_ALSA
 
+#define ALSA_PCM_NEW_HW_PARAMS_API
+#define ALSA_PCM_NEW_SW_PARAMS_API
+
 #include <alsa/asoundlib.h>
 
 static char *device = "hw:0,0"; /* FIXME */ /* Or "plughw:0,0" */

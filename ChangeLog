@@ -1,3 +1,7 @@
+2004-01-04  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/sfx/pcm_device/alsa.c: Build fix for older versions of ALSA. 
+
 2004-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/pcm_device/alsa.c, src/sfx/pcm_device/pcm_devices.c,
