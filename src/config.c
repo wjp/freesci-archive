@@ -24,12 +24,6 @@
 #include <stdlib.h>
 #ifndef _WIN32
 #include <unistd.h>
-#else
-#ifndef YY_ALWAYS_INTERACTIVE
-#ifndef YY_NEVER_INTERACTIVE
-extern int isatty YY_PROTO(( int ));
-#endif
-#endif
 #endif
 
 /* Use prototypes in function declarations. */
@@ -861,7 +855,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 865 "config.c"
+#line 859 "config.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1026,7 +1020,7 @@ YY_DECL
 #line 289 "config.l"
 
 
-#line 1030 "config.c"
+#line 1024 "config.c"
 
 	if ( yy_init )
 		{
@@ -1293,7 +1287,7 @@ YY_RULE_SETUP
 #line 443 "config.l"
 ECHO;
 	YY_BREAK
-#line 1297 "config.c"
+#line 1291 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
