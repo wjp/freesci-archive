@@ -1648,8 +1648,8 @@ _gfxwop_list_add_dirty(gfxw_container_t *container, rect_t dirty, int propagate)
 	return _gfxwop_container_add_dirty(container, dirty, propagate);
 }
 
-static int
-_gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
+static inline int
+_gfxwop_ordered_add(gfxw_container_t *container, gfxw_widget_t *widget, int compare_all)
      /* O(n) */
 {
 	gfxw_widget_t **seekerp = &(container->contents);
@@ -1667,14 +1667,15 @@ _gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
 	if (_gfxw_container_id_equals(container, widget))
 		return 0;
 
-	while (*seekerp && (widget->compare_to(widget, *seekerp) > 0)) {
-#if 0
+	while (*seekerp && (compare_all || (widget->compare_to(widget, *seekerp) >= 0))) {
+
 		if (widget->equals(GFXW(widget), GFXW(*seekerp))) {
 			widget->next = (*seekerp)->next;
 			(*seekerp)->widfree(GFXW(*seekerp));
 			*seekerp = widget;
 			return (_parentize_widget(container, widget));
-#endif
+		}
+
 		if (widget->equals(GFXW(widget), GFXW(*seekerp)))
 			(*seekerp)->widfree(GFXW(*seekerp));
 
@@ -1689,6 +1690,13 @@ _gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
 		return 1;
 
 	return 0;
+}
+
+static int
+_gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
+     /* O(n) */
+{
+	_gfxwop_ordered_add(container, widget, 0);
 }
 
 void
@@ -2003,6 +2011,13 @@ _gfxwop_port_add_dirty(gfxw_container_t *widget, rect_t dirty, int propagate)
 	return 0;
 }
 
+static int
+_gfxwop_port_add(gfxw_container_t *container, gfxw_widget_t *widget)
+     /* O(n) */
+{
+	_gfxwop_ordered_add(container, widget, 1);
+}
+
 void
 _gfxw_set_ops_PORT(gfxw_container_t *widget)
 {
@@ -2018,7 +2033,7 @@ _gfxw_set_ops_PORT(gfxw_container_t *widget)
 				_gfxwop_container_free_tagged,
 				_gfxwop_container_free_contents,
 				_gfxwop_port_add_dirty,
-				_gfxwop_sorted_list_add);
+				_gfxwop_port_add);
 }
 
 gfxw_port_t *
