@@ -188,30 +188,30 @@ kMapKeyToDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGlobalToLocal(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = UPARAM_OR_ALT(0, 0);
+	heap_ptr obj = UPARAM_OR_ALT(0, 0);
 
-  if (obj) {
-    int x = GET_SELECTOR(obj, x);
-    int y = GET_SELECTOR(obj, y);
+	if (obj) {
+		int x = GET_SELECTOR(obj, x);
+		int y = GET_SELECTOR(obj, y);
 
-    PUT_SELECTOR(obj, x, x - s->port->bounds.x);
-    PUT_SELECTOR(obj, y, y - s->port->bounds.y);
-  }
+		PUT_SELECTOR(obj, x, x - s->port->zone.x);
+		PUT_SELECTOR(obj, y, y - s->port->zone.y);
+	}
 }
 
 
 void
 kLocalToGlobal(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = UPARAM_OR_ALT(0, 0);
+	heap_ptr obj = UPARAM_OR_ALT(0, 0);
 
-  if (obj) {
-    int x = GET_SELECTOR(obj, x);
-    int y = GET_SELECTOR(obj, y);
+	if (obj) {
+		int x = GET_SELECTOR(obj, x);
+		int y = GET_SELECTOR(obj, y);
 
-    PUT_SELECTOR(obj, x, x + s->port->bounds.x);
-    PUT_SELECTOR(obj, y, y + s->port->bounds.y);
-  }
+		PUT_SELECTOR(obj, x, x + s->port->zone.x);
+		PUT_SELECTOR(obj, y, y + s->port->zone.y);
+	}
 }
 
 void /* Not implemented */

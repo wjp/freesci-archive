@@ -54,7 +54,7 @@ void FUNCTION_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per
 #endif /* USE_PRIORITY */
 
 		for (x = 0; x < alpha_end; x += bytes_per_alpha_pixel) {
-			if (alpha_test_mask & alpha[x] < alpha_min)
+			if ((alpha_test_mask & alpha[x]) < alpha_min)
 #ifdef USE_PRIORITY
 				if (priority_buffer[priority_offset] <= priority) {
 					priority_buffer[priority_offset] = priority;

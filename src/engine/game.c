@@ -150,6 +150,7 @@ _reset_graphics_input(state_t *s)
 	s->pic_is_new = 0;
 	s->pic_visible_map = 0; /* Other values only make sense for debugging */
 	s->dyn_views = NULL; /* no DynViews */
+	s->drop_views = NULL; /* And, consequently, no list for dropped views */
 
 	s->priority_first = 42; /* Priority zone 0 ends here */
 	s->priority_last = 200; /* The highest priority zone (15) starts here */

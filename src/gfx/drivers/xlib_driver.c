@@ -814,6 +814,11 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 		while (XCheckWindowEvent(display, window, eventmask | ExposureMask, &event)) {
 			switch (event.type) {
 
+			case ReparentNotify:
+			case ConfigureNotify:
+			case MapNotify:
+				break;
+
 			case KeyPress: {
 				sci_event->type = SCI_EVT_KEYBOARD;
 				sci_event->buckybits = S->buckystate;

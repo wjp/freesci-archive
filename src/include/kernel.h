@@ -57,6 +57,10 @@ extern DLLEXTERN int _debug_seeking;
 extern DLLEXTERN int _debug_step_running;
 
 
+typedef struct {
+	int x, y, xend, yend;
+} abs_rect_t;
+
 
 /******************** Heap macros ********************/
 

@@ -277,7 +277,7 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 		}
 	}
 
-#define ALPHA_FACTOR1 0x80
+#define ALPHA_FACTOR1 0x81
 #define ALPHA_FACTOR2 0xc0
 	if (alpha_mask & 0xff) {
 		alpha_min = ((alpha_mask * ALPHA_FACTOR1) >> 8) & alpha_mask;

@@ -1,3 +1,18 @@
+2001-02-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kDrawControl): Added full redraw to
+	DrawControl()
+	(kCanBeHere): Fixed collision checking
+
+	* src/engine/kevent.c (kGlobalToLocal): G2L and L2G now use port->zone
+	instead of port->area
+
+	* src/config.l: Fixed config system to allow numeric values in some
+	places (as described in the original documentation)
+
+	* src/gfx/gfx_support.c (ALPHA_FACTOR1): Increased crossblit
+	alpha threshold to 0xa0
+
 2001-02-24  Solomon Peachy <pizza@shaftnet.org>
 
 	* README,

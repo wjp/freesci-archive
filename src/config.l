@@ -143,6 +143,7 @@ DIGIT [0-9]
 PARAMTOKEN [[:alpha:]][[:alnum:]_]*
 SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
 NUMTOKEN {DIGIT}+
+NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
 
 %%
 
@@ -205,7 +206,7 @@ color_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} { /* Deprecated: For backward 
 		_parse_name(yytext, valid_modes, "color mode", conf[cur_section].gfx_options.pic0_dither_mode);
 }
 
-pic0_dither_pattern[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+pic0_dither_pattern[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
 	yytext = strchr(yytext, '=') + 1;
 
 	while (isspace(*yytext))
@@ -232,7 +233,7 @@ pic0_line_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
 		_parse_name(yytext, line_mode, "SCI0 pic line mode", conf[cur_section].gfx_options.pic0_line_mode);
 }
 
-dirty_strategy[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+dirty_strategy[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
 	yytext = strchr(yytext, '=') + 1;
 
 	while (isspace(*yytext))
@@ -241,7 +242,7 @@ dirty_strategy[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
 		_parse_name(yytext, dirty_strategy, "dirty strategy", conf[cur_section].gfx_options.dirty_frames);
 }
 
-pic0_scaled[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+pic0_scaled[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
 	yytext = strchr(yytext, '=') + 1;
 
 	while (isspace(*yytext))
@@ -286,7 +287,7 @@ cursor_filter[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
 		_parse_name(yytext, filter_mode, "cursor filter", conf[cur_section].gfx_options.cursor_xlate_filter);
 }
 
-mouse[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+mouse[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
 	yytext = strchr(yytext, '=') + 1;
 
 	while (isspace(*yytext))
