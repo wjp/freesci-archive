@@ -1,3 +1,9 @@
+2003-03-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/drivers/dc_driver.c (dc_input_thread): Added initial
+	support for the Dreamcast controller. It can now be used instead of
+	a mouse.
+
 2003-03-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/gamemenu.c, src/dc/gp.h, src/dc/selectgame.c: The Dreamcast

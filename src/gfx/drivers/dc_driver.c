@@ -30,6 +30,7 @@
 #include <dc/maple.h>
 #include <dc/maple/mouse.h>
 #include <dc/maple/keyboard.h>
+#include <dc/maple/controller.h>
 #include <dc/video.h>
 #include <dc/pvr.h>
 
@@ -355,9 +356,10 @@ dc_input_thread(struct _gfx_driver *drv)
 	int keystate = DC_KEY_INSERT;
 
 	while (S->run_thread) {
-		maple_device_t *kaddr = NULL, *maddr;
+		maple_device_t *kaddr = NULL, *maddr, *caddr;
 		mouse_state_t *mouse;
 		kbd_state_t *kbd = 0;
+		cont_state_t *cont;
 		uint8 key;
 		int skeys;	
 		int bucky = 0;
@@ -465,8 +467,53 @@ dc_input_thread(struct _gfx_driver *drv)
 				mstate &= ~DC_MOUSE_RIGHT;
 			}
 		}
-		else drv->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
+		else if ((caddr = maple_enum_type(0, MAPLE_FUNC_CONTROLLER)) &&
+		  (cont = maple_dev_status(caddr))) {
+			/* Enable mouse support */
+			drv->capabilities |= GFX_CAPABILITY_MOUSE_SUPPORT;
+			
+			/* Semaphore prevents get_event() from accessing
+			** S->pointer_dx/dy while they are being updated
+			*/
+			sem_wait(S->sem_pointer);
+			S->pointer_dx += cont->joyx/20;
+			S->pointer_dy += cont->joyy/20;
+			sem_signal(S->sem_pointer);
 
+			if ((cont->buttons & CONT_X) &&
+			  !(mstate & DC_MOUSE_LEFT)) {
+				event.type = SCI_EVT_MOUSE_PRESS;
+				event.data = 1;
+				event.buckybits = bucky;
+				dc_add_event(drv, &event);
+				mstate |= DC_MOUSE_LEFT;
+			}
+			if ((cont->buttons & CONT_Y) &&
+			  !(mstate & DC_MOUSE_RIGHT)) {
+				event.type = SCI_EVT_MOUSE_PRESS;
+				event.data = 2;
+				event.buckybits = bucky;
+				dc_add_event(drv, &event);
+				mstate |= DC_MOUSE_RIGHT;
+			}
+			if (!(cont->buttons & CONT_X) &&
+			  (mstate & DC_MOUSE_LEFT)) {
+				event.type = SCI_EVT_MOUSE_RELEASE;
+				event.data = 1;
+				event.buckybits = bucky;
+				dc_add_event(drv, &event);
+				mstate &= ~DC_MOUSE_LEFT;
+			}
+			if (!(cont->buttons & CONT_Y) &&
+			  (mstate & DC_MOUSE_RIGHT)) {
+				event.type = SCI_EVT_MOUSE_RELEASE;
+				event.data = 2;
+				event.buckybits = bucky;
+				dc_add_event(drv, &event);
+				mstate &= ~DC_MOUSE_RIGHT;
+			}
+		}
+		else drv->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
 	}
 }
 
