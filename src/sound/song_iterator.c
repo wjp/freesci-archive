@@ -183,7 +183,7 @@ _sci0_read_next_command(song_iterator_t *self, byte *buf, int *buf_size)
 				buf[0] = self->ccc;
 				return SI_CUE;
 
-			case SCI_MIDI_RESET_ON_STOP:
+			case SCI_MIDI_RESET_ON_SUSPEND:
 				self->resetflag = buf[2];
 				break;
 
@@ -217,7 +217,7 @@ _sci0_read_next_command(song_iterator_t *self, byte *buf, int *buf_size)
 			case 0x79: /* reset all */
 				/* No special treatment neccessary */
 				break;
-				
+
 			}
 			return 0;
 

@@ -68,7 +68,7 @@ on Win32. Hopefully, both of these bugs will be fixed in an upcoming release.
 If you wish to change the default MIDI out driver that FreeSCI chooses, add
 this to your config file:
 
-device = x
+midi_device = x
 
 where x is the number of the MIDI out device you wish to use.
 
