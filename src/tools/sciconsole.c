@@ -65,8 +65,6 @@ main(int argc, char** argv)
 	 "or any later version, at your option.\n"
 	 "It comes with ABSOLUTELY NO WARRANTY.\n");
 
-  sci_color_mode = 0; /* Needed for correct linking */
-
   if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
     exit(-1);

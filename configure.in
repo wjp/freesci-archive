@@ -49,7 +49,8 @@ AC_OUTPUT(Makefile    \
 	doc/Makefile \
         doc/misc/Makefile \
 	src/Makefile  \
-	src/core/Makefile \
+	src/scicore/Makefile \
+	src/engine/Makefile \
 	src/graphics/Makefile \
 	src/include/Makefile \
 	src/tools/Makefile \

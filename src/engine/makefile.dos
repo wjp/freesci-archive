@@ -1,0 +1,22 @@
+#
+# FreeSCI/DOS Makefile
+#
+# 19991220              rink            created this file
+#
+#
+TARGET  :       scicore.a
+
+FILES   =       heap.o kernel.o simplesaid.o said.o game.o \
+                kevent.o kfile.o kgraphics.o klists.o kmath.o kmenu.o   \
+                kscripts.o ksound.o kstring.o resource.o  \
+                savegame.o script.o scriptdebug.o       \
+                tools.o vm.o sci_dos.o
+		
+CC	= gcc
+CFLAGS	= -g -c -I../include -I../.. -D_DOS -DHAVE_LIBPNG -DHAVE_UNISTD_H
+
+clean:
+		del *.o *.a
+
+scicore.a:      ${FILES}
+		ar r sciengine.a ${FILES}

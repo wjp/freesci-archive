@@ -1,0 +1,21 @@
+#
+# FreeSCI/DOS Makefile
+#
+# 19991220              rink            created this file
+#
+#
+TARGET  :       scigraphics.a
+
+FILES   =	con_font.o con_io.o engine_graphics.o font.o graphics.o \
+		input.o mcursor.o menubar.o window.o graphics_png.o	\
+		graphics_dgfx.o
+		
+CC	= gcc
+CFLAGS	= -g -c -I../include -I../.. -D_DOS -DHAVE_LIBPNG -DHAVE_UNISTD_H \
+	  -DHAVE_DGFX
+
+clean:
+		del *.o *.a
+
+scigraphics.a:  ${FILES}
+		ar r scigraphics.a ${FILES}

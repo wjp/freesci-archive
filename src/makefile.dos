@@ -1,0 +1,20 @@
+#
+# FreeSCI/DOS Makefile
+#
+# 19991220              rink            created this file
+# 20000502		christoph	altered: core.a -> (scicore.a, engine.a)
+#
+#
+TARGET  :       freesci.exe
+
+FILES   =       main.o config.o yywrap.o
+LIBS	=	scicore/scicore.a engine/engine.a sound/scisound.a graphics/scigraphics.a
+		
+CC	= gcc
+CFLAGS	= -g -c -Iinclude -I../.. -D_DOS -DHAVE_LIBPNG -DHAVE_DGFX -DHAVE_UNISTD_H
+
+clean:
+		del *.o *.a
+
+freesci.exe:	${FILES} ${LIBS}
+		gcc -g -o freesci.exe ${FILES} ${LIBS} -lpng -lz
