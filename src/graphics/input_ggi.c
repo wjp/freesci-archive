@@ -54,6 +54,7 @@ ggi_visual_t _sci_ggi_last_visual;
     : (later.tv_sec >= earlier.tv_sec))
 
 static int buckybits;
+static int pending;
 
 sci_event_t _sci_ggi_input_handler(state_t *s)
 {
@@ -63,6 +64,16 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 
   event_loop.type = SCI_EVT_CLOCK;
   event_redraw.type = SCI_EVT_REDRAW;
+
+  if(pending!=-1)
+  {
+  	sci_event_t r;
+  	r.type=SCI_EVT_KEYBOARD;
+  	r.data=pending;
+  	pending=-1;
+  	r.buckybits=buckybits;
+  	return r;
+  }
 
   while (1) {
 
@@ -78,6 +89,24 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
         retval.data=-1;
         switch(event.key.label)
 	  {
+	  case GIIK_P4:
+	  case GIIK_Left: retval.data=0; pending=SCI_K_LEFT;; break;
+	  case GIIK_P6:
+	  case GIIK_Right: retval.data=0; pending=SCI_K_RIGHT; break;
+	  case GIIK_P8:
+	  case GIIK_Up: retval.data=0; pending=SCI_K_UP; break;
+	  case GIIK_P2:
+	  case GIIK_Down: retval.data=0; pending=SCI_K_DOWN; break;
+	  case GIIK_P7:
+	  case GIIK_Home: retval.data=0; pending=SCI_K_HOME; break;
+	  case GIIK_P1:
+	  case GIIK_End: retval.data=0; pending=SCI_K_END; break;
+	  case GIIK_P9:
+	  case GIIK_PageUp: retval.data=0; pending=SCI_K_PGUP; break;
+	  case GIIK_P3:
+	  case GIIK_PageDown: retval.data=0; pending=SCI_K_PGDOWN; break;
+	  case GIIK_P5: retval.data=SCI_K_CENTER; break;
+
 	  case GIIK_ShiftL: buckybits^=SCI_EVM_LSHIFT; break;
 	  case GIIK_ShiftR: buckybits^=SCI_EVM_RSHIFT; break;
 	  case GIIK_CtrlR:
@@ -90,17 +119,12 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	  case GIIK_NumLock: buckybits^=SCI_EVM_NUMLOCK; break;
 	  case GIIK_ScrollLock: buckybits^=SCI_EVM_SCRLOCK; break;
 	  case GIIK_Insert: buckybits^=SCI_EVM_INSERT; break;
+	  case GIIK_PEnter:
 	  case GIIK_Enter: retval.data='\r'; break;
 	  case GIIUC_Tab: retval.data='\t'; break;
-	  case GIIK_Left: retval.data=SCI_K_LEFT;; break;
-	  case GIIK_Right: retval.data=SCI_K_RIGHT; break;
-	  case GIIK_Up: retval.data=SCI_K_UP; break;
-	  case GIIK_Down: retval.data=SCI_K_DOWN; break;
-	  case GIIK_Home: retval.data=SCI_K_HOME; break;
-	  case GIIK_End: retval.data=SCI_K_END; break;
-	  case GIIK_PageUp: retval.data=SCI_K_PGUP; break;
-	  case GIIK_PageDown: retval.data=SCI_K_PGDOWN; break;
+	  case GIIUC_Space: retval.data=' '; break;
 	  case GIIUC_BackSpace: retval.data=SCI_K_BACKSPACE; break;
+
 	    /*FIXME: Add all special keys in a sane way*/
 	  default:
 	    {
@@ -196,6 +220,7 @@ void initInputGGI()
   gettimeofday(&_sci_ggi_redraw_loopt, NULL);
   _sci_ggi_loopt = _sci_ggi_redraw_loopt;
   buckybits=0;
+  pending=-1;
   /* reset timers, leave them at current time to send redraw events ASAP */
 
 }
