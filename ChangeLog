@@ -1,3 +1,8 @@
+2004-08-02  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kernel.c (determine_reg_type): Allow a signature to
+	ignore invalid pointers. 
+
 2004-08-01  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/scicore/resource.c (scir_find_resource): Modulo-ise bad resource

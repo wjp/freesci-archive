@@ -41,6 +41,7 @@
 #define KSIG_SPEC_ARITHMETIC 'i'
 #define KSIG_SPEC_NULL 'z'
 #define KSIG_SPEC_ANY '.'
+#define KSIG_SPEC_ALLOW_INV '!' /* Allow invalid pointers */
 #define KSIG_SPEC_ELLIPSIS '*' /* Arbitrarily more TYPED arguments */
 
 #define KSIG_SPEC_SUM_DONE ('a' - 'A') /* Use small letters to indicate end of sum type */
@@ -58,8 +59,11 @@
 #define KSIG_ARITHMETIC 0x10
 
 #define KSIG_NULL	0x40
-#define KSIG_ANY	0x7f
+#define KSIG_ANY	0x5f
 #define KSIG_ELLIPSIS	0x80
+#define KSIG_ALLOW_INV  0x20
+#define KSIG_INVALID	KSIG_ALLOW_INV
+
 
 int
 kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv);
@@ -72,11 +76,21 @@ kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv);
 */
 
 int
-determine_reg_type(state_t *s, reg_t reg);
+determine_reg_type(state_t *s, reg_t reg, int allow_invalid);
 /* Determines the type of the object indicated by reg
 ** Parameters: (state_t *) s: The state to operate on
 **             (reg_t) reg: The register to check
-** Returns   : one of KSIG_* below KSIG_NULL, or 0 on error
+**	       (int) allow_invalid: Allow invalid pointer values
+** Returns   : one of KSIG_* below KSIG_NULL. 
+**	       KSIG_INVALID set if the type of reg can be determined, but is invalid.
+**	       0 on error.
+*/
+
+char *
+kernel_argtype_description(int type);
+/* Returns a textual description of the type of an object
+** Parameters: (int) type: The type value to describe
+** Returns: (char *) Pointer to a (static) descriptive string
 */
 
 #endif /* ! _FREESCI_KERNEL_TYPES_H_ */

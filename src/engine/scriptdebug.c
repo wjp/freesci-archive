@@ -578,11 +578,14 @@ static int
 c_vr(state_t *s)
 {
 	reg_t reg = cmd_params[0].reg;
-	int type_mask = determine_reg_type(s, reg);
+	int type_mask = determine_reg_type(s, reg, 1);
 	int filter;
 	int found = 0;
 
-	sciprintf(PREG" is of type 0x%x: ", PRINT_REG(reg), type_mask);
+	sciprintf(PREG" is of type 0x%x%s: ", PRINT_REG(reg), type_mask & ~KSIG_INVALID,
+					    type_mask & KSIG_INVALID ? " (invalid)" : "");
+
+	type_mask &= ~KSIG_INVALID;
 
 	if (reg.segment == 0
 	    && reg.offset == 0) {
@@ -3116,34 +3119,37 @@ c_se(state_t *s)
 int
 c_type(state_t *s)
 {
-	int t = determine_reg_type(s, cmd_params[0].reg);
+	int t = determine_reg_type(s, cmd_params[0].reg, 1);
+	int invalid = t & KSIG_INVALID;
 
-	switch (t) {
+	switch (t & ~KSIG_INVALID) {
 
 	case 0:
-		sciprintf("Invalid\n");
+		sciprintf("Invalid");
 		break;
 
 	case KSIG_LIST:
-		sciprintf("List\n");
+		sciprintf("List");
 		break;
 
 	case KSIG_OBJECT:
-		sciprintf("Object\n");
+		sciprintf("Object");
 		break;
 
 	case KSIG_REF:
-		sciprintf("Reference\n");
+		sciprintf("Reference");
 		break;
 
 	case KSIG_ARITHMETIC:
-		sciprintf("Arithmetic\n");
+		sciprintf("Arithmetic");
 		break;
 
 	default:
 		sciprintf("Erroneous unknown type %02x(%d decimal)\n", t, t);
 		
 	}
+	
+	sciprintf("%s\n", invalid ? " (invalid)" : "");
 }
 
 int

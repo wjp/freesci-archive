@@ -336,6 +336,8 @@ sci_kernel_function_t kfunct_mappers[] = {
 	{KF_TERMINATOR, NULL} /* Terminator */
 };
 
+static char *argtype_description[] = {"Undetermined (WTF?)", "List","Node","Object","Reference","Arithmetic"};
+
 
 /******************** Kernel Oops ********************/
 
@@ -748,6 +750,10 @@ kernel_compile_signature(char **s)
 				v |= KSIG_ANY;
 				break;
 
+			case KSIG_SPEC_ALLOW_INV:
+				v |= KSIG_ALLOW_INV;
+				break;
+			
 			case KSIG_SPEC_ELLIPSIS:
 				v |= KSIG_ELLIPSIS;
 				ellipsis = 1;
@@ -762,7 +768,9 @@ kernel_compile_signature(char **s)
 			}
 
 			}
-		} while (*src && (*src == '*' || (c < 'a' && c != '.')));
+		} while (*src && (*src == KSIG_SPEC_ALLOW_INV || 
+				  *src == KSIG_SPEC_ELLIPSIS || 
+				  (c < 'a' && c != KSIG_SPEC_ANY)));
 
 		/* To handle sum types */
 		result[index++] = v;
@@ -861,7 +869,7 @@ free_kfunct_tables(state_t *s)
 
 }
 int
-determine_reg_type(state_t *s, reg_t reg)
+determine_reg_type(state_t *s, reg_t reg, int allow_invalid)
 {
 	mem_obj_t *mobj;
 
@@ -892,52 +900,60 @@ determine_reg_type(state_t *s, reg_t reg)
 			return KSIG_REF;
 
 	case MEM_OBJ_CLONES:
-		if (ENTRY_IS_VALID(&(mobj->data.clones), reg.offset))
+		if (allow_invalid || ENTRY_IS_VALID(&(mobj->data.clones), reg.offset))
 			return KSIG_OBJECT;
 		else
-			return 0;
+			return KSIG_OBJECT | KSIG_INVALID;
 
 	case MEM_OBJ_LOCALS:
-		if (reg.offset < mobj->data.locals.nr * sizeof(reg_t))
+		if (allow_invalid || reg.offset < mobj->data.locals.nr * sizeof(reg_t))
 			return KSIG_REF;
 		else
-			return 0;
+			return KSIG_REF | KSIG_INVALID;
 
 	case MEM_OBJ_STACK:
-		if (reg.offset < mobj->data.stack.nr * sizeof(reg_t))
+		if (allow_invalid || reg.offset < mobj->data.stack.nr * sizeof(reg_t))
 			return KSIG_REF;
 		else
-			return 0;
+			return KSIG_REF | KSIG_INVALID;
 
 	case MEM_OBJ_SYS_STRINGS:
-		if (reg.offset < SYS_STRINGS_MAX
-		    && mobj->data.sys_strings.strings[reg.offset].name)
+		if (allow_invalid || (reg.offset < SYS_STRINGS_MAX
+		    && mobj->data.sys_strings.strings[reg.offset].name))
 			return KSIG_REF;
 		else
-			return 0;
+			return KSIG_REF | KSIG_INVALID;
 
 	case MEM_OBJ_LISTS:
-		if (ENTRY_IS_VALID(&(mobj->data.lists), reg.offset))
+		if (allow_invalid || ENTRY_IS_VALID(&(mobj->data.lists), reg.offset))
 			return KSIG_LIST;
 		else
-			return 0;
+			return KSIG_LIST | KSIG_INVALID;
 
 	case MEM_OBJ_NODES:
-		if (ENTRY_IS_VALID(&(mobj->data.nodes), reg.offset))
+		if (allow_invalid || ENTRY_IS_VALID(&(mobj->data.nodes), reg.offset))
 			return KSIG_NODE;
 		else
-			return 0;
+			return KSIG_NODE | KSIG_INVALID;
 
 	case MEM_OBJ_DYNMEM:
-		if (reg.offset < mobj->data.dynmem.size)
+		if (allow_invalid || reg.offset < mobj->data.dynmem.size)
 			return KSIG_REF;
 		else
-			return 0;
+			return KSIG_REF | KSIG_INVALID;
 
 	default:
 		return 0;
 
 	}
+}
+
+char *
+kernel_argtype_description(int type)
+{
+    type &= ~KSIG_INVALID;
+    
+    return argtype_description[sci_ffs(type)];
 }
 
 int
@@ -948,12 +964,19 @@ kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv)
 
 	while (*sig && argc) {
 		if ((*sig & KSIG_ANY) != KSIG_ANY) {
-			int type = determine_reg_type(s, *argv);
+			int type = determine_reg_type(s, *argv, *sig & KSIG_ALLOW_INV);
 
 			if (!type) {
 				sciprintf("[KERN] Could not determine type of ref "PREG";"
 					  " failing signature check\n",
 					  PRINT_REG(*argv));
+				return 0;
+			}
+			
+			if (type & KSIG_INVALID) {
+				sciprintf("[KERN] ref "PREG" was determined to be a %s, "
+					  "but the reference itself is invalid\n",
+					  PRINT_REG(*argv), kernel_argtype_description(type));
 				return 0;
 			}
 
