@@ -33,8 +33,8 @@
 #include <gfx_options.h>
 
 typedef struct {
-  char *option;
-  char *value;
+	char *option;
+	char *value;
 } gfx_option_t;
 
 typedef struct {
@@ -45,6 +45,7 @@ typedef struct {
 	gfx_options_t gfx_options;
 
 	int animation_delay; /* Number of microseconds to wait between each pic transition animation cycle */
+	int alpha_threshold; /* Crossblitting alpha threshold */
 	int unknown_count; /* The number of "unknown" kernel functions */ 
 	char *resource_dir; /* Resource directory */
 	char *work_dir;     /* Working directory (save games, additional graphics) */

@@ -1370,8 +1370,8 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 {
 	int x = GET_SELECTOR(obj, nsLeft);
 	int y = GET_SELECTOR(obj, nsTop);
-	int xl = GET_SELECTOR(obj, nsRight) - x + 1;
-	int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
+	int xl = GET_SELECTOR(obj, nsRight) - x;
+	int yl = GET_SELECTOR(obj, nsBottom) - y;
 	rect_t area = gfx_rect(x, y, xl, yl);
 
 	int font_nr = GET_SELECTOR(obj, font);
@@ -1512,13 +1512,15 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 	if (!(view->signalp && (GET_HEAP(view->signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
 		gfxw_box_t *box;
 		gfx_color_t color;
+		abs_rect_t abs_bounds = set_base(s, (heap_ptr) view->ID);
 
 		gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
 
 		SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", left, top,
 			  right, bottom);
 
-		box = gfxw_new_box(s->gfx_state, gfx_rect(left, top, right - left + 1, bottom - top + 1),
+		box = gfxw_new_box(s->gfx_state, gfx_rect(abs_bounds.x, abs_bounds.y, abs_bounds.xend - abs_bounds.x + 1, abs_bounds.yend - abs_bounds.y + 1)
+/*gfx_rect(left, top, right - left + 1, bottom - top + 1)*/,
 				   color, color, GFX_BOX_SHADE_FLAT);
 
 		assert_primary_widget_lists(s);
@@ -1987,7 +1989,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		
 		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y), 0, view, loop, cel,
 						priority, control, ALIGN_CENTER, ALIGN_BOTTOM, 0));
-		draw_to_control_map(s, (gfxw_dyn_view_t *) widget, 1, funct_nr, argc, argp);
+		/*		draw_to_control_map(s, (gfxw_dyn_view_t *) widget, 1, funct_nr, argc, argp); */
 
 		if (!widget) {
 			SCIkwarn(SCIkERROR, "Attempt to single-add invalid picview (%d/%d/%d)\n", view, loop, cel);

@@ -45,6 +45,7 @@ typedef struct {
 	char *text; /* Copy of the actual text */
 
 	int lines_nr;
+	int line_height;
 	text_fragment_t *lines; /* Text offsets */
 	gfx_bitmap_font_t *font;
 	gfx_pixmap_t **text_pixmaps;

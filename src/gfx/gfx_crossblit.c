@@ -35,11 +35,11 @@
 ** BYTESPP: Bytes per pixel
 */
 
-void FUNCTION_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_line,
-		   int xl, int yl, byte *alpha, int bytes_per_alpha_line, int bytes_per_alpha_pixel,
-		   int alpha_test_mask, int alpha_min, int alpha_max
+static void FUNCTION_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_line,
+			  int xl, int yl, byte *alpha, int bytes_per_alpha_line, int bytes_per_alpha_pixel,
+			  int alpha_test_mask, int alpha_min
 #ifdef USE_PRIORITY
-		   , byte *priority_buffer, int bytes_per_priority_line, int bytes_per_priority_pixel, int priority
+			  , byte *priority_buffer, int bytes_per_priority_line, int bytes_per_priority_pixel, int priority
 #endif /* USE_PRIORITY */
 		   )
 {

@@ -441,6 +441,8 @@ init_console()
 		     "Whether pic0 should be drawn unscaled\n");
 	con_hook_int(&(gfx_options->dirty_frames), "dirty_frames",
 		     "Dirty frames management\n");
+	con_hook_int(&gfx_crossblit_alpha_threshold, "alpha_threshold",
+		     "Alpha threshold for crossblitting\n");
 
 	con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
 
@@ -716,6 +718,7 @@ main(int argc, char** argv)
 		con_file = console_logfile;
 	}
 	gamestate->animation_delay = conf[conf_nr].animation_delay;
+	gfx_crossblit_alpha_threshold = conf[conf_nr].alpha_threshold;
 
 	printf("Emulating SCI version %d.%03d.%03d\n",
 	       SCI_VERSION_MAJOR(gamestate->version),

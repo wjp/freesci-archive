@@ -303,7 +303,8 @@ gfx_pixmap_t *
 gfxr_draw_font(gfx_bitmap_font_t *font, char *text, int characters,
 	       gfx_pixmap_color_t *fg0, gfx_pixmap_color_t *fg1, gfx_pixmap_color_t *bg)
 {
-	int height = font->line_height;
+	int height = font->height;
+	int line_height = font->line_height;
 	int width = 0;
 	gfx_pixmap_t *pxm;
 	int fore_0, fore_1, back;
@@ -357,3 +358,4 @@ gfxr_draw_font(gfx_bitmap_font_t *font, char *text, int characters,
 
 	return pxm;
 }
+

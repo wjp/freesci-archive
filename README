@@ -151,6 +151,7 @@ time, the configuration file may contain:
   non-moving background) images. 'none' means that they are translated into
   what may look like a huge chunk of colored rectangles; 'bilinear' smoothes
   those rectangles somewhat.
+  This has no effect if graphics are not scaled.
 
 - pic_filter = none | bilinear
   Selects the filter to use when scaling background pictures. This only applies
@@ -171,6 +172,18 @@ time, the configuration file may contain:
 
 - animation_delay: A speed factor for transition animations. Default is 500.
   Set to 0 to disable transition animations.
+
+- alpha_threshold: A value between 0 and 255 (defaults to 129) used by the
+  built-in crossblitter to distinguish between "opaque" and "transparent"
+  pixels. This only has any effect if pixmap filtering is enabled for any
+  resource type.
+  Smaller values will cause fewer parts of the picture to be displayed,
+  which may result e.g. in text being unreadable, while larger values may
+  cause too many pixels to be drawn, resulting in bulky images. Most of
+  the "critical" pixels are around the area of 128; it is recommended that
+  you use 129 when running with even scaling factors, and 128 for odd
+  factors.
+  This does not have any effect when running unscaled.
 
 
 Example:

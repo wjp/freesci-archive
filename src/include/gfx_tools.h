@@ -38,6 +38,10 @@ typedef enum {
 } gfx_xlate_filter_t;
 
 
+extern int gfx_crossblit_alpha_threshold; /* Crossblitting functions use this value as threshold
+					  ** for distinguishing between transparent and opaque
+					  ** wrt alpha values */
+
 gfx_mode_t *
 gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned int green_mask,
 	     unsigned int blue_mask, unsigned int alpha_mask, int red_shift, int green_shift,

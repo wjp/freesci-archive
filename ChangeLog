@@ -1,8 +1,19 @@
+2001-02-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/klists.c (listp): When verifying lists, sizes of both 6
+	and 8 (6 +2 bytes heap padding) are allowed now.
+
+	* src/config.l: Added new alpha threshold option
+
+	* src/gfx/operations.c (gfxop_new_text): Fixed text rendering for
+	pixels below the bottom line
+
 2001-02-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kDrawControl): Added full redraw to
 	DrawControl()
 	(kCanBeHere): Fixed collision checking
+	(_k_draw_control): Fixed trivial OB1 issue when determining control size
 
 	* src/engine/kevent.c (kGlobalToLocal): G2L and L2G now use port->zone
 	instead of port->area
@@ -11,7 +22,7 @@
 	places (as described in the original documentation)
 
 	* src/gfx/gfx_support.c (ALPHA_FACTOR1): Increased crossblit
-	alpha threshold to 0xa0
+	alpha threshold to 0x81
 
 2001-02-24  Solomon Peachy <pizza@shaftnet.org>
 

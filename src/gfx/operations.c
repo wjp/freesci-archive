@@ -1852,6 +1852,7 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 	strcpy(handle->text, text);
 	handle->halign = halign;
 	handle->valign = valign;
+	handle->line_height = font->line_height;
 
 	handle->lines =
 		gfxr_font_calculate_size(font, maxwidth, handle->text, &(handle->width), &(handle->height),
@@ -1947,7 +1948,7 @@ gfxop_draw_text(gfx_state_t *state, gfx_text_handle_t *handle, rect_t zone)
 
 	_gfxop_scale_rect(&zone, state->driver->mode);
 
-	line_height = handle->text_pixmaps[0]->index_yl * state->driver->mode->yfact;
+	line_height = handle->line_height * state->driver->mode->yfact;
 
 	pos.y = zone.y;
 

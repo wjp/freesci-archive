@@ -1521,7 +1521,7 @@ show_list(state_t *s, heap_ptr list)
 	int nodectr = 0;
 
 	sciprintf("List at %04x:\n", list);
-	node = getInt16(s->heap + list );
+	node = getUInt16(s->heap + list );
 
 	while (node) {
 		nodectr++;
@@ -1570,20 +1570,22 @@ c_dump_words(state_t *s)
 int
 c_show_list(state_t *s)
 {
-  heap_ptr list = cmd_params[0].val;
+	heap_ptr list = cmd_params[0].val;
+	int size;
 
-  if (!s) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!s) {
+	  sciprintf("Not in debug state\n");
+	  return 1;
+	}
 
-  if (getInt16(s->heap + list - 2) != 6) { /* List is hmalloc()'d to size 6 */
-    sciprintf("No list at %04x.\n", list);
-    return 1;
-  }
+	size = getUInt16(s->heap + list - 2);
+	if (size != 6 && size != 8) {
+		sciprintf("No list at %04x.\n", list);
+		return 1;
+	}
 
-  return 
-    show_list(s, list);
+	return 
+		show_list(s, list);
 }
 
 

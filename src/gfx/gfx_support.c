@@ -31,6 +31,7 @@
 #include <gfx_system.h>
 #include <gfx_tools.h>
 
+int gfx_crossblit_alpha_threshold;
 
 #define DRAWLINE_FUNC _gfx_draw_line_buffer_1
 #define PIXELWIDTH 1
@@ -192,6 +193,18 @@ _gfx_crossblit_simple(byte *dest, byte *src, int dest_line_width, int src_line_w
 	}
 }
 
+#ifdef __alpha__
+#  define FUNCT_NAME alpha_mvi_crossblit_32
+#    include "alpha_mvi_crossblit.c"
+#  undef FUNCT_NAME
+
+#  define FUNCT_NAME alpha_mvi_crossblit_32_P
+#  define PRIORITY
+#    include "alpha_mvi_crossblit.c"
+#  undef PRIORTY
+#  undef FUNCT_NAME
+#endif /* __alpha__ */
+
 int
 gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 		     rect_t src_coords,
@@ -204,7 +217,7 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 	byte *src = pxm->data;
 	byte *alpha = pxm->alpha_map? pxm->alpha_map : pxm->data;
 	byte *priority_pos = priority_dest;
-	int alpha_mask, alpha_min, alpha_max;
+	int alpha_mask, alpha_min;
 	int bpp = mode->bytespp;
 	int bytes_per_alpha_pixel = pxm->alpha_map? 1 : bpp;
 	int bytes_per_alpha_line =  bytes_per_alpha_pixel * pxm->xl;
@@ -278,14 +291,10 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 	}
 
 #define ALPHA_FACTOR1 0x81
-#define ALPHA_FACTOR2 0xc0
-	if (alpha_mask & 0xff) {
-		alpha_min = ((alpha_mask * ALPHA_FACTOR1) >> 8) & alpha_mask;
-		alpha_max = ((alpha_mask * ALPHA_FACTOR2) >> 8) & alpha_mask;
-	} else {
-		alpha_min = ((alpha_mask >> 8) * ALPHA_FACTOR1) & alpha_mask;
-		alpha_max = ((alpha_mask >> 8) * ALPHA_FACTOR2) & alpha_mask;
-	}
+	if (alpha_mask & 0xff)
+		alpha_min = ((alpha_mask * gfx_crossblit_alpha_threshold) >> 8) & alpha_mask;
+	else
+		alpha_min = ((alpha_mask >> 8) * gfx_crossblit_alpha_threshold) & alpha_mask;
 
 	if (!alpha_mask)
 		 _gfx_crossblit_simple(dest, src, dest_line_width, pxm->xl * bpp, 
@@ -297,22 +306,22 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 
 		case 1: _gfx_crossblit_8(dest, src, dest_line_width, pxm->xl * bpp, 
 					 xl, yl, alpha, bytes_per_alpha_line, bytes_per_alpha_pixel,
-					 alpha_mask, alpha_min, alpha_max);
+					 alpha_mask, alpha_min);
 			break;
 
 		case 2: _gfx_crossblit_16(dest, src, dest_line_width, pxm->xl * bpp, 
 					 xl, yl, alpha, bytes_per_alpha_line, bytes_per_alpha_pixel,
-					 alpha_mask, alpha_min, alpha_max);
+					 alpha_mask, alpha_min);
 			break;
 
 		case 3: _gfx_crossblit_24(dest, src, dest_line_width, pxm->xl * bpp, 
 					 xl, yl, alpha, bytes_per_alpha_line, bytes_per_alpha_pixel,
-					 alpha_mask, alpha_min, alpha_max);
+					 alpha_mask, alpha_min);
 			break;
 
 		case 4: _gfx_crossblit_32(dest, src, dest_line_width, pxm->xl * bpp, 
 					 xl, yl, alpha, bytes_per_alpha_line, bytes_per_alpha_pixel,
-					 alpha_mask, alpha_min, alpha_max);
+					 alpha_mask, alpha_min);
 			break;
 
 		default: GFXERROR("Invalid mode->bytespp: %d\n", mode->bytespp);
@@ -325,25 +334,25 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 
 	case 1: _gfx_crossblit_8_P(dest, src, dest_line_width, pxm->xl * bpp, 
 				   xl, yl, alpha, bytes_per_alpha_line, bytes_per_alpha_pixel,
-				   alpha_mask, alpha_min, alpha_max, priority_pos,
+				   alpha_mask, alpha_min, priority_pos,
 				   priority_line_width, priority_skip, priority);
 		break;
 
 	case 2: _gfx_crossblit_16_P(dest, src, dest_line_width, pxm->xl * bpp, 
 				    xl, yl, alpha, bytes_per_alpha_line, bytes_per_alpha_pixel,
-				    alpha_mask, alpha_min, alpha_max, priority_pos,
+				    alpha_mask, alpha_min, priority_pos,
 				    priority_line_width, priority_skip, priority);
 		break;
 
 	case 3: _gfx_crossblit_24_P(dest, src, dest_line_width, pxm->xl * bpp, 
 				    xl, yl, alpha, bytes_per_alpha_line, bytes_per_alpha_pixel,
-				    alpha_mask, alpha_min, alpha_max, priority_pos,
+				    alpha_mask, alpha_min, priority_pos,
 				    priority_line_width, priority_skip, priority);
 		break;
 
 	case 4: _gfx_crossblit_32_P(dest, src, dest_line_width, pxm->xl * bpp, 
 				    xl, yl, alpha, bytes_per_alpha_line, bytes_per_alpha_pixel,
-				    alpha_mask, alpha_min, alpha_max, priority_pos,
+				    alpha_mask, alpha_min, priority_pos,
 				    priority_line_width, priority_skip, priority);
 		break;
 
@@ -354,6 +363,5 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 
 	return GFX_OK;
 }
-
 
 

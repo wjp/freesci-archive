@@ -28,6 +28,14 @@
 #include <engine.h>
 
 
+static inline int
+listp(state_t *s, heap_ptr address)
+{
+	int size = UGET_HEAP(address);
+	return (size == 6 || size == 8);
+}
+
+
 
 void
 kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -190,7 +198,7 @@ kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr list = UPARAM(0);
 
 	if (list)
-		s->acc = GET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+		s->acc = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
 	else
 		s->acc = 0;
 }
@@ -239,7 +247,7 @@ kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		PUT_HEAP(newnode + LIST_PREVIOUS_NODE, 0);
 		PUT_HEAP(list + LIST_FIRST_NODE, newnode);
 
-		if (GET_HEAP(list + LIST_LAST_NODE) == 0) /* List was empty? */
+		if (UGET_HEAP(list + LIST_LAST_NODE) == 0) /* List was empty? */
 			PUT_HEAP(list + LIST_LAST_NODE, newnode); /* First node is also the last node */
 	}
 }
@@ -251,7 +259,7 @@ kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr list = UPARAM(0);
 
 	if (list)
-		s->acc = GET_HEAP(UPARAM(0) + LIST_LAST_NODE);
+		s->acc = UGET_HEAP(UPARAM(0) + LIST_LAST_NODE);
 	else
 		s->acc = 0;
 }
@@ -260,14 +268,14 @@ kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kPrevNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	s->acc = GET_HEAP(UPARAM(0) + LIST_PREVIOUS_NODE);
+	s->acc = UGET_HEAP(UPARAM(0) + LIST_PREVIOUS_NODE);
 }
 
 
 void
 kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	s->acc = GET_HEAP(UPARAM(0) + LIST_NEXT_NODE);
+	s->acc = UGET_HEAP(UPARAM(0) + LIST_NEXT_NODE);
 }
 
 
@@ -278,7 +286,7 @@ kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
   
 	a = UPARAM(0) + LIST_NODE_VALUE;
 
-	s->acc=GET_HEAP(a);
+	s->acc=UGET_HEAP(a);
 
 }
 
@@ -287,7 +295,7 @@ void
 kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	heap_ptr address = PARAM(0) - 2; /* -2 to get the heap header */
-	heap_ptr node = GET_HEAP(address + 2 + LIST_FIRST_NODE);
+	heap_ptr node = UGET_HEAP(address + 2 + LIST_FIRST_NODE);
 
 	while (node) { /* Free all nodes */
 		heap_ptr node_heapbase = node - 2;
@@ -296,7 +304,7 @@ kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		heap_free(s->_heap, node_heapbase); /* Clear heap space of old node */
 	}
 
-	if (GET_HEAP(address) != 6) {
+	if (!listp(s, address)) {
 		SCIkwarn(SCIkERROR, "Attempt to dispose non-list at %04x\n", address);
 	} else heap_free(s->_heap, address);
 }
