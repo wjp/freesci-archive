@@ -496,7 +496,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 			break;
 
 		case SI_FINISHED:
-			PUT_SEL32V(obj, signal, 0xff);
+			PUT_SEL32V(obj, signal, 0xffff);
 			break;
 
 		case SI_LOOP:

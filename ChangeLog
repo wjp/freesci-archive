@@ -1,3 +1,8 @@
+2004-02-25  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/ksound.c (kDoSound_SCI01): One-liner fix for KQ5
+	intro: When song ends, set signal to 0xffff, not 0xff.
+
 2004-02-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/iterator.c: Fixed memory leak when generating PCM feeds
