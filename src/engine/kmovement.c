@@ -238,7 +238,11 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	SCIkdebug(SCIkBRESEN, "New data: (x,y)=(%d,%d), di=%d\n", x, y, bdi);
 
-	invoke_selector(INV_SEL(client, canBeHere, 0), 0);
+	if (s->version >= SCI_VERSION_FTU_INVERSE_CANBEHERE)
+		invoke_selector(INV_SEL(client, cantBeHere, 0), 0); else
+			invoke_selector(INV_SEL(client, canBeHere, 0), 0);
+
+	s->r_acc = not_register(s, s->r_acc);
 
 	if (!s->r_acc.offset) { /* Contains the return value */
 

@@ -1,3 +1,11 @@
+2003-03-26  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c,
+	  src/engine/kmovement.c,
+	  src/scicore/script.c: Added support for inverse CanBeHere semantics.
+	* src/engine/game.c (script_init_engine): Autodetect inverse CanBeHere
+	  semantics.
+
 2003-03-25  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/decompress_01.c,

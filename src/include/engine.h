@@ -274,4 +274,13 @@ other_libs_exit();
 /* Called directly before FreeSCI ends to allow libraries to clean up
 */
 
+static inline
+reg_t not_register(state_t *s, reg_t r)
+{
+	if (s->version >= SCI_VERSION_FTU_INVERSE_CANBEHERE)
+		return make_reg(0, !r.offset); else
+		return r;
+
+}
+
 #endif /* !_SCI_ENGINE_H */

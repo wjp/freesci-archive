@@ -747,7 +747,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 	SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
 	if (retval == 0) {
 		SCIkdebug(SCIkBRESEN, " -> %04x\n", retval);
-		return NULL_REG; /* Can'tBeHere */
+		return not_register(s, NULL_REG); /* Can'tBeHere */
 	}
 
 	retval = 0;
@@ -765,7 +765,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
                             && is_object(s, make_reg(widget->ID, widget->subID)))
                                 if (collides_with(s, abs_zone, make_reg(widget->ID, widget->subID), 1,
 						  GASEOUS_VIEW_MASK_ACTIVE, funct_nr, argc, argv))
-                                        return NULL_REG;
+                                        return not_register(s, NULL_REG);
 
                         widget = (gfxw_dyn_view_t *) widget->next;
                 }
@@ -774,7 +774,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 	if (signal & GASEOUS_VIEW_MASK_ACTIVE) {
 		retval = signal & GASEOUS_VIEW_MASK_ACTIVE; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
 		SCIkdebug(SCIkBRESEN, " -> %04x\n", retval);
-		return make_reg(0, retval); /* CanBeHere */
+		return not_register(s, make_reg(0, retval)); /* CanBeHere */
 	}
 
 	if (cliplist_ref.segment)
@@ -794,7 +794,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 
 				if (collides_with(s, abs_zone, other_obj, 0, GASEOUS_VIEW_MASK_PASSIVE, funct_nr, argc, argv)) {
 					SCIkdebug(SCIkBRESEN, " -> %04x\n", retval);
-					return NULL_REG;
+					return not_register(s, NULL_REG);
 				}
 
 			} /* if (other_obj != obj) */
@@ -806,7 +806,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 		retval = 1;
 	SCIkdebug(SCIkBRESEN, " -> %04x\n", retval);
 
-	return make_reg(0, retval);
+	return not_register(s, make_reg(0, retval));
 }  /* CanBeHere */
 
 
