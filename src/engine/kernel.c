@@ -30,129 +30,129 @@
 
 
 sci_kernel_function_t kfunct_mappers[] = {
-  {"Load", kLoad},
-  {"UnLoad", kUnLoad},
-  {"GameIsRestarting", kGameIsRestarting },
-  {"NewList", kNewList },
-  {"GetSaveDir", kGetSaveDir },
-  {"GetCWD", kGetCWD },
-  {"SetCursor", kSetCursor },
-  {"FindKey", kFindKey },
-  {"NewNode", kNewNode },
-  {"AddToFront", kAddToFront },
-  {"AddToEnd", kAddToEnd },
-  {"Show", kShow },
-  {"PicNotValid", kPicNotValid },
-  {"Random", kRandom },
-  {"Abs", kAbs },
-  {"Sqrt", kSqrt },
-  {"OnControl", kOnControl },
-  {"HaveMouse", kHaveMouse },
-  {"GetAngle", kGetAngle },
-  {"GetDistance", kGetDistance },
-  {"LastNode", kLastNode },
-  {"FirstNode", kFirstNode },
-  {"NextNode", kNextNode },
-  {"PrevNode", kPrevNode },
-  {"NodeValue", kNodeValue },
-  {"Clone", kClone },
-  {"DisposeClone", kDisposeClone },
-  {"ScriptID", kScriptID },
-  {"MemoryInfo", kMemoryInfo },
-  {"DrawPic", kDrawPic },
-  {"DisposeList", kDisposeList },
-  {"DisposeScript", kDisposeScript },
-  {"GetPort", kGetPort },
-  {"SetPort", kSetPort },
-  {"NewWindow", kNewWindow },
-  {"DisposeWindow", kDisposeWindow },
-  {"IsObject", kIsObject },
-  {"Format", kFormat },
-  {"DrawStatus", kDrawStatus },
-  {"DrawMenuBar", kDrawMenuBar },
-  {"AddMenu", kAddMenu },
-  {"SetMenu", kSetMenu },
-  {"AddToPic", kAddToPic },
-  {"CelWide", kCelWide },
-  {"CelHigh", kCelHigh },
-  {"Display", kDisplay },
-  {"Animate", kAnimate },
-  {"GetTime", kGetTime },
-  {"DeleteKey", kDeleteKey },
-  {"StrLen", kStrLen },
-  {"GetFarText", kGetFarText },
-  {"StrEnd", kStrEnd },
-  {"StrCat", kStrCat },
-  {"StrCmp", kStrCmp },
-  {"StrCpy", kStrCpy },
-  {"StrAt", kStrAt },
-  {"ReadNumber", kReadNumber },
-  {"DrawControl", kDrawControl },
-  {"NumCels", kNumCels },
-  {"NumLoops", kNumLoops },
-  {"TextSize", kTextSize },
-  {"InitBresen", kInitBresen },
-  {"DoBresen", kDoBresen },
-  {"CanBeHere", kCanBeHere },
-  {"DrawCel", kDrawCel },
-  {"DirLoop", kDirLoop },
-  {"CoordPri", kCoordPri },
-  {"PriCoord", kPriCoord },
-  {"ValidPath", kValidPath },
-  {"RespondsTo", kRespondsTo },
-  {"FOpen", kFOpen },
-  {"FPuts", kFPuts },
-  {"FGets", kFGets },
-  {"FClose", kFClose },
-  {"TimesSin", kTimesSin },
-  {"SinMult", kTimesSin },
-  {"TimesCos", kTimesCos },
-  {"CosMult", kTimesCos },
-  {"MapKeyToDir", kMapKeyToDir },
-  {"GlobalToLocal", kGlobalToLocal },
-  {"LocalToGlobal", kLocalToGlobal },
-  {"Wait", kWait },
-  {"CosDiv", kCosDiv },
-  {"SinDiv", kSinDiv },
-  {"BaseSetter", kBaseSetter },
-  {"Parse", kParse },
-  {"ShakeScreen", kShakeScreen },
+	{"Load", kLoad},
+	{"UnLoad", kUnLoad},
+	{"GameIsRestarting", kGameIsRestarting },
+	{"NewList", kNewList },
+	{"GetSaveDir", kGetSaveDir },
+	{"GetCWD", kGetCWD },
+	{"SetCursor", kSetCursor },
+	{"FindKey", kFindKey },
+	{"NewNode", kNewNode },
+	{"AddToFront", kAddToFront },
+	{"AddToEnd", kAddToEnd },
+	{"Show", kShow },
+	{"PicNotValid", kPicNotValid },
+	{"Random", kRandom },
+	{"Abs", kAbs },
+	{"Sqrt", kSqrt },
+	{"OnControl", kOnControl },
+	{"HaveMouse", kHaveMouse },
+	{"GetAngle", kGetAngle },
+	{"GetDistance", kGetDistance },
+	{"LastNode", kLastNode },
+	{"FirstNode", kFirstNode },
+	{"NextNode", kNextNode },
+	{"PrevNode", kPrevNode },
+	{"NodeValue", kNodeValue },
+	{"Clone", kClone },
+	{"DisposeClone", kDisposeClone },
+	{"ScriptID", kScriptID },
+	{"MemoryInfo", kMemoryInfo },
+	{"DrawPic", kDrawPic },
+	{"DisposeList", kDisposeList },
+	{"DisposeScript", kDisposeScript },
+	{"GetPort", kGetPort },
+	{"SetPort", kSetPort },
+	{"NewWindow", kNewWindow },
+	{"DisposeWindow", kDisposeWindow },
+	{"IsObject", kIsObject },
+	{"Format", kFormat },
+	{"DrawStatus", kDrawStatus },
+	{"DrawMenuBar", kDrawMenuBar },
+	{"AddMenu", kAddMenu },
+	{"SetMenu", kSetMenu },
+	{"AddToPic", kAddToPic },
+	{"CelWide", kCelWide },
+	{"CelHigh", kCelHigh },
+	{"Display", kDisplay },
+	{"Animate", kAnimate },
+	{"GetTime", kGetTime },
+	{"DeleteKey", kDeleteKey },
+	{"StrLen", kStrLen },
+	{"GetFarText", kGetFarText },
+	{"StrEnd", kStrEnd },
+	{"StrCat", kStrCat },
+	{"StrCmp", kStrCmp },
+	{"StrCpy", kStrCpy },
+	{"StrAt", kStrAt },
+	{"ReadNumber", kReadNumber },
+	{"DrawControl", kDrawControl },
+	{"NumCels", kNumCels },
+	{"NumLoops", kNumLoops },
+	{"TextSize", kTextSize },
+	{"InitBresen", kInitBresen },
+	{"DoBresen", kDoBresen },
+	{"CanBeHere", kCanBeHere },
+	{"DrawCel", kDrawCel },
+	{"DirLoop", kDirLoop },
+	{"CoordPri", kCoordPri },
+	{"PriCoord", kPriCoord },
+	{"ValidPath", kValidPath },
+	{"RespondsTo", kRespondsTo },
+	{"FOpen", kFOpen },
+	{"FPuts", kFPuts },
+	{"FGets", kFGets },
+	{"FClose", kFClose },
+	{"TimesSin", kTimesSin },
+	{"SinMult", kTimesSin },
+	{"TimesCos", kTimesCos },
+	{"CosMult", kTimesCos },
+	{"MapKeyToDir", kMapKeyToDir },
+	{"GlobalToLocal", kGlobalToLocal },
+	{"LocalToGlobal", kLocalToGlobal },
+	{"Wait", kWait },
+	{"CosDiv", kCosDiv },
+	{"SinDiv", kSinDiv },
+	{"BaseSetter", kBaseSetter },
+	{"Parse", kParse },
+	{"ShakeScreen", kShakeScreen },
 #ifdef _WIN32
-  {"DeviceInfo", kDeviceInfo_Win32},
+	{"DeviceInfo", kDeviceInfo_Win32},
 #else /* !_WIN32 */
-  {"DeviceInfo", kDeviceInfo_Unix},
+	{"DeviceInfo", kDeviceInfo_Unix},
 #endif
-  {"HiliteControl", kHiliteControl},
-  {"GetMenu", kGetMenu},
-  {"MenuSelect", kMenuSelect},
-  {"GetEvent", kGetEvent },
-  {"CheckFreeSpace", kCheckFreeSpace },
-  {"DoSound", kDoSound },
-  {"SetSynonyms", kSetSynonyms },
-  {"FlushResources", kFlushResources },
-  {"SetDebug", kSetDebug },
-  {"GetSaveFiles", kGetSaveFiles },
-  {"CheckSaveGame", kCheckSaveGame },
-  {"SaveGame", kSaveGame },
-  {"RestoreGame", kRestoreGame },
-  {"SetJump", kSetJump },
-  {"EditControl", kEditControl },
-  {"EmptyList", kEmptyList },
-  {"AddAfter", kAddAfter },
-  {"RestartGame", kRestartGame },
-  {"SetNowSeen", kSetNowSeen },
-  {"Graph", kGraph },
-  {"TimesTan", kTimesTan },
-  {"TimesCot", kTimesCot },
+	{"HiliteControl", kHiliteControl},
+	{"GetMenu", kGetMenu},
+	{"MenuSelect", kMenuSelect},
+	{"GetEvent", kGetEvent },
+	{"CheckFreeSpace", kCheckFreeSpace },
+	{"DoSound", kDoSound },
+	{"SetSynonyms", kSetSynonyms },
+	{"FlushResources", kFlushResources },
+	{"SetDebug", kSetDebug },
+	{"GetSaveFiles", kGetSaveFiles },
+	{"CheckSaveGame", kCheckSaveGame },
+	{"SaveGame", kSaveGame },
+	{"RestoreGame", kRestoreGame },
+	{"SetJump", kSetJump },
+	{"EditControl", kEditControl },
+	{"EmptyList", kEmptyList },
+	{"AddAfter", kAddAfter },
+	{"RestartGame", kRestartGame },
+	{"SetNowSeen", kSetNowSeen },
+	{"Graph", kGraph },
+	{"TimesTan", kTimesTan },
+	{"TimesCot", kTimesCot },
+	{"Said", kSaid },
 
   /* Experimental functions */
-  {"Said", kSaid },
-  {"FileIO", kFileIO },
-  {"Memory", kMemory },
+	{"FileIO", kFileIO },
+	{"Memory", kMemory },
   /* Special and NOP stuff */
-  {"DoAvoider", kNOP },
-  {SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
-  {0,0} /* Terminator */
+	{"DoAvoider", kNOP },
+	{SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
+	{0,0} /* Terminator */
 };
 
 
@@ -286,21 +286,21 @@ static kfunct * unknown_function_map[SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR] = { /* Ma
 
 
 const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
-  "Stubs",
-  "Lists and nodes",
-  "Graphics",
-  "Character handling",
-  "Memory management",
-  "Function parameter checks",
-  "Bresenham algorithms",
-  "Audio subsystem",
-  "System graphics driver",
-  "Base setter results",
-  "Parser",
-  "Menu handling",
-  "Said specs",
-  "File I/O"
-  "Time"
+	"Stubs",
+	"Lists and nodes",
+	"Graphics",
+	"Character handling",
+	"Memory management",
+	"Function parameter checks",
+	"Bresenham algorithms",
+	"Audio subsystem",
+	"System graphics driver",
+	"Base setter results",
+	"Parser",
+	"Menu handling",
+	"Said specs",
+	"File I/O"
+	"Time"
 };
 
 
@@ -309,10 +309,10 @@ const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 int
 kernel_oops(state_t *s, char *file, int line, char *reason)
 {
-  sciprintf("Kernel Oops in file %s, line %d: %s\n", file, line, reason);
-  fprintf(stderr,"Kernel Oops in file %s, line %d: %s\n", file, line, reason);
-  script_debug_flag = script_error_flag = 1;
-  return 0;
+	sciprintf("Kernel Oops in file %s, line %d: %s\n", file, line, reason);
+	fprintf(stderr,"Kernel Oops in file %s, line %d: %s\n", file, line, reason);
+	script_debug_flag = script_error_flag = 1;
+	return 0;
 }
 
 
@@ -320,21 +320,21 @@ kernel_oops(state_t *s, char *file, int line, char *reason)
 int
 kalloc(state_t *s, int type, int space)
 {
-  int seeker = 0;
+	int seeker = 0;
 
-  while ((seeker < MAX_HUNK_BLOCKS) && (s->hunk[seeker].size))
-    seeker++;
+	while ((seeker < MAX_HUNK_BLOCKS) && (s->hunk[seeker].size))
+		seeker++;
 
-  if (seeker == MAX_HUNK_BLOCKS)
-    KERNEL_OOPS("Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
-  else {
-    s->hunk[seeker].data = malloc(s->hunk[seeker].size = space);
-    s->hunk[seeker].type = type;
-  }
+	if (seeker == MAX_HUNK_BLOCKS)
+		KERNEL_OOPS("Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
+	else {
+		s->hunk[seeker].data = malloc(s->hunk[seeker].size = space);
+		s->hunk[seeker].type = type;
+	}
 
-  SCIkdebug(SCIkMEM, "Allocated %d at hunk %04x\n", space, seeker | (sci_memory << 11));
+	SCIkdebug(SCIkMEM, "Allocated %d at hunk %04x\n", space, seeker | (sci_memory << 11));
 
-  return (seeker | (sci_memory << 11));
+	return (seeker | (sci_memory << 11));
 }
 
 
@@ -342,48 +342,49 @@ kalloc(state_t *s, int type, int space)
 byte *
 kmem(state_t *s, int handle)
 {
-  if ((handle >> 11) != sci_memory) {
-    SCIkwarn(SCIkERROR, "Error: kmem() without a handle (%04x)\n", handle);
-    return 0;
-  }
+	if ((handle >> 11) != sci_memory) {
+		SCIkwarn(SCIkERROR, "Error: kmem() without a handle (%04x)\n", handle);
+		return 0;
+	}
 
-  handle &= 0x7ff;
+	handle &= 0x7ff;
 
-  if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
-    SCIkwarn(SCIkERROR, "Error: kmem() with invalid handle\n");
-    return 0;
-  }
+	if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
+		SCIkwarn(SCIkERROR, "Error: kmem() with invalid handle\n");
+		return 0;
+	}
 
-  return s->hunk[handle & 0x7ff].data;
+	return s->hunk[handle & 0x7ff].data;
 }
 
 /* Frees the specified handle. Returns 0 on success, 1 otherwise. */
 int
 kfree(state_t *s, int handle)
 {
-  if ((handle >> 11) != sci_memory) {
-    SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-handle\n");
-    return 1;
-  }
+	if ((handle >> 11) != sci_memory) {
+		SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-handle\n");
+		return 1;
+	}
 
-  SCIkdebug(SCIkMEM, "Freeing hunk %04x\n", handle);
+	SCIkdebug(SCIkMEM, "Freeing hunk %04x\n", handle);
 
-  handle &= 0x7ff;
+	handle &= 0x7ff;
 
-  if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
-    SCIkwarn(SCIkERROR, "Error: Attempt to kfree() with invalid handle\n");
-    return 1;
-  }
+	if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
+		SCIkwarn(SCIkERROR, "Error: Attempt to kfree() with invalid handle\n");
+		return 1;
+	}
 
-  if (s->hunk[handle].size == 0) {
-    SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-allocated memory\n");
-    return 1;
-  }
+	if (s->hunk[handle].size == 0) {
+		SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-allocated memory\n");
+		return 1;
+	}
 
-  free(s->hunk[handle].data);
-  s->hunk[handle].size = 0;
+	free(s->hunk[handle].data);
+	s->hunk[handle].data = NULL;
+	s->hunk[handle].size = 0;
 
-  return 0;
+	return 0;
 }
 
 
@@ -396,10 +397,10 @@ char *old_save_dir;
 void
 kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  old_save_dir=strdup(s->heap+s->save_dir+2);
-  s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
-  s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE; /* This appears to help */
-  script_abort_flag = 1; /* Force vm to abort ASAP */
+	old_save_dir=strdup(s->heap+s->save_dir+2);
+	s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
+	s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE; /* This appears to help */
+	script_abort_flag = 1; /* Force vm to abort ASAP */
 }
 
 
@@ -409,27 +410,27 @@ kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
-  s->acc = (s->restarting_flags & SCI_GAME_WAS_RESTARTED);
+	CHECK_THIS_KERNEL_FUNCTION;
+	s->acc = (s->restarting_flags & SCI_GAME_WAS_RESTARTED);
 
-  if ((old_save_dir)&&(s->save_dir))
-    {
-      strcpy(s->heap + s->save_dir + 2, old_save_dir);
-      free(old_save_dir);
-      old_save_dir = NULL;
-    }
-  if (argc) {/* Only happens during replay */
-    if (!PARAM(0)) /* Set restarting flag */
-      s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED;
-  }
+	if ((old_save_dir)&&(s->save_dir))
+		{
+			strcpy(s->heap + s->save_dir + 2, old_save_dir);
+			free(old_save_dir);
+			old_save_dir = NULL;
+		}
+	if (argc) {/* Only happens during replay */
+		if (!PARAM(0)) /* Set restarting flag */
+			s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED;
+	}
 }
 
 void
 kHaveMouse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  s->acc = s->have_mouse_flag;
+	s->acc = s->have_mouse_flag;
 }
 
 
@@ -451,28 +452,28 @@ kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  kfunct *funct = (funct_nr >= SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR)? NULL : unknown_function_map[funct_nr];
+	kfunct *funct = (funct_nr >= SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR)? NULL : unknown_function_map[funct_nr];
 
-  if (!funct) {
-    CHECK_THIS_KERNEL_FUNCTION;
-    SCIkwarn(SCIkSTUB, "Unhandled Unknown function %04x\n", funct_nr);
-  } else funct(s, funct_nr, argc, argp);
+	if (!funct) {
+		CHECK_THIS_KERNEL_FUNCTION;
+		SCIkwarn(SCIkSTUB, "Unhandled Unknown function %04x\n", funct_nr);
+	} else funct(s, funct_nr, argc, argp);
 }
 
 
 void
 kFlushResources(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  /* Nothing to do */
+	/* Nothing to do */
 }
 
 void
 kSetDebug(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  sciprintf("Debug mode activated\n");
+	sciprintf("Debug mode activated\n");
 
-  script_debug_flag = 1; /* Enter debug mode */
-  _debug_seeking = _debug_step_running = 0;
+	script_debug_flag = 1; /* Enter debug mode */
+	_debug_seeking = _debug_step_running = 0;
 }
 
 #define _K_NEW_GETTIME_TICKS 0
@@ -545,103 +546,103 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
   
-  switch (PARAM(0)) {
+	switch (PARAM(0)) {
   
-    case K_MEMORY_ALLOCATE_CRITICAL :
+	case K_MEMORY_ALLOCATE_CRITICAL :
 	
-	s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
-	if (!s->acc)
-	{
-	  SCIkwarn(SCIkERROR, "Critical heap allocation failed\n");
-	  script_error_flag = script_debug_flag = 1;
+		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
+		if (!s->acc)
+			{
+				SCIkwarn(SCIkERROR, "Critical heap allocation failed\n");
+				script_error_flag = script_debug_flag = 1;
+			}
+		break;
+
+	case K_MEMORY_ALLOCATE_NONCRITICAL :
+	
+		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
+		break;
+
+	case K_MEMORY_FREE :
+	
+		heap_free(s->_heap, UPARAM(1)-2);
+		break;
+	
+	case K_MEMORY_MEMCPY :
+		{
+
+			int dest = UPARAM(1);
+			int src = UPARAM(2);
+			int n = UPARAM(3);
+    
+			memcpy(s->heap + dest, s->heap + src, n);
+			break;
+		}
+    
+	case K_MEMORY_PEEK :
+    
+		s->acc=GET_HEAP(UPARAM(1));		
+		break;
+	
+	case K_MEMORY_POKE :
+    
+		PUT_HEAP(UPARAM(1), UPARAM(2));
+		break;
+    
 	}
-	break;
-
-    case K_MEMORY_ALLOCATE_NONCRITICAL :
-	
-	s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
-	break;
-
-    case K_MEMORY_FREE :
-	
-	heap_free(s->_heap, UPARAM(1)-2);
-	break;
-	
-    case K_MEMORY_MEMCPY :
-    {
-
-	int dest = UPARAM(1);
-    	int src = UPARAM(2);
-	int n = UPARAM(3);
-    
-	memcpy(s->heap + dest, s->heap + src, n);
-	break;
-    }
-    
-    case K_MEMORY_PEEK :
-    
-	s->acc=GET_HEAP(UPARAM(1));		
-	break;
-	
-    case K_MEMORY_POKE :
-    
-	PUT_HEAP(UPARAM(1), UPARAM(2));
-	break;
-    
-    }
 }
 
 void
 kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int i;
+	int i;
 
-  SCIkwarn(SCIkWARNING, "Unimplemented syscall: %s[%x](", s->kernel_names[funct_nr], funct_nr);
+	SCIkwarn(SCIkWARNING, "Unimplemented syscall: %s[%x](", s->kernel_names[funct_nr], funct_nr);
 
-  for (i = 0; i < argc; i++) {
-    sciprintf("%04x", 0xffff & PARAM(i));
-    if (i+1 < argc) sciprintf(", ");
-  }
-  sciprintf(")\n");
+	for (i = 0; i < argc; i++) {
+		sciprintf("%04x", 0xffff & PARAM(i));
+		if (i+1 < argc) sciprintf(", ");
+	}
+	sciprintf(")\n");
 }
 
 
 void
 kNOP(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
-  SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: NOP\n", funct_nr);
+	CHECK_THIS_KERNEL_FUNCTION;
+	SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: NOP\n", funct_nr);
 }
 
 
 void
 script_map_kernel(state_t *s)
 {
-  int functnr;
-  int mapped = 0;
+	int functnr;
+	int mapped = 0;
 
-  s->kfunct_table = malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
+	s->kfunct_table = malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
 
-  for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
-    int seeker, found = -1;
+	for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
+		int seeker, found = -1;
 
-    for (seeker = 0; (found == -1) && kfunct_mappers[seeker].functname; seeker++)
-      if (strcmp(kfunct_mappers[seeker].functname, s->kernel_names[functnr]) == 0) {
-	found = seeker; /* Found a kernel function with the same name! */
-	mapped++;
-      }
+		for (seeker = 0; (found == -1) && kfunct_mappers[seeker].functname; seeker++)
+			if (strcmp(kfunct_mappers[seeker].functname, s->kernel_names[functnr]) == 0) {
+				found = seeker; /* Found a kernel function with the same name! */
+				mapped++;
+			}
 
-    if (found == -1) {
+		if (found == -1) {
 
-      sciprintf("Warning: Kernel function %s[%x] unmapped\n", s->kernel_names[functnr], functnr);
-      s->kfunct_table[functnr] = kstub;
+			sciprintf("Warning: Kernel function %s[%x] unmapped\n", s->kernel_names[functnr], functnr);
+			s->kfunct_table[functnr] = kstub;
 
-    } else s->kfunct_table[functnr] = kfunct_mappers[found].kernel_function;
+		} else s->kfunct_table[functnr] = kfunct_mappers[found].kernel_function;
 
-  } /* for all functions requesting to be mapped */
+	} /* for all functions requesting to be mapped */
 
-  sciprintf("Mapped %d of %d kernel functions.\n", mapped, s->kernel_names_nr);
+	sciprintf("Mapped %d of %d kernel functions.\n", mapped, s->kernel_names_nr);
 
 }

@@ -1,3 +1,11 @@
+2001-03-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/gfx_resource.h: Added a backup for the visual pic's
+	undithered data, to be used for cumulative drawing
+
+	* src/engine/kernel.c (kfree): kfree now sets the freed data to
+	NULL, to allow checking for invalid kernel handles
+
 2001-03-02  Solomon Peachy <pizza@shaftnet.org>
 	* src/include/sound.h:  Stripped out some useless midimap stuff.
 	* src/sound/midi_mt32.c:  Fixed a bunch of things from patch.001

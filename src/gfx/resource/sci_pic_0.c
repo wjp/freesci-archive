@@ -121,6 +121,9 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 	/* Initialize colors */
 	gfxr_init_static_palette();
 
+	pic->undithered_buffer_size = pic->visual_map->index_xl * pic->visual_map->index_yl;
+	pic->undithered_buffer = NULL;
+
 	return pic;
 }
 

@@ -674,9 +674,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 			if (command == SCI_MIDI_EOT) {
 
-				if ((song->loops) != 0) {
-
-					--(song->loops);
+				if (--(song->loops) != 0) {
 
 					fprintf(ds, "looping back from %d to %d on handle %04x\n",
 						song->pos, song->loopmark, song->handle);
