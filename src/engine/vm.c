@@ -105,12 +105,7 @@ validate_arithmetic(reg_t reg)
 		if (!_weak_validations)
 			script_debug_flag = script_error_flag = 1;
 		sciprintf("Attempt to read arithmetic value from non-zero segment [%04x]\n", reg.segment);
-#ifdef HAVE_SETJMP_H
-		if (jump_initialized)
-			longjmp(vm_error_address, 0);
-		else
-#endif
-			BREAKPOINT();
+		return 0;
 	}
 
 	return reg.offset;
@@ -568,18 +563,9 @@ add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
 	xstack->objp = objp;
 	if (locals_segment != SCI_XS_CALLEE_LOCALS)
 		xstack->local_segment = locals_segment;
-	else {
-		xstack->local_segment = 0;
+	else
+		xstack->local_segment = pc.segment;
 
-		if (objp.segment) {
-			object_t *obj = obj_get(s, objp);
-			if (obj)
-				xstack->local_segment = obj->pos.segment;
-			else
-				sciprintf("Warning: Object "PREG", base of exec stack entry, does not exist\n",
-					  PRINT_REG(objp));
-		}
-	}
 	xstack->sendp = sendp;
 	xstack->addr.pc = pc;
 	xstack->fp = xstack->sp = sp;
@@ -641,6 +627,7 @@ pointer_add(state_t *s, reg_t base, int offset)
 	switch (mobj->type) {
 
 	case MEM_OBJ_SCRIPT:
+	case MEM_OBJ_DYNMEM:
 		base.offset += offset;
 		return base;
 		break;

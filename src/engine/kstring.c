@@ -395,7 +395,7 @@ kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *dest = (char *) kernel_dereference_pointer(s, argv[0], 0);
+	unsigned char *dest = (unsigned char *) kernel_dereference_pointer(s, argv[0], 0);
 
 	if (!dest) {
 		SCIkdebug(SCIkWARNING, "Attempt to strat at invalid pointer "PREG"!\n",

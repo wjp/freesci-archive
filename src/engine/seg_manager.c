@@ -90,11 +90,13 @@ static list_t *sm_alloc_list(seg_manager_t *self, reg_t *addr);
 static node_t *sm_alloc_node(seg_manager_t *self, reg_t *addr);
 static hunk_t *sm_real_alloc_hunk(seg_manager_t *self, char *, int size, reg_t *addr);
 static hunk_t *sm_alloc_hunk(seg_manager_t *self, reg_t *addr);
+static unsigned char *sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr);
 
 static void sm_free_clone(seg_manager_t *self, reg_t addr);
 static void sm_free_list(seg_manager_t *self, reg_t addr);
 static void sm_free_node(seg_manager_t *self, reg_t addr);
 static void sm_free_hunk(seg_manager_t *self, reg_t addr);
+static int sm_free_dynmem(seg_manager_t *self, reg_t addr);
 
 
 /***--------------------------***/
@@ -202,11 +204,13 @@ void sm_init(seg_manager_t* self) {
 	self->alloc_list = sm_alloc_list;
 	self->alloc_node = sm_alloc_node;
 	self->alloc_hunk = sm_real_alloc_hunk;
+	self->alloc_dynmem = sm_alloc_dynmem;
 
 	self->free_clone = sm_free_clone;
 	self->free_list = sm_free_list;
 	self->free_node = sm_free_node;
 	self->free_hunk = sm_free_hunk;
+	self->free_dynmem = sm_free_dynmem;
 };
 
 /* destroy the object, free the memorys if allocated before */
@@ -305,6 +309,12 @@ _sm_deallocate (seg_manager_t* self, int seg)
 	case MEM_OBJ_LOCALS:
 		sci_free(mobj->data.locals.locals);
 		mobj->data.locals.locals = NULL;
+		break;
+
+	case MEM_OBJ_DYNMEM:
+		if (mobj->data.dynmem.buf)
+			sci_free(mobj->data.dynmem.buf);
+		mobj->data.dynmem.buf = NULL;
 		break;
 
 	default:
@@ -1070,9 +1080,48 @@ sm_dereference(seg_manager_t *self, reg_t reg, int *size)
 		return mobj->data.sys_strings.strings[reg.offset].value;
 		break;
 
+	case MEM_OBJ_DYNMEM:
+		if (size)
+			*size = mobj->data.dynmem.size - reg.offset;
+		return mobj->data.dynmem.buf + reg.offset;
+
 	default:
 		if (size)
 			*size = 0;
 		return NULL;
 	}
+}
+
+
+static unsigned char *
+sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr)
+{
+	seg_id_t seg;
+	mem_obj_t *mobj = alloc_nonscript_segment(self, MEM_OBJ_DYNMEM, &seg);
+	*addr = make_reg(seg, 0);
+
+	mobj->data.dynmem.size = size;
+
+	if (size == 0)
+		mobj->data.dynmem.buf = NULL;
+	else
+		mobj->data.dynmem.buf = sci_malloc(size);
+
+	mobj->data.dynmem.description = descr;
+
+	return mobj->data.dynmem.buf;
+}
+
+static int
+sm_free_dynmem(seg_manager_t *self, reg_t addr)
+{
+	
+	if (addr.segment <= 0
+	    || addr.segment >= self->heap_size
+	    || !self->heap[addr.segment]
+	    || self->heap[addr.segment]->type != MEM_OBJ_DYNMEM)
+		return 1; /* error */
+
+	_sm_deallocate(self, addr.segment);
+	return 0; /* OK */
 }

@@ -591,9 +591,8 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_MEMORY_ALLOCATE_CRITICAL :
 
-		s->r_acc = kalloc(s, "kMemory() critical", UKPV(1));
-
-		if (!s->r_acc.segment) {
+		if (!s->seg_manager.alloc_dynmem(&s->seg_manager, UKPV(1), 
+						 "kMemory() critical", &s->r_acc)) {
 			SCIkwarn(SCIkERROR, "Critical heap allocation failed\n");
 			script_error_flag = script_debug_flag = 1;
 		}
@@ -603,12 +602,16 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_MEMORY_ALLOCATE_NONCRITICAL :
 
-		s->r_acc = kalloc(s, "kMemory() non-critical", UKPV(1));
+		s->seg_manager.alloc_dynmem(&s->seg_manager, UKPV(1),
+					    "kMemory() non-critical", &s->r_acc);
 		break;
 
 	case K_MEMORY_FREE :
 
-		kfree(s, argv[1]);
+		if (s->seg_manager.free_dynmem(&s->seg_manager, argv[1])) {
+			SCIkwarn(SCIkERROR, "Attempt to kMemory::free() non-dynmem pointer "PREG"!\n",
+				 PRINT_REG(argv[1]));
+		}
 		break;
 
 	case K_MEMORY_MEMCPY : {
@@ -646,7 +649,7 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 	case K_MEMORY_POKE : {
 		char *ref = (char *) kernel_dereference_pointer(s, argv[1], 2);
 
-		if (argv[1].segment) {
+		if (argv[2].segment) {
 			SCIkdebug(SCIkERROR, "Attempt to poke memory reference "PREG" to "PREG"!\n",
 				  PRINT_REG(argv[2]), PRINT_REG(argv[1]));
 			return s->r_acc;
@@ -925,6 +928,12 @@ determine_reg_type(state_t *s, reg_t reg)
 		else
 			return 0;
 
+	case MEM_OBJ_DYNMEM:
+		if (reg.offset < mobj->data.dynmem.size)
+			return KSIG_REF;
+		else
+			return 0;
+
 	default:
 		return 0;
 
@@ -1003,26 +1012,31 @@ kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries)
 		count = mobj->data.stack.nr;
 		base = mobj->data.stack.entries;
 		break;
+
+	case MEM_OBJ_DYNMEM:
+		count = mobj->data.dynmem.size;
+		base = mobj->data.dynmem.buf;
+		break;
 		
 	case MEM_OBJ_SYS_STRINGS:
 		if (pointer.offset < SYS_STRINGS_MAX
 		    && mobj->data.sys_strings.strings[pointer.offset].name)
 			return (reg_t *) (mobj->data.sys_strings.strings[pointer.offset].value);
 		else {
-			SCIkdebug(SCIkERROR, "Attempt to dereference invalid pointer "PREG"!",
+			SCIkdebug(SCIkERROR, "Attempt to dereference invalid pointer "PREG"!\n",
 				  PRINT_REG(pointer));
 			return NULL;
 		}
 
 	default:
 		SCIkdebug(SCIkERROR, "Trying to dereference pointer "PREG" to inappropriate"
-			  " segment!",
+			  " segment!\n",
 			  PRINT_REG(pointer));
 		return NULL;
 	}
 
 	if (pointer.offset + entries > count) {
-		SCIkdebug(SCIkERROR, "Trying to dereference pointer "PREG" beyond end of segment!",
+		SCIkdebug(SCIkERROR, "Trying to dereference pointer "PREG" beyond end of segment!\n",
 			  PRINT_REG(pointer));
 		return NULL;
 	} return

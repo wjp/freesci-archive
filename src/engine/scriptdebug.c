@@ -43,7 +43,7 @@ int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? *
 int _debug_seeking = 0; /* Stepping forward until some special condition is met */
 int _debug_seek_level = 0; /* Used for seekers that want to check their exec stack depth */
 int _debug_seek_special = 0;  /* Used for special seeks(1) */
-int _weak_validations = 0; /* Some validation errors are reduced to warnings if non-0 */
+int _weak_validations = 1; /* Some validation errors are reduced to warnings if non-0 */
 reg_t _debug_seek_reg = NULL_REG_INITIALIZER;  /* Used for special seeks(2) */
 
 #define _DEBUG_SEEK_NOTHING 0
@@ -136,6 +136,10 @@ c_segtable(state_t *s)
 
 			case MEM_OBJ_HUNK:
 				sciprintf("H  hunk (%d)", mobj->data.hunks.entries_used);
+				break;
+
+			case MEM_OBJ_DYNMEM:
+				sciprintf("M  dynmem: %d bytes", mobj->data.dynmem.size);
 				break;
 
 			default:
@@ -307,6 +311,16 @@ _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 					  i, ht->table[i].entry.size, ht->table[i].entry.mem,
 					  ht->table[i].entry.type);
 				}
+	}
+
+	case MEM_OBJ_DYNMEM: {
+		int i;
+		sciprintf("dynmem (%s): %d bytes\n",
+			  mobj->data.dynmem.description?
+			  mobj->data.dynmem.description:"no description",
+			  mobj->data.dynmem.size);
+
+		sci_hexdump(mobj->data.dynmem.buf, mobj->data.dynmem.size, 0);
 	}
 		break;
 
@@ -2156,25 +2170,18 @@ c_gfx_update_zone(state_t *s)
 
 }
 
-#if 0
-#warning "Re-implement con:disasm"
 int
 c_disasm(state_t *s)
 {
-	int vpc = cmd_params[0].val;
+	reg_t vpc = cmd_params[0].reg;
 	int op_count = 1;
 	int do_bwc = 0;
 	int do_bytes = 0;
 	int i;
 	int invalid = 0;
-
-	if (!_debugstate_valid) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
-
-	if (vpc <= 0)
-		vpc = *p_pc + vpc;
+	int size;
+	s->seg_manager.dereference(&s->seg_manager, vpc, &size);
+	size += vpc.offset; /* total segment size */
 
 	for (i = 1; i < cmd_paramlength; i++) {
 			if (!strcasecmp(cmd_params[i].str, "bwt"))
@@ -2193,11 +2200,10 @@ c_disasm(state_t *s)
 		return invalid;
 
 	do {
-		vpc = disassemble(s, (heap_ptr)vpc, do_bwc, do_bytes);
-	} while ((vpc > 0) && (vpc < 0xfff2) && (cmd_paramlength > 1) && (--op_count));
+		vpc = disassemble(s, vpc, do_bwc, do_bytes);
+	} while ((vpc.offset > 0) && (vpc.offset + 6 < size) && (--op_count));
 	return 0;
 }
-#endif
 
 
 int
@@ -2278,12 +2284,7 @@ c_go(state_t *s)
 int
 c_set_acc(state_t *s)
 {
-	if (!_debugstate_valid) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
-
-	s->acc = (gint16) (cmd_params[0].val);
+	s->r_acc = cmd_params[0].reg;
 	return 0;
 }
 
@@ -3153,17 +3154,12 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_heapdump, "heapdump", "ii", "Dumps data from the heap\n"
 					 "\nEXAMPLE\n\n    heapdump 0x1200 42\n\n  Dumps 42 bytes starting at heap address\n"
 					 "  0x1200");
-#warning "Re-enable con:disasm hook"
-#if 0
-			con_hook_command(c_disasm, "disasm", "is*", "Disassembles one or more commands\n\n"
+			con_hook_command(c_disasm, "disasm", "!rs*", "Disassembles one or more commands\n\n"
 					 "USAGE\n\n  disasm [startaddr] <options>\n\n"
 					 "  Valid options are:\n"
 					 "  bwt  : Print byte/word tag\n"
 					 "  c<x> : Disassemble <x> bytes\n"
-					 "  bc   : Print bytecode\n\n"
-					 "  If the start address is specified to be zero, the\n"
-					 "  current program counter is used instead.\n\n");
-#endif
+					 "  bc   : Print bytecode\n\n");
 #warning "Re-enable con:scriptinfo hook"
 #if 0
 			con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
@@ -3179,7 +3175,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  If invoked with a parameter, it will\n  look for that specific callk.\n");
 			con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");
 			con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
-			con_hook_command(c_set_acc, "set_acc", "i", "Sets the accumulator");
+			con_hook_command(c_set_acc, "set_acc", "!r", "Sets the accumulator");
 			con_hook_command(c_heap_free, "heapfree", "", "Shows the free heap");
 			con_hook_command(c_heap_dump_all, "heapdump_all", "", "Shows allocated/free zones on the\n  heap");
 			con_hook_command(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution"

@@ -70,8 +70,8 @@ expected to be closed and not to self-intersect.
 reg_t
 kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int startx = UKPV(1);
-	int starty = UKPV(2);
+	int startx = SKPV(1);
+	int starty = SKPV(2);
 
 	switch (argc) {
 	case 3 :
@@ -84,8 +84,8 @@ kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 	case 6 :
 	case 7 :
 	{
-		int endx = UKPV(3);
-		int endy = UKPV(4);
+		int endx = SKPV(3);
+		int endy = SKPV(4);
 		reg_t poly_list = argv[5];
 		int poly_list_size = UKPV(6);
 		int unknown = UKPV_OR_ALT(7, 1);
@@ -97,8 +97,8 @@ kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 		}
 
 		/* Generate a straight line. */
-		output = kalloc(s, "AvoidPath: polyline", POLY_POINT_SIZE*3);
-		oref = kmem(s, output);
+		oref = s->seg_manager.alloc_dynmem(&s->seg_manager, POLY_POINT_SIZE*3,
+						   "AvoidPath polyline", &output);
 
 		POLY_SET_POINT(oref, 0, startx, starty);
 		POLY_SET_POINT(oref, 1, endx, endy);
