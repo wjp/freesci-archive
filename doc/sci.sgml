@@ -8215,47 +8215,57 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	      <sect3>
 		<title>snd stop</title>
 		<para>
+		  Suspends the sound server. This is the opposite of 'snd resume'.
 		</para>
 	      </sect3>
 	      <sect3>
 		<title>snd resume</title>
 		<para>
+		  Resumes the sound server after it has been suspended.
 		</para>
 	      </sect3>
 	      <sect3>
 		<title>snd play (song)</title>
 		<para>
+		  Instructs the sound server to play the indicated song with a handle
+		  of 42.
 		</para>
 	      </sect3>
 	      <sect3>
 		<title>snd mute_channel (channel)</title>
 		<para>
+		  Mutes the indicated MIDI channel; events sent to this channel will be
+		  discarded before they reach the sound hardware.
 		</para>
 	      </sect3>
 	      <sect3>
 		<title>snd unmute_channel (channel)</title>
 		<para>
+		  Undoes a previous 'mute_channel' command, or part of a previous 'snd mute'
 		</para>
 	      </sect3>
 	      <sect3>
 		<title>snd mute</title>
 		<para>
+		  Mutes all channels (as per 'snd mute_channel')
 		</para>
 	      </sect3>
 	      <sect3>
 		<title>snd unmute</title>
 		<para>
+		  Unmutes all channels (as per 'snd unmute_channel')
 		</para>
 	      </sect3>
 	      <sect3>
 		<title>snd solo (channel)</title>
 		<para>
+		  Mutes all but one channel
 		</para>
 	      </sect3>
 	      <sect3>
 		<title>snd printchannels</title>
 		<para>
-		  Lists all
+		  Lists all channels, and the instruments currently playing on them
 		</para>
 	      </sect3>
 	      <sect3>
@@ -8330,6 +8340,55 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 		</para>
 	      </sect3>
            </Sect2>
+	   <sect2><title>Console interaction with dmalloc</title> 
+	     <para>
+	       The FreeSCI console proivdes an interface to the dmalloc memory debugger/profiler, if
+	       the interpreter was compiled with dmalloc support enabled. The following commands are
+	       provided:
+	     </para>
+	     <sect3><title>dm_log_heap</title>
+	       <para>
+		 Prints the current heap state into the dmalloc log file
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_stats</title>
+	       <para>
+		 Prints memory usage statistics to the output file
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_log_unfreed</title>
+	       <para>
+		 Lists unfreed pointers in the dmalloc output file
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_verify (pointer)</title>
+	       <para>
+		 Verifies a pointer and prints the result to the dmalloc output file. Specifying 0 instead
+		 of a pointer will verify all pointers currently known to dmalloc.
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_debug (mode)</title>
+	       <para>
+		 Sets the dmalloc debug flags (please refer to the dmalloc documentation for a description)
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_mark</title>
+	       <para>
+		 Gets a mark describing the current heap situation (see also 'dm_chmark')
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_chmark (mark)</title>
+	       <para>
+		 Compares a mark retreived by 'dm_mark' with the current heap situation, and prints the
+		 results to the dmalloc output file.
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_print (output)</title>
+	       <para>
+		 Prints arbitrary output to the dmalloc output file
+	       </para>
+	     </sect3>
+	   </sect2>
      </Sect1>
      <sect1 id = "freesci-savegames">
         <title/Savegames/

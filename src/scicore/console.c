@@ -1029,8 +1029,6 @@ con_init_dmalloc ()
 		    "USAGE\n\n  c_dm_chmark <mark>\n\n  Output is written to the\n  dmalloc output file.\n\n  Use dm_mark to retreive a\n"
 		    "  mark.\n\nSEE ALSO\n\n  c_dm_mark");
   con_hook_command (c_dm_print, "dm_print", "s*",
-		    "Prints something to the\n  dmalloc ouput file\n\nUSAGE\n\n  dm_print <output>");
-  con_hook_command (c_dm_print, "dm_print", "s*",
 		    "Prints something to the\n  dmalloc output.\n\nUSAGE\n\n  dm_print <text>");
 }
 #else /* !DMALLOC */

@@ -1300,7 +1300,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		script_debug_flag = script_error_flag = 1;
 		return 0;
 	}
-recursive = 1;
+	recursive = 1;
 	s->scripttable[script_nr].heappos = script_basepos + 2;
 	/* Set heap position (beyond the size word) */
 	s->scripttable[script_nr].lockers = 1; /* Locked by one */

@@ -1,3 +1,24 @@
+2001-05-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci.sgml: Updates.
+
+05-03-2001  Matt Hargett  <matt@use.net>
+	
+        * midiout_win32mci.c (_win32mci_print_error): New function.
+
+	* (all): Changed error reporting in all functions to use new function.
+
+	* Corrected uninitialized memory read.
+
+	* User can now specify device number in config file.
+
+	* README: Added section for win32mci driver.
+
+2001-05-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kDirLoop): Now returns gracefully on invalid
+	loop numbers, as does Sierra SCI
+
 2001-05-02  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
 
 	* src/gfx/gfx_support.c (gfx_crossblit_pixmap): Correctly calculates

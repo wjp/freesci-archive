@@ -576,8 +576,8 @@ kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		PUT_SELECTOR(obj, loop, 0xffff); /* Invalid */
 		return;
 	} else if (loop >= maxloops) {
-		SCIkwarn(SCIkWARNING, "With view.%03d: loop %d > maxloop %d\n", view, loop, maxloops);
-		loop = 0;
+		return;
+		/* SCIkwarn(SCIkWARNING, "With view.%03d: loop %d > maxloop %d\n", view, loop, maxloops); */
 	}
 
 	PUT_SELECTOR(obj, loop, loop);
