@@ -1,7 +1,7 @@
 2004-12-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gp32/config.c: Removed from repository.
-	* src/gp32/Makefile: Updated.
+	* src/Makefile.am, src/gp32/Makefile: Updated.
 	* src/gp32/wrap.c, src/gp32/wrap.h: Most function wrappers were
 	removed. I'm now making use of a modified newlib in order to take
 	advantage of its I/O buffering.

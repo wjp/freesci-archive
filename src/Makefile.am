@@ -4,7 +4,7 @@ EXTRA_DIST = README yywrap.c config.l sciv dc/3dutils.c dc/Makefile \
 	dc/gamemenu.c dc/gp.h dc/mouse1.h dc/selectgame.c dc/selectgame.h \
 	dc/sintab.h dc/snd_stream.c dc/snprintf.c dc/stream.h dc/texture.c \
 	dc/options.h gp32/main.S gp32/wrap.c gp32/wrap.h gp32/config.h \
-	gp32/config.c gp32/Makefile
+	gp32/Makefile
 INCLUDES = -I$(top_srcdir)/src/include
 AM_CFLAGS = $(SDL_CFLAGS)
 LDADD = engine/libsciengine.a gfx/libscigraphics.a		   \
