@@ -1,5 +1,5 @@
 /***************************************************************************
- soundserver.h (C) 1999 Christoph Reichenbach, TU Darmstadt
+ soundserver.h (C) 1999, 2000 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -55,7 +55,9 @@
 #define SCI_MIDI_TIME_EXPANSION_PREFIX 0xf8
 #define SCI_MIDI_TIME_EXPANSION_LENGHT 240
 
-
+/* [RS] tsk tsk tsk */
+/* [CR] WTF? */
+#define SCI_MIDI_TIME_EXPANSION_LENGTH SCI_MIDI_TIME_EXPANSION_LENGHT
 
 /* INTERNAL SOUND COMMANDS */
 #define SOUND_COMMAND_MAPPINGS 100

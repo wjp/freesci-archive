@@ -74,6 +74,10 @@ const char* Resource_Types[] = {"view","pic","script","text","sound",
 				"audio","sync","message","map","heap"};
 /* These are the 18 resource types supported by SCI1 */
 
+const char *resource_type_suffixes[] = {"v56","p56","scr","tex","snd",
+					"   ","voc","fon","cur","pat",
+					"bit","pal","cda","aud","syn",
+					"msg","map","hep"};
 
 
 int sci_version = 0;
@@ -109,15 +113,24 @@ int loadResources(int version, int allow_patches)
   if (sci_version == SCI_VERSION_0) {
     if ((retval = resourceLoader(&decompress0, autodetect, allow_patches))) {
       freeResources();
-      if ((retval == SCI_ERROR_UNKNOWN_COMPRESSION) ||
-	  (retval == SCI_ERROR_DECOMPRESSION_OVERFLOW)) {
+      if (autodetect && ((retval == SCI_ERROR_UNKNOWN_COMPRESSION) ||
+			 (retval == SCI_ERROR_DECOMPRESSION_OVERFLOW))) {
 	sci_version = SCI_VERSION_01;
       } else return retval;
     } else return 0;
   }
 
-  if ((sci_version == SCI_VERSION_01) ||
-      (sci_version == SCI_VERSION_1)) {
+  if (sci_version == SCI_VERSION_01) {
+    if ((retval = resourceLoader(&decompress01, autodetect, allow_patches))) {
+      freeResources();
+      if (autodetect == ((retval == SCI_ERROR_UNKNOWN_COMPRESSION)
+			 || (retval == SCI_ERROR_DECOMPRESSION_OVERFLOW))) {
+	sci_version = SCI_VERSION_1;
+      } else return retval;
+    } else return 0;
+  }
+
+  if (sci_version == SCI_VERSION_1) {
     if ((retval = resourceLoader(&decompress1, autodetect, allow_patches))) {
       freeResources();
       return retval;
@@ -143,7 +156,8 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
     seeker = base;
 
     while (seeker && seeker->next) {
-      if (seeker->resource->id == resource->id) {
+      if (seeker->resource->number == resource->number
+	  && seeker->resource->type == resource->type) {
 	if (priority) { /* replace the old resource */
 	  g_free(seeker->resource->data);
 	  g_free(seeker->resource);

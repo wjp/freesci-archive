@@ -33,7 +33,9 @@
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
-#include <glib.h>
+#ifndef _DOS
+# include <glib.h>
+#endif
 #include <ctype.h>
 #include <graphics_png.h>
 #ifdef HAVE_DIRENT_H

@@ -6,10 +6,10 @@
 #
 TARGET  :       scigraphics.a
 
-FILES   =	con_font.o con_io.o engine_graphics.o font.o graphics.o \
-		input.o mcursor.o menubar.o window.o graphics_png.o	\
-		graphics_dgfx.o
-		
+FILES   =       con_io.o con_font.o graphics_dgfx.o graphics.o font.o \
+                mcursor.o input.o window.o menubar.o  engine_graphics.o \
+		graphics_png.o
+
 CC	= gcc
 CFLAGS	= -g -c -I../include -I../.. -D_DOS -DHAVE_LIBPNG -DHAVE_UNISTD_H \
 	  -DHAVE_DGFX

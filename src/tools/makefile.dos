@@ -7,7 +7,7 @@
 TARGET  :       utils
 
 FILES   =       main.o config.o yywrap.o
-LIBS	=	../scicore/scicore.a ../sound/scisound.a ../graphics/scigraphics.a
+LIBS	=	../core/scicore.a ../sound/scisound.a ../graphics/scigraphics.a
 		
 CC	= gcc
 CFLAGS	= -g -c -I../include -I../.. -D_DOS -DHAVE_LIBPNG -DHAVE_DGFX -DHAVE_UNISTD_H
@@ -36,3 +36,4 @@ vocabdump.exe:  vocabdump.o
 		
 classes.exe:	classes.o
 		gcc -g -o classes.exe classes.o ${LIBS} -lpng -lz
+

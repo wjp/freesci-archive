@@ -16,3 +16,4 @@ clean:
 
 scisound.a:     ${FILES}
 		ar r scisound.a ${FILES}
+

@@ -1,5 +1,5 @@
 /***************************************************************************
- soundserver_dos.c Copyright (C) 1999 Rink Springer
+ soundserver_dos.c Copyright (C) 1999, 2000 Rink Springer
 
 
  This program may be modified and copied freely according to the terms of
@@ -28,7 +28,9 @@
 
 #include <resource.h>
 #include <engine.h>
+
 #include <soundserver.h>
+#include <resource.h>
 #include <sound.h>
 
 static char *sound_dos_song;

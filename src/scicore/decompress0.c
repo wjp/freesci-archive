@@ -269,6 +269,13 @@ int decompress0(resource_t *result, int resh)
   switch(compressionMethod) {
 
   case 0: /* no compression */
+    if (result->length != compressedLength) {
+      g_free(result->data);
+      result->data = NULL;
+      result->status = SCI_STATUS_NOMALLOC;
+      g_free(buffer);
+      return SCI_ERROR_DECOMPRESSION_OVERFLOW;
+    }
     memcpy(result->data, buffer, compressedLength);
     result->status = SCI_STATUS_OK;
     break;

@@ -54,13 +54,19 @@
 #ifdef _MSC_VER
 /* [DJ] fchmod is not in Visual C++ RTL - and probably not needed,anyway */
 #define fchmod(file,mode)
+#define CREAT_OPTIONS O_BINARY
 
 #endif
 
 #ifdef _DOS
 /* [RS] (see comment above, but read MS-DOS instead of Visual C++ RTL) */
 #define fchmod(file,mode)
+#define CREAT_OPTIONS O_BINARY
 
+#endif
+
+#ifdef __unix__
+#define CREAT_OPTIONS 0x640
 #endif
 
 static int conversion = 1;
@@ -69,6 +75,24 @@ static int verbose = 0;
 static int with_header = 1;
 static int dissect = 0;
 static int color_mode = 0;
+
+void
+print_resource_filename(FILE* file, int type, int number)
+{
+  if (sci_version < SCI_VERSION_1)
+    fprintf(file, "%s.%03d", Resource_Types[type], number);
+  else
+    fprintf(file, "%d.%s", number, resource_type_suffixes[type]);
+}
+
+void
+sprint_resource_filename(char* buf, int type, int number)
+{
+  if (sci_version < SCI_VERSION_1)
+    sprintf(buf, "%s.%03d", Resource_Types[type], number);
+  else
+    sprintf(buf, "%d.%s", number, resource_type_suffixes[type]);
+}
 
 #ifdef HAVE_GETOPT_LONG
 static struct option options[] = {
@@ -218,17 +242,19 @@ int main(int argc, char** argv)
     int i;
 
     if (verbose) {
-      for (i=0; i<max_resource; i++)
-	printf("%i: %s.%03i   has size %i\n", i,
-	       Resource_Types[resource_map[i].type], resource_map[i].number,
-	       resource_map[i].length);
+      for (i=0; i<max_resource; i++) {
+	printf("%i: ",i);
+	print_resource_filename(stdout, resource_map[i].type, resource_map[i].number);
+	printf("   has size %i\n", resource_map[i].length);
+      }
 
       fprintf(stderr," Reading complete. Actual resource count is %i\n",
 	      max_resource);
     } else {
-      for (i=0; i<max_resource; i++)
-	printf("%s.%03i\n", Resource_Types[resource_map[i].type],
-	       resource_map[i].number);
+      for (i=0; i<max_resource; i++) {
+	print_resource_filename(stdout, resource_map[i].type, resource_map[i].number);
+	printf("\n");
+      }
     }
     freeResources();
     return 0;
@@ -271,10 +297,14 @@ void unpack_resource(int stype, int snr, char *outfilename)
       sprintf(outfilename,"%03d.png", snr);
 #endif /* HAVE_LIBPNG */
     else
-      sprintf(outfilename,"%s.%03d",Resource_Types[stype], snr);
+      sprint_resource_filename(outfilename, stype, snr);
   }
 
-  if (verbose) printf("seeking %s.%03d...\n", Resource_Types[stype], snr);
+  if (verbose) {
+    printf("seeking ");
+    print_resource_filename(stdout, stype, snr);
+    printf("...\n");
+  }
 
   if ((found = findResource(stype, snr))) {
 
@@ -300,7 +330,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
     } else 
     {
 
-      int outf = creat(outfilename, O_RDONLY);
+      int outf = creat(outfilename, CREAT_OPTIONS);
 
 #ifdef HAVE_OBSTACK_H
       if ((stype == sci_sound) && conversion) {

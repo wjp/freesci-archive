@@ -29,7 +29,9 @@
 #include <engine.h>
 #include <sci_conf.h>
 #include <graphics.h>
-#include <glib.h>
+#ifndef _DOS
+# include <glib.h>
+#endif
 
 #ifdef _MSC_VER
 #include <ctype.h>

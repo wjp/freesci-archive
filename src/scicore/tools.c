@@ -36,15 +36,6 @@ void *memfrob(void *s, size_t n);
 int script_debug_flag = 0; /* Defaulting to running mode */
 int sci_debug_flags = 0; /* Special flags */
 
-#ifdef WORDS_BIGENDIAN
-gint16
-getInt16(unsigned char* address)
-{
-  return (gint16)((((guint16)address[1]) << 8) | (address[0]));
-}
-#endif WORDS_BIGENDIAN
-
-
 
 int
 memtest(char *where, ...)

@@ -33,7 +33,7 @@
 #define _SCI_RESOURCE_H_
 
 /*#define _SCI_RESOURCE_DEBUG */
-/*#define _SCI_DECOMPRESS_DEBUG */
+/*#define _SCI_DECOMPRESS_DEBUG*/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -113,6 +113,7 @@
 extern DLLEXTERN const char* SCI_Error_Types[];
 extern DLLEXTERN const char* SCI_Version_Types[];
 extern DLLEXTERN const char* Resource_Types[];
+extern DLLEXTERN const char* resource_type_suffixes[]; /* Suffixes for SCI1 patch files */
 
 enum ResourceTypes {
   sci_view=0, sci_pic, sci_script, sci_text,
@@ -164,14 +165,17 @@ extern DLLEXTERN resource_t *resource_map;
 #ifdef WORDS_BIGENDIAN
 
 gint16 getInt16(byte *d);
-#define getUInt16(d) (guint16)(getInt16(d))
 
 #else /* !WORDS_BIGENDIAN */
 
-#define getInt16(d) (*((gint16 *)(d)))
-#define getUInt16(d) (*((guint16 *)(d)))
+static inline gint16
+getInt16(byte *d)
+{
+  return *d | (d[1] << 8);
+}
 
 #endif /* !WORDS_BIGENDIAN */
+#define getUInt16(d) (guint16)(getInt16(d))
 /*
 gint16 getInt16(guint8* d);
 #else
@@ -236,6 +240,14 @@ int decompress0(resource_t *result, int resh);
 **               encountered.
 */
 
+int decompress01(resource_t *result, int resh);
+/* Decrypts resource data and stores the result for SCI01-style compression.
+** Parameters : result: The resource_t the decompressed data is stored in.
+**              resh  : File handle of the resource file
+** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
+**               encountered.
+*/
+
 int decompress1(resource_t *result, int resh);
 /* Decrypts resource data and stores the result for SCI1-style compression.
 ** Parameters : result: The resource_t the decompressed data is stored in.
@@ -245,7 +257,7 @@ int decompress1(resource_t *result, int resh);
 */
 
 int decrypt2(guint8* dest, guint8* src, int length, int complength);
-/* Huffman token decryptor - defined in decompress0.c and used in decompress1.c
+/* Huffman token decryptor - defined in decompress0.c and used in decompress01.c
 */
 
 

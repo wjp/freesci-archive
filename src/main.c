@@ -33,6 +33,7 @@
 #include <sci_conf.h>
 #include <kdebug.h>
 #include <sys/types.h>
+#include <unistd.h>
 #ifdef HAVE_FORK
 #include <sys/wait.h>
 #endif

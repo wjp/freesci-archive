@@ -1,3 +1,8 @@
+2000-06-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/resource.h (getInt16): Fixed getInt16() for some little
+	endian RISC architectures
+
 2000-06-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kCanBeHere): Slightly less restrictive

@@ -33,7 +33,9 @@
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
-#include <glib.h>
+#ifndef _DOS
+# include <glib.h>
+#endif
 #include <ctype.h>
 #include <graphics_png.h>
 #ifdef HAVE_DIRENT_H
@@ -2590,7 +2592,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.6.7 */
-#line 398 "CFSML input file"
+#line 400 "CFSML input file"
 
 
 
@@ -2604,7 +2606,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 408 "CFSML input file"
+#line 410 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2631,7 +2633,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 425 "CFSML input file"
+#line 427 "CFSML input file"
 
   }
   return *hiteof;
@@ -2647,7 +2649,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 436 "CFSML input file"
+#line 438 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2675,7 +2677,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 454 "CFSML input file"
+#line 456 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2747,7 +2749,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 521 "CFSML input file"
+#line 523 "CFSML input file"
 
   fclose(fh);
 
@@ -2813,7 +2815,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 574 "CFSML input file"
+#line 576 "CFSML input file"
 
   fclose(fh);
 

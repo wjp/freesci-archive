@@ -1,5 +1,5 @@
 /***************************************************************************
- graphics_dgfx.c Copyright (C) 1999 Rink Springer
+ graphics_dgfx.c Copyright (C) 1999, 2000 Rink Springer
 
 
  This program may be modified and copied freely according to the terms of
@@ -145,7 +145,7 @@ void initColors() {
 }
 
 int
-dgfx_init(state_t *s, picture_t pic) {
+dgfx_init(state_t* s, picture_t pic) {
   union REGS r;
 
   dgfx_state=s;

@@ -349,7 +349,9 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkASSERT(path2 >= HEAP_MIN);
 
 #ifndef HAVE_FNMATCH_H
-#warn "File matches will be unprecise!"
+#ifndef _DOS
+# warn "File matches will be unprecise!"
+#endif
     s->acc = !strcmp(path1_s, path2_s);
 #else
     s->acc = fnmatch(path1_s, path2_s, FNM_PATHNAME); /* POSIX.2 */
