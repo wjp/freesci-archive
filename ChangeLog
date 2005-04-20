@@ -1,3 +1,8 @@
+2005-04-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/drivers/sdl_driver.c (sdl_init): Reverted back to
+	hardcoded values. XFACT and YFACT cannot be used at that point.
+
 2005-02-14  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/scitypes.h: Added missing Dreamcast #include.

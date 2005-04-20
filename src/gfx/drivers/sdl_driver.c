@@ -610,8 +610,8 @@ sdl_init(struct _gfx_driver *drv)
 		i |= SDL_FULLSCREEN;
 	}
 
-	depth = SDL_VideoModeOK(XFACT*320,YFACT*200, 32, i);
-	if (depth && (! sdl_init_specific(drv, XFACT, YFACT, depth >> 3 )))
+	depth = SDL_VideoModeOK(640, 400, 32, i);
+	if (depth && (! sdl_init_specific(drv, 2, 2, depth >> 3 )))
 		return GFX_OK;
 
 	DEBUGB("Failed to find visual!\n");
