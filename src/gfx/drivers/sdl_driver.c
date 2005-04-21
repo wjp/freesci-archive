@@ -1245,6 +1245,7 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 	switch (skey) {
 		/* XXXX catch KMOD_NUM for KP0-9 */
 	case SDLK_BACKSPACE: return SCI_K_BACKSPACE;
+	case SDLK_DELETE: return SCI_K_DELETE;
 	case SDLK_TAB: return 9;
 	case SDLK_ESCAPE: return SCI_K_ESC;
 	case SDLK_RETURN:

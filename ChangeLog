@@ -1,5 +1,12 @@
 2005-04-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/gfx/gfx_console.c (con_gfx_read): Fixed a problem related to
+	unprintable characters. Typed commands are now echoed back.
+
+	* src/gfx/drivers/sdl_driver.c (sdl_map_key): Added delete key.
+
+2005-04-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/gfx/drivers/sdl_driver.c (sdl_init): Reverted back to
 	hardcoded values. XFACT and YFACT cannot be used at that point.
 

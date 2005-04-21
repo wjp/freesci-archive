@@ -835,7 +835,7 @@ con_gfx_read(gfx_state_t *state)
 				break;
 
 			default:
-				if (evt.data >= 31) {
+				if ((evt.character >= 32) && (evt.character <= 255)) {
 					memmove(con.input_text + con.cursor_position + 1,
 						con.input_text + con.cursor_position,
 						slen - con.cursor_position + 1);
@@ -868,6 +868,7 @@ con_gfx_read(gfx_state_t *state)
 		}
 	} while (!done);
 
+	sciprintf(CON_GFX_PROMPT "%s\n", con.input_text);
 	retval = con.input_text;
 	con.input_text = sci_malloc(64);
 	con.input_text[0] = 0;
