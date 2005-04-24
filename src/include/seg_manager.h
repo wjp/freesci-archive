@@ -99,6 +99,11 @@ typedef struct _seg_manager_t {
 	int reserved_id;
 	int exports_wide;
 
+	int gc_mark_bits; /* For standard Mark&Sweep:
+			  ** 1 or 0, depending on what unreachable/freshly allocated
+			  ** memory is tagged as  */
+	size_t mem_allocated; /* Total amount of memory allocated */
+
 	seg_id_t clones_seg_id; /* ID of the (a) clones segment */
 	seg_id_t lists_seg_id; /* ID of the (a) list segment */
 	seg_id_t nodes_seg_id; /* ID of the (a) node segment */
@@ -110,7 +115,6 @@ typedef struct _seg_manager_t {
 /*==============================================================*/
 /* Toplevel functionality					*/
 /*==============================================================*/
-
 void
 sm_init (seg_manager_t* self);
 /* Initialize the segment manager

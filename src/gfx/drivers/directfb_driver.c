@@ -783,7 +783,7 @@ scidfb_exit(gfx_driver_t *drv)
 }
 
 static int
-scidfb_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
+scidfb_draw_line(gfx_driver_t *drv, point_t start, point_t end, gfx_color_t color,
 		 gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
 	int xc, yc;
@@ -792,15 +792,16 @@ scidfb_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
 
 	if (line_mode == GFX_LINE_MODE_FINE) {
 		SCIDFB_CHECKED(scidfb_visual->DrawLine(scidfb_visual,
-						       line.x, line.y,
-						       line.x + line.xl, line.y + line.yl));
+						       start.x, start.y,
+						       end.x, end.y));
 	} else /* "Correct" lines */
 		for (xc = 0; xc < drv->mode->xfact; xc++)
 			for (yc = 0; yc < drv->mode->yfact; yc++)
 				SCIDFB_CHECKED(scidfb_visual->DrawLine(scidfb_visual,
-								       line.x + xc, line.y + yc,
-								       line.x + line.xl + xc,
-								       line.y + line.yl + yc));
+								       start.x + xc,
+								       start.y + yc,
+								       end.x + xc,
+								       end.y + yc));
 	
 	return GFX_OK;
 }

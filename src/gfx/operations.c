@@ -73,6 +73,16 @@ _gfxop_scale_rect(rect_t *rect, gfx_mode_t *mode)
 }
 
 static void
+_gfxop_scale_point(point_t *point, gfx_mode_t *mode)
+{
+	int xfact = mode->xfact;
+	int yfact = mode->yfact;
+
+	point->x *= xfact;
+	point->y *= yfact;
+}
+
+static void
 _gfxop_alloc_colors(gfx_state_t *state, gfx_pixmap_color_t *colors, int colors_nr)
 {
 	int i;
@@ -945,24 +955,42 @@ line_clip(rect_t *line, rect_t clip, int xfact, int yfact)
 	return 0;
 }
 
+static int
+point_clip(point_t *start, point_t *end, rect_t clip, int xfact, int yfact)
+{
+	rect_t line = gfx_rect(start->x, start->y, end->x - start->x, end->y - start->y);
+	int retval = line_clip(&line, clip, xfact, yfact);
+
+	start->x = line.x;
+	start->y = line.y;
+
+	end->x = line.x + line.xl;
+	end->y = line.y + line.yl;
+
+	return retval;
+}
+
+
 
 static void
-draw_line_to_control_map(gfx_state_t *state, rect_t line, gfx_color_t color)
+draw_line_to_control_map(gfx_state_t *state, point_t start, point_t end, gfx_color_t color)
 {
 	if (color.mask & GFX_MASK_CONTROL)
-		if (!line_clip(&line, state->clip_zone_unscaled, 0, 0))
-			gfx_draw_line_pixmap_i(state->control_map, line, color.control);
+		if (!point_clip(&start, &end, state->clip_zone_unscaled, 0, 0))
+			gfx_draw_line_pixmap_i(state->control_map, start, end, color.control);
 }
 
 static int
-simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, rect_t line, gfx_color_t color, gfx_line_mode_t line_mode)
+simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, point_t start, point_t end, gfx_color_t color, gfx_line_mode_t line_mode)
      /* Draws a stippled line if this isn't supported by the driver (skipone is ignored ATM) */
 {
-	int stepwidth = (line.xl)? driver->mode->xfact : driver->mode->yfact;
+	int xl = end.x - start.x;
+	int yl = end.y - start.y;
+	int stepwidth = (xl)? driver->mode->xfact : driver->mode->yfact;
 	int dbl_stepwidth = 2*stepwidth;
 	int linelength = (line_mode == GFX_LINE_MODE_FINE)? stepwidth - 1 : 0;
-	int *posvar = (line.xl)? &line.x : &line.y;
-	int length = (line.xl)? line.xl : line.yl;
+	int *posvar = (xl)? &start.x : &start.y;
+	int length = (xl)? xl : yl;
 	int length_left = length;
 
 	if (skipone) {
@@ -974,16 +1002,19 @@ simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, rect_t line, gfx_
 
 	length_left -= length * dbl_stepwidth;
 
-	if (line.xl)
-		line.xl = linelength;
+	if (xl)
+		xl = linelength;
 	else
-		line.yl = linelength;
+		yl = linelength;
 
 	while (length--) {
 		int retval;
+		point_t nextpos = gfx_point(start.x + xl, start.y + yl);
 
-		if ((retval = driver->draw_line(driver, line, color, line_mode, GFX_LINE_STYLE_NORMAL))) {
-			GFXERROR("Failed to draw partial stippled line (%d,%d)+(%d,%d)\n", line.x, line.y, line.xl, line.yl);
+		if ((retval = driver->draw_line(driver, start, nextpos,
+						color, line_mode, GFX_LINE_STYLE_NORMAL))) {
+			GFXERROR("Failed to draw partial stippled line (%d,%d) -- (%d,%d)\n",
+				 GFX_PRINT_POINT(start), GFX_PRINT_POINT(nextpos));
 			return retval;
 		}
 		*posvar += dbl_stepwidth;
@@ -991,18 +1022,22 @@ simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, rect_t line, gfx_
 
 	if (length_left) {
 		int retval;
+		point_t nextpos;
 
 		if (length_left > stepwidth)
 			length_left = stepwidth;
 
-		if (line.xl)
-			line.xl = length_left;
+		if (xl)
+			xl = length_left;
 		else
-			if (line.yl)
-				line.yl = length_left;
+			if (yl)
+				yl = length_left;
 
-		if ((retval = driver->draw_line(driver, line, color, line_mode, GFX_LINE_STYLE_NORMAL))) {
-			GFXERROR("Failed to draw partial stippled line (%d,%d)+(%d,%d)\n", line.x, line.y, line.xl, line.yl);
+		nextpos = gfx_point(start.x + xl, start.y + yl);
+
+		if ((retval = driver->draw_line(driver, start, nextpos, color, line_mode, GFX_LINE_STYLE_NORMAL))) {
+			GFXERROR("Failed to draw partial stippled line (%d,%d) -- (%d,%d)\n",
+				 GFX_PRINT_POINT(start), GFX_PRINT_POINT(nextpos));
 			return retval;
 		}
 	}
@@ -1012,75 +1047,79 @@ simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, rect_t line, gfx_
 
 
 static int
-_gfxop_draw_line_clipped(gfx_state_t *state, rect_t line, gfx_color_t color, gfx_line_mode_t line_mode,
+_gfxop_draw_line_clipped(gfx_state_t *state, point_t start, point_t end, gfx_color_t color, gfx_line_mode_t line_mode,
 			 gfx_line_style_t line_style)
 {
 	int retval;
-	int skipone = (line.x ^ line.y) & 1; /* Used for simulated line stippling */
+	int skipone = (start.x ^ end.y) & 1; /* Used for simulated line stippling */
 
 	BASIC_CHECKS(GFX_FATAL);
 	REMOVE_POINTER;
 
 	/* First, make sure that the line is normalized */
-	if (line.yl < 0) {
-		line.y += line.yl;
-		line.x += line.xl;
-		line.yl = -line.yl;
-		line.xl = -line.xl;
+	if (start.y > end.y) {
+		point_t swap = start;
+		start = end;
+		end = swap;
 	}
 
-	if (line.x < state->clip_zone.x
-	    || line.x < state->clip_zone.x
-	    || line.y < state->clip_zone.y
-	    || (line.x + line.xl) >= (state->clip_zone.x + state->clip_zone.xl)
-	    || (line.y + line.yl) >= (state->clip_zone.y + state->clip_zone.yl))
-		if (line_clip(&line, state->clip_zone, state->driver->mode->xfact - 1,
+	if (start.x < state->clip_zone.x
+	    || start.y < state->clip_zone.y
+	    || end.x >= (state->clip_zone.x + state->clip_zone.xl)
+	    || end.y >= (state->clip_zone.y + state->clip_zone.yl))
+		if (point_clip(&start, &end, state->clip_zone, state->driver->mode->xfact - 1,
 			      state->driver->mode->yfact - 1))
 			return GFX_OK; /* Clipped off */
 
 	if (line_style == GFX_LINE_STYLE_STIPPLED) {
-		if (line.xl && line.yl) {
-			GFXWARN("Attempt to draw stippled line which is neither an hbar nor a vbar: (%d,%d)+(%d,%d)\n",
-				line.x, line.y, line.xl, line.yl);
+		if (start.x != end.x && start.y != end.y) {
+			GFXWARN("Attempt to draw stippled line which is neither an hbar nor a vbar: (%d,%d) -- (%d,%d)\n",
+				 GFX_PRINT_POINT(start), GFX_PRINT_POINT(end));
 			return GFX_ERROR;
 		}
 		if (!(state->driver->capabilities & GFX_CAPABILITY_STIPPLED_LINES))
-			return simulate_stippled_line_draw(state->driver, skipone, line, color, line_mode);
+			return simulate_stippled_line_draw(state->driver, skipone, start, end, color, line_mode);
 	}
 
 	if (line_mode == GFX_LINE_MODE_FINE
 	    && !(state->driver->capabilities & GFX_CAPABILITY_FINE_LINES))
 		line_mode = GFX_LINE_MODE_FAST;
 
-	if ((retval = state->driver->draw_line(state->driver, line, color, line_mode, line_style))) {
-		GFXERROR("Failed to draw line (%d,%d)+(%d,%d)\n", line.x, line.y, line.xl, line.yl);
+	if ((retval = state->driver->draw_line(state->driver, start, end, color, line_mode, line_style))) {
+		GFXERROR("Failed to draw line (%d,%d) -- (%d,%d)\n",
+			 GFX_PRINT_POINT(start), GFX_PRINT_POINT(end));
 		return retval;
 	}
 	return GFX_OK;
 }
 
 int
-gfxop_draw_line(gfx_state_t *state, rect_t line, gfx_color_t color, gfx_line_mode_t line_mode,
+gfxop_draw_line(gfx_state_t *state, point_t start, point_t end,
+		gfx_color_t color, gfx_line_mode_t line_mode,
 		gfx_line_style_t line_style)
 {
 	int xfact, yfact;
 
 	BASIC_CHECKS(GFX_FATAL);
-	_gfxop_add_dirty_x(state, line);
+	_gfxop_add_dirty_x(state, gfx_rect(start.x, start.y, end.x - start.x, end.y - start.y));
 
 	xfact = state->driver->mode->xfact;
 	yfact = state->driver->mode->yfact;
 
-	draw_line_to_control_map(state, line, color);
+	draw_line_to_control_map(state, start, end, color);
 
-	_gfxop_scale_rect(&line, state->driver->mode);
+	_gfxop_scale_point(&start, state->driver->mode);
+	_gfxop_scale_point(&end, state->driver->mode);
 
 	if (line_mode == GFX_LINE_MODE_FINE) {
-		line.x += xfact >> 1;
-		line.y += yfact >> 1;
+		start.x += xfact >> 1;
+		start.y += yfact >> 1;
+
+		end.x += xfact >> 1;
+		end.y += yfact >> 1;
 	}
 
-	return _gfxop_draw_line_clipped(state, line, color, line_mode, line_style);
+	return _gfxop_draw_line_clipped(state, start, end, color, line_mode, line_style);
 }
 
 int
@@ -1088,11 +1127,12 @@ gfxop_draw_rectangle(gfx_state_t *state, rect_t rect, gfx_color_t color, gfx_lin
 		     gfx_line_style_t line_style)
 {
 	int retval = 0;
-	rect_t line, unscaled_line = gfx_rect(rect.x, rect.y, rect.xl, rect.yl);
 	int xfact, yfact;
 	int xunit, yunit;
 	int ystart;
-	int xl, yl;
+	int x, y, xl, yl;
+	point_t upper_left_u, upper_right_u, lower_left_u, lower_right_u;
+	point_t upper_left, upper_right, lower_left, lower_right;
 
 	BASIC_CHECKS(GFX_FATAL);
 	REMOVE_POINTER;
@@ -1100,62 +1140,44 @@ gfxop_draw_rectangle(gfx_state_t *state, rect_t rect, gfx_color_t color, gfx_lin
 	xfact = state->driver->mode->xfact;
 	yfact = state->driver->mode->yfact;
 
-	if (rect.xl == 0 || rect.yl == 0) {
-		GFXWARN("Rectangle too small: (%d,%d)+(%d,%d)\n", rect.x, rect.y, rect.xl, rect.yl);
-		return GFX_ERROR;
-	}
-
 	if (line_mode == GFX_LINE_MODE_FINE
 	    && state->driver->capabilities & GFX_CAPABILITY_FINE_LINES) {
 		xunit = yunit = 1;
 		xl = 1 + (rect.xl - 1) * xfact;
 		yl = 1 + (rect.yl - 1) * yfact;
-		line.x = rect.x * xfact + (xfact - 1);
-		line.y = rect.y * yfact + (yfact - 1);
+		x = rect.x * xfact + (xfact - 1);
+		y = rect.y * yfact + (yfact - 1);
 	} else {
 		xunit = xfact;
 		yunit = yfact;
 		xl = rect.xl * xfact;
 		yl = rect.yl * yfact;
-		line.x = rect.x * xfact;
-		line.y = rect.y * yfact;
+		x = rect.x * xfact;
+		y = rect.y * yfact;
 	}
 
-	ystart = line.y;
-	line.xl = xl;
-	line.yl = 0;
-	retval |= _gfxop_draw_line_clipped(state, line, color, line_mode, line_style);
-	unscaled_line.yl = 0;
-	draw_line_to_control_map(state, unscaled_line, color);
-	_gfxop_add_dirty_x(state, unscaled_line);
+	upper_left_u = gfx_point(rect.x, rect.y);
+	upper_right_u = gfx_point(rect.x + rect.xl, rect.y);
+	lower_left_u = gfx_point(rect.x, rect.y + rect.yl);
+	lower_right_u = gfx_point(rect.x + rect.xl, rect.y + rect.yl);
 
+	upper_left = gfx_point(x, y);
+	upper_right = gfx_point(x + xl, y);
+	lower_left = gfx_point(x, y + yl);
+	lower_right = gfx_point(x + xl, y + yl);
 
-	line.y += yl;
-	line.x += xunit;
-	line.xl -= xunit;
-	retval |= _gfxop_draw_line_clipped(state, line, color, line_mode, line_style);
-	unscaled_line.y += rect.yl;
-	draw_line_to_control_map(state, unscaled_line, color);
-	_gfxop_add_dirty_x(state, unscaled_line);
+#define PARTIAL_LINE(pt1, pt2)	 								\
+	retval |= _gfxop_draw_line_clipped(state, pt1, pt2, color, line_mode, line_style);	\
+	draw_line_to_control_map(state, pt1##_u, pt2##_u, color);				\
+	_gfxop_add_dirty_x(state,								\
+			   gfx_rect(pt1##_u.x, pt1##_u.y, pt2##_u.x - pt1##_u.x, pt2##_u.y - pt1##_u.y))
 
-	line.xl = 0;
-	line.yl = yl - yunit;
-	line.y = ystart + yunit;
-	line.x -= xunit;
-	retval |= _gfxop_draw_line_clipped(state, line, color, line_mode, line_style);
-	unscaled_line.y = rect.y;
-	unscaled_line.yl = rect.yl;
-	unscaled_line.xl = rect.xl;
-	draw_line_to_control_map(state, unscaled_line, color);
-	_gfxop_add_dirty_x(state, unscaled_line);
+	PARTIAL_LINE (upper_left, upper_right);
+	PARTIAL_LINE (upper_right, lower_right);
+	PARTIAL_LINE (lower_right, lower_left);
+	PARTIAL_LINE (lower_left, upper_left);
 
-	line.x += xl;
-	line.y = ystart;
-	retval |= _gfxop_draw_line_clipped(state, line, color, line_mode, line_style);
-	unscaled_line.x += rect.xl;
-	draw_line_to_control_map(state, unscaled_line, color);
-	_gfxop_add_dirty_x(state, unscaled_line);
-
+#undef PARTIAL_LINE
 	if (retval) {
 		GFXERROR("Failed to draw rectangle (%d,%d)+(%d,%d)\n", rect.x, rect.y, rect.xl, rect.yl);
 		return retval;

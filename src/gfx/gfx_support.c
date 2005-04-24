@@ -62,24 +62,24 @@ int gfx_crossblit_alpha_threshold = 128;
 #undef DRAWLINE_FUNC
 
 inline void
-gfx_draw_line_buffer(byte *buffer, int linewidth, int pixelwidth, rect_t line, unsigned int color)
+gfx_draw_line_buffer(byte *buffer, int linewidth, int pixelwidth, point_t start, point_t end, unsigned int color)
 {
 	switch (pixelwidth) {
 
 	case 1:
-		_gfx_draw_line_buffer_1(buffer, linewidth, line, color);
+		_gfx_draw_line_buffer_1(buffer, linewidth, start, end, color);
 		return;
 
 	case 2:
-		_gfx_draw_line_buffer_2(buffer, linewidth, line, color);
+		_gfx_draw_line_buffer_2(buffer, linewidth, start, end, color);
 		return;
 
 	case 3:
-		_gfx_draw_line_buffer_3(buffer, linewidth, line, color);
+		_gfx_draw_line_buffer_3(buffer, linewidth, start, end, color);
 		return;
 
 	case 4:
-		_gfx_draw_line_buffer_4(buffer, linewidth, line, color);
+		_gfx_draw_line_buffer_4(buffer, linewidth, start, end, color);
 		return;
 
 	default:
@@ -93,9 +93,9 @@ gfx_draw_line_buffer(byte *buffer, int linewidth, int pixelwidth, rect_t line, u
 
 
 void
-gfx_draw_line_pixmap_i(gfx_pixmap_t *pxm, rect_t line, int color)
+gfx_draw_line_pixmap_i(gfx_pixmap_t *pxm, point_t start, point_t end, int color)
 {
-	gfx_draw_line_buffer(pxm->index_data, pxm->index_xl, 1, line, color);
+	gfx_draw_line_buffer(pxm->index_data, pxm->index_xl, 1, start, end, color);
 }
 
 

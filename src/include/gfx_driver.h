@@ -213,11 +213,14 @@ typedef struct _gfx_driver { /* Graphics driver */
 
 	/*** Drawing operations ***/
 
-	int (*draw_line) (struct _gfx_driver *drv, rect_t line, gfx_color_t color,
-		    gfx_line_mode_t line_mode, gfx_line_style_t line_style);
+	int (*draw_line) (struct _gfx_driver *drv,
+			  point_t start, point_t end,
+			  gfx_color_t color,
+			  gfx_line_mode_t line_mode, gfx_line_style_t line_style);
 	/* Draws a single line to the back buffer.
 	** Parameters: (gfx_driver_t *) drv: The driver affected
-	**             (rect_t *) line: The line to draw
+	**             (point_t) start: Starting point of the line to draw
+	**             (point_t) end: End point of the line to draw
 	**             (gfx_color_t *) color: The color to draw with
 	**             (int) line_mode: Any of the line modes
 	**             (int) line_style: Any of the line styles

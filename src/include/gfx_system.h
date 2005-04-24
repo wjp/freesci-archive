@@ -140,7 +140,7 @@ typedef struct { /* gfx_color_t: Full color */
 
 typedef struct { /* rect_t: Rectangle description */
 	int x, y;
-	int xl, yl; /* width-1, height-1: (x,y,xl,yl)=(5,5,1,1) occupies 4 pixels */
+	int xl, yl; /* width, height: (x,y,xl,yl)=(5,5,1,1) occupies 1 pixel */
 } rect_t;
 
 
@@ -246,6 +246,7 @@ typedef struct {
 	int x, y;
 } point_t;
 
+#define GFX_PRINT_POINT(p) (p).x, (p).y
 
 /* Generates a point_t from index data
 ** Parameters: (int x int) x,y: Indicated point

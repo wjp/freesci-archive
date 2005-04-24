@@ -45,15 +45,15 @@
 
 
 static inline
-void DRAWLINE_FUNC(byte *buffer, int linewidth, rect_t line, unsigned int color)
+void DRAWLINE_FUNC(byte *buffer, int linewidth, point_t start, point_t end, unsigned int color)
 {
 	int dx, dy, incrE, incrNE, d, finalx, finaly;
-	int x = line.x;
-	int y = line.y;
-	dx = line.xl;
-	dy = line.yl;
-	finalx = x + dx;
-	finaly = y + dy;
+	int x = start.x;
+	int y = start.y;
+	dx = end.x - start.x;
+	dy = end.y - start.y;
+	finalx = end.x;
+	finaly = end.y;
 #ifdef WORDS_BIGENDIAN
         color = GUINT32_SWAP_LE_BE_CONSTANT(color);
 #endif

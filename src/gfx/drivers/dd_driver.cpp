@@ -400,9 +400,13 @@ dd_exit(gfx_driver_t *drv)
 }
 
 int
-dd_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
-	      gfx_line_mode_t line_mode, gfx_line_style_t line_style)
+dd_draw_line(gfx_driver_t *drv,
+	     point_t start, point_t end,
+	     gfx_color_t color,
+	     gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
+	rect_t line = gfx_rect(start.x, start.y,
+			       end.x - start.x, end.y - start.y);
 	HRESULT hr;
 	DDSURFACEDESC ddsc;
 	gfx_dd_struct_t *ctx;
@@ -420,7 +424,7 @@ dd_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
 		return GFX_ERROR;
 	}
 
-	_dd_draw_line(drv->mode, line, (byte *) ddsc.lpSurface, ddsc.lPitch,color);
+	_dd_draw_line(drv->mode, start, end, (byte *) ddsc.lpSurface, ddsc.lPitch,color);
 
 //	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest, (byte *) ddsc.lpSurface,
 //			     ddsc.lPitch,pri_map, drv->mode->xfact * 320, 1);

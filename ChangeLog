@@ -1,3 +1,21 @@
+2005-04-24  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/resource/Makefile.am: Disabled sci_pic_1.c: Too much
+	overlap with sci_pic_0.c, needs to be handled in a more clever
+	fashion
+
+	* src/include/gfx_system.h: Changed the semantics of rect_t to use
+	xl, yl as width, height (rather than width-1, height-1), changed
+	line functions to take two points rather than one rect
+
+	* src/engine/seg_manager.c: Added some (currently disabled) code
+	and prototypes for automatic memory management
+
+2005-04-02  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* doc/sci.tex: Misc. formatting improvements, added documentation
+	for GetMenu and SetMenu
+
 2005-04-05  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/savegame.cfsml: Remove stuff related to the old VM.

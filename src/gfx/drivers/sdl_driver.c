@@ -478,7 +478,7 @@ static void lineColor2(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16
 }
 
 static int
-sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
+sdl_draw_line(struct _gfx_driver *drv, point_t start, point_t end, gfx_color_t color,
 	      gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
 	Uint32 scolor;
@@ -489,58 +489,46 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 
 	if (color.mask & GFX_MASK_VISUAL) {
 		int xc, yc;
-		rect_t newline;
+		point_t nstart, nend;
 
 		scolor = sdl_map_color(drv, color);
-		newline.xl = line.x;
-		newline.yl = line.y;
 
 		for (xc = 0; xc < xfact; xc++)
 			for (yc = 0; yc < yfact; yc++) {
-				newline.x = line.x + xc;
-				newline.y = line.y + yc;
-				newline.xl = line.x + line.xl + xc;
-				newline.yl = line.y + line.yl + yc;
+				nstart.x = start.x + xc;
+				nstart.y = start.y + yc;
+				nend.x = end.x + xc;
+				nend.y = end.y + yc;
 
-				if (newline.x < 0)
-					newline.x = 0;
-				if (newline.xl < 0)
-					newline.xl = 0;
-				if (newline.y < 0)
-					newline.y = 0;
-				if (newline.yl < 0)
-					newline.yl = 0;
-				if (newline.x > xsize)
-					newline.x = xsize;
-				if (newline.xl >= xsize)
-					newline.xl = xsize -1;
-				if (newline.y > ysize)
-					newline.y = ysize;
-				if (newline.yl >= ysize)
-					newline.yl = ysize -1;
+				if (nstart.x < 0)
+					nstart.x = 0;
+				if (nend.x < 0)
+					nstart.x = 0;
+				if (nstart.y < 0)
+					nstart.y = 0;
+				if (nend.y < 0)
+					nend.y = 0;
+				if (nstart.x > xsize)
+					nstart.x = xsize;
+				if (nend.x >= xsize)
+					nend.x = xsize -1;
+				if (nstart.y > ysize)
+					nstart.y = ysize;
+				if (nend.y >= ysize)
+					nend.y = ysize -1;
 
 #if 0
-				fprintf(stderr, "draw %d %d %d %d %08x %d %d\n", newline.x,
-					newline.y, newline.xl, newline.yl, scolor, xsize, ysize);
+				fprintf(stderr, "draw %d %d to %d %d %08x %d %d\n", nstart.x,
+					nstart.y, nend.x, nend.yl, scolor, xsize, ysize);
 #endif
 
-				lineColor2(S->visual[1], (Sint16)newline.x, (Sint16)newline.y,
-					  (Sint16)newline.xl, (Sint16)newline.yl, scolor);
-			}
-	}
+				lineColor2(S->visual[1], (Sint16)nstart.x, (Sint16)nstart.y,
+					  (Sint16)nend.x, (Sint16)nend.y, scolor);
 
-	if (color.mask & GFX_MASK_PRIORITY) {
-		int xc, yc;
-		rect_t newline;
-
-		newline.xl = line.xl;
-		newline.yl = line.yl;
-
-		for (xc = 0; xc < xfact; xc++)
-			for (yc = 0; yc < yfact; yc++) {
-				newline.x = line.x + xc;
-				newline.y = line.y + yc;
-				gfx_draw_line_pixmap_i(S->priority[0], newline, color.priority);
+				if (color.mask & GFX_MASK_PRIORITY) {
+					gfx_draw_line_pixmap_i(S->priority[0], nstart, nend,
+							       color.priority);
+				}
 			}
 	}
 

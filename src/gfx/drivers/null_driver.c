@@ -72,12 +72,14 @@ null_exit(struct _gfx_driver *drv)
   /*** Drawing operations ***/
 
 static int
-null_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
+null_draw_line(struct _gfx_driver *drv, point_t start, point_t end,
+	       gfx_color_t color,
                gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
 	if (debug_draw)
-		printf("[GFX-NULL] Line (%d,%d)d(%d,%d)\n",
-		       GFX_PRINT_RECT(line));
+		printf("[GFX-NULL] Line (%d,%d) -- (%d,%d)\n",
+		       GFX_PRINT_POINT(start),
+		       GFX_PRINT_POINT(end));
 	return GFX_OK;
 }
 

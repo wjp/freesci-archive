@@ -758,7 +758,7 @@ xlib_exit(struct _gfx_driver *drv)
   /*** Drawing operations ***/
 
 static int
-xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
+xlib_draw_line(struct _gfx_driver *drv, point_t start, point_t end, gfx_color_t color,
 	       gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
 	int linewidth = (line_mode == GFX_LINE_MODE_FINE)? 1:
@@ -779,24 +779,26 @@ xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 
 		XChangeGC(S->display, S->gc, GCLineWidth | GCLineStyle | GCForeground | GCCapStyle, &(S->gc_values));
 
-		XASS(XDrawLine(S->display, S->visual[1], S->gc, line.x + xmod,
-			       line.y + ymod, line.x + line.xl + xmod,
-			       line.y + line.yl + ymod));
+		XASS(XDrawLine(S->display, S->visual[1], S->gc,
+			       start.x + xmod, start.y + ymod,
+			       end.x + xmod, end.y + ymod));
 	}
 
 	if (color.mask & GFX_MASK_PRIORITY) {
 		int xc, yc;
-		rect_t newline;
-
-		newline.xl = line.xl;
-		newline.yl = line.yl;
+		point_t nstart, nend;
 
 		linewidth--;
 		for (xc = 0; xc <= linewidth; xc++)
 			for (yc = -linewidth; yc <= linewidth; yc++) {
-				newline.x = line.x + xc;
-				newline.y = line.y + yc;
-				gfx_draw_line_pixmap_i(S->priority[0], newline, color.priority);
+				nstart.x = start.x + xc;
+				nstart.y = start.y + yc;
+
+				nend.x = end.x + xc;
+				nend.y = end.y + yc;
+
+				gfx_draw_line_pixmap_i(S->priority[0],
+						       nstart, nend, color.priority);
 			}
 	}
 

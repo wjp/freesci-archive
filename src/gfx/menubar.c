@@ -407,7 +407,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, reg_t
 		} else {
 
 			item->keytext = NULL;
-			item->flags &= ~MENU_ATTRIBUTE_KEY;
+			item->flags &= ~MENU_ATTRIBUTE_FLAGS_KEY;
 
 		}
 		break;

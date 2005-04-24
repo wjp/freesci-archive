@@ -138,6 +138,16 @@ WARNING("Uncomment me after fixing sci0_palette changes to reset me");
 }
 
 
+extern gfx_pixmap_t *
+gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t *view, int mirrored);
+/* Draw cel into pixmap
+** Parameters: (int * int * int) (id, loop, cel): ID to give the cel
+**             (byte *) resource: The data to read it from
+**             (int) size: Number of bytes max that may be read from resource
+**             (gfxr_view_t *) view: A view to append to, if possible
+**             (int) mirrored: Whether the view is mirrored
+*/
+
 gfxr_pic_t *
 gfxr_init_pic(gfx_mode_t *mode, int ID)
 {
@@ -941,23 +951,21 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 static inline void
 _gfxr_draw_subline(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int priority, int drawenable)
 {
-	rect_t line;
+	point_t start = gfx_point(x, y);
+	point_t end = gfx_point (ex, ey);
 
-	line.x = x;
-	line.y = y;
-	line.xl = ex - x;
-	line.yl = ey - y;
         if (ex >= pic->visual_map->index_xl || ey >= pic->visual_map->index_yl || x < 0 || y < 0) {
-                fprintf(stderr,"While drawing pic0: INVALID LINE %d,%d,%d,%d\n",
-                        GFX_PRINT_RECT(line));
+                fprintf(stderr,"While drawing pic0: INVALID LINE %d,%d -- %d,%d\n",
+                        GFX_PRINT_POINT(start),
+			GFX_PRINT_POINT(end));
                 return;
         }
 
 	if (drawenable & GFX_MASK_VISUAL)
-		gfx_draw_line_pixmap_i(pic->visual_map, line, color);
+		gfx_draw_line_pixmap_i(pic->visual_map, start, end, color);
 
 	if (drawenable & GFX_MASK_PRIORITY)
-		gfx_draw_line_pixmap_i(pic->priority_map, line, priority);
+		gfx_draw_line_pixmap_i(pic->priority_map, start, end, priority);
 
 }
 
@@ -969,15 +977,12 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 	int scale_x = pic->mode->xfact;
 	int scale_y = pic->mode->yfact;
 	int xc, yc;
-	rect_t line;
 	int mask;
 	int partially_white = (drawenable & GFX_MASK_VISUAL)
 		&& (((color & 0xf0) == 0xf0) || ((color & 0x0f) == 0x0f));
-
-	line.x = x;
-	line.y = y;
-	line.xl = ex - x;
-	line.yl = ey - y;
+	point_t start;
+	point_t end;
+	rect_t line;
 
 	if (x > 319 || y > 199 || x < 0 || y < 0
 	    || ex > 319 || ey > 199 || ex < 0 || ey < 0) {
@@ -985,13 +990,18 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 		return;
 	}
 
+	line = gfx_rect(x, y, ex - x, ey - y);
+
 	y += SCI_TITLEBAR_SIZE;
 	ey += SCI_TITLEBAR_SIZE;
+
+	start = gfx_point(x, y);
+	end = gfx_point(ex, ey);
 
 	if (drawenable & GFX_MASK_CONTROL) {
 
 		p0printf(" ctl:%x", control);
-		gfx_draw_line_pixmap_i(pic->control_map, gfx_rect(x, y, line.xl, line.yl), control);
+		gfx_draw_line_pixmap_i(pic->control_map, start, end, control);
 	}
 
 
@@ -1897,3 +1907,17 @@ gfxr_dither_pic0(gfxr_pic_t *pic, int dmode, int pattern)
 	}
 }
 
+gfxr_pic_t *
+gfxr_init_pic1(gfx_mode_t *mode, int ID)
+{
+	fprintf(stderr, "Pic1 initialisation not recovered from sci_pic_1.c yet\n");
+	exit(1);
+}
+
+void
+gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size,
+	       byte *resource, gfxr_pic1_params_t *style, int resid)
+{
+	fprintf(stderr, "Pic1 drawing not recovered from sci_pic_1.c yet\n");
+	exit(1);
+}

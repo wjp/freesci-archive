@@ -53,7 +53,8 @@ typedef enum {
 
 	GFXW_BOX,
 	GFXW_RECT,
-	GFXW_LINE,
+	GFXW_LINE, /* For lines, the bounding rectangle's xl, yl determine the line's expansion:
+		   ** (x2, y2) = (x+xl, y+yl) */
 	GFXW_INVERSE_LINE,
 	GFXW_VIEW,
 	GFXW_STATIC_VIEW,

@@ -128,10 +128,18 @@ gfx_box_border(gfx_driver_t *gfx_driver, rect_t box, gfx_color_t color)
 	box.xl *= gfx_driver->mode->xfact;
 	box.yl *= gfx_driver->mode->yfact;
 
-	gfx_driver->draw_line(gfx_driver, gfx_rect(box.x, box.y, box.xl, 0), color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
-	gfx_driver->draw_line(gfx_driver, gfx_rect(box.x, box.y, 0, box.yl), color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
-	gfx_driver->draw_line(gfx_driver, gfx_rect(box.x + box.xl, box.y, 0, box.yl), color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
-	gfx_driver->draw_line(gfx_driver, gfx_rect(box.x, box.y + box.yl, box.xl, 0), color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
+	{
+		point_t ul = gfx_point (box.x, box.y);
+		point_t ur = gfx_point (box.x + box.xl, box.y);
+		point_t ll = gfx_point (box.x, box.y + box.yl);
+		point_t lr = gfx_point (box.x + box.xl, box.y + box.yl);
+
+
+		gfx_driver->draw_line(gfx_driver, ul, ur, color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
+		gfx_driver->draw_line(gfx_driver, ur, lr, color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
+		gfx_driver->draw_line(gfx_driver, lr, ll, color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
+		gfx_driver->draw_line(gfx_driver, ll, ul, color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
+	}
 }
 
 static void
@@ -153,7 +161,13 @@ gfx_box_line(gfx_driver_t *gfx_driver, rect_t box, gfx_color_t color)
 	box.xl *= gfx_driver->mode->xfact;
 	box.yl *= gfx_driver->mode->yfact;
 
-	gfx_driver->draw_line(gfx_driver, box, color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
+
+	{
+		point_t p1 = gfx_point (box.x, box.y);
+		point_t p2 = gfx_point (box.x + box.xl, box.y + box.yl);
+
+		gfx_driver->draw_line(gfx_driver, p1, p2, color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
+	}
 }
 
 static void

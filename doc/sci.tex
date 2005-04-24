@@ -386,6 +386,11 @@
 \newcommand{\docbooktolatexaligncr}{\docbooktolatex@align{}{\hspace*\fill}}
 \newcommand{\docbooktolatexalignrl}{\protect\ifvmode\raggedleft\else\hfill\fi}
 \newcommand{\docbooktolatexalignrr}{}
+
+\newcommand{\kfuncparamlist}{\textbf{Parameters:}\\}
+\newcommand{\kfuncparam}[1]{\textit{#1}}
+\newcommand{\kfuncty}[1]{$: \textbf{#1}$}
+
 \ifx\captionswapskip\@undefined\newcommand{\captionswapskip}{}\fi
 \makeatother
 \title{\bfseries The Sierra Creative Interpreter}
@@ -971,7 +976,7 @@ tuples, which they could subsequently be read from.
 \label{id2492132}\hypertarget{id2492132}{}%
 
 The SCI0 map file format is pretty simple: It consists of 6-byte
-entries, terminated by the sequence 0xffff ffff ffff. The first 2
+entries, terminated by a six-tuple of 0xff values. The first 2
 bytes, interpreted as little endian 16 bit integer, encode resource
 type (high 5 bits) and number (low 11 bits). The next 4 bytes are a 32
 bit LE integer that contains the resource file number in the high 6
@@ -2949,16 +2954,18 @@ The type numbers are laid out as follows:
 5 - not used  \\
 6 - Selector control (as in the Save and Restore boxes)  \\
 \end{tabular}
+
  The gauge "controls" are not really controls. I don't know how they work (yet).
 
 Each control also has a state value. These are laid out as follows: 
 
-\begin{tabular}{l}
-bit 0 - selectable. If this bit is set, the control can be selected using the Tab key. Except for the text and icon controls, all controls are selectable.  \\
-bit 1 - unknown. Always set, except for the text and icon controls  \\
-bit 2 - disabled. When this bit is set, a button is grayed out. No other control types are affected.  \\
-bit 3 - selected. When this bit is set, a frame is drawn around the control.  \\
+\begin{tabular}{lp{12cm}}
+bit 0 & selectable. If this bit is set, the control can be selected using the Tab key. Except for the text and icon controls, all controls are selectable.  \\
+bit 1 & unknown. Always set, except for the text and icon controls  \\
+bit 2 & disabled. When this bit is set, a button is grayed out. No other control types are affected.  \\
+bit 3 & selected. When this bit is set, a frame is drawn around the control.  \\
 \end{tabular}
+
  Note that state 3 is by far the most common. With that explained, I'll move on to the kernel functions. There are three functions associated with controls - KDrawControl (see \hyperlink{KDrawControl}{Section {\ref{KDrawControl}}}), KHiliteControl (see \hyperlink{KHiliteControl}{Section {\ref{KHiliteControl}}}) and KEditControl (see \hyperlink{KEditControl}{Section {\ref{KEditControl}}}). Note that there is a KOnControl kernel call which is entirely unrelated to window management.
 
 The dialogs are implemented using not one, but two classes - Dialog and Window. While the Window class maintains the window (It is derived from SysWindow), the Dialog class is just a list of controls. It is derived from the List class, but has extended functionality to tell its members to redraw etc. There is a special function, located in script 255, which allows scripts to push information about the dialog on the stack instead of creating the Dialog object manually.
@@ -3025,7 +3032,7 @@ Some people prefer the one-based numbering system for channel and program number
 
 Sierra changed its sound file format in the switch to SCI1. I refer only to SCI0 sound files in this specification. Hybrid interpreters such as the one used for Quest for Glory II are also excluded. Finally, SCI games written for non-DOS systems may have different formats. This document applies to Sierra's IBM games.
 
-Please post comments or questions to the SCI webboard: http://pub48.bravenet.com/forum/show.asp?usernum=4071584210
+Please post comments or questions to the SCI webboard:\\\texttt{ http://pub48.bravenet.com/forum/show.asp?usernum=4071584210}
 
 You can contact me personally at ravi.i@softhome.net, but I would prefer that SCI messages be posted on the webboard so everyone can see them.
 \subsection{Sound Devices}
@@ -3088,9 +3095,9 @@ Listed here are devices supported by the SCI0 interpreter with a little informat
 
  (thanks to Shane T. for providing some of this). Blank fields are unknown, not unused. 
 
-\begin{tabular}{l}
-* when asked which patch to load, the PC and Tandy speaker drivers return FFFFh, which is a signal that they do not use patches  \\
-+ the imf driver almost certainly uses 02h for the play flag, but I haven't confirmed this  \\
+\begin{tabular}{lp{13cm}}
+* & when asked which patch to load, the PC and Tandy speaker drivers return FFFFh, which is a signal that they do not use patches  \\
++ & the imf driver almost certainly uses 02h for the play flag, but I haven't confirmed this  \\
 \end{tabular}
 
 
@@ -3626,6 +3633,7 @@ Objects look like this (LE 16 bit values):
 {\texttt{{[08+\dbz{} \#vs*2 +\dbz{} \#fs*2][09+\dbz{} \#vs*2 +\dbz{} \#fs*2]}}}zero  \\
 {\texttt{{[0a+\dbz{} \#vs*2 +\dbz{} \#fs*2].\dbz{}.\dbz{}.\dbz{}}}}: Function selector code pointers  \\
 \end{tabular}
+
  For objects, the selectors are simply values for the selector IDs specified in their species class (which is either present by its offset (in-memory) or class ID (in-script)- the same for the species' superclass (superClass selector)). Info typically has one of the following values (although this does not appear to be relevant for SCI): 
 
 \begin{tabular}{l}
@@ -3633,6 +3641,7 @@ Objects look like this (LE 16 bit values):
 {\texttt{{0x0001}}}: Clone  \\
 {\texttt{{0x8000}}}: Class  \\
 \end{tabular}
+
  Other values are used, but do not appear to be of relevance\label{id2499890}\begingroup\catcode`\#=12\footnote{
 See SQ3's inventory objects for an example
 }\endgroup\docbooktolatexmakefootnoteref{id2499890}.
@@ -3674,6 +3683,7 @@ Classes look similar to objects:
 {\texttt{{[08+\dbz{} \#vs*4 +\dbz{} \#fs*2][09+\dbz{} \#vs*4 +\dbz{} \#fs*2]}}}: 0  \\
 {\texttt{{[0a+\dbz{} \#vs*4 +\dbz{} \#fs*2].\dbz{}.\dbz{}.\dbz{}}}}: Selector ID of the first etc. funcselectors  \\
 \end{tabular}
+
  Simply put, they look like objects with each selector section followed by a list of selector IDs.
 \subsubsection{Export segments}
 \label{id2500108}\hypertarget{id2500108}{}%
@@ -3761,22 +3771,22 @@ When the interpreter initializes, it sets up a timer for 60 hertz (one that "tic
 
 Basically, the initialization proceeds as follows: 
 
-\begin{tabular}{l}
-Initialize the heap and hunk.  \\
-Parse the config file and the command line.  \\
-Load the drivers specified in the config file  \\
-Initialize the graphics subsystem.  \\
-Initialize the event manager  \\
-Initialize the window manager  \\
-Initialize the text parser (i.e. load the vocabulary files)  \\
-Initialize the music player  \\
-Save the machine state for restarting the game later on \label{id2500537}\begingroup\catcode`\#=12\footnote{
+\begin{enumerate}
+\item Initialize the heap and hunk
+\item Parse the config file and the command line
+\item Load the drivers specified in the config file
+\item Initialize the graphics subsystem.
+\item Initialize the event manager
+\item Initialize the window manager
+\item Initialize the text parser (i.e. load the vocabulary files)
+\item Initialize the music player
+\item Save the machine state for restarting the game later on \label{id2500537}\begingroup\catcode`\#=12\footnote{
 This is quite interesting, the KRestartGame kernel call is implemented using a simple setjmp/longjmp pair.
-}\endgroup\docbooktolatexmakefootnoteref{id2500537}  \\
-Allocate the PMachine stack on the heap.  \\
-Get a pointer to the game object  \\
-And run, by executing the play or replay method.  \\
-\end{tabular}
+}\endgroup\docbooktolatexmakefootnoteref{id2500537}
+\item Allocate the PMachine stack on the heap.
+\item Get a pointer to the game object
+\item And run, by executing the play or replay method.
+\end{enumerate}
 
 
 The right game object is found by looking in the "dispatch table" of script 0. The dispatch table has block type 7, and is an array of words. The first entry is a pointer (script relative) to the game object, for instance SQ3. If the game was restarted, the interpreter executes the replay method, play otherwise.
@@ -3868,19 +3878,19 @@ These variables also reside on the stack. They contain information passed from o
 \label{id2500846}\hypertarget{id2500846}{}%
 
 While two adjacent variables may be entirely unrelated, the contents of an object is always related to one task. The object, like the variable tables, provides storage space. This storage space is called properties. Depending on the instructions used, a property can be referred to by index into the object structure, or by property IDs (PIDs). For instance, the name property has the PID 17h, but the offset 6. The property IDs are assigned by the SCI compiler, and it is the "compatible" way of accessing object data. Whereas the offset method is used only internally by an object to access its own data, the PID method is used externally by objects to read/write the data fields of other objects. The PID method is also used to call methods in an object, either by the object itself, by another object, or by the SCI inter- preter. Yes, this really happens sometimes.
-\subsection{The PMachine "registers"}
+\subsection{The PMachine ``registers''}
 \label{id2500868}\hypertarget{id2500868}{}%
 
 The PMachine can be said to have a number of registers, although none of them can be accessed explicitly by script code. They are used/changed implicitly by the script opcodes: 
 
-\begin{tabular}{l}
-Acc - the accumulator. Used for result storage and input for a number of opcodes.  \\
-IP - the instruction pointer.\label{id2500890}\begingroup\catcode`\#=12\footnote{
+\begin{tabular}{lp{13cm}}
+Acc & the accumulator. Used for result storage and input for a number of opcodes.  \\
+IP & the instruction pointer.\label{id2500890}\begingroup\catcode`\#=12\footnote{
 FreeSCI calls this the "Program Counter" or PC, which is the more general term.
 }\endgroup\docbooktolatexmakefootnoteref{id2500890} Points to the currently executing instruction  \\
-Vars - an array of 4 values, pointing to the current variables of each mentioned type  \\
-Object - points to the currently executing object.  \\
-SP - the current stack pointer. Note that the stack in the original SCI interpreter is used bottom-up instead of the more usual top-down.  \\
+Vars & an array of 4 values, pointing to the current variables of each mentioned type  \\
+Object & points to the currently executing object.  \\
+SP & the current stack pointer. Note that the stack in the original SCI interpreter is used bottom-up instead of the more usual top-down.  \\
 \end{tabular}
 
 
@@ -3909,10 +3919,10 @@ The PMachine CPU potentially has 128 instructions (however, a couple of these ar
 Certain instructions (in particular, branching ones) take relative addresses as a parameter. The actual address is calculated based on the instruction after the branching instruction itself. In this example, the bnt instruction, if the branch is made, jumps over the ldi instruction. 
 \begin{Verbatim}[]
 
-        eq?
-        bnt +2
-        ldi byte 2
-        push
+    eq?
+    bnt +2
+    ldi byte 2
+    push
 
 \end{Verbatim}
  
@@ -3956,14 +3966,15 @@ These functions are used in the pseudocode explanations:
 pop(): sp -= 2; return *sp;  \\
 push(x): *sp = x; sp += 2; return x;  \\
 \end{tabular}
- The following rules apply to opcodes: 
-\begin{tabular}{l}
 
-Parameters are signed, unless stated otherwise. Sign extension is performed.  \\
-Jumps are relative to the posisition of the next operation.  \\
-*TOS refers to the TOS (Top Of Stack) element.  \\
-"tmp" refers to a temporary register that is used for explanation purposes only.  \\
-\end{tabular}
+ The following rules apply to opcodes: 
+
+\begin{enumerate}
+\item Parameters are signed, unless stated otherwise. Sign extension is performed.
+\item Jumps are relative to the posisition of the next operation.
+\item *TOS refers to the TOS (Top Of Stack) element.
+\item "tmp" refers to a temporary register that is used for explanation purposes only.
+\end{enumerate}
 
 
 \begin{itemize}
@@ -3974,6 +3985,7 @@ Jumps are relative to the posisition of the next operation.  \\
 op 0x00: bnot (1 byte)  \\
 op 0x01: bnot (1 byte)  \\
 \end{tabular}
+
  Binary not: 
 \begin{Verbatim}[]
 acc ^= 0xffff;
@@ -3989,6 +4001,7 @@ acc ^= 0xffff;
 op 0x02: add (1 byte)  \\
 op 0x03: add (1 byte)  \\
 \end{tabular}
+
  Addition: 
 \begin{Verbatim}[]
 acc += pop();
@@ -4004,6 +4017,7 @@ acc += pop();
 op 0x04: sub (1 byte)  \\
 op 0x05: sub (1 byte)  \\
 \end{tabular}
+
  Subtraction: 
 \begin{Verbatim}[]
 acc = pop() - acc;
@@ -4019,6 +4033,7 @@ acc = pop() - acc;
 op 0x06: mul (1 byte)  \\
 op 0x07: mul (1 byte)  \\
 \end{tabular}
+
  Multiplication: 
 \begin{Verbatim}[]
 acc *= pop();
@@ -4034,6 +4049,7 @@ acc *= pop();
 op 0x08: div (1 byte)  \\
 op 0x09: div (1 byte)  \\
 \end{tabular}
+
  Division: 
 \begin{Verbatim}[]
 acc = pop() / acc;
@@ -4049,6 +4065,7 @@ acc = pop() / acc;
 op 0x0a: mod (1 byte)  \\
 op 0x0b: mod (1 byte)  \\
 \end{tabular}
+
  Modulo: 
 \begin{Verbatim}[]
 acc = pop() % acc;
@@ -4064,6 +4081,7 @@ acc = pop() % acc;
 op 0x0c: shr (1 byte)  \\
 op 0x0d: shr (1 byte)  \\
 \end{tabular}
+
  Shift Right logical: 
 \begin{Verbatim}[]
 acc = pop() >> acc;
@@ -4079,6 +4097,7 @@ acc = pop() >> acc;
 op 0x0e: shl (1 byte)  \\
 op 0x0f: shl (1 byte)  \\
 \end{tabular}
+
  Shift Left logical: 
 \begin{Verbatim}[]
 acc = pop() << acc;
@@ -4094,6 +4113,7 @@ acc = pop() << acc;
 op 0x10: xor (1 byte)  \\
 op 0x11: xor (1 byte)  \\
 \end{tabular}
+
  Exclusive or: 
 \begin{Verbatim}[]
 acc ^= pop();
@@ -4109,6 +4129,7 @@ acc ^= pop();
 op 0x12: and (1 byte)  \\
 op 0x13: and (1 byte)  \\
 \end{tabular}
+
  Logical and: 
 \begin{Verbatim}[]
 acc &= pop();
@@ -4124,6 +4145,7 @@ acc &= pop();
 op 0x14: or (1 byte)  \\
 op 0x15: or (1 byte)  \\
 \end{tabular}
+
  Logical or: 
 \begin{Verbatim}[]
 acc |= pop();
@@ -4139,6 +4161,7 @@ acc |= pop();
 op 0x16: neg (1 byte)  \\
 op 0x17: neg (1 byte)  \\
 \end{tabular}
+
  Sign negation: 
 \begin{Verbatim}[]
 acc = -acc;
@@ -4154,6 +4177,7 @@ acc = -acc;
 op 0x18: not (1 byte)  \\
 op 0x19: not (1 byte)  \\
 \end{tabular}
+
  Boolean not: 
 \begin{Verbatim}[]
 acc = !acc;
@@ -4169,10 +4193,11 @@ acc = !acc;
 op 0x1a: eq? (1 byte)  \\
 op 0x1b: eq? (1 byte)  \\
 \end{tabular}
+
  Equals?: 
 \begin{Verbatim}[]
 prev = acc;
-                                 acc = (acc == pop());
+acc = (acc == pop());
 \end{Verbatim}
 
 
@@ -4185,10 +4210,11 @@ prev = acc;
 op 0x1c: ne? (1 byte)  \\
 op 0x1d: ne? (1 byte)  \\
 \end{tabular}
+
  Is not equal to? 
 \begin{Verbatim}[]
 prev = acc;
-                                 acc = !(acc == pop());
+acc = !(acc == pop());
 \end{Verbatim}
 
 
@@ -4201,10 +4227,11 @@ prev = acc;
 op 0x1e: gt? (1 byte)  \\
 op 0x1f: gt? (1 byte)  \\
 \end{tabular}
+
  Greater than? 
 \begin{Verbatim}[]
 prev = acc;
-                                 acc = (pop() > acc);
+acc = (pop() > acc);
 \end{Verbatim}
 
 
@@ -4217,10 +4244,11 @@ prev = acc;
 op 0x20: ge? (1 byte)  \\
 op 0x21: ge? (1 byte)  \\
 \end{tabular}
+
  Greater than or equal to? 
 \begin{Verbatim}[]
 prev = acc;
-                                 acc = (pop() >= acc);
+acc = (pop() >= acc);
 \end{Verbatim}
 
 
@@ -4233,10 +4261,11 @@ prev = acc;
 op 0x22: lt? (1 byte)  \\
 op 0x23: lt? (1 byte)  \\
 \end{tabular}
+
  Less than? 
 \begin{Verbatim}[]
 prev = acc;
-                                 acc = (pop() < acc);
+acc = (pop() < acc);
 \end{Verbatim}
 
 
@@ -4249,10 +4278,11 @@ prev = acc;
 op 0x24: le? (1 byte)  \\
 op 0x25: le? (1 byte)  \\
 \end{tabular}
+
  Less than or equal to? 
 \begin{Verbatim}[]
 prev = acc;
-                                 acc = (pop() <= acc);
+acc = (pop() <= acc);
 \end{Verbatim}
 
 
@@ -4265,6 +4295,7 @@ prev = acc;
 op 0x26: ugt? (1 byte)  \\
 op 0x27: ugt? (1 byte)  \\
 \end{tabular}
+
  Unsigned: Greater than? 
 \begin{Verbatim}[]
 acc = (pop() > acc);
@@ -4280,6 +4311,7 @@ acc = (pop() > acc);
 op 0x28: uge? (1 byte)  \\
 op 0x29: uge? (1 byte)  \\
 \end{tabular}
+
  Unsigned: Greather than or equal to? 
 \begin{Verbatim}[]
 acc = (pop() >= acc);
@@ -4295,6 +4327,7 @@ acc = (pop() >= acc);
 op 0x2a: ult? (1 byte)  \\
 op 0x2b: ult? (1 byte)  \\
 \end{tabular}
+
  Unsigned: Less than? 
 \begin{Verbatim}[]
 acc = (pop() < acc);
@@ -4310,6 +4343,7 @@ acc = (pop() < acc);
 op 0x2c: ule? (1 byte)  \\
 op 0x2d: ule? (1 byte)  \\
 \end{tabular}
+
  Unsigned: Less than or equal to? 
 \begin{Verbatim}[]
 acc = (pop() >= acc);
@@ -4325,6 +4359,7 @@ acc = (pop() >= acc);
 op 0x2e: bt W relpos (3 bytes)  \\
 op 0x2f: bt B relpos (2 bytes)  \\
 \end{tabular}
+
  Branch relative if true 
 \begin{Verbatim}[]
 if (acc) pc += relpos;
@@ -4340,6 +4375,7 @@ if (acc) pc += relpos;
 op 0x30: bnt W relpos (3 bytes)  \\
 op 0x31: bnt B relpos (2 bytes)  \\
 \end{tabular}
+
  Branch relative if not true 
 \begin{Verbatim}[]
 if (!acc) pc += relpos;
@@ -4355,6 +4391,7 @@ if (!acc) pc += relpos;
 op 0x32: jmp W relpos (3 bytes)  \\
 op 0x33: jmp B relpos (2 bytes)  \\
 \end{tabular}
+
  Jump 
 \begin{Verbatim}[]
 pc += relpos;
@@ -4370,6 +4407,7 @@ pc += relpos;
 op 0x34: ldi W data (3 bytes)  \\
 op 0x35: ldi B data (2 bytes)  \\
 \end{tabular}
+
  Load data immediate 
 \begin{Verbatim}[]
 acc = data;
@@ -4385,6 +4423,7 @@ acc = data;
 op 0x36: push (1 byte)  \\
 op 0x37: push (1 byte)  \\
 \end{tabular}
+
  Push to stack 
 \begin{Verbatim}[]
 push(acc)
@@ -4400,6 +4439,7 @@ push(acc)
 op 0x38: pushi W data (3 bytes)  \\
 op 0x39: pushi B data (2 bytes)  \\
 \end{tabular}
+
  Push immediate 
 \begin{Verbatim}[]
 push(data)
@@ -4415,6 +4455,7 @@ push(data)
 op 0x3a: toss (1 byte)  \\
 op 0x3b: toss (1 byte)  \\
 \end{tabular}
+
  TOS subtract 
 \begin{Verbatim}[]
 pop();
@@ -4430,6 +4471,7 @@ pop();
 op 0x3c: dup (1 byte)  \\
 op 0x3d: dup (1 byte)  \\
 \end{tabular}
+
  Duplicate TOS element 
 \begin{Verbatim}[]
 push(*TOS);
@@ -4460,11 +4502,12 @@ sp += (size * 2);
 op 0x40: call W relpos, B framesize (4 bytes)  \\
 op 0x41: call B relpos, B framesize (3 bytes)  \\
 \end{tabular}
+
  Call inside script. 
 \begin{Verbatim}[]
 (See description below)
-                              sp -= (framesize + 2 + &rest_modifier);
-                              &rest_modifier = 0;
+sp -= (framesize + 2 + &rest_modifier);
+&rest_modifier = 0;
 \end{Verbatim}
  This calls a script subroutine at the relative position {\ttfamily\itshape{{relpos}}}, setting up the ParmVar pointer first. ParmVar points to sp-{\ttfamily\itshape{{framesize}}} (but see also the \&rest operation). The number of parameters is stored at word offset -1 relative to ParmVar.
 
@@ -4477,11 +4520,12 @@ op 0x41: call B relpos, B framesize (3 bytes)  \\
 op 0x42: callk W kfunct, B kparams (4 bytes)  \\
 op 0x43: callk B kfunct, B kparams (3 bytes)  \\
 \end{tabular}
+
  Call kernel function (see \hyperlink{Kfunctions}{Section {\ref{Kfunctions}}}) 
 \begin{Verbatim}[]
 sp -= (kparams + 2 + &rest_modifier);
-                                 &rest_modifier = 0;
-                                 (call kernel function kfunct)
+&rest_modifier = 0;
+(call kernel function kfunct)
 \end{Verbatim}
 
 
@@ -4494,11 +4538,12 @@ sp -= (kparams + 2 + &rest_modifier);
 op 0x44: callb W dispindex, B framesize (4 bytes)  \\
 op 0x45: callb B dispindex, B framesize (3 bytes)  \\
 \end{tabular}
+
  Call base script 
 \begin{Verbatim}[]
 (See description below)
-                              sp -= (framesize + 2 + &rest_modifier);
-                              &rest_modifier = 0;
+sp -= (framesize + 2 + &rest_modifier);
+&rest_modifier = 0;
 \end{Verbatim}
  This operation starts a new execution loop at the beginning of script 0, public method {\ttfamily\itshape{{dispindex}}} (Each script comes with a dispatcher list (type 7) that identifies public methods). Parameters are handled as in the call operation.
 
@@ -4511,14 +4556,19 @@ op 0x45: callb B dispindex, B framesize (3 bytes)  \\
 op 0x46: calle W script, W dispindex, B framesize (5 bytes)  \\
 op 0x47: calle B script, B dispindex, B framesize (4 bytes)  \\
 \end{tabular}
+
  Call external script 
 \begin{Verbatim}[]
 (See description below)
-                              sp -= (framesize + 2 + &rest_modifier);
-                              &rest_modifier = 0;
+sp -= (framesize + 2 + &rest_modifier);
+&rest_modifier = 0;
 \end{Verbatim}
- This operation starts a new execution loop at the beginning of script {\ttfamily\itshape{{script}}}s public method {\ttfamily\itshape{{dispindex}}}. The dispatcher list (the script's type 7 object) is used to dereference the requested method. Parameters are handled as described for the call operation.
+ This operation performs a function call (implicitly placing the current program counter on the execution stack) to an ``external'' procedure of
+a script. More precisely, exported procedure \texttt {dispindex} of script \texttt{script} is invoked, where \texttt{dispindex} is an offset into
+the script's Exports list (i.e., $\texttt{dispindex} = n * 2$ references the $n$th exported procedure).
 
+The ``Exports list'' is defined in the script's type 7 object (cf. section \ref{id2499584}). It is an error to invoke a script which does not exist or which does not provide
+an Exports list, or to use a dispatch index which does not point into an even address within the Exports list.
 
 %--- Item
 \item 
@@ -4528,6 +4578,7 @@ op 0x47: calle B script, B dispindex, B framesize (4 bytes)  \\
 op 0x48: ret (1 byte)  \\
 op 0x49: ret (1 byte)  \\
 \end{tabular}
+
  Return: returns from an execution loop started by call, calle, callb, send, self or super.
 
 
@@ -4539,6 +4590,7 @@ op 0x49: ret (1 byte)  \\
 op 0x4a: send B framesize (2 bytes)  \\
 op 0x4b: send B framesize (2 bytes)  \\
 \end{tabular}
+
  Send for one or more selectors. This is the most complex SCI operation (together with self and class).
 
 Send looks up the supplied selector(s) in the object pointed to by the accumulator. If the selector is a variable selector, it is read (to the accumulator) if it was sent for with zero parameters. If a parameter was supplied, this selector is set to that parameter. Method selectors are called with the specified parameters.
@@ -4546,16 +4598,16 @@ Send looks up the supplied selector(s) in the object pointed to by the accumulat
 The selector(s) and parameters are retreived from the stack frame. Send first looks up the selector ID at the bottom of the frame, then retreives the number of parameters, and, eventually, the parameters themselves. This algorithm is iterated until all of the stack frame has been "used up". Example: 
 \begin{Verbatim}[]
 ; This is an example for usage of the SCI send operation
-                            pushi x      ; push the selector ID of x
-                            push1        ; 1 parameter: x is supposed to be set
-                            pushi 42     ; That's the value x will get set to
-                            pushi moveTo ; In this example, moveTo is a method selector.
-                            push2        ; It will get called with two parameters-
-                            push         ; The accumulator...
-                            lofss 17     ; ...and PC-relative address 17.
-                            pushi foo    ; Let's assume that foo is another variable selector.
-                            push0        ; This will read foo and return the value in acc.
-                            send 12      ; This operation does three quite different things.
+   pushi x      ; push the selector ID of x
+   push1        ; 1 parameter: x is supposed to be set
+   pushi 42     ; That's the value x will get set to
+   pushi moveTo ; In this example, moveTo is a method selector.
+   push2        ; It will get called with two parameters-
+   push         ; The accumulator...
+   lofss 17     ; ...and PC-relative address 17.
+   pushi foo    ; Let's assume that foo is another variable selector.
+   push0        ; This will read foo and return the value in acc.
+   send 12      ; This operation does three quite different things.
             
 \end{Verbatim}
 
@@ -4571,6 +4623,7 @@ op 0x4d  \\
 op 0x4e  \\
 op 0x4f  \\
 \end{tabular}
+
  These opcodes don't exist in SCI.
 
 
@@ -4582,6 +4635,7 @@ op 0x4f  \\
 op 0x50: class W function (3 bytes)  \\
 op 0x51: class B function (2 bytes)  \\
 \end{tabular}
+
  Get class address. Sets the accumulator to the memory address of the specified {\ttfamily\itshape{{function}}} of the current object.
 
 
@@ -4593,6 +4647,7 @@ op 0x51: class B function (2 bytes)  \\
 op 0x52  \\
 op 0x53  \\
 \end{tabular}
+
  These opcodes don't exist in SCI.
 
 
@@ -4604,6 +4659,7 @@ op 0x53  \\
 op 0x54: self B stackframe (2 bytes)  \\
 op 0x55: self B stackframe (2 bytes)  \\
 \end{tabular}
+
  Send to self. This operation is the same as the send operation, except that it sends to the current object instead of the object pointed to by the accumulator.
 
 
@@ -4615,6 +4671,7 @@ op 0x55: self B stackframe (2 bytes)  \\
 op 0x56: super W class, B stackframe (4 bytes)  \\
 op 0x57: super B class, B stackframe (3 bytes)  \\
 \end{tabular}
+
  Send to any class. This operation is the same as the send operation, except that it sends to an arbitrary {\ttfamily\itshape{{class}}}.
 
 
@@ -4626,6 +4683,7 @@ op 0x57: super B class, B stackframe (3 bytes)  \\
 op 0x58: \&rest W paramindex (3 bytes)  \\
 op 0x59: \&rest B paramindex (2 bytes)  \\
 \end{tabular}
+
  Pushes all or part of the ParmVar list on the stack. The number specifies the first parameter variable to be pushed. I'll give a small example. Suppose we have two functions:
 
 function a(y,z) and function b(x,y,z)
@@ -4647,6 +4705,7 @@ Note that the values are copied to the stack {\em{immediately}}. The {\texttt{{\
 op 0x5a: lea W type, W index ( bytes)  \\
 op 0x5b: lea B type, B index ( bytes)  \\
 \end{tabular}
+
  Load Effective Address
 
 The variable type is a bit-field used as follows: 
@@ -4698,6 +4757,7 @@ int lea(int vt, int vi)
 op 0x5c: selfID (1 bytes)  \\
 op 0x5d: selfID (1 bytes)  \\
 \end{tabular}
+
  Get 'self' identity: SCI uses heap pointers to identify objects, so this operation sets the accumulator to the address of the current object. 
 \begin{Verbatim}[]
 acc = object
@@ -4713,6 +4773,7 @@ acc = object
 op 0x5e  \\
 op 0x5f  \\
 \end{tabular}
+
  These opcodes don't exist in SCI.
 
 
@@ -4724,6 +4785,7 @@ op 0x5f  \\
 op 0x60: pprev (1 bytes)  \\
 op 0x61: pprev (1 bytes)  \\
 \end{tabular}
+
  Push prev: Pushes the value of the prev register, set by the last comparison bytecode (eq?, lt?, etc.), on the stack. 
 \begin{Verbatim}[]
 push(prev)
@@ -4739,6 +4801,7 @@ push(prev)
 op 0x62: pToa W offset (3 bytes)  \\
 op 0x63: pToa B offset (2 bytes)  \\
 \end{tabular}
+
  Property To Accumulator: Copies the value of the specified property (in the current object) to the accumulator. The property is specified as an offset into the object structure.
 
 
@@ -4750,6 +4813,7 @@ op 0x63: pToa B offset (2 bytes)  \\
 op 0x64: aTop W offset (3 bytes)  \\
 op 0x65: aTop B offset (2 bytes)  \\
 \end{tabular}
+
  Accumulator To Property: Copies the value of the accumulator into the specified property (in the current object). The property number is specified as an offset into the object structure.
 
 
@@ -4761,6 +4825,7 @@ op 0x65: aTop B offset (2 bytes)  \\
 op 0x66: pTos W offset (3 bytes)  \\
 op 0x67: pTos B offset (2 bytes)  \\
 \end{tabular}
+
  Property To Stack: Same as pToa, but pushes the property value on the stack instead.
 
 
@@ -4772,6 +4837,7 @@ op 0x67: pTos B offset (2 bytes)  \\
 op 0x68: sTop W offset (3 bytes)  \\
 op 0x69: sTop B offset (2 bytes)  \\
 \end{tabular}
+
  Stack To Property: Same as aTop, but gets the new property value from the stack instead.
 
 
@@ -4783,6 +4849,7 @@ op 0x69: sTop B offset (2 bytes)  \\
 op 0x6a: ipToa W offset (3 bytes)  \\
 op 0x6b: ipToa B offset (2 bytes)  \\
 \end{tabular}
+
  Incement Property and copy To Accumulator: Increments the value of the specified property of the current object and copies it into the accumulator. The property number is specified as an offset into the object structure.
 
 
@@ -4794,6 +4861,7 @@ op 0x6b: ipToa B offset (2 bytes)  \\
 op 0x6c: dpToa W offset (3 bytes)  \\
 op 0x6d: dpToa B offset (2 bytes)  \\
 \end{tabular}
+
  Decrepent Property and copy to Accumulator: Decrements the value of the specified property of the current object and copies it into the accumulator. The property number is specified as an offset into the object structure.
 
 
@@ -4805,6 +4873,7 @@ op 0x6d: dpToa B offset (2 bytes)  \\
 op 0x6e: ipTos W offset (3 bytes)  \\
 op 0x6f: ipTos B offset (2 bytes)  \\
 \end{tabular}
+
  Increment Property and push to Stack Same as ipToa, but pushes the result on the stack instead.
 
 
@@ -4816,6 +4885,7 @@ op 0x6f: ipTos B offset (2 bytes)  \\
 op 0x70: dpTos W offset (3 bytes)  \\
 op 0x71: dpTos B offset (2 bytes)  \\
 \end{tabular}
+
  Decrement Property and push to stack: Same as dpToa, but pushes the result on the stack instead.
 
 
@@ -4827,6 +4897,7 @@ op 0x71: dpTos B offset (2 bytes)  \\
 op 0x72: lofsa W offset (3 bytes)  \\
 op 0x73: lofsa B offset (2 bytes)  \\
 \end{tabular}
+
  Load Offset to Accumulator: 
 \begin{Verbatim}[]
 acc = pc + offset
@@ -4842,6 +4913,7 @@ acc = pc + offset
 op 0x74: lofss W offset (3 bytes)  \\
 op 0x75: lofss B offset (2 bytes)  \\
 \end{tabular}
+
  Load Offset to Stack: 
 \begin{Verbatim}[]
 push(pc + offset)
@@ -4857,6 +4929,7 @@ push(pc + offset)
 op 0x76: push0 (1 bytes)  \\
 op 0x77: push0 (1 bytes)  \\
 \end{tabular}
+
  Push 0: 
 \begin{Verbatim}[]
 push(0)
@@ -4872,6 +4945,7 @@ push(0)
 op 0x78: push1 (1 bytes)  \\
 op 0x79: push1 (1 bytes)  \\
 \end{tabular}
+
  Push 1: 
 \begin{Verbatim}[]
 push(1)
@@ -4887,6 +4961,7 @@ push(1)
 op 0x7a: push2 (1 bytes)  \\
 op 0x7b: push2 (1 bytes)  \\
 \end{tabular}
+
  Push 2: 
 \begin{Verbatim}[]
 push(2)
@@ -4902,6 +4977,7 @@ push(2)
 op 0x7c: pushSelf (1 bytes)  \\
 op 0x7d: pushSelf (1 bytes)  \\
 \end{tabular}
+
  Push self: 
 \begin{Verbatim}[]
 push(object)
@@ -4917,6 +4993,7 @@ push(object)
 op 0x7e  \\
 op 0x7f  \\
 \end{tabular}
+
  These operations don't exist in SCI.
 
 
@@ -4928,6 +5005,7 @@ op 0x7f  \\
 op 0x80 - 0xfe: [ls+-][as][gltp]i? W index (3 bytes)  \\
 op 0x81 - 0xff: [ls+-][as][gltp]i? B index (2 bytes)  \\
 \end{tabular}
+
  The remaining SCI operations work on one of the four variable types. The variable index is retreived by taking the heap pointer for the specified variable type, adding the {\ttfamily\itshape{{index}}} and possibly the accumulator, and executing the operation according to the following table: 
 \begin{description}
 % \null and \mbox are tricks to induce different typesetting decisions
@@ -4938,6 +5016,7 @@ Used as with all other opcodes with variably-sized parameters:
 0: 16 bit parameter  \\
 1: 8 bit parameter  \\
 \end{tabular}
+
 
 % \null and \mbox are tricks to induce different typesetting decisions
 \item[{Bits 1,2}]\null{}
@@ -5019,15 +5098,15 @@ Return values are returned into the accumulator, unless stated otherwise. If ret
 
 SCI0 uses only little endian 16 bit integer values for parameters. However, this document distinguishes between different uses of those integers by defining the following variable types: 
 
-\begin{tabular}{l}
-(word): 16 bit signed little endian integer  \\
-(HeapPtr): As (word); interpreted as a pointer to a heap address  \\
-(DblList): As (HeapPtr); interpreted as offset of a doubly linked list  \\
-(Node): As (HeapPtr); interpreted as offset of a list node  \\
-(\&FarPtr): As (HeapPtr); interpreted as the 32 bit pointer stored at the referenced heap address  \\
-(Point): A sequence of two (word)s to describe a point on the screen, with the y coordinate being the first in the sequence.  \\
-(Rect): A sequence of four (word)s describing a rectangle. If you read "(Rect) foo", think "(word) foo\_ymin, (word) foo\_xmin, (word) foo\_ymax, (word) foo\_xmax" instead.  \\
-(String): If greater than or equal to 1000, this is the heap address of a text string. If less than 1000, it is the number of a text resource, and immediately followed by another word that contains the number of the string inside the text resource.  \\
+\begin{tabular}{lp{12cm}}
+(word)& 16 bit signed little endian integer  \\
+(HeapPtr)& As (word); interpreted as a pointer to a heap address  \\
+(DblList)& As (HeapPtr); interpreted as offset of a doubly linked list  \\
+(Node)& As (HeapPtr); interpreted as offset of a list node  \\
+(\&FarPtr)& As (HeapPtr); interpreted as the 32 bit pointer stored at the referenced heap address  \\
+(Point)& A sequence of two (word)s to describe a point on the screen, with the y coordinate being the first in the sequence.  \\
+(Rect)& A sequence of four (word)s describing a rectangle. If you read "(Rect) foo", think "(word) foo\_ymin, (word) foo\_xmin, (word) foo\_ymax, (word) foo\_xmax" instead.  \\
+(String)& If greater than or equal to 1000, this is the heap address of a text string. If less than 1000, it is the number of a text resource, and immediately followed by another word that contains the number of the string inside the text resource.  \\
 \end{tabular}
 
 
@@ -5178,6 +5257,7 @@ This function checks whether the supplied heap pointer is valid and returns 0 if
 16: close from edges to center, reopen from center to edges  \\
 17: close random checkboard, reopen  \\
 \end{tabular}
+
  The animation is executed when kAnimate() (see \hyperlink{KAnimate}{Section {\ref{KAnimate}}}) is invoked. If not specified, it is assumed to be the same animation as last time.  \\
 (word) {\ttfamily\itshape{{Flags}}}:
 
@@ -5185,6 +5265,7 @@ This function checks whether the supplied heap pointer is valid and returns 0 if
 Bit 0: Clear screen before drawing  \\
 Bit 1-f: unknown, probably unused  \\
 \end{tabular}
+
 If not specified, it defaults to 1.
 
 Some interpreter versions older than 0.000.502 interpret this parameter inversely, and have 0 as a default.
@@ -5831,6 +5912,7 @@ All sounds are stopped  \\
 All scripts are removed from the script table  \\
 The heap status is reset, but the heap is not cleared  \\
 \end{tabular}
+
  After this is done, the engine restarts at a certain point (see \hyperlink{LSExecLoop}{Section {\ref{LSExecLoop}}}), re-initializes the stack, and executes the replay method of the game object.
 \subsubsection{Kernel function 0x30: GameIsRestarting()}
 \label{id2507314}\hypertarget{id2507314}{}%
@@ -5874,6 +5956,7 @@ Returns: (see below)
 0xb: CHECK\_DRIVER  \\
 0xc: ALL\_STOP  \\
 \end{tabular}
+
  See individual descriptions below for more information.
 \subsubsection{Kernel function 0x31: DoSound(INIT, Object)}
 \label{id2507430}\hypertarget{id2507430}{}%
@@ -6622,6 +6705,7 @@ This function first retreives {\ttfamily\itshape{{obj}}}'s signal and illegalBit
 illegalBits bitwise-AND the disjunction of all elements of $\{ 2^n | \exists \textrm{ a pixel with the color value n inside the control map zone delimited by obj's brRect}\}$ equals 0  \\
 $\nexists \textrm{pic} \in \textrm{clip\_list}. (\textrm{pic::signal} \& (\textrm{DONT\_RESTORE} \texttt{ | } \textrm{IGNORE\_ACTOR})) = 0 \land \textrm{pic::brRect} \cap \textrm{obj::brRect} \neq \emptyset$  \\
 \end{tabular}
+
  If both conditions are met, 1 is returned. Otherwise, 0 is returned.
 \subsubsection{Kernel function 0x52: OnControl(word, Point \docbooktolatexpipe{} Rect)}
 \label{KONCONTROL}\hypertarget{KONCONTROL}{}%
@@ -6757,13 +6841,45 @@ Mode 4 was apparently introduced in SCI01 and reports the amount of free memory 
 \label{id2510256}\hypertarget{id2510256}{}%
 
 
-\subsubsection{Kernel function 0x5f: GetMenu(?)}
+\subsubsection{Kernel function 0x5f: GetMenu(word, word)}
 \label{id2510265}\hypertarget{id2510265}{}%
+\kfuncparamlist
+\begin{tabular}{p{2cm}p{2cm}p{9cm}}
+\kfuncparam{entry}&\kfuncty{word}&{A pair of bytes. In LE notation, the higher byte is the ``menu ID'', and the lower byte is the ``entry ID''.} \\
+\kfuncparam{key}&\kfuncty{word}&{A special key selecting some particular information regarding the menu entry.} \\
+\end{tabular}
+
+Retrieves some metainformation about an (existing) menu entry. \textit{entry} selects the menu and
+entry the information is recovered with respect to, and \textit{key} specifies which particular
+information to recover. At the moment, the following kinds of information are known for \textit{key}:
+
+\begin{tabular}{|l|p{3.5cm}|p{9.5cm}|}
+\hline
+\textbf{ID} & \textbf{FreeSCI macro (\texttt{MENU\_ATTRIBUTE\_}\ldots)} & \textbf{Description} \\
+\hline
+\hline
+0x6d	& \texttt{SAID}		& The ``\textit{Said}'' spec associated with the menu entry, or a null pointer. If this spec is matched, the next \texttt{GetEvent()} call will behave as if the appropriate menu option had been selected. \\
+0x6e	& \texttt{TEXT}		& The string currently displayed for the menu item. \\
+0x6f	& \texttt{KEY}		& An optional key (as reported by \texttt{GetKey()}) the menu option should be triggered by. \\
+0x70	& \texttt{ENABLED}	& Whether the menu option is enabled or not (in the latter case, it is grayed out and cannot be selected). \\
+0x71	& \texttt{TAG}		& A value without special semantics. \\
+\hline
+\end{tabular}
 
 
-\subsubsection{Kernel function 0x60: SetMenu(?)}
+\subsubsection{Kernel function 0x60: SetMenu(word, [word, any]*)}
 \label{id2510273}\hypertarget{id2510273}{}%
+\kfuncparamlist
+\begin{tabular}{p{2cm}p{2cm}p{9cm}}
+\kfuncparam{entry}&\kfuncty{word}&{A pair of bytes. In LE notation, the higher byte is the ``menu ID'', and the lower byte is the ``entry ID''.} \\
+\kfuncparam{key}&\kfuncty{word}&{A special key selecting some particular information regarding the menu entry.} \\
+\kfuncparam{value}&\kfuncty{word}&{A special key selecting some particular information regarding the menu entry.} \\
+\end{tabular}
 
+\texttt{SetMenu} is a varargs function; it takes a menu bar \textit{entry} ID (cf. \texttt{GetMenu}, section \ref{id2510265})
+followed by any even number of parameters. Each of these parameter pairs begins with a \textit{key}; the
+second entry is a \textit{value}, whose type depends on the key. Semantics of \textit{key} are as in
+\texttt{GetMenu} (cf. section \ref{id2510265}).
 
 \subsubsection{Kernel function 0x61: GetSaveFiles(String, String, HeapPtr*)}
 \label{id2510279}\hypertarget{id2510279}{}%
@@ -6854,12 +6970,13 @@ Returns: See below
 
 Depending on the value of sub\_function, this system call executes one of four defined actions: 
 
-\begin{tabular}{l}
-0: GET\_DEVICE  \\
-1: GET\_CURRENT\_DEVICE  \\
-2: PATHS\_EQUAL  \\
-3: IS\_FLOPPY  \\
+\begin{tabular}{ll}
+0& GET\_DEVICE  \\
+1& GET\_CURRENT\_DEVICE  \\
+2& PATHS\_EQUAL  \\
+3& IS\_FLOPPY  \\
 \end{tabular}
+
  See the specific function definitions below for more information.
 \subsubsection{Kernel function 0x67: DeviceInfo(GET\_DEVICE, String, String)}
 \label{id2510593}\hypertarget{id2510593}{}%
@@ -6963,10 +7080,10 @@ Returns: (void)
 
 If {\ttfamily\itshape{{direction}}} is not specified, it defaults to 1. It is a bitmask and defined as follows: 
 
-\begin{tabular}{l}
-bit 0: Shake 10 pixels downwards  \\
-bit 1: Shake to the right  \\
-bit 2: Unknown, but used  \\
+\begin{tabular}{ll}
+bit 0& Shake 10 pixels downwards  \\
+bit 1& Shake to the right  \\
+bit 2& Unknown, but used  \\
 \end{tabular}
 
 \subsubsection{Kernel function 0x6b: FlushResources(?)}
@@ -7053,27 +7170,27 @@ Some parts of the event mechanism (in particular, keyboard management) are very 
 
 There are three types of events, distinguished by their "type" property. The possible values are listed below; they are laid out as a bitfield to allow for selective event retrieval, see later. 
 
-\begin{tabular}{l}
-0x00 - Null event  \\
-0x01 - Mouse button event  \\
-0x02 - Mouse button release event  \\
-0x04 - Keyboard event  \\
-0x40 - Movement (joystick) event  \\
+\begin{tabular}{ll}
+0x00 & Null event  \\
+0x01 & Mouse button event  \\
+0x02 & Mouse button release event  \\
+0x04 & Keyboard event  \\
+0x40 & Movement (joystick) event  \\
 \end{tabular}
 
 
 This type is returned to the SCI event managers by the input device drivers along with a "message" and a set of "modifiers". This is the basic event structure, although some event types contain extra information. The latter field is a direct copy of the BIOS shift flags, laid out as follows:
 
 
-\begin{tabular}{l}
-bit 7 - Insert active  \\
-bit 6 - Caps lock active  \\
-bit 5 - Num lock active  \\
-bit 4 - Scroll lock active  \\
-bit 3 - Alt key pressed  \\
-bit 2 - Ctrl key pressed  \\
-bit 1 - Left shift key pressed  \\
-bit 0 - Right shift key pressed  \\
+\begin{tabular}{ll}
+bit 7 & Insert active  \\
+bit 6 & Caps lock active  \\
+bit 5 & Num lock active  \\
+bit 4 & Scroll lock active  \\
+bit 3 & Alt key pressed  \\
+bit 2 & Ctrl key pressed  \\
+bit 1 & Left shift key pressed  \\
+bit 0 & Right shift key pressed  \\
 \end{tabular}
 
 
@@ -7134,21 +7251,21 @@ After the offset table are the actual words. A word defition consists of two par
 
 The possible values are arranged as a bit field to allow for class masks, see later. Only one bit is actually tested by the interpreter. If a word class equals to 0xff ("anyword"), the word is excluded (allowing for parser'ese). The values go like this: 
 
-\begin{tabular}{l}
-0x001 - number (not found in the vocabulary, set internally)  \\
-0x002 - special  \\
-0x004 - special  \\
-0x008 - special\label{id2517843}\begingroup\catcode`\#=12\footnote{
+\begin{tabular}{lp{13cm}}
+0x001 & number (not found in the vocabulary, set internally)  \\
+0x002 & special  \\
+0x004 & special  \\
+0x008 & special\label{id2517843}\begingroup\catcode`\#=12\footnote{
 The three special classes are apparently used for words with very specific semantics, such as "if", "not", "and" etc. It is unknown as of yet whether they receive special treatment by the parser.
 }\endgroup\docbooktolatexmakefootnoteref{id2517843}  \\
-0x010 - preposition  \\
-0x020 - article  \\
-0x040 - qualifying adjective  \\
-0x080 - relative pronoun  \\
-0x100 - noun  \\
-0x200 - indicative verb (such as "is", "went" as opposed to \_do\_ this or that, which is imperative)  \\
-0x400 - adverb  \\
-0x800 - imperative verb  \\
+0x010 & preposition  \\
+0x020 & article  \\
+0x040 & qualifying adjective  \\
+0x080 & relative pronoun  \\
+0x100 & noun  \\
+0x200 & indicative verb (such as "is", "went" as opposed to \_do\_ this or that, which is imperative)  \\
+0x400 & adverb  \\
+0x800 & imperative verb  \\
 \end{tabular}
 
 
@@ -7158,22 +7275,22 @@ The compression works in this way: Each string starts with a byte-sized copy cou
 
 Here is an example of the compression scheme: 
 
-\begin{tabular}{l}
-apple - 0,appl\textbackslash0xE5  \\
+\begin{tabular}{ll}
+apple & 0,appl\textbackslash0xE5  \\
 \end{tabular}
 
 
 The byte count is 0 because we assume that "apple" is the first word beginning with an a (not likely, though!). 0xE5 is 0x65 (the ascii value for 'e') \docbooktolatexpipe{} 0x80. Watch now the next word: 
 
-\begin{tabular}{l}
-athlete - 1,thlet\textbackslash0xE5  \\
+\begin{tabular}{ll}
+athlete & 1,thlet\textbackslash0xE5  \\
 \end{tabular}
 
 
 Here, the initial letter is identical to that of its predecessor, so the copy count is 1. Another example: 
 
-\begin{tabular}{l}
-atrocious - 2,rociou\textbackslash0xF3  \\
+\begin{tabular}{ll}
+atrocious & 2,rociou\textbackslash0xF3  \\
 \end{tabular}
 
 \subsubsection{The suffix vocabulary (VOCAB.901)}
@@ -7226,11 +7343,12 @@ The suffix vocabulary consists of variably-sized records with this layout:
 An asterisk (*) represents the word stem. Taking the above example with "enemies", the interpreter finds this record: 
 
 \begin{tabular}{l}
-*ies  \\
+\texttt{*ies}  \\
 0x100  \\
-*y  \\
+\texttt{*y}  \\
 0x100  \\
 \end{tabular}
+
  word class 0x100 being a noun.
 
 The interpreter then tries to replace "enemies" with "enemy" and finds that word in the vocabulary. "Enemy" is a noun (class 1), which it is also supposed to be, according to the suffix vocabulary. Since we succeeded, the word class is set to the output value (which is, incidentally, also 1).
@@ -7403,14 +7521,14 @@ r = v_0 \to v_1 v_2 \ldots v_n
 
  there are semantic tags $\sigma_{r,1}, \sigma_{r,2} \ldots \sigma_{r,n} \in S$, as explained above. $T_{\Pi}$ is now constructed from the resulting derivation and the semantic tags assiociated with each non-terminal of the rule used. The construction algorithm is explained below with $T_{\Pi}$ being constructed from nodes, which have the following structure:
 \[
-\Node = \{\diamond\} \cup S × V × (\Node \cup \Gamma)*;
+\Node = \{\diamond\} \cup S \times V \times (\Node \cup \Gamma)*;
 \]
 
  Where S is the set of possible semantic values, and V is the set of non-terminals as defined in the grammar. We will also use the sequence $\gamma_{0}, \gamma_{1}, \gamma_{2} \ldots \gamma_{k-1}$, which will represent the word groups the input tokens belonged to (in the exact order they were accepted), and the sequence $r_{0}, r_{1}, r_{2} \ldots r_{l-1}$, which will be the list of rules used to create the left derivation tree as described in the previous section. 
 \begin{Verbatim}[]
 
-              Helper function sci_said_recursive: S × V × (V \cup \Sigma)* \to \Node
-              Parameters: s \in S, Rule r \in V × (V \cup \Sigma): v0 \to v1 v2 ... vi
+              Helper function sci_said_recursive: S \times V \times (V \cup \Sigma)* \to \Node
+              Parameters: s \in S, Rule r \in V \times (V \cup \Sigma): v0 \to v1 v2 ... vi
               cnmr = cnr
               \Node n := s, v0
               FOR j := 1 TO i
@@ -7490,7 +7608,7 @@ To test what the player wanted to say, SCI compares $T_\Pi$ with a second tree, 
  \hline 
 {{)}} & {{f4}} & {{See '('}} \tabularnewline
  \hline 
-{{[}} & {{f5}} & {{Used together with '[' for optional grouping. "[ a ]" means "either a or nothing"}} \tabularnewline
+{{[}} & {{f5}} & {{Used together with '[' for optional grouping. "[ \textit{a} ]" means "either \textit{a} or nothing"}} \tabularnewline
  \hline 
 {{]}} & {{f6}} & {{See '['.}} \tabularnewline
  \hline 
@@ -7626,16 +7744,16 @@ First, we need to describe a set of functions for traversing the nodes of $T_\Si
 \\
 \textrm{is\_word} : && \Node \to B \\
 \textrm{is\_word} : \tuple{s, v, n_{0}, n_{1} \ldots n_{i}} = \Btt \iff (i = 0) \land n_{0} \in \Gamma \\
-%\textrm{contains\_word}: && \Node × S × \Gamma \to B contains\_word(n, s, \gamma) = tt \gamma = 0xfff\label{id2519386}\begingroup\catcode`\#=12\footnote{
+%\textrm{contains\_word}: && \Node \times S \times \Gamma \to B contains\_word(n, s, \gamma) = tt \gamma = 0xfff\label{id2519386}\begingroup\catcode`\#=12\footnote{
 %This is the so-called "anyword". Words with a word group of 0xfff match any other word.
 %}\endgroup\docbooktolatexmakefootnoteref{id2519386} \lor (\iff \exists m.m\in\textrm{all\_children}(n).(s = \textrm{second}(m)) \land (\textrm{is\_word}(m) \land (\textrm{word}(m) = \gamma))) \\
-\textrm{verify\_sentence\_part\_elements}: && \Node × \Node \to B \\
+\textrm{verify\_sentence\_part\_elements}: && \Node \times \Node \to B \\
 \textrm{verify\_sentence\_part\_elements}: && \tuple{n_{p}, n_{s}} \mapsto \Btt \iff (\textrm{first}(n_{s} = 152) \land ((\forall m.m \in \Node.\textrm{verify\_sentence\_part\_elements}(m, n_{s}) \iff \{ w \docbooktolatexpipe{} \exists t.t \in \textrm{all\_children}(m).w = \textrm{word}(t)\} = \emptyset) \lor \exists m \in \textrm{children}(n_{s}).\textrm{verify\_sentence\_part\_elements}(m, n_{s})) ) \lor ((\textrm{second}(n_{s}) = 153) \land (\exists m.m \in \textrm{children}(n_{s}).(\exists o \in \textrm{all\_children}(n_{s}).(\textrm{first}(o) = \textrm{first}(n_{p})) \land \textrm{word}(o) = \textrm{word}(m))) ) \lor ((\textrm{second}(n_{s}) \in \{144, 14c\}) \land (\exists m.m \in \textrm{children}(n_{s}).verify\_sentence\_part(m, n_{s}))) \\
 \\
-\textrm{verify\_sentence\_part}: && \Node × \Node \to B \\
+\textrm{verify\_sentence\_part}: && \Node \times \Node \to B \\
 \textrm{verify\_sentence\_part}: && \tuple{n_{p}, n_{s}} \mapsto \Btt \iff \forall n.n \in \textrm{children}(n_{s}):\exists m.m\in\textrm{children}(n_{p}).(\textrm{first}(m) = \textrm{first}(n)) \land \textrm{verify\_sentence\_part\_elements}(n, m) \\
 \\
-\textrm{verify\_sentence\_part\_brackets}: && \Node × \Node \to B \\
+\textrm{verify\_sentence\_part\_brackets}: && \Node \times \Node \to B \\
 \textrm{verify\_sentence\_part\_brackets}: && \tuple{n_{p}, n_{s}} \mapsto \Btt \iff (\textrm{first}(n_{p}) = 152 \land (\forall m.m\in \Node.(\textrm{first}(m) = \textrm{first}(n_{s})) \land (\textrm{second}(m) = \textrm{second}(n_{s})). \textrm{verify\_sentence\_part}(n_{p}, m) \iff \{ w \docbooktolatexpipe{} \exists t.t \in \textrm{all\_children}(m).w = \textrm{word}(t)\} = \emptyset)) \lor ((\textrm{first}(n_{p}) \in \{141, 142, 143\}) \land \textrm{verify\_sentence\_part}(n_{p}, n_{s})) \\
 \end{eqnarray}
 
@@ -7670,47 +7788,47 @@ The behaviour of a view is controlled by its signal property. This property cont
 \captionswapskip{}{{\caption{SCI and FreeSCI signal bits}\label{id2519626}}}
 \captionswapskip{}\begin{minipage}{\linewidth}
 
-\begin{tabular}{|c|c|c|p{8cm}|}
+\begin{tabular}{|c|c|p{3.5cm}|p{8cm}|}
 \hline 
-{{Bit \#}} & {{Name}} & {{FreeSCI constant}} & {{Meaning}} \tabularnewline
+{{Bit \#}} & {{Name}} & {{FreeSCI constant {\texttt{\_K\_VIEW\_SIG\_FLAG\_} \ldots}}} & {{Meaning}} \tabularnewline
  \hline 
-{{0}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_STOP\_UPDATE}} & {{A view updating process has ended}} \tabularnewline
+{{0}} & {{}} & {{STOP\_UPDATE}} & {{A view updating process has ended}} \tabularnewline
  \hline 
-{{1}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_UPDATED}} & {{The view object is being updated}} \tabularnewline
+{{1}} & {{}} & {{UPDATED}} & {{The view object is being updated}} \tabularnewline
  \hline 
-{{2}} & {{noUpd}} & {{\_K\_VIEW\_SIG\_FLAG\_NO\_UPDATE}} & {{Don't actually draw the view}} \tabularnewline
+{{2}} & {{noUpd}} & {{NO\_UPDATE}} & {{Don't actually draw the view}} \tabularnewline
  \hline 
-{{3}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_HIDDEN}} & {{The view is hidden from sight. Often, if an actor is supposed to enter and exit a room (such as the guards in the plazas in QfG2), this bit is used. When he's supposed to enter the room, bit 3 in his signal is cleared. When he leaves, bit 3 is set, but his SCI object is not deleted.}} \tabularnewline
+{{3}} & {{}} & {{HIDDEN}} & {{The view is hidden from sight. Often, if an actor is supposed to enter and exit a room (such as the guards in the plazas in QfG2), this bit is used. When he's supposed to enter the room, bit 3 in his signal is cleared. When he leaves, bit 3 is set, but his SCI object is not deleted.}} \tabularnewline
  \hline 
-{{4}} & {{fixPriOn}} & {{\_K\_VIEW\_SIG\_FLAG\_FIX\_PRI\_ON}} & {{if this bit is set, the priority of the view never changes (if it isn't, the interpreter recalculates the priority automagically).}} \tabularnewline
+{{4}} & {{fixPriOn}} & {{FIX\_PRI\_ON}} & {{if this bit is set, the priority of the view never changes (if it isn't, the interpreter recalculates the priority automagically).}} \tabularnewline
  \hline 
-{{5}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_ALWAYS\_UPDATE}} & {{}} \tabularnewline
+{{5}} & {{}} & {{ALWAYS\_UPDATE}} & {{}} \tabularnewline
  \hline 
-{{6}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_FORCE\_UPDATE}} & {{}} \tabularnewline
+{{6}} & {{}} & {{FORCE\_UPDATE}} & {{}} \tabularnewline
  \hline 
-{{7}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_REMOVE}} & {{The view should be removed from the screen (an interpreter bit - its corresponding script bit is bit 3). If bit 3 isn't set as well, the view reappears on the next frame.}} \tabularnewline
+{{7}} & {{}} & {{REMOVE}} & {{The view should be removed from the screen (an interpreter bit - its corresponding script bit is bit 3). If bit 3 isn't set as well, the view reappears on the next frame.}} \tabularnewline
  \hline 
-{{8}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_FROZEN}} & {{Deactivates the mover object of the view (it is "frozen" - the view can still turn, however).}} \tabularnewline
+{{8}} & {{}} & {{FROZEN}} & {{Deactivates the mover object of the view (it is "frozen" - the view can still turn, however).}} \tabularnewline
  \hline 
-{{9}} & {{isExtra}} & {{\_K\_VIEW\_SIG\_FLAG\_IS\_EXTRA}} & {{}} \tabularnewline
+{{9}} & {{isExtra}} & {{IS\_EXTRA}} & {{}} \tabularnewline
  \hline 
-{{10}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_HIT\_OBSTACLE}} & {{The view hit an obstacle on the last animation cycle}} \tabularnewline
+{{10}} & {{}} & {{HIT\_OBSTACLE}} & {{The view hit an obstacle on the last animation cycle}} \tabularnewline
  \hline 
-{{11}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_DOESNT\_TURN}} & {{Meaningful for actors only. Means that the actor does not turn, even though he is walking the "wrong way".}} \tabularnewline
+{{11}} & {{}} & {{DOESNT\_TURN}} & {{Meaningful for actors only. Means that the actor does not turn, even though he is walking the "wrong way".}} \tabularnewline
  \hline 
-{{12}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_NO\_CYCLER}} & {{The view cycler is disabled. This makes the view float instead of walk.}} \tabularnewline
+{{12}} & {{}} & {{NO\_CYCLER}} & {{The view cycler is disabled. This makes the view float instead of walk.}} \tabularnewline
  \hline 
-{{13}} & {{ignoreHorizon}} & {{\_K\_VIEW\_SIG\_FLAG\_IGNORE\_HORIZON}} & {{}} \tabularnewline
+{{13}} & {{ignoreHorizon}} & {{IGNORE\_HORIZON}} & {{}} \tabularnewline
  \hline 
-{{14}} & {{ignrAct}} & {{\_K\_VIEW\_SIG\_FLAG\_IGNORE\_ACTOR}} & {{Actors can walk in the rectangle occupied by the view. The behaviour of this bit is odd, and best expressed by example. The Guild Master in QfG1 has his bit 14 set. This means that ego (or someone else) can walk all the way to his chair (try sneaking in on him from behind). If we clear this bit, we can't sneak in on him.}} \tabularnewline
+{{14}} & {{ignrAct}} & {{IGNORE\_ACTOR}} & {{Actors can walk in the rectangle occupied by the view. The behaviour of this bit is odd, and best expressed by example. The Guild Master in QfG1 has his bit 14 set. This means that ego (or someone else) can walk all the way to his chair (try sneaking in on him from behind). If we clear this bit, we can't sneak in on him.}} \tabularnewline
  \hline 
-{{15}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_DISPOSE\_ME}} & {{The view should be disposed}} \tabularnewline
+{{15}} & {{}} & {{DISPOSE\_ME}} & {{The view should be disposed}} \tabularnewline
  \hline 
 {{\label{animate-flags-freesci}\begingroup\catcode`\#=12\footnote{
 This flag is used internally in FreeSCI; it can't be found in the view objects, only in their copies in the dynview widget list.
-}\endgroup\docbooktolatexmakefootnoteref{animate-flags-freesci}}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_FREESCI\_PRIVATE}} & {{Used as an intermediate result by the interpreter; marks views that are going to have their nsRect/lsRect regions redrawn (for the test in the main draw algorithm's step 17.1., below)}} \tabularnewline
+}\endgroup\docbooktolatexmakefootnoteref{animate-flags-freesci}}} & {{}} & {{FREESCI\_PRIVATE}} & {{Used as an intermediate result by the interpreter; marks views that are going to have their nsRect/lsRect regions redrawn (for the test in the main draw algorithm's step 17.1., below)}} \tabularnewline
  \hline 
-{{\docbooktolatexusefootnoteref{animate-flags-freesci}}} & {{}} & {{\_K\_VIEW\_SIG\_FLAG\_FRESCI\_STOPUPD}} & {{View has been 'stopupdated'. This flag is set whenever the view has the STOP\_UPDATE bit set, and cleared as soon as it moves again. Stopupdated views are collided against differently than normal views.}} \tabularnewline
+{{\docbooktolatexusefootnoteref{animate-flags-freesci}}} & {{}} & {{FRESCI\_STOPUPD}} & {{View has been 'stopupdated'. This flag is set whenever the view has the STOP\_UPDATE bit set, and cleared as soon as it moves again. Stopupdated views are collided against differently than normal views.}} \tabularnewline
 \hline 
 \end{tabular}
 \end{minipage}
@@ -7727,6 +7845,7 @@ Animate (see \hyperlink{KAnimate}{Section {\ref{KAnimate}}}) can be called in tw
 Animate(DblList cast, bool cycle)  \\
 Animate()  \\
 \end{tabular}
+
  If the second syntax is used, the two parameters are assumed to be zero.
 
 The cast list is just a list of the views to draw. Animate creates a backup of this list for updating purposes. However, this backup cast list isn't just a normal copy. The interpreter copies some selectors from the view (view, loop, cel, nsRect) and places them in a special data structure. This indicates to me that there is a possibility that the view objects may be deleted even though an update is anticipated.
@@ -7909,23 +8028,23 @@ FreeSCI doesn't take Clone()ing lightly. It carefully notes which clone was crea
 
 FreeSCI keeps an internal list of flags for specific areas of the game that should be watched more closely. The 'debuglog' command activates or deactivates debug output for each of those areas. Each area is described by a letter; to activate debugging for that area, use "debuglog +x", where x is the area you want to debug. "debuglog -x" deactivates debugging for that area. To activate or deactivate multiple areas, concatenate their single-letter descriptions. Run "debuglog" without parameters to get a listing of all active modes. The modes and describing letters are listed below. 
 
-\begin{tabular}{l}
-a: The audio subsystem  \\
-b: The Bresenham line algorithm functions  \\
-c: Character and string handling  \\
-d: System graphics display and management  \\
-f: Function calls  \\
-F: File IO  \\
-g: Graphics  \\
-l: List and node handling  \\
-m: Memory management  \\
-M: Menu system  \\
-p: The command parser  \\
-s: Base setter: Draws the bases of each actor as colored rectangles  \\
-S: Said specs  \\
-t: Time functions  \\
-u: Unimplemented functionality  \\
-*: Everything at once. Use with care.  \\
+\begin{tabular}{lp{13cm}}
+a& The audio subsystem  \\
+b& The Bresenham line algorithm functions  \\
+c& Character and string handling  \\
+d& System graphics display and management  \\
+f& Function calls  \\
+F& File IO  \\
+g& Graphics  \\
+l& List and node handling  \\
+m& Memory management  \\
+M& Menu system  \\
+p& The command parser  \\
+s& Base setter: Draws the bases of each actor as colored rectangles  \\
+S& Said specs  \\
+t& Time functions  \\
+u& Unimplemented functionality  \\
+*& Everything at once. Use with care.  \\
 \end{tabular}
 
 \subsubsection{die}
@@ -7969,11 +8088,11 @@ Prints the port ID of the current port.
 
 Toggles debug flags for the graphics driver. Using "+x", the flag 'x' can be enabled, "-x" disables it. Multiple flags can be set at once, e.g. "+abc" or "-abc". With no parameters, all flags currently enabled are displayed. Note that, depending on the graphics driver in use, some flags might not be used. The list of supported flags follows. 
 
-\begin{tabular}{l}
-b: Basic driver features  \\
-p: Pointing device management  \\
-u: Screen updates  \\
-x: Pixmap operations  \\
+\begin{tabular}{ll}
+b& Basic driver features  \\
+p& Pointing device management  \\
+u& Screen updates  \\
+x& Pixmap operations  \\
 \end{tabular}
 
 \subsubsection{gfx\_draw\_cel (view) (loop) (cel)}
@@ -8027,11 +8146,12 @@ Propagates a rectangular zone from the back buffer (0) or static buffer (1) to t
 
 Draws one of the screen maps to the visual back buffer and updates the front buffer. The maps are numbered as follows: 
 
-\begin{tabular}{l}
-0: Visual buffer  \\
-1: Priority buffer (z buffer)  \\
-2: Control buffer  \\
+\begin{tabular}{ll}
+0 & Visual buffer  \\
+1 & Priority buffer (z buffer)  \\
+2 & Control buffer  \\
 \end{tabular}
+
  Buffers 1 and 2 will be rendered in EGA colors, with color values representing the associated priority/control values (this is identical to Sierra SCI behaviour).
 \subsubsection{gfx\_update\_zone (x) (y) (width) (height)}
 \label{id2522188}\hypertarget{id2522188}{}%
@@ -8070,13 +8190,13 @@ Searches for a list of hexadecimal numbers inside a single resource (if specifie
 
 If called without parameters, it lists all things it can list. Among these are: 
 
-\begin{tabular}{l}
-vars: Global interpreter variables  \\
-cmds: All available commands  \\
-restypes: All resource types  \\
-selectors: All selectors  \\
-syscalls: All kernel functions  \\
-\verb.[.resource\verb.].: All resources of that type (ex: "list view")  \\
+\begin{tabular}{ll}
+\texttt{vars}& Global interpreter variables  \\
+\texttt{cmds}& All available commands  \\
+\texttt{restypes}& All resource types  \\
+\texttt{selectors}& All selectors  \\
+\texttt{syscalls}& All kernel functions  \\
+\textit{[resource]}& All resources of that type (e.g.: "list view")  \\
 \end{tabular}
 
 \subsubsection{list\_sentence\_fragments}
@@ -8174,14 +8294,15 @@ Sets the nodes of the parse tree, and shows the result in list representation. U
 
 Sets the visual display map. Mapnr can be any of the following: 
 
-\begin{tabular}{l}
-0: Visual map  \\
-1: Priority map  \\
-2: Control map  \\
-4: Auxiliary map \label{id2522654}\begingroup\catcode`\#=12\footnote{
+\begin{tabular}{ll}
+0 & Visual map  \\
+1 & Priority map  \\
+2 &  Control map  \\
+4 & Auxiliary map \label{id2522654}\begingroup\catcode`\#=12\footnote{
 Not really meaningful; only used while pic resources are drawn.
 }\endgroup\docbooktolatexmakefootnoteref{id2522654}  \\
 \end{tabular}
+
  This function is a no-op since FreeSCI 0.3.1.
 \subsubsection{simkey (keynr)}
 \label{id2522664}\hypertarget{id2522664}{}%
@@ -8480,7 +8601,7 @@ Portable Network Graphics. A very portable graphics format with lossless compres
 \subsection{Savegame directory policy}
 \label{id2523557}\hypertarget{id2523557}{}%
 
-The general FreeSCI directory policy is simple: If there is a \$HOME, use \textasciitilde{}/.freesci/[game name]/ as your playground, if there is no home, use the current working directory. Savegames are true to that policy. Each save game has a directory associated with itself, and this directory is relative to the directory mentioned above. For example, if you execute "save\_game frobnitz" in SQ3 on your *BSD box while your \$HOME is set to /home/rogerw, the save game files would be written to /home/rogerw/.freesci/SQ3/frobnitz/.
+The general FreeSCI directory policy is simple: If there is a \texttt{\$HOME}, use \texttt{\textasciitilde{}/.freesci/\textit{[game name]}/} as your playground, if there is no home, use the current working directory. Savegames are true to that policy. Each save game has a directory associated with itself, and this directory is relative to the directory mentioned above. For example, if you execute ``\texttt{save\_game frobnitz}'' in SQ3 on your *BSD box while your \texttt{\$HOME} is set to \texttt{/home/rogerw}, the save game files would be written to\\ \texttt{/home/rogerw/.freesci/SQ3/frobnitz/}.
 \subsection{Files}
 \label{id2523577}\hypertarget{id2523577}{}%
 \subsubsection{state}
@@ -8522,6 +8643,7 @@ priority\_map.png  \\
 control\_map.png  \\
 auxiliary\_map.png  \\
 \end{tabular}
+
  The meanings of those files should be rather obvious.
 
 visual\_map.png contains regular palette or color information, so it is, in fact, a screenshot of the game (the mouse pointer is not shown, since it is not stored in the display maps). The other three png files each contain a greyscale gradient palette.
@@ -8561,6 +8683,7 @@ No use of accellerated drawing functions: Many of the targetted graphics drivers
 Scalability moved to the drivers: Each driver would have to take care of magnifying the resulting picture by itself (if it wanted to support it at all), since the base buffer was at a fixed size.  \\
 Manual graphics buffer access: This was in fact used in many places, making it hard to keep track of modifications, which, in turn, would have inhibited attempts to track modifications of the visual buffer. However, without those, either each drawing operation would have enforce an update, causing flickering in the general case, or the full screen would have to be re-drawn each time (which was what actually was done), resulting in major performance penalites, especially for remote displays.  \\
 \end{tabular}
+
  Combined with some cases of code rot, these problems suggested a re-write of the complete graphics subsystem, and a more modular re-design in preparation for supporting later revisions of SCI (and, possibly, related engines such as AGI).
 
 This documentation section will describe the architecture and functionality of the new graphics subsystem, which has been in operation since FreeSCI 0.3.1. I will start by giving a general overview of the various components involved and how they interact, and then give a more detailed description of each of those components in sequence.
@@ -8814,15 +8937,16 @@ By means of each widget's {\texttt{{print}}} method, its state can be written to
 \end{quote}
  The {\em{FLAGS}} are described by a sequence of characters; their meanings are listed below: 
 
-\begin{tabular}{l}
-V: Widget is visible  \\
-O: Widget is completely opaque, i.e. fully covers all area in its bounds  \\
-C: Widget is a container  \\
-D: Widget is "dirty", i.e. will be redrawn at the next update  \\
-T: Widget has been tagged for clean-up  \\
-M: The widget's ID is not considered to be unique  \\
-I: Widget will not be freed if a snapshot is resored  \\
+\begin{tabular}{ll}
+\texttt{V}& Widget is visible  \\
+\texttt{O}& Widget is completely opaque, i.e. fully covers all area in its bounds  \\
+\texttt{C}& Widget is a container  \\
+\texttt{D}& Widget is "dirty", i.e. will be redrawn at the next update  \\
+\texttt{T}& Widget has been tagged for clean-up  \\
+\texttt{M}& The widget's ID is not considered to be unique  \\
+\texttt{I}& Widget will not be freed if a snapshot is resored  \\
 \end{tabular}
+
  The widget's ID will generally be considered to be unique within the container it is appended to, unless the Multi-ID flag ('M') is set. Functionally, this means that a widget {\texttt{{w}}} is appended to a list containing one or more widgets with an ID identical to its own, it overwrites the first widget with a matching ID, unless {\texttt{{w}}} itself has the {\em{M}} flag set.
 
 The {\em{WIDGET-DESCRIPTION}} part of a widget starts with a string describing the widget's type; this is followed by widget- specific information.
@@ -8853,41 +8977,43 @@ Each kernel function is declared like this:
 \end{Verbatim}
  So this is how you should start. The four parameters (think of them as the Four Accessories of a kernel function) mean the following: 
 
-\begin{tabular}{l}
-state\_t *s: A pointer to the state you are operating on.  \\
-int funct\_nr: The number of this function. Mostly irrelevant.  \\
-int argc: The number of arguments.  \\
-heap\_ptr argp: Heap pointer to the first argument.  \\
+\begin{tabular}{lp{13cm}}
+\texttt{state\_t *s}& A pointer to the state you are operating on.  \\
+\texttt{int funct\_nr}& The number of this function. Mostly irrelevant.  \\
+\texttt{int argc}& The number of arguments.  \\
+\texttt{heap\_ptr argp}& Heap pointer to the first argument.  \\
 \end{tabular}
+
  "s" contains a lot of important and interesting data. Have a look at src/include/engine.h for a complete description. What you will probably need mostly will be the heap, (s-\textgreater{}heap), a unsigned char pointer, and the accumulator (s-\textgreater{}acc), a word (guint16), which is used to return values to the SCI program.
 
 Some kernel functions don't even need to refer to the heap. However, most of them are passed at least one, if not more parameters. This may sound shocking to you, but there is an easy way to work around the neccessity of peeling them off the heap manually: Use the PARAM macros. They are used as follows: 
 
-\begin{tabular}{l}
-PARAM(x): Returns the value of the parameter x. Does not check for validity.  \\
-UPARAM(x): Same as PARAM(x), but casts the parameter to be unsigned.  \\
-PARAM\_OR\_ALT(x, y): Checks if PARAM(x) is valid and returns it, or returns y if PARAM(x) is invalid.  \\
-UPARAM\_OR\_ALT(x, y): PARAM\_OR\_ALT(x, y) unsigned.  \\
+\begin{tabular}{lp{11cm}}
+\texttt{PARAM(\textit{x})}	& Returns the value of the parameter \texttt{\textit{x}}. Does not check for validity.  \\
+\texttt{UPARAM(\textit{x})}	& Same as \texttt{PARAM(\textit{x})}, but casts the parameter to be unsigned.  \\
+\texttt{PARAM\_OR\_ALT(\textit{x}, \textit{y})}		& Checks if \texttt{PARAM(\textit{x})} is valid and returns it, or returns \texttt{\textit{y}} if \texttt{PARAM(\textit{x})} is invalid.  \\
+\texttt{UPARAM\_OR\_ALT(\textit{x}, \textit{y})}	& \texttt{PARAM\_OR\_ALT(\textit{x}, \textit{y})} unsigned.  \\
 \end{tabular}
- Several kernel functions assume default values if a specific parameter is not present. Use the U?PARAM\_OR\_ALT(x, y) macros to detect this case, and you'll rarely have to care about using argc directly.
+
+ Several kernel functions assume default values if a specific parameter is not present, to simplify the use of optional parameters. Use the \texttt{U?PARAM\_OR\_ALT(x, y)} macros to detect this case, and you'll rarely have to care about using argc directly.
 \subsection{Hunk and heap}
 \label{id2525728}\hypertarget{id2525728}{}%
 
 Accessing the heap for both reading and writing is surprisingly important for the kernel, especially when it has to deal with functions that would usually belong into user space, like handling of doubly-linked lists. To ease this, three macros are available: 
 
-\begin{tabular}{l}
-GET\_HEAP(x) - reads a signed SCI word (gint16) from heap address x  \\
-UGET\_HEAP(x) - reads an unsigned SCI word (guint16)  \\
-PUT\_HEAP(x, foo) - writes the value foo to the specified heap address  \\
+\begin{tabular}{lp{12cm}}
+\texttt{GET\_HEAP(\textit{x})} & reads a signed SCI word (gint16) from heap address x  \\
+\texttt{UGET\_HEAP(\textit{x})} & reads an unsigned SCI word (guint16)  \\
+\texttt{PUT\_HEAP(\textit{x}, \textit{foo})} & writes the value foo to the specified heap address  \\
 \end{tabular}
 
 
 Some kernel functions, especially graphical kernel functions, additionally require the usage of what Sierra referred to as "hunk space". This is dynamically allocated memory; it can even be allocated and unallocated manually from SCI scripts by using the Load() and UnLoad() system calls (this is the sci\_memory resource). To allow usage of this kind of memory, three functions have been provided: 
 
-\begin{tabular}{l}
-int kalloc(state\_t *, space) - allocate space bytes and return a handle  \\
-byte *kmem(state\_t *, handle) - resolve a handle and return the memory address it points to  \\
-int kfree(state\_t *, handle) - unallocate memory associated with a handle. Returns 0 on success, 1 otherwise  \\
+\begin{tabular}{lp{9cm}}
+\texttt{int kalloc(state\_t *, space)} & allocate space bytes and return a handle  \\
+\texttt{byte *kmem(state\_t *, handle)} & resolve a handle and return the memory address it points to  \\
+\texttt{int kfree(state\_t *, handle)} & unallocate memory associated with a handle. Returns 0 on success, 1 otherwise  \\
 \end{tabular}
 
 \subsection{Error handling and debugging}
@@ -8895,10 +9021,10 @@ int kfree(state\_t *, handle) - unallocate memory associated with a handle. Retu
 
 Error handling and debugging probably are the most important aspects of program writing. FreeSCI provides three macros for printing debug output: 
 
-\begin{tabular}{l}
-SCIkwarn(text, \ldots) - Print a warning message  \\
-SCIkdebug(text, \ldots) - Print a debug message  \\
-CHECK\_THIS\_KERNEL\_FUNCTION - print the function name and parameters  \\
+\begin{tabular}{lp{11cm}}
+\texttt{SCIkwarn(\textit{text}, \ldots)} & Print a warning message  \\
+\texttt{SCIkdebug(\textit{text}, \ldots)} & Print a debug message  \\
+\texttt{CHECK\_THIS\_KERNEL\_FUNCTION} & print the function name and parameters  \\
 \end{tabular}
  The difference between SCIkwarn and SCIkdebug is that the latter can be easily removed (by commenting out the \#define SCI\_KERNEL\_DEBUG on or about line 39). In practice this means that SCIkwarn should be used for warning or error messages in cases where it is likely that the vm or the kernel function are doing something wrong; e.g. if the program refers to a non-existant resource file, if a node list command does not come with a pointer to a node list, or if the number of parameters is insufficient. These messages are important and may point to misperceptions of details of the SCI engine. SCIkdebug, on the other hand, is your every-day "flood me with information until I'm blind" debug macro.
 

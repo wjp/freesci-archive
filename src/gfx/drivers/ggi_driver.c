@@ -444,7 +444,7 @@ ggi_draw_filled_rect(gfx_driver_t *drv, rect_t box, gfx_color_t color1, gfx_colo
 		     gfx_rectangle_fill_t shade_mode);
 
 static int
-ggi_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
+ggi_draw_line(gfx_driver_t *drv, point_t start, point_t end, gfx_color_t color,
 	      gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
 	ggi_pixel pixel;
@@ -459,12 +459,12 @@ ggi_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
 		xw = MODE->xfact, yw = MODE->yfact;
 	}
 
-	rx = line.x;
-	ry = line.y;
-	endx = rx + line.xl;
-	endy = ry + line.yl;
+	rx = start.x;
+	ry = start.y;
+	endx = end.x;
+	endy = end.y;
 
-	if (!line.xl && !line.yl)
+	if ((rx = endx) && (ry = endy))
 		return ggi_draw_filled_rect(drv, gfx_rect(rx, ry, xw, yw), color, color, GFX_SHADE_FLAT);
 
 	if (color.mask & GFX_MASK_PRIORITY) {

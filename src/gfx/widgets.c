@@ -434,6 +434,15 @@ _move_rect(rect_t rect, point_t point)
 	return gfx_rect(rect.x + point.x, rect.y + point.y, rect.xl, rect.yl);
 }
 
+static inline void
+_split_rect(rect_t rect, point_t *p1, point_t *p2)
+{
+	p1->x = rect.x;
+	p1->y = rect.y;
+	p2->x = rect.x + rect.xl;
+	p2->y = rect.y + rect.yl;
+}
+
 static inline point_t
 _move_point(rect_t rect, point_t point)
 {
@@ -643,6 +652,7 @@ _gfxwop_line_draw(gfxw_widget_t *widget, point_t pos)
 {
 	gfxw_primitive_t *line = (gfxw_primitive_t *) widget;
 	rect_t linepos = widget->bounds;
+	point_t p1, p2;
 
 	linepos.xl--;
 	linepos.yl--;
@@ -655,7 +665,8 @@ _gfxwop_line_draw(gfxw_widget_t *widget, point_t pos)
 	}
 
 
-	GFX_ASSERT(gfxop_draw_line(line->visual->gfx_state, _move_rect(linepos, pos),
+	_split_rect(_move_rect(linepos, pos), &p1, &p2);
+	GFX_ASSERT(gfxop_draw_line(line->visual->gfx_state, p1, p2,
 				   line->color, line->line_mode, line->line_style));
 
 	return 0;

@@ -233,11 +233,14 @@ gfxop_have_mouse(gfx_state_t *state);
 /******************************/
 
 int
-gfxop_draw_line(gfx_state_t *state, rect_t line, gfx_color_t color, gfx_line_mode_t line_mode,
+gfxop_draw_line(gfx_state_t *state,
+		point_t start, point_t end,
+		gfx_color_t color, gfx_line_mode_t line_mode,
 		gfx_line_style_t line_style);
 /* Renders a clipped line to the back buffer
 ** Parameters: (gfx_state_t *) state: The state affected
-**             (rect_t) line: The line position and parameters
+**             (point_t) start: Starting point of the line
+**	       (point_t) end: End point of the line
 **             (gfx_color_t) color: The color to use for drawing
 **             (gfx_line_mode_t) line_mode: Any valid line mode to use
 **             (gfx_line_style_t) line_style: The line style to use

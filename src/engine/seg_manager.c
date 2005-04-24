@@ -30,8 +30,10 @@
 #include <versions.h>
 #include <engine.h>
 
-mem_obj_t* mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum type);
 
+#define SM_MEMORY_POISON	/* Poison memory upon deallocation */
+
+mem_obj_t* mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum type);
 
 #undef DEBUG_SEG_MANAGER /* Define to turn on debugging */
 #define GET_SEGID() 	if (flag == SCRIPT_ID) \
@@ -75,17 +77,151 @@ static void
 sm_free_hunk(seg_manager_t *self, reg_t addr);
 
 static int
-sm_check (seg_manager_t* self, int seg);
+sm_check(seg_manager_t* self, int seg);
 /* Check segment validity
 ** Parameters: (int) seg: The segment to validate
 ** Returns   : (int)	0 if 'seg' is an invalid segment
 **			1 if 'seg' is a valid segment
 */
 
+static void *
+sm_malloc(seg_manager_t *self, size_t size);
+/* Allocate memory managed by the segment manager
+** Parameters: (size_t) size: number of bytes of raw memory to allocate
+** Returns   : (void *) A memory block of at least the requested size
+** Effects   : Updates memory counts in 'self'
+*/
+
+static void *
+sm_calloc(seg_manager_t *self, size_t size);
+/* Allocate memory managed by the segment manager, initialised to 0
+** Parameters: (size_t) size: number of bytes of zeroed memory to allocate
+** Returns   : (void *) A zeroed memory block of at least the requested size
+** Effects   : Updates memory counts in 'self'
+*/
+
+static void
+sm_free(seg_manager_t *self, void *pointer);
+/* Free memory previously allocated by sm_malloc() or sm_calloc()
+** Parameters: (void *): The pointer to free
+** Effects   : Updates memory counts in 'self'
+*/
+
+static reg_t
+sm_find_canonic_address(seg_manager_t *self, reg_t sub_addr);
+/* Finds the canonic address associated with sub_reg
+** Parameters: (reg_t) sub_addr: The base address whose canonic address is to be found
+** For each valid address a, there exists a canonic address c(a) such that c(a) = c(c(a)).
+** This address "governs" a in the sense that deallocating c(a) will deallocate a.
+*/
+
+static void *
+sm_get_canonic_address_memory(seg_manager_t *self, reg_t c_addr);
+/* Retrieves the canonic memory associated with a given address
+** Parameters: (reg_t) c_addr: The address whose canonic memory we desire
+*/
+
+
+static void
+sm_find_all_used_addresses(seg_manager_t *self, reg_t addr, void (*note_address)(reg_t addr));
+/* Iterates through all addresses referenced from within a given address
+** Parameters: (reg_t) addr: The base address whose memory we scan for addresses
+**	       (reg_t -> void) note_address: A callback, invoked for each address encountered
+*/
+
+
 /***--------------------------***/
 /** end of forward declarations */
 /***--------------------------***/
 
+/***********************/
+/** Memory management **/
+/***********************/
+
+#if 0
+
+#define SM_GC_MAGIC 0xbacafade
+#define GC_BITMASK 0x3		/* # mask of bits reserved for the GC; increasing this
+				** will increase memory report granularity (you might rather
+				** want to shift the memory allocation size a bit) */
+
+#define GET_DATA_AND_PREDATA				\
+	size_t *data = (((size_t *)pointer) - 1);	\
+	int *predata = ((int *)data) - 1;		\
+	VERIFY ( *predata == SM_GC_MAGIC, "Non-gcable memory" )
+
+
+static unsigned int
+sm_gc_get_mark(void *pointer)
+{
+	GET_DATA_AND_PREDATA;
+
+	return *data & GC_BITMASK;
+}
+
+static void
+sm_gc_set_mark(void *pointer, int tag)
+{
+	GET_DATA_AND_PREDATA;
+	VERIFY ( (tag & GC_BITMASK) == tag, "Tag too large" );
+
+	*data = (*data & ~GC_BITMASK) | tag;
+}
+
+#define SM_ALLOCATE(allocator, self, size)				\
+{									\
+	int *predata = (int *)(allocator);				\
+	*predata = SM_GC_MAGIC;						\
+	byte *data = (byte *)(predata + 1);				\
+	void *retval = data + sizeof(size_t);				\
+	size = (size & ~GC_BITMASK) + ((size & GC_BITMASK)? (GC_BITMASK + 1) : 0);	\
+									\
+	self->mem_allocated += size;					\
+	*((size_t *)data) = size | (self->gc_mark_bits);		\
+									\
+	return retval;							\
+}
+
+static void *
+sm_malloc(seg_manager_t *self, size_t size)
+     SM_ALLOCATE(sci_malloc(4 + size + sizeof(size_t)), self, size);
+
+static void *
+sm_calloc(seg_manager_t *self, size_t size)
+     SM_ALLOCATE(sci_calloc(1, 4 + size + sizeof(size_t)), self, size);
+
+#undef SM_ALLOCATE
+
+static void
+sm_free(seg_manager_t *self, void *pointer)
+{
+	GET_DATA_AND_PREDATA;
+
+	size_t size = *data & ~GC_BITMASK;
+	self->mem_allocated -= size;
+
+#ifdef SM_MEMORY_POISON
+	size_t poison_size = size - GC_BITMASK;
+	if (poison_size > 0)
+		memset(pointer, 0x55, poison_size);
+#endif
+
+	sci_free(predata);
+}
+
+#undef GET_DATA_AND_PREDATA
+#undef GC_BITMASK
+#undef SM_GC_MAGIC
+
+#endif
+
+#define sm_malloc(_, size) sci_malloc(size)
+#define sm_calloc(_, size) sci_calloc(1, size)
+#define sm_free(_, ref) sci_free(ref)
+
+/*******************************/
+/** End of Memory Management  **/
+/*******************************/
 
 static inline int
 find_free_id(seg_manager_t *self, int *id)
@@ -117,13 +253,15 @@ alloc_nonscript_segment(seg_manager_t *self, mem_obj_enum type, seg_id_t *segid)
 void sm_init(seg_manager_t* self) {
 	int i;
 
+	self->mem_allocated = 0; /* Initialise memory count */
+
 	self->id_seg_map = new_int_hash_map();
 	self->reserved_id = INVALID_SCRIPT_ID;
 	int_hash_map_check_value (self->id_seg_map, self->reserved_id, 1, NULL);	/* reserve 0 for seg_id */
 	self->reserved_id--;	/* reserved_id runs in the reversed direction to make sure no one will use it. */
 	
 	self->heap_size = DEFAULT_SCRIPTS;
-        self->heap = (mem_obj_t**) sci_calloc (self->heap_size, sizeof(mem_obj_t *));
+        self->heap = (mem_obj_t**) sm_calloc(self, self->heap_size * sizeof(mem_obj_t *));
 
 	self->clones_seg_id = 0;
 	self->lists_seg_id = 0;
@@ -137,6 +275,8 @@ void sm_init(seg_manager_t* self) {
 		self->heap[i] = NULL;
 	}
 
+	/* gc initialisation */
+	self->gc_mark_bits = 0;
 };
 
 /* destroy the object, free the memorys if allocated before */
