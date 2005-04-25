@@ -68,7 +68,8 @@ finish_titlebar_list(state_t *s, gfxw_list_t *list, gfxw_port_t *status_bar)
 	gfx_color_t black = s->ega_colors[0];
 	gfxw_primitive_t *line;
 
-	line = gfxw_new_line(gfx_rect(0, status_bar->bounds.yl - 1, status_bar->bounds.xl, 0),
+	line = gfxw_new_line(gfx_point(0, status_bar->bounds.yl - 1),
+			     gfx_point(status_bar->bounds.xl, status_bar->bounds.yl - 1),
 			     black, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
 	list->add((gfxw_container_t *) list, (gfxw_widget_t *) line);
 
@@ -223,7 +224,8 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 
 			if (flags & WINDOW_FLAG_TITLE)
 				decorations->add((gfxw_container_t *) decorations, (gfxw_widget_t *)
-						 gfxw_new_line(gfx_rect(1, 10, frame.xl - 3, 0),
+						 gfxw_new_line(gfx_point(1, 10),
+							       gfx_point(frame.xl - 2, 10),
 							       black, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL));
 		} else {
 			decorations->add((gfxw_container_t *) decorations, (gfxw_widget_t *)
@@ -399,8 +401,9 @@ sciw_new_edit_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int 
 		};
 
 		if (cursor == strlen(text))
-			list->add(GFXWC(list), GFXW(gfxw_new_line(gfx_rect(zone.x + 1, zone.y, 0, zone.yl - 1),
-							  port->color, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL)));
+			list->add(GFXWC(list), GFXW(gfxw_new_line(gfx_point(zone.x + 1, zone.y),
+								  gfx_point(zone.x + 1, zone.y + zone.yl - 1),
+								  port->color, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL)));
 		free(textdup);
 	}
 
@@ -649,7 +652,9 @@ _make_menu_hbar(int offset, int width, gfxw_port_t *port, gfx_color_t color, gfx
 	bgcolor = un_prioritize(bgcolor);
 
 	list->add(GFXWC(list), GFXW(gfxw_new_box(port->visual->gfx_state, area, bgcolor, bgcolor, GFX_BOX_SHADE_FLAT)));
-	list->add(GFXWC(list), GFXW(gfxw_new_line(gfx_rect(0, 5, width, 0), color,
+	list->add(GFXWC(list), GFXW(gfxw_new_line(gfx_point(0, 5),
+						  gfx_point(width, 5),
+						  color,
 						  GFX_LINE_MODE_FAST, GFX_LINE_STYLE_STIPPLED)));
 
 	return GFXW(list);

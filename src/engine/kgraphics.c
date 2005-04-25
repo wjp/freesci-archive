@@ -427,7 +427,9 @@ kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
 			  gfxcolor.mask);
 
 		redraw_port = 1;
-		ADD_TO_CURRENT_BG_WIDGETS(GFXW(gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+		ADD_TO_CURRENT_BG_WIDGETS(GFXW(gfxw_new_line(gfx_point(SKPV(2), SKPV(1)),
+							     gfx_point(SKPV(4), SKPV(3)),
+							     gfxcolor, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
 
 	}
 	break;

@@ -252,9 +252,9 @@ gfxw_new_rect(rect_t rect, gfx_color_t color, gfx_line_mode_t line_mode, gfx_lin
 */
 
 gfxw_primitive_t *
-gfxw_new_line(rect_t line, gfx_color_t color, gfx_line_mode_t line_mode, gfx_line_style_t line_style);
+gfxw_new_line(point_t start, point_t end, gfx_color_t color, gfx_line_mode_t line_mode, gfx_line_style_t line_style);
 /* Creates a new line
-** Parameters: (rect_t) line: The line origin and relative destination coordinates
+** Parameters: (point_t * point_t) (start, line): The line origin and end point
 **             (gfx_color_t) color: The line's color
 **             (gfx_line_mode_t) line_mode: The line mode to use for drawing
 **             (gfx_line_style_t) line_style: The line style

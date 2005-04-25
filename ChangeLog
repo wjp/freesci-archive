@@ -1,3 +1,13 @@
+2005-04-25  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/widgets.c (gfxw_new_line): Adapted interface to new structure
+
+2005-04-24  Max Horn  <max@quendi.de>
+
+        * src/scicore/vocab.c: added coments to class_names
+        (vocab_get_words): Merged vocab_get_words_sci1 into vocab_get_words
+        (vocab_free_words): Fixed GCC warnings
+
 2005-04-24  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/resource/Makefile.am: Disabled sci_pic_1.c: Too much

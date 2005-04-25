@@ -46,16 +46,16 @@ int vocab_version;
 char *class_names[] =
   {"",               /* These strange names were taken from an SCI01 interpreter */
    "",
-   "conj",
-   "ass",
-   "pos",
-   "art",
-   "adj",
-   "pron",
-   "noun",
-   "auxv",
-   "adv",
-   "verb",
+   "conj",		/* conjunction */
+   "ass",		/* ? */
+   "pos",		/* preposition ? */
+   "art",		/* article */
+   "adj",		/* adjective */
+   "pron",		/* pronoun */
+   "noun",		/* noun */
+   "auxv",		/* auxillary verb */
+   "adv",		/* adverb */
+   "verb",		/* verb */
    "",
    "",
    "",
@@ -68,10 +68,9 @@ _vocab_cmp_words(const void *word1, const void *word2)
 	return strcasecmp((*((word_t **) word1))->word, (*((word_t **) word2))->word);
 }
 
-/* FIXME: Unify this with the SCI0 routine */
 
 word_t **
-vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
+vocab_get_words(resource_mgr_t *resmgr, int *word_counter)
 {
 	int counter = 0;
 	unsigned int seeker;
@@ -80,18 +79,31 @@ vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 	char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
 	int currentwordpos = 0;
 
-	resource_t *resource = scir_find_resource(resmgr, sci_vocab,
-						  VOCAB_RESOURCE_SCI1_MAIN_VOCAB, 0);
-	vocab_version = 1;
+	resource_t *resource;
+
+	/* First try to load the SCI0 vocab resource. */
+	resource = scir_find_resource(resmgr, sci_vocab,
+						  VOCAB_RESOURCE_SCI0_MAIN_VOCAB, 0);
+	vocab_version = 0;
+
+	if (!resource) {
+		fprintf(stderr,"SCI0: Could not find a main vocabulary, trying SCI01.\n");
+		resource = scir_find_resource(resmgr, sci_vocab,
+							  VOCAB_RESOURCE_SCI1_MAIN_VOCAB, 0);
+		vocab_version = 1;
+	}
 
 	if (!resource) {
 		fprintf(stderr,"SCI1: Could not find a main vocabulary!\n");
 		return NULL; /* NOT critical: SCI1 games and some demos don't have one! */
 	}
 
-	seeker = 0x1fe; /* vocab.900 starts with 255 16-bit pointers which we don't use */
+	if (vocab_version == 1)
+		seeker = 255 * 2; /* vocab.900 starts with 255 16-bit pointers which we don't use */
+	else
+		seeker = 26 * 2; /* vocab.000 starts with 26 16-bit pointers which we don't use */
 
-	if (resource->size < 510) {
+	if (resource->size < seeker) {
 		fprintf(stderr, "Invalid main vocabulary encountered: Too small\n");
 		return NULL;
 		/* Now this ought to be critical, but it'll just cause parse() and said() not to work */
@@ -106,18 +118,24 @@ vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 
 		currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
 
-		c = 1;
-		while (seeker < resource->size
-		       && currentwordpos < 255
-		       && c) {
-			c = resource->data[seeker++];
-			currentword[currentwordpos++] = c;
-		}
-		if (seeker == resource->size) {
-			int i;
-			fprintf(stderr, "SCI1: Vocabulary not usable, disabling.\n");
-			vocab_free_words(words, counter);
-			return NULL;
+		if (vocab_version == 1) {
+			c = 1;
+			while (seeker < resource->size
+				   && currentwordpos < 255
+				   && c) {
+				c = resource->data[seeker++];
+				currentword[currentwordpos++] = c;
+			}
+			if (seeker == resource->size) {
+				fprintf(stderr, "SCI1: Vocabulary not usable, disabling.\n");
+				vocab_free_words(words, counter);
+				return NULL;
+			}
+		} else {
+			do {
+				c = resource->data[seeker++];
+				currentword[currentwordpos++] = c & 0x7f; /* 0x80 is used to terminate the string */
+			} while (c < 0x80);
 		}
 
 		currentword[currentwordpos] = 0;
@@ -134,72 +152,6 @@ vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 
 		seeker += 3;
 		++counter;
-
-	}
-
-	*word_counter = counter;
-
-	qsort(words, counter, sizeof(word_t *), _vocab_cmp_words); /* Sort entries */
-
-	return words;
-}
-
-
-word_t **
-vocab_get_words(resource_mgr_t *resmgr, int *word_counter)
-{
-	int counter = 0;
-	int seeker;
-	word_t **words;
-
-	char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
-	int currentwordpos = 0;
-
-	resource_t *resource = scir_find_resource(resmgr, sci_vocab,
-						  VOCAB_RESOURCE_SCI0_MAIN_VOCAB, 0);
-
-	if (!resource) {
-		fprintf(stderr,"SCI0: Could not find a main vocabulary, trying SCI01.\n");
-		return vocab_get_words_sci1(resmgr, word_counter); /* NOT critical: SCI1 games and some demos don't have one! */
-	}
-
-	seeker = 52; /* vocab.000 starts with 26 16-bit pointers which we don't use */
-
-	if (resource->size < 52) {
-		fprintf(stderr, "Invalid main vocabulary encountered: Too small\n");
-		return NULL;
-		/* Now this ought to be critical, but it'll just cause parse() and said() not to work */
-	}
-
-	words = sci_malloc(sizeof(word_t *));
-
-	while (seeker < resource->size) {
-		byte c;
-
-		words = sci_realloc(words, (counter + 1) * sizeof(word_t *));
-
-		currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
-
-		do {
-			c = resource->data[seeker++];
-			currentword[currentwordpos++] = c & 0x7f; /* 0x80 is used to terminate the string */
-		} while (c < 0x80);
-		currentword[currentwordpos] = 0;
-
-		words[counter] = sci_malloc(sizeof(word_t) + currentwordpos);
-		/* Allocate more memory, so that the word fits into the structure */
-
-		strcpy(&(words[counter]->word[0]), &(currentword[0])); /* Copy the word */
-
-		/* Now decode class and group: */
-		c = resource->data[seeker + 1];
-		words[counter]->w_class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
-
-		words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
-
-		++counter;
-
-		seeker += 3;
 
 	}
 
@@ -378,7 +330,7 @@ vocab_lookup_word(char *word, int word_len,
 	tempword->word[word_len] = 0;
 
 	word_len_tmp = word_len;
-	while (tester = strchr(tempword->word, '-'))
+	while ((tester = strchr(tempword->word, '-')))
 		memmove(tester, tester + 1, (tempword->word + word_len_tmp--) - tester);
 
 	retval = sci_malloc(sizeof(result_word_t));
@@ -427,7 +379,7 @@ vocab_lookup_word(char *word, int word_len,
 	tempword->word[word_len] = 0;
 
 	word_len_tmp = word_len;
-	while (tester = strchr(tempword->word, '-'))
+	while ((tester = strchr(tempword->word, '-')))
 		memmove(tester, tester + 1, (tempword->word + word_len--) - tester);
 
 	if ((strtol(&(tempword->word[0]), &tester, 10) >= 0)
