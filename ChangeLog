@@ -1,3 +1,18 @@
+2005-04-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kgraphics.c (kNewWindow): Moved windows up one pixel.
+	* src/gfx/sci_widgets.c: Several changes to match SSCI more closely.
+	(sciw_new_window): Draw framed windows without titlebar one pixel less
+	in height. Reduced height of title bar by one pixel. Reverted patch
+	that moved windows with title bar down 10 pixels.
+	(sciw_new_button_control): Increased both width and height by one
+	pixel. Changed drawing code to match look of SSCI.
+	* src/gfx/sci_widgets.c (sciw_new_edit_control),
+	src/include/sci_widgets.h, src/engine/kgraphics.c (_k_draw_control):
+	Edit control's cursor height is now based on font height rather than
+	control height. Increased both width and height of control by one
+	pixel.
+
 2005-04-25  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/widgets.c (gfxw_new_line): Adapted interface to new structure

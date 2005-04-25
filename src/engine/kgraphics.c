@@ -1519,7 +1519,8 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 			update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
 
 		update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
-		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr, (unsigned)cursor, (gint8)inverse));
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr,
+					  gfxop_get_font_height(s->gfx_state, font_nr), (unsigned)cursor, (gint8)inverse));
 		break;
 
 	case K_CONTROL_ICON:
@@ -2424,7 +2425,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	yl = SKPV(2) - y;
 	xl = SKPV(3) - x;
 
-	y += s->wm_port->bounds.y - 1;
+	y += s->wm_port->bounds.y;
 
 	if (x+xl > 319)
 		x -= ((x+xl) - 319);
