@@ -1,5 +1,14 @@
 2005-04-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/engine/kgraphics.c (_k_draw_control), src/gfx/sci_widgets.c
+	(sciw_new_edit_control), src/include/sci_widgets.h: Determine cursor
+	height inside sciw_new_edit_control().
+
+	* src/gfx/sci_widgets.c (sciw_new_list_control): Changed size to
+	match SSCI more closely.
+
+2005-04-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/gfx/sci_widgets.c (sciw_new_button_control): Slight adjustment
 	to text location in buttons.
 

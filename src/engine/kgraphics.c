@@ -1519,8 +1519,7 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 			update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
 
 		update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
-		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr,
-					  gfxop_get_font_height(s->gfx_state, font_nr), (unsigned)cursor, (gint8)inverse));
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr, (unsigned)cursor, (gint8)inverse));
 		break;
 
 	case K_CONTROL_ICON:
