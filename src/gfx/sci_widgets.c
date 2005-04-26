@@ -311,7 +311,7 @@ sciw_new_button_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, in
 							 port->color, port->color, GFX_BOX_SHADE_FLAT)));
 
 	if (!inverse)
-		list = _sciw_add_text_to_list(list, port, gfx_rect(zone.x + 1, zone.y + 2, zone.xl, zone.yl),
+		list = _sciw_add_text_to_list(list, port, gfx_rect(zone.x + 1, zone.y + 2, zone.xl - 1, zone.yl),
 					      text, font, ALIGN_CENTER, 0, inverse, GFXR_FONT_FLAG_EAT_TRAILING_LF, grayed_out);
 
 	if (!inverse)
@@ -319,7 +319,7 @@ sciw_new_button_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, in
 			  GFXW(gfxw_new_rect(zone, *frame_col, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
 
 	if (inverse)
-		list = _sciw_add_text_to_list(list, port, gfx_rect(zone.x + 1, zone.y + 2, zone.xl, zone.yl),
+		list = _sciw_add_text_to_list(list, port, gfx_rect(zone.x + 1, zone.y + 2, zone.xl - 1, zone.yl),
 					      text, font, ALIGN_CENTER, 0, inverse, GFXR_FONT_FLAG_EAT_TRAILING_LF, grayed_out);
 
         if (selected)

@@ -1,5 +1,10 @@
 2005-04-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/gfx/sci_widgets.c (sciw_new_button_control): Slight adjustment
+	to text location in buttons.
+
+2005-04-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/engine/kgraphics.c (kNewWindow): Moved windows up one pixel.
 	* src/gfx/sci_widgets.c: Several changes to match SSCI more closely.
 	(sciw_new_window): Draw framed windows without titlebar one pixel less
