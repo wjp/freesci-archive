@@ -924,11 +924,13 @@ _con_redraw(gfx_state_t *state, int update_display_field, int update_input_field
 
 	if (update_input_field) {
 
-		if (con_border_width >= 2)
-			gfxop_draw_line(state, gfx_rect(0, con_displayed_lines
-							+ con_border_width - 2,
-							320, 0), con.color_input,
-					GFX_LINE_MODE_FINE, GFX_LINE_STYLE_NORMAL);
+		if (con_border_width >= 2) {
+			int y = con_displayed_lines + con_border_width - 2;
+
+			gfxop_draw_line(state, gfx_point(0, y), gfx_point(319, y),
+					con.color_input, GFX_LINE_MODE_FINE,
+					GFX_LINE_STYLE_NORMAL);
+		}
 
 		if (con.input_prompt) {
 			int promptlen = strlen(CON_GFX_PROMPT);
