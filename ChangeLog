@@ -1,3 +1,15 @@
+2005-06-02  Ismail Khatib  <ikhatib@imail.de>
+
+	* src/config.l: Changed to handle '\r' in configfile on WinCE
+	* src/config.c: Generated new version for platforms without flex
+	* src/main.c: Added #ifdef for WinCE
+	* src/menu/game_select.c: Changed #ifdef for WinCE
+	* src/sound/sound.c:Changed #define for WinCE
+	* src/sound/polled_ss_win32.c: Corrected path for sci_win32.h
+	* src/wince/makeres.bat: Changed some compile flags for WinCE
+	* src/wince/config: Renamed from freesci.cfg (and added '\r's for WinCE people)
+	* src/wince/freesci.ico: Added the icon (was missing)
+
 2005-04-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/gfx_console.c (con_gfx_read): Fixed a problem related to

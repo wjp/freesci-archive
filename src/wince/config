@@ -1,0 +1,19 @@
+# Fullscreen/Portrait Mode can be triggered by switching gfx.sdl.fullscreen to yes/no
+
+gfx.sdl.fullscreen = yes
+animation_delay = 0
+midi_device = adlibemu
+sound_server = sdl
+scale = 1
+mouse = yes
+color_depth = 16
+pic0_scaled = no
+dirty_strategy = clusters
+pic0_dither_mode = flat
+
+# Please add your games like in the example below
+# Don't forget to copy this file to the \.freesci directory
+
+#[Leisure_Suit_Larry_II]
+#resource_dir = \games\lsl2
+#version = 0.000.409

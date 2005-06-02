@@ -37,7 +37,7 @@
 
 #if defined (_WIN32) || (ARM_WINCE)
 
-#include <sci_win32.h>
+#include <win32/sci_win32.h>
 #include <windows.h>
 
 /* #define SSWIN_DEBUG 0 */

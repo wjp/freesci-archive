@@ -201,7 +201,7 @@ game_select(state_t *gamestate,
 
 	gfx_driver = (gfx_driver_t *)
 		lookup_driver((lookup_funct_t *)gfx_find_driver,
-#if defined(WIN32_) || defined(ARM_WINCE)
+#ifdef WIN32_
 				MSVC_FUNCTYPECAST_KLUDGE
 #endif
 			      list_graphics_drivers,

@@ -1316,7 +1316,7 @@ main(int argc, char** argv)
 
 	chdir (startdir); /* ? */
 
-#ifdef HAVE_FORK
+#if defined HAVE_FORK && !(ARM_WINCE)
 	printf("Waiting for sound server to die...");
 	wait(NULL); /* Wait for sound server process to die, if neccessary */
 	printf(" OK.\n");

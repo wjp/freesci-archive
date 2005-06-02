@@ -297,7 +297,7 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 
 %%
 
-"["[_[:alnum:]]+"]" {
+"["[_[:alnum:]]+"]"\r* {
 	char *cleanup;
 
 	++yytext; /* Get over opening bracket */
@@ -338,9 +338,17 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 }
 
 
-version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} {
+version[[:blank:]]*"="[[:blank:]]*{SCIVERSION}\r* {
+
+  char *p2;
 
 	yytext = strchr(yytext, '=') + 1;
+
+	if (strchr(yytext, '\r')) { 
+		/* This is needed for WinCE, dunno why... */
+		p2 = strchr(yytext, '\r');
+		*p2 = 0;
+	}
 
 	while (isspace(*yytext))
 		yytext++;
@@ -350,7 +358,16 @@ version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} {
 
 resource_dir[[:blank:]]*"="[[:blank:]]*.+	if (cur_section) {
 
+  char *p2;
+
 	yytext = strchr(yytext, '=') + 1;
+
+	if (strchr(yytext, '\r')) { 
+		/* This is needed for WinCE, dunno why... */
+		p2 = strchr(yytext, '\r');
+		*p2 = 0;
+	}
+
 	while (isspace(*yytext))
 		yytext++;
 
@@ -361,7 +378,15 @@ resource_dir[[:blank:]]*"="[[:blank:]]*.+	if (cur_section) {
 
 debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
+  char *p2;
+
 	yytext = strchr(yytext, '=') + 1;
+
+	if (strchr(yytext, '\r')) { 
+		/* This is needed for WinCE, dunno why... */
+		p2 = strchr(yytext, '\r');
+		*p2 = 0;
+	}
 
 	while (isspace(*yytext))
 		yytext++;
@@ -370,7 +395,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
-[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*({NUMPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]]* {
+[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*({NUMPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]\r]* {
 /* driver parameters */
 	char *subsys_name = yytext;
 	char *driver_name;
@@ -401,7 +426,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
-{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*({NUMPATHPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]]* { /* Normal config option */
+{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*({NUMPATHPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]\r]* { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
 	int option_str_len;
@@ -426,7 +451,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
 "#".+$ /* Ignore comments */
 
-[[:blank:]\n]+ /* Eat whitespace */
+[[:blank:]\r\n]+ /* Eat whitespace */
 
 <<EOF>> {
 
@@ -522,7 +547,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 			conf_path = sci_malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
 			strcpy(conf_path, homedir);
-#ifndef __MORPHOS__
+#if !defined (__MORPHOS__) && !defined (ARM_WINCE)
 			strcat(conf_path, G_DIR_SEPARATOR_S);
 #endif
 			strcat(conf_path, FREESCI_GAMEDIR);
