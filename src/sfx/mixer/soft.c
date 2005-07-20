@@ -93,7 +93,7 @@ static int
 mix_init(sfx_pcm_mixer_t *self, sfx_pcm_device_t *device)
 {
 	self->dev = device;
-	P = sci_malloc(sizeof(struct mixer_private));
+	self->private_bits /* = P */ = sci_malloc(sizeof(struct mixer_private));
 	P->outbuf = P->writebuf = NULL;
 	P->lastbuf_len = 0;
 	P->compbuf_l = sci_malloc(sizeof(gint32) * device->buf_size);
@@ -281,7 +281,7 @@ mix_exit(sfx_pcm_mixer_t *self)
 		sci_free(P->compbuf_r);
 
 	sci_free(P);
-	P = NULL;
+	self->private_bits /* = P */ = NULL;
 	RELEASE_LOCK();
 
 #ifdef DEBUG
