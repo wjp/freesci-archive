@@ -964,23 +964,24 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 static inline void
 _gfxr_draw_subline(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int priority, int drawenable)
 {
-	rect_t line;
+	point_t start;
+	point_t end;
 
-	line.x = x;
-	line.y = y;
-	line.xl = ex - x;
-	line.yl = ey - y;
+	start.x = x;
+	start.y = y;
+	end.x = ex - x;
+	end.y = ey - y;
         if (ex >= pic->visual_map->index_xl || ey >= pic->visual_map->index_yl || x < 0 || y < 0) {
                 fprintf(stderr,"While drawing pic0: INVALID LINE %d,%d,%d,%d\n",
-                        GFX_PRINT_RECT(line));
+                        GFX_PRINT_POINT(start), GFX_PRINT_POINT(end));
                 return;
         }
 
 	if (drawenable & GFX_MASK_VISUAL)
-		gfx_draw_line_pixmap_i(pic->visual_map, line, color);
+		gfx_draw_line_pixmap_i(pic->visual_map, start, end, color);
 
 	if (drawenable & GFX_MASK_PRIORITY)
-		gfx_draw_line_pixmap_i(pic->priority_map, line, priority);
+		gfx_draw_line_pixmap_i(pic->priority_map, start, end, priority);
 
 }
 
@@ -1014,7 +1015,7 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 	if (drawenable & GFX_MASK_CONTROL) {
 
 		p0printf(" ctl:%x", control);
-		gfx_draw_line_pixmap_i(pic->control_map, gfx_rect(x, y, line.xl, line.yl), control);
+		gfx_draw_line_pixmap_i(pic->control_map, gfx_point(x, y), gfx_point(line.xl, line.yl), control);
 	}
 
 
@@ -1646,7 +1647,7 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 
 void
 gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size,
-	       byte *resource, gfxr_pic1_params_t *style, int resid)
+	       byte *resource, gfxr_pic0_params_t *style, int resid)
 {
 	int i;
 	int drawenable = GFX_MASK_VISUAL | GFX_MASK_PRIORITY;

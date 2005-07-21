@@ -73,9 +73,7 @@ gfxr_interpreter_init_pic(int version, gfx_mode_t *mode, int ID, void *internal)
 {
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
 
-	if (version >= SCI_VERSION_01_VGA)
-	    return gfxr_init_pic1(mode, ID); else
-	    return gfxr_init_pic(mode, ID);
+	return gfxr_init_pic(mode, ID, version >= SCI_VERSION_01_VGA);
 }
 
 
@@ -84,7 +82,7 @@ gfxr_interpreter_clear_pic(int version, gfxr_pic_t *pic, void *internal)
 {
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
 
-	gfxr_clear_pic0(pic);
+	gfxr_clear_pic0(pic, SCI_TITLEBAR_SIZE);
 }
 
 
@@ -95,44 +93,36 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
 	resource_t *res = scir_find_resource(resmgr, sci_pic, nr, 0);
 	int need_unscaled = unscaled_pic != NULL;
-	gfxr_pic1_params_t style1, basic_style1;
-	gfxr_pic0_params_t style0, basic_style0;
+	gfxr_pic0_params_t style, basic_style;
 	
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
 
-	basic_style0.line_mode = GFX_LINE_MODE_CORRECT;
-	basic_style0.brush_mode = GFX_BRUSH_MODE_SCALED;
-
-	style0.line_mode = state->options->pic0_line_mode;
-	style0.brush_mode = state->options->pic0_brush_mode;
-
-	basic_style1.line_mode = GFX_LINE_MODE_CORRECT;
-	basic_style1.brush_mode = GFX_BRUSH_MODE_SCALED;
-	basic_style1.pic_port_bounds = state->options->pic_port_bounds;
+	basic_style.line_mode = GFX_LINE_MODE_CORRECT;
+	basic_style.brush_mode = GFX_BRUSH_MODE_SCALED;
+	basic_style.pic_port_bounds = state->options->pic_port_bounds;
 	
-	style1.line_mode = state->options->pic0_line_mode;
-	style1.brush_mode = state->options->pic0_brush_mode;
-	style1.pic_port_bounds = state->options->pic_port_bounds;
+	style.line_mode = state->options->pic0_line_mode;
+	style.brush_mode = state->options->pic0_brush_mode;
+	style.pic_port_bounds = state->options->pic_port_bounds;
 
 	if (!res || !res->data)
 		return GFX_ERROR;
 
 	if (state->version >= SCI_VERSION_01_VGA) {
 		if (need_unscaled)
-			gfxr_draw_pic1(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style1, res->id);
-
+			gfxr_draw_pic01(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id, 1);
 		if (scaled_pic && scaled_pic->undithered_buffer)
 			memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
 
-		gfxr_draw_pic1(scaled_pic, flags, default_palette, res->size, res->data, &style1, res->id);
+		gfxr_draw_pic01(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id, 1);
 	} else {
 		if (need_unscaled)
-			gfxr_draw_pic0(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style0, res->id);
+			gfxr_draw_pic01(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id, 0);
 
 		if (scaled_pic && scaled_pic->undithered_buffer)
 			memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
 
-		gfxr_draw_pic0(scaled_pic, flags, default_palette, res->size, res->data, &style0, res->id);
+		gfxr_draw_pic01(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id, 0);
 		if (need_unscaled)
 			gfxr_remove_artifacts_pic0(scaled_pic, unscaled_pic);
 
@@ -190,6 +180,12 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 	else
 		{
 		    result=gfxr_draw_view1(resid, res->data, res->size); 
+		    if (!result->colors)
+		    {
+			result->colors = malloc(sizeof(gfx_pixmap_color_t) * state->static_palette_entries);
+			memset(result->colors, 0, sizeof(gfx_pixmap_color_t) * state->static_palette_entries);
+			result->colors_nr = state->static_palette_entries;
+		    }
 		    gfxr_palettize_view(result, state->static_palette, state->static_palette_entries);
 		}
 	return result;

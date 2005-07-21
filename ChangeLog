@@ -1,3 +1,7 @@
+2005-07-21  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/resource/sci_pic_0.c: Merge sci_pic_1.c in here.
+
 2005-07-20  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/mixer/soft.c: Build fixes for gcc 4.0 (cast expressions

@@ -64,15 +64,8 @@ extern gfx_pixmap_color_t gfx_sci0_pic_colors[];
 typedef struct {
 	gfx_line_mode_t line_mode; /* one of GFX_LINE_MODE_* */
 	gfx_brush_mode_t brush_mode;
-} gfxr_pic0_params_t;
-
-
-typedef struct {
-	gfx_line_mode_t line_mode; /* one of GFX_LINE_MODE_* */
-	gfx_brush_mode_t brush_mode;
 	rect_t pic_port_bounds;
-} gfxr_pic1_params_t;
-
+} gfxr_pic0_params_t;
 
 typedef struct {
 	int ID; /* pic number (NOT resource ID, just number) */
@@ -144,7 +137,7 @@ gfxr_init_static_palette(void);
 */
 
 gfxr_pic_t *
-gfxr_init_pic(gfx_mode_t *mode, int ID);
+gfxr_init_pic(gfx_mode_t *mode, int ID, int sci1);
 /* Initializes a gfxr_pic_t for a specific mode
 ** Parameters: (gfx_mode_t *) mode: The specific graphics mode
 **             (int) ID: The ID to assign to the resulting pixmaps
@@ -255,7 +248,7 @@ gfxr_draw_font(gfx_bitmap_font_t *font, char *text, int characters,
 
 
 void
-gfxr_clear_pic0(gfxr_pic_t *pic);
+gfxr_clear_pic0(gfxr_pic_t *pic, int sci_titlebar_size);
 /* Clears all pic buffers of one pic
 ** Parameters: (gfxr_pic_t) pic: The picture to clear
 ** Returns   : (void)
@@ -265,8 +258,8 @@ gfxr_clear_pic0(gfxr_pic_t *pic);
 
 
 void
-gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette,
-	       int size, byte *resource, gfxr_pic0_params_t *style, int resid);
+gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette,
+	       int size, byte *resource, gfxr_pic0_params_t *style, int resid, int sci1);
 /* Draws a pic resource
 ** Parameters: (gfxr_pic_t *) pic: The pic to draw to
 **             (int) fill_normally: If 1, the pic is drawn normally; if 0, all
