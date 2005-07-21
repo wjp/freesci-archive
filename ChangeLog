@@ -1,5 +1,7 @@
 2005-07-21  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/gfx/resource/sci_pic_0.c: Fix embarassing line draw bug.
+
 	* src/gfx/resource/sci_pic_0.c: Merge sci_pic_1.c in here.
 
 2005-07-20  Lars Skovlund  <lskovlun@image.dk>
