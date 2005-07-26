@@ -2309,9 +2309,9 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 					sciprintf("gfx_draw_pic0(): can't set a non-static palette for an embedded view!\n");
 				}
 
-				/* Use special color mapping to copy the low
+				/* For SCI0, use special color mapping to copy the low
 				** nibble of the color index to the high
-				** nibble.
+				** nibble. 
 				*/
 				if (sci1) {
 					view->colors = pic->visual_map->colors;
@@ -2328,7 +2328,7 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 
 				_gfx_crossblit_simple(pic->visual_map->index_data+(sci_titlebar_size*view->index_xl),
 						      view->index_data,
-						      320, view->index_xl,
+						      pic->visual_map->index_xl, view->index_xl,
 						      view->index_xl,
 						      view->index_yl,
 						      1);
@@ -2345,7 +2345,12 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 
 				p0printf("Explicit priority table @%d\n", pos);
 				if (!pic->internal)
-					pic->internal = sci_malloc(16 * sizeof(int));
+				{
+					pic->internal = sci_malloc(16 * sizeof(int)); 
+				} else
+				{
+					GFXERROR("pic->internal is not NULL (%08x); possible memory corruption!\n", pic->internal); 
+				}	
 
 				pri_table = pic->internal;
 

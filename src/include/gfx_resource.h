@@ -251,6 +251,7 @@ void
 gfxr_clear_pic0(gfxr_pic_t *pic, int sci_titlebar_size);
 /* Clears all pic buffers of one pic
 ** Parameters: (gfxr_pic_t) pic: The picture to clear
+**             (int) sci_titlebar_size: How much space to reserve for the title bar
 ** Returns   : (void)
 ** This function should be called before gfxr_draw_pic0, unless cumulative
 ** drawing is intended
@@ -269,6 +270,7 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette,
 **             (byte *) resource: Pointer to the resource data
 **             (gfxr_pic0_params_t *) style: The drawing style
 **             (int) resid: The resource ID
+**             (int) sci1: Nonzero if SCI1
 ** Returns   : (void)
 ** The result is stored in gfxr_visual_map, gfxr_priority_map, and gfxr_control_map.
 ** The palette entry of gfxr_visual_map is never used.

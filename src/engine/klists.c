@@ -147,10 +147,9 @@ sane_listp(state_t *s, reg_t addr)
 	if (IS_NULL_REG(l->last))
 		++empties;
 
-	/* Either none or both are set */
-
+	/* Either none or both must be set */
 	if (empties == 1)
-		return 1;
+		return 0;
 
 	if (!empties) {
 		node_t *node_a, *node_z;
