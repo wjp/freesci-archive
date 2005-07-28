@@ -1,3 +1,13 @@
+2005-07-29  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/config.l (configure_platform), src/config.c: Set appropriate
+	default sound settings for GP32.
+
+	* src/gfx/drivers/gp32_driver.c: Reverted changes from revisions 1.8
+	and 1.9.
+
+	* src/sound/pcmout_gp32.c (pcm_thread): Fixed stereo output.
+
 2005-07-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gp32/main.S: Removed from repository.

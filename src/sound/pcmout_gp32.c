@@ -401,7 +401,7 @@ pcm_thread(void *p)
 
         if (pcm_stereo)
         {
-            for (i = 0; i < count; i++)
+            for (i = 0; i < count * 2; i++)
                 buf[i] = buffer[i];
         }
         else
@@ -437,7 +437,6 @@ pcmout_gp32_open(gint16 *b, guint16 buffer_size, guint16 rate, guint8 stereo)
 
     ringbuf_next_chunk = 0;
     initSound(rate, 16, ringbuf_chunk_size * ringbuf_chunks);
-    sciprintf("Initted with %i Hz; Chunk size: %i; Chunks: %i\n", rate, ringbuf_chunk_size, ringbuf_chunks);
     pthread_create(&thread, NULL, pcm_thread, NULL);
     return 0;
 }

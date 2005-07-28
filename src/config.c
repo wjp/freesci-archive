@@ -24,6 +24,12 @@
 #include <stdlib.h>
 #ifndef _WIN32
 #include <unistd.h>
+#else
+#ifndef YY_ALWAYS_INTERACTIVE
+#ifndef YY_NEVER_INTERACTIVE
+extern int isatty YY_PROTO(( int ));
+#endif
+#endif
 #endif
 
 /* Use prototypes in function declarations. */
@@ -63,7 +69,6 @@
 #else
 #define YY_PROTO(proto) ()
 #endif
-
 
 /* Returned upon end-of-file. */
 #define YY_NULL 0
@@ -890,7 +895,6 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 894 "config.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1055,7 +1059,6 @@ YY_DECL
 #line 298 "config.l"
 
 
-#line 1059 "config.c"
 
 	if ( yy_init )
 		{
@@ -1210,13 +1213,13 @@ if (cur_section) {
   char *p2;
 
 	yytext = strchr(yytext, '=') + 1;
-	
+
 	if (strchr(yytext, '\r')) { 
 		/* This is needed for WinCE, dunno why... */
 		p2 = strchr(yytext, '\r');
 		*p2 = 0;
 	}
-	
+
 	while (isspace(*yytext))
 		yytext++;
 
@@ -1334,7 +1337,6 @@ YY_RULE_SETUP
 #line 464 "config.l"
 ECHO;
 	YY_BREAK
-#line 1338 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2750,5 +2752,10 @@ configure_platform(config_entry_t *conf)
 	/* on Windows CE, default to lower audio quality for performance */
 	conf->pcmout_rate = 11025;
 	conf->pcmout_stereo = 0; /* Only one tape recorder in our nose */
+#elif defined(_GP32)
+	conf->pcmout_rate = 22050;
+	conf->pcmout_stereo = 0;
+	conf->pcmout_buffer_size = 256;
+	conf->midi_device = midi_find_device("adlibemu");
 #endif
 }

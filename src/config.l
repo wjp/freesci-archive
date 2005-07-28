@@ -988,5 +988,10 @@ configure_platform(config_entry_t *conf)
 	/* on Windows CE, default to lower audio quality for performance */
 	conf->pcmout_rate = 11025;
 	conf->pcmout_stereo = 0; /* Only one tape recorder in our nose */
+#elif defined(_GP32)
+	conf->pcmout_rate = 22050;
+	conf->pcmout_stereo = 0;
+	conf->pcmout_buffer_size = 256;
+	conf->midi_device = midi_find_device("adlibemu");
 #endif
 }
