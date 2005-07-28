@@ -71,6 +71,9 @@ extern pcmout_driver_t pcmout_driver_al;
 #ifdef _DREAMCAST
 extern pcmout_driver_t pcmout_driver_dc;
 #endif
+#ifdef _GP32
+extern pcmout_driver_t pcmout_driver_gp32;
+#endif
 
 extern DLLEXTERN pcmout_driver_t *pcmout_drivers[];
 

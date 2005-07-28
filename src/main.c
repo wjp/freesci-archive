@@ -99,10 +99,6 @@
 #  define MSVC_FUNCTYPECAST_KLUDGE
 #endif
 
-#ifdef _GP32
-#  define main freesci_main
-#endif
-
 #define ACTION_PLAY 0
 #define ACTION_LIST_SAVEGAMES 1
 

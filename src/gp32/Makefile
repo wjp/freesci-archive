@@ -70,6 +70,7 @@ OBJS =	$(FSCI_BASE)/src/engine/game.o \
 	$(FSCI_BASE)/src/scicore/sci_memory.o \
 	$(FSCI_BASE)/src/scicore/script.o \
 	$(FSCI_BASE)/src/scicore/tools.o \
+	$(FSCI_BASE)/src/scicore/versions.o \
 	$(FSCI_BASE)/src/scicore/vocab.o \
 	$(FSCI_BASE)/src/scicore/vocab_debug.o \
 	$(FSCI_BASE)/src/sound/fmopl.o \
@@ -80,18 +81,16 @@ OBJS =	$(FSCI_BASE)/src/engine/game.o \
 	$(FSCI_BASE)/src/sound/midiout.o \
 	$(FSCI_BASE)/src/sound/oldmidi.o \
 	$(FSCI_BASE)/src/sound/pcmout.o \
-	$(FSCI_BASE)/src/sound/pcmout_sdl.o \
+	$(FSCI_BASE)/src/sound/pcmout_gp32.o \
 	$(FSCI_BASE)/src/sound/polled_ss.o \
 	$(FSCI_BASE)/src/sound/sfx_save.o \
 	$(FSCI_BASE)/src/sound/sound.o \
 	$(FSCI_BASE)/src/sound/soundserver.o \
+	$(FSCI_BASE)/src/sound/polled_ss_pthread.o \
 	$(FSCI_BASE)/src/gp32/wrap.o \
-	$(FSCI_BASE)/src/gp32/main.o \
 	$(FSCI_BASE)/src/dc/keyboard.o
 
-LIBS      = -L$(SDK_BASE)/lib -lmirkoSDK -lm
-CRT0      = $(SDK_BASE)/lib/crt0.S
-LNKSCRIPT = $(SDK_BASE)/lib/lnkscript
+LDFLAGS   = -L$(SDK_BASE)/lib -lc -lmirkoSDK -lm
 INCLUDES  = -I. -I$(FSCI_BASE)/src/include -I$(SDK_BASE)/lib.src/include \
 	-I$(FSCI_BASE)/src/include/beos -I$(FSCI_BASE)/src/dc
 CFLAGS    = $(INCLUDES) -O2 -g -Wall -mtune=arm9tdmi -DHAVE_CONFIG_H \
@@ -103,18 +102,14 @@ all: $(PRG).fxe
 $(PRG).fxe: $(PRG).bin
 	b2fxec -a FreeSCI_team -t FreeSCI $(PRG).bin $(PRG).fxe
 
-$(PRG).elf: $(OBJS) crt0.o
-	$(LD) -nostartfiles -Wall -T $(LNKSCRIPT) crt0.o -o $(PRG).elf \
-	$(OBJS) $(LIBS)
+$(PRG).elf: $(OBJS)
+	$(CC) -specs=gp32.specs -o $(PRG).elf $(OBJS) $(LDFLAGS)
 
 $(PRG).bin: $(PRG).elf
 	arm-elf-objcopy -O binary $(PRG).elf $(PRG).bin
-
-crt0.o:	$(CRT0)
-	$(CC) -c -o crt0.o $(CRT0)
 
 run: $(PRG).fxe
 	gplink run $(PRG).fxe
 
 clean:
-	rm -f crt0.o $(OBJS) $(PRG).bin $(PRG).elf $(PRG).fxe
+	rm -f $(OBJS) $(PRG).bin $(PRG).elf $(PRG).fxe

@@ -64,6 +64,10 @@ extern sound_server_t sound_server_dos;
 extern sound_server_t sound_server_dc;
 #endif
 
+#ifdef _GP32
+extern sound_server_t sound_server_pthread;
+#endif
+
 sound_server_t *sound_servers[] = {
 #ifndef NO_SOUND
 #  if defined (HAVE_SYSV_IPC) && !defined(ARM_WINCE)
@@ -90,6 +94,10 @@ sound_server_t *sound_servers[] = {
 
 #  ifdef _DREAMCAST
 	&sound_server_dc,
+#  endif
+
+#  ifdef _GP32
+	&sound_server_pthread,
 #  endif
 #endif /* NO_SOUND */
 	NULL

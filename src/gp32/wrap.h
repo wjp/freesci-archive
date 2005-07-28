@@ -49,9 +49,6 @@ typedef struct {
 	char name[16];
 } DIR;
 
-/* Not present in newlib. */
-void usleep(unsigned long usec);
-
 /* Function declaration in mirkoSDK's header file contains a typo. */
 int smc_createdir(char *dirname);
 

@@ -1,3 +1,19 @@
+2005-07-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gp32/main.S: Removed from repository.
+	* src/Makefile.am: Updated.
+
+	* src/sound/polled_ss_pthread.c, src/sound/pcmout_gp32.c: Added to
+	repository.
+	* src/gp32/Makefile, src/sound/Makefile.am, src/include/pcmout.h,
+	src/sound/pcmout.c, src/sound/sound.c: Updated.
+
+	* src/main.c, src/gp32/wrap.c, src/gp32/wrap.h: Removed some GP32
+	workarounds that are no longer needed.
+
+	* src/gfx/drivers/gp32_driver.c: Do not printf() from interrupt
+	routine.
+
 2005-06-02  Ismail Khatib  <ikhatib@imail.de>
 
 	* src/config.l: Changed to handle '\r' in configfile on WinCE
@@ -122,7 +138,6 @@
 	* src/gp32/wrap.c: Changed names of functions for latest newlib
 	patch.
 
->>>>>>> 1.682
 2005-01-02  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/include/sci_conf.h: Removed work_dir from config_entry_t, as

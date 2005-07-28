@@ -38,6 +38,9 @@ pcmout_driver_t *pcmout_drivers[] = {
 #	ifdef _DREAMCAST
 		&pcmout_driver_dc,
 #	endif
+#	ifdef _GP32
+		&pcmout_driver_gp32,
+#	endif
 #endif
 	&pcmout_driver_null,
 	NULL

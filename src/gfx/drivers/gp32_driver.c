@@ -224,10 +224,9 @@ gp32_add_event(sci_event_t *event)
 ** Returns   : (int) 1 on success, 0 on error
 */
 {
-	if (event_total >= EVENT_BUFFER_SIZE) {
-		printf("Error: Event buffer is full\n");
+	if (event_total >= EVENT_BUFFER_SIZE)
+		/* Event buffer is full. */
 		return 0;
-	}
 
 	event_buffer[event_total++] = *event;
 	return 1;
@@ -915,6 +914,7 @@ gp32_init_specific(struct _gfx_driver *drv, int xfact, int yfact,
 static int
 gp32_init(struct _gfx_driver *drv)
 {
+	gp_setCPUspeed(133);
 	if (gp32_init_specific(drv, 1, 1, 2) != GFX_OK) return GFX_FATAL;
 
 	return GFX_OK;

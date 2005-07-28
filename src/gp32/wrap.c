@@ -31,15 +31,6 @@
 #include <fcntl.h>
 #include "wrap.h"
 
-void
-usleep(unsigned long usec) {
-	int start = gp_getRTC();
-	int add = usec / 15625;
-	if (!add)
-		add = 1;
-	while (gp_getRTC() < start + add);
-}
-
 unsigned int
 sleep(unsigned int seconds) {
 	usleep(seconds * 1000000);
@@ -78,29 +69,17 @@ gp_print(char *msg, int mlen)
 	while (!gp_getButton());
 }
 
-int write_stdout(char *buf, int len)
+int stdout_write(char *buf, int len)
 {
 	return len;
 }
 
-int write_stderr(char *buf, int len)
+int stderr_write(char *buf, int len)
 {
 	return len;
 }
 
-int read_stdin(char *buf, int len)
+int stdin_read(char *buf, int len)
 {
 	return 0;
-}
-
-void
-gp32_main()
-{
-	char *argv[] = { "freesci.fxe", NULL };
-
-	/* Set CPU speed to 133Mhz. */
-	gp_setCpuspeed(133);
-
-	/* Call freesci's main(). */
-	exit(freesci_main(1, argv));
 }
