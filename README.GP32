@@ -1,16 +1,13 @@
 FreeSCI - GP32
 
-Last update: 2005-01-04
+Last update: 2005-07-30
 
 
 Index
 -----
 
 1      Building FreeSCI from source
-1.1    Installing the GCC toolchain
-1.1.1  Installing binutils
-1.1.2  Installing GCC and newlib
-1.1.3  Installing mirkoSDK and various utilities
+1.1    Installing the toolchain
 1.2    Compiling FreeSCI
 2      Using FreeSCI
 2.1    The config file
@@ -23,8 +20,8 @@ Index
 2.3.1  Normal mode
 2.3.1  Function mode
 3      Bugs and other known issues
-3.1    Soundserver
-3.2    Sound
+3.1    Sound
+3.2    Saving
 4      Libraries used in FreeSCI GP32 binaries
 5      newlib license information
 6      Get involved
@@ -41,97 +38,20 @@ proceed to chapter 2.
 1.1   Installing the toolchain
 ------------------------------
 
-Create a temporary directory somewhere and download the following:
-
-binutils 2.15 (http://sources.redhat.com/binutils/)
-GCC 3.4.3 (http://gcc.gnu.org/)
-newlib 1.13.0 (http://sources.redhat.com/newlib/)
-newlib GP32 patch (latest version) (http://www.retrovg.com/gp32/)
-
-Choose a directory where you want to install the toolchain, for example
-/usr/local/gp32. Make sure you have sufficient rights to write to this
-location (e.g. install as root).
-# prefix=/usr/local/gp32
-
-Add the bin directory to the PATH variable:
-# PATH=$PATH:$prefix/bin
-
-1.1.1  Installing binutils
---------------------------
-
-Unpack, compile and install binutils:
-# tar jxfv binutils-2.15.tar.bz2
-# cd binutils-2.15
-# ./configure --target=arm-elf --prefix=$prefix
-# make
-# make install
-# cd ..
-
-1.1.2  Installing GCC and newlib
---------------------------------
-
-Unpack GCC and newlib:
-# tar jxfv gcc-3.4.3.tar.bz2
-# tar zxfv newlib-1.13.0.tar.gz
-
-Apply the GP32 newlib patch (replace x.y with actual version number).
-# cd newlib-1.13.0
-# patch -p1 < ../newlib-1.13.0-gp32-patch-x.y.diff
-
-Modify the configure script to prevent libiberty from being built:
-# cd ../gcc-3.4.3
-# sed -i s/target-qthreads\"/target-qthreads\ target-libiberty\"/ ./configure
-
-Create a symlink to newlib:
-# ln -s ../newlib-1.13.0/newlib .
-
-Create a build directory and compile and install GCC and newlib:
-# mkdir build
-# cd build
-# ../configure --target=arm-elf --prefix=$prefix --with-cpu=arm9 \
-  --disable-threads --enable-languages=c,c++ --with-newlib \
-  --disable-multilib --with-gnu-ld --with-gnu-as
-# cflags="-s -mtune=arm920t -march=armv4t -marm -ffast-math -fshort-enums \
-  -mstructure-size-boundary=8 -O2"
-# make all \
-  CFLAGS_FOR_TARGET="-DTAG_CFLAGS_FOR_TARGET $cflags" \
-  CXXFLAGS_FOR_TARGET="-DTAG_CXXFLAGS_FOR_TARGET $cflags \
-  -fno-implicit-templates" \
-  LIBCFLAGS_FOR_TARGET="-DTAG_LIBCFLAGS_FOR_TARGET $cflags" \
-  LIBGCC2_CFLAGS="-DIN_GCC -DCROSS_COMPILE -DIN_LIBGCC2 \
-  -D__GCC_FLOAT_NOT_NEEDED -W -Wall -Wwrite-strings -Wstrict-prototypes \
-  -isystem ./include -Dinhibit_libc -fno-inline -DTAG_LIBGCC_FLAGS $cflags"
-# make install
-
-1.1.3  Installing mirkoSDK and various utilities
-------------------------------------------------
-
-Download mirkoSDK 0.91
-(http://home.t-online.de/home/mirkoroller/gp32/) and extract it somewhere in
-your home directory:
-# tar zxfv mirkoSDK091.tar.gz
-
-Download b2fxec
-(http://www.cs.helsinki.fi/u/jikorhon/condev/gp32/download.html) and install
-it.
-
+Download http://www.retrovg.com/gp32/newlib-1.13.0-gp32-patch-0.5.README and
+follow the instructions.
 
 1.2    Compiling FreeSCI
 ------------------------
 
-Add the toolchain's bin directory (e.g. /usr/local/gp32/bin) to the PATH
-variable:
-# PATH=$PATH:/usr/local/gp32/bin
-
-Set SDK_BASE to the base directory of mirkoSDK
-(e.g. /home/joe/gp32_SDK):
-# SDK_BASE=/home/joe/gp32_SDK
+Run the environ-gp32.sh script:
+$ . environ-gp32.sh
 
 Change to the src/gp32 directory of the FreeSCI source distribution:
-# cd src/gp32
+$ cd src/gp32
 
 Compile FreeSCI:
-# make
+$ make
 
 
 2      Using FreeSCI
@@ -147,10 +67,8 @@ each be in their own directory).
 ----------------------
 
 In order to use FreeSCI you'll have to create at least a minimal config file
-which tells FreeSCI where the games are located. This file must be
-UNIX-formatted! All good text editors (e.g. UltraEdit) should be able to save
-in this format. For general information about the config file, see README.
-Here's an example of a config file for two games:
+which tells FreeSCI where the games are located. For general information about
+the config file, see README. Here's an example of a config file for two games:
 
 -------------->8--------------
 [lsl1]
@@ -250,19 +168,22 @@ Shift + D       - Ctrl + ` (Debug key)
 3      Bugs and other known issues
 ----------------------------------
 
-This chapter will present a list of currently known bugs and missing features
-that are specific to the GP32 port.
+This chapter will present a list of currently known bugs that are specific to
+the GP32 port.
 
-3.1    Soundserver
-------------------
-
-A soundserver for GP32 hasn't been implemented yet. This causes games to
-malfunction in some places.
-
-3.2    Sound
+3.1    Sound
 ------------
 
-A PCM driver for GP32 hasn't been implemented yet.
+Sound may be choppy and/or exhibit a ticking sound at times.
+
+3.2    Saving
+-------------
+
+Saving is currently extremely slow (up to several minutes). The seems to be
+caused by the SMC library. This issue is being investigated.
+
+Savegames created by FreeSCI releases without sound support can not
+be restored by releases with sound support.
 
 
 4      Libraries used in FreeSCI GP32 binaries

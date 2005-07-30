@@ -94,7 +94,7 @@ LDFLAGS   = -L$(SDK_BASE)/lib -lc -lmirkoSDK -lm
 INCLUDES  = -I. -I$(FSCI_BASE)/src/include -I$(SDK_BASE)/lib.src/include \
 	-I$(FSCI_BASE)/src/include/beos -I$(FSCI_BASE)/src/dc
 CFLAGS    = $(INCLUDES) -O2 -g -Wall -mtune=arm9tdmi -DHAVE_CONFIG_H \
-	-DWANT_CONSOLE -DFREESCI_GAMEDIR=\"FREESCI\" \
+	-DHAVE_SCHED_YIELD -DWANT_CONSOLE -DFREESCI_GAMEDIR=\"FREESCI\" \
 	-DSTRLEN_FREESCI_GAMEDIR=7 -DMAX_GAMEDIR_SIZE=9 -D_GP32
 
 all: $(PRG).fxe

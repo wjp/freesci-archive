@@ -719,13 +719,6 @@ sci_sched_yield()
 	thd_pass();
 }
 
-#elif defined (_GP32)
-
-void
-sci_sched_yield()
-{
-}
-
 #else
 
 void
