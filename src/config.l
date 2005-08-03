@@ -989,9 +989,9 @@ configure_platform(config_entry_t *conf)
 	conf->pcmout_rate = 11025;
 	conf->pcmout_stereo = 0; /* Only one tape recorder in our nose */
 #elif defined(_GP32)
-	conf->pcmout_rate = 22050;
+	conf->pcmout_rate = 16000;
 	conf->pcmout_stereo = 0;
-	conf->pcmout_buffer_size = 256;
+	conf->pcmout_buffer_size = 192;
 	conf->midi_device = midi_find_device("adlibemu");
 #endif
 }

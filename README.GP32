@@ -1,6 +1,6 @@
 FreeSCI - GP32
 
-Last update: 2005-07-30
+Last update: 2005-08-03
 
 
 Index
@@ -20,8 +20,7 @@ Index
 2.3.1  Normal mode
 2.3.1  Function mode
 3      Bugs and other known issues
-3.1    Sound
-3.2    Saving
+3.1    Saving
 4      Libraries used in FreeSCI GP32 binaries
 5      newlib license information
 6      Get involved
@@ -38,7 +37,7 @@ proceed to chapter 2.
 1.1   Installing the toolchain
 ------------------------------
 
-Download http://www.retrovg.com/gp32/newlib-1.13.0-gp32-patch-0.5.README and
+Download http://www.retrovg.com/gp32/newlib-1.13.0-gp32-patch-0.6.README and
 follow the instructions.
 
 1.2    Compiling FreeSCI
@@ -171,18 +170,10 @@ Shift + D       - Ctrl + ` (Debug key)
 This chapter will present a list of currently known bugs that are specific to
 the GP32 port.
 
-3.1    Sound
-------------
-
-Sound may be choppy and/or exhibit a ticking sound at times.
-
-3.2    Saving
+3.1    Saving
 -------------
 
-Saving is currently extremely slow (up to several minutes). The seems to be
-caused by the SMC library. This issue is being investigated.
-
-Savegames created by FreeSCI releases without sound support can not
+Savegames created by FreeSCI releases without sound support cannot
 be restored by releases with sound support.
 
 

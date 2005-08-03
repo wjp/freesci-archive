@@ -841,6 +841,7 @@ gp32_init_specific(struct _gfx_driver *drv, int xfact, int yfact,
 	int rmask = 0, gmask = 0, bmask = 0, rshift = 0, gshift = 0;
 	int bshift = 0;
 
+	gp_setCPUspeed(133);
 	sciprintf("Initialising video mode\n");
 
 	drv->state = NULL;
@@ -914,7 +915,6 @@ gp32_init_specific(struct _gfx_driver *drv, int xfact, int yfact,
 static int
 gp32_init(struct _gfx_driver *drv)
 {
-	gp_setCPUspeed(133);
 	if (gp32_init_specific(drv, 1, 1, 2) != GFX_OK) return GFX_FATAL;
 
 	return GFX_OK;

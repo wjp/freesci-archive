@@ -385,6 +385,9 @@ current_playing_chunk()
 static void *
 pcm_thread(void *p)
 {
+    struct sched_param param;
+    param.sched_priority = 0;
+
     while (pcm_run)
     {
         int i;
@@ -394,6 +397,8 @@ pcm_thread(void *p)
         while (ringbuf_next_chunk == current_playing_chunk())
             /* We can't fill audio yet. */
             sched_yield();
+
+        pthread_setschedparam(thread, SCHED_RR, &param);
 
         buf = samplebuffer + ringbuf_chunk_size / 2 * ringbuf_next_chunk;
 
@@ -416,6 +421,8 @@ pcm_thread(void *p)
 
         if (++ringbuf_next_chunk == ringbuf_chunks)
             ringbuf_next_chunk = 0;
+        
+        pthread_setschedparam(thread, SCHED_OTHER, &param);
     }
 
     return NULL;

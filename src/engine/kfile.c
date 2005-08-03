@@ -973,6 +973,11 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->acc = 1;
 
+#ifdef _GP32
+	/* Write save files without updating FAT to speed up the process. */
+	smNoFATUpdate("dev0:\\");
+#endif
+
 	if (gamestate_save(s, savegame_dir)) {
 		sciprintf("Saving the game failed.\n");
 		s->acc = 0;
@@ -995,9 +1000,15 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		chdir (G_DIR_PARENT_S);
 	}
 	free(game_id_file_name);
+
 #ifdef _DREAMCAST
-	if (dc_store_savegame(game_id, game_description, savedir_id) < 0) s->acc = 0;
+	if (dc_store_savegame(game_id, game_description, savedir_id) < 0)
+		s->acc = 0;
+#elif defined(_GP32)
+	/* Update FAT. */
+	smFATUpdate("dev0:\\");
 #endif
+
 	sci_free(savegame_dir);
 	_chdir_restoredir(workdir);
 }

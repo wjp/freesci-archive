@@ -1,3 +1,20 @@
+2005-08-03  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README.GP32: Updated.
+
+	* src/engine.kfile.c (kSaveGame): On GP32, disable FAT updates while
+	writing to speed up saving.
+	* src/gp32/wrap.h: Added FAT functions.	
+
+	* src/config.l, src/config.c: On GP32, use a pcmout_rate of 16000 by
+	default.
+
+	* src/gfx/drivers/gp32_driver.c: Moved CPU speed setting from
+	gp32_init() to gp32_init_specific().
+
+	* src/sound/pcmout_gp32.c (pcm_thread): Use SCHED_RR when filling
+	the sound buffer.
+
 2005-07-31  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README.GP32: Updated.

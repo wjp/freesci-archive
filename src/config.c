@@ -895,6 +895,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
+#line 899 "config.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1059,6 +1060,7 @@ YY_DECL
 #line 298 "config.l"
 
 
+#line 1064 "config.c"
 
 	if ( yy_init )
 		{
@@ -1337,6 +1339,7 @@ YY_RULE_SETUP
 #line 464 "config.l"
 ECHO;
 	YY_BREAK
+#line 1343 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2753,9 +2756,9 @@ configure_platform(config_entry_t *conf)
 	conf->pcmout_rate = 11025;
 	conf->pcmout_stereo = 0; /* Only one tape recorder in our nose */
 #elif defined(_GP32)
-	conf->pcmout_rate = 22050;
+	conf->pcmout_rate = 16000;
 	conf->pcmout_stereo = 0;
-	conf->pcmout_buffer_size = 256;
+	conf->pcmout_buffer_size = 192;
 	conf->midi_device = midi_find_device("adlibemu");
 #endif
 }

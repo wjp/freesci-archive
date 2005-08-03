@@ -49,8 +49,11 @@ typedef struct {
 	char name[16];
 } DIR;
 
-/* Function declaration in mirkoSDK's header file contains a typo. */
-int smc_createdir(char *dirname);
+/* Disables FAT for volume vol. */
+int smNoFATUpdate(const char* vol);
+
+/* Enables FAT for volume vol and updates FAT. */
+int smFATUpdate(const char* vol);
 
 /* Function declaration missing from mirkoSDK. */
 short gp_initFramebufferBP(void *addr,u16 bitmode,u16 refreshrate);
