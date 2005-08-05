@@ -131,6 +131,36 @@ int decrypt3(guint8 *dest, guint8 *src, int length, int complength)
 	return 0;     /* [DJ] shut up compiler warning */
 }
 
+guint32 gbits(int numbits,  guint8 * data, int dlen)
+{
+	int place; /* indicates location within byte */
+	guint32 bitstring;
+	static guint32 whichbit=0;
+	int i;
+
+	if(numbits==0) {whichbit=0; return 0;}
+
+	place = whichbit >> 3;
+	bitstring=0;
+	for(i=(numbits>>3)+1;i>=0;i--)
+		{
+			if (i+place < dlen)
+				bitstring |=data[place+i] << (8*(2-i));
+		}
+	/*  bitstring = data[place+2] | (long)(data[place+1])<<8
+	    | (long)(data[place])<<16;*/
+	bitstring >>= 24-(whichbit & 7)-numbits;
+	bitstring &= (0xffffffff >> (32-numbits));
+	/* Okay, so this could be made faster with a table lookup.
+	   It doesn't matter. It's fast enough as it is. */
+	whichbit += numbits;
+	return bitstring;
+}
+
+/***************************************************************************
+* Carl Muckenhoupt's code ends here
+***************************************************************************/
+
 enum {
 	PIC_OP_SET_COLOR = 0xf0,
 	PIC_OP_DISABLE_VISUAL = 0xf1,
@@ -476,35 +506,6 @@ byte *view_reorder(byte *inbuffer, int dsize)
 	return outbuffer;	
 }
 
-guint32 gbits(int numbits,  guint8 * data, int dlen)
-{
-	int place; /* indicates location within byte */
-	guint32 bitstring;
-	static guint32 whichbit=0;
-	int i;
-
-	if(numbits==0) {whichbit=0; return 0;}
-
-	place = whichbit >> 3;
-	bitstring=0;
-	for(i=(numbits>>3)+1;i>=0;i--)
-		{
-			if (i+place < dlen)
-				bitstring |=data[place+i] << (8*(2-i));
-		}
-	/*  bitstring = data[place+2] | (long)(data[place+1])<<8
-	    | (long)(data[place])<<16;*/
-	bitstring >>= 24-(whichbit & 7)-numbits;
-	bitstring &= (0xffffffff >> (32-numbits));
-	/* Okay, so this could be made faster with a table lookup.
-	   It doesn't matter. It's fast enough as it is. */
-	whichbit += numbits;
-	return bitstring;
-}
-
-/***************************************************************************
-* Carl Muckenhoupt's code ends here
-***************************************************************************/
 
 
 int decompress01(resource_t *result, int resh)
