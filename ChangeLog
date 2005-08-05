@@ -1,3 +1,16 @@
+2005-08-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* acinclude.m4: Added check for directfb_version.h. This file
+	contains DirectFB version macros. Pre-0.9.18 DirectFB versions don't
+	install this file. Because of the difficulty of coping with API
+	changes when the DirectFB version cannot easily be determined at
+	compile-time, DirectFB >= 0.9.18 is now required for DirectFB
+	support.
+	* src/gfx/drivers/directfb_driver.c (_scidfb_decode_pixel_format):
+	Renamed DSPF_RGB15 to DSPF_ARGB1555 to match DirectFB API change.
+
+	* src/wince/Makefile.am: Updated EXTRA_DIST.
+
 2005-08-03  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README.GP32: Updated.

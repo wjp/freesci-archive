@@ -611,7 +611,7 @@ _scidfb_decode_pixel_format(DFBSurfacePixelFormat pixel_format,
 
 	switch (pixel_format) {
 
-	case DSPF_RGB15:
+	case DSPF_ARGB1555:
 		*bytespp = 2;
 		*rm = 5; _rs = 10;
 		*gm = 5; _gs = 5;

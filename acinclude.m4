@@ -287,13 +287,24 @@ else
 	else
 		AC_MSG_RESULT([found]);
 
-		ac_directfb_libraries="$ac_directfb_libraries"
-		ac_graphics_directfb_libfile="graphics_directfb.c"
-		AC_SUBST(ac_graphics_directfb_libfile)
-		ac_graphics_directfb_libobjects="graphics_directfb.o"
-		AC_SUBST(ac_graphics_directfb_libobjects)
-		AC_DEFINE([HAVE_DIRECTFB], [1], [Define to 1 if you have the `directfb' library (-ldirectfb).])
-		fsci_directfb_driver="yes"
+		AC_MSG_CHECKING([for directfb_version.h])
+		AC_CHECK_INCLUDE_PATH([directfb_version.h],[$ac_directfb_includes],[],[ac_directfb_version])
+
+		if test "$ac_directfb_version" = no; then
+			AC_MSG_RESULT([no])
+			AC_MSG_WARN([Your DirectFB installation is missing directfb_version.h. For DirectFB support please upgrade to DirectFB 0.9.18 or later.])
+			ac_directfb_libraries=""
+			ac_directfb_includes=""
+		else
+			AC_MSG_RESULT([yes])
+			ac_directfb_libraries="$ac_directfb_libraries"
+			ac_graphics_directfb_libfile="graphics_directfb.c"
+			AC_SUBST(ac_graphics_directfb_libfile)
+			ac_graphics_directfb_libobjects="graphics_directfb.o"
+			AC_SUBST(ac_graphics_directfb_libobjects)
+			AC_DEFINE([HAVE_DIRECTFB], [1], [Define to 1 if you have the `directfb' library (-ldirectfb).])
+			fsci_directfb_driver="yes"
+		fi
 	fi
 fi
 
