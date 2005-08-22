@@ -1,6 +1,6 @@
 FreeSCI - GP32
 
-Last update: 2005-08-03
+Last update: 2005-08-05
 
 
 Index
@@ -10,7 +10,7 @@ Index
 1.1    Installing the toolchain
 1.2    Compiling FreeSCI
 2      Using FreeSCI
-2.1    The config file
+2.1    The configuration file
 2.1.1  BLU+ support
 2.2    The controls
 2.2.1  Controlling the cursor keys
@@ -58,16 +58,17 @@ $ make
 
 On the GP32 FreeSCI basically works the same as on other platforms
 (see README). This chapter describes some of the differences. First of all,
-on GP32 the directory that FreeSCI uses for the config file and savegames is
-dev0:\gpmm\freesci. The games themselves can be located anywhere (but must
-each be in their own directory).
+on GP32 the directory that FreeSCI uses for the configuration file and
+savegames is dev0:\gpmm\freesci. The games themselves can be located anywhere
+(but must each be in their own directory).
 
-2.1    The config file
-----------------------
+2.1    The configuration file
+-----------------------------
 
-In order to use FreeSCI you'll have to create at least a minimal config file
-which tells FreeSCI where the games are located. For general information about
-the config file, see README. Here's an example of a config file for two games:
+In order to use FreeSCI you'll have to create at least a minimal configuration
+file called 'config' (without extension) which tells FreeSCI where the games
+are located. For general information about the configuration file, see README.
+Here's an example configuration file for two games:
 
 -------------->8--------------
 [lsl1]
@@ -81,7 +82,7 @@ resource_dir = dev0:\gpmm\sq3
 ------------------
 
 If you have a BLU+ (the latest revision of the GP32 with the Taiwanese LCD),
-add the following line to the top of the config file:
+add the following line to the top of the configuration file:
 
 gfx.gp32.blu_plus = yes
 
