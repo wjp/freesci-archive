@@ -141,14 +141,14 @@ int sci_ffs(int _mask)
 /******************** Debug functions ********************/
 
 void
-_SCIkvprintf(FILE *file, char *format, va_list args)
+_SCIkvprintf(FILE *file, const char *format, va_list args)
 {
 	vfprintf(file, format, args);
 	if (con_file) vfprintf(con_file, format, args);
 }
 
 void
-_SCIkprintf(FILE *file, char *format, ...)
+_SCIkprintf(FILE *file, const char *format, ...)
 {
 	va_list args;
 

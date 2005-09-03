@@ -394,7 +394,7 @@ sci_open(char *fname, int flags);
 
 
 int
-sciprintf(char *fmt, ...);
+sciprintf(const char *fmt, ...);
 #define gfxprintf sciprintf
 /* Prints a string to the console stack
 ** Parameters: fmt: a printf-style format string

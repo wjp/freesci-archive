@@ -5808,13 +5808,13 @@ This function can change the appearance and position of the mouse pointer. If no
 \end{tabular}
 
 
-Returns: (word) a file handle on success, 0 on error
+Returns: (word) a file handle on success, -1 on error
 
 Tries to open or create a file in the CWD with the specified file name. The following modes are valid: 
 
 \begin{tabular}{l}
-0: open or fail: Try to open file, abort if not possible  \\
-1: open or create: Try to open file, create it if it doesn't exist  \\
+0: open or create: Try to open file, create it if it doesn't exist  \\
+1: open or fail: Try to open file, abort if not possible  \\
 2: create: Create the file, destroying any content it might have had  \\
 \end{tabular}
 

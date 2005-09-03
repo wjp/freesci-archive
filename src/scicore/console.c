@@ -44,7 +44,7 @@ static void (*_con_pixmap_callback)(gfx_pixmap_t *) = NULL;
 
 
 int
-sciprintf (char *fmt, ...)
+sciprintf (const char *fmt, ...)
 {
 	va_list argp;
 	size_t bufsize = 256;

@@ -168,9 +168,9 @@ is_object(struct _state *s, reg_t obj);
 
 /* Functions for internal macro use */
 void
-_SCIkvprintf(FILE *file, char *format, va_list args);
+_SCIkvprintf(FILE *file, const char *format, va_list args);
 void
-_SCIkprintf(FILE *file, char *format, ...);
+_SCIkprintf(FILE *file, const char *format, ...);
 
 
 
