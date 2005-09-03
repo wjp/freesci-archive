@@ -116,8 +116,8 @@ f_open_mirrored(state_t *s, char *fname)
 }
 
 
-#define _K_FILE_MODE_OPEN_OR_FAIL 0
-#define _K_FILE_MODE_OPEN_OR_CREATE 1
+#define _K_FILE_MODE_OPEN_OR_CREATE 0
+#define _K_FILE_MODE_OPEN_OR_FAIL 1
 #define _K_FILE_MODE_CREATE 2
 
 
@@ -147,7 +147,7 @@ file_open(state_t *s, char *filename, int mode)
 	}
 	if (!file) { /* Failed */
 		SCIkdebug(SCIkFILE, "file_open() failed\n");
-		s->acc = 0;
+		s->acc = 0xffff;
 		return;
 	}
 

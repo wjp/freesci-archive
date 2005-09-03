@@ -140,14 +140,14 @@ int sci_ffs(int _mask)
 /******************** Debug functions ********************/
 
 void
-_SCIkvprintf(FILE *file, char *format, va_list args)
+_SCIkvprintf(FILE *file, const char *format, va_list args)
 {
 	vfprintf(file, format, args);
 	if (con_file) vfprintf(con_file, format, args);
 }
 
 void
-_SCIkprintf(FILE *file, char *format, ...)
+_SCIkprintf(FILE *file, const char *format, ...)
 {
 	va_list args;
 
@@ -158,7 +158,7 @@ _SCIkprintf(FILE *file, char *format, ...)
 
 
 void
-_SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...)
+_SCIkwarn(state_t *s, const char *file, int line, int area, const char *format, ...)
 {
 	va_list args;
 
@@ -176,7 +176,7 @@ _SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...)
 }
 
 void
-_SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...)
+_SCIkdebug(state_t *s, const char *file, int line, int area, const char *format, ...)
 {
 	va_list args;
 
@@ -190,7 +190,7 @@ _SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...)
 }
 
 void
-_SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *format, ...)
+_SCIGNUkdebug(const char *funcname, state_t *s, const char *file, int line, int area, const char *format, ...)
 {
 	va_list xargs;
 	int error = ((area == SCIkWARNING_NR) || (area == SCIkERROR_NR));

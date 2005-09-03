@@ -521,7 +521,7 @@ con_hook_int (int *pointer, char *name, char *description)
 
 
 int
-sciprintf (char *fmt, ...)
+sciprintf (const char *fmt, ...)
 {
 	va_list argp;
 	size_t bufsize = 256;

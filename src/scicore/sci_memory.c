@@ -51,7 +51,7 @@
 
 
 inline void *
-_SCI_MALLOC(size_t size, char *file, int line, char *funct)
+_SCI_MALLOC(size_t size, const char *file, int line, const char *funct)
 {
 	void *res;
 #ifdef MALLOC_DEBUG
@@ -63,7 +63,7 @@ _SCI_MALLOC(size_t size, char *file, int line, char *funct)
 
 
 inline void *
-_SCI_CALLOC(size_t num, size_t size, char *file, int line, char *funct)
+_SCI_CALLOC(size_t num, size_t size, const char *file, int line, const char *funct)
 {
 	void *res;
 #ifdef MALLOC_DEBUG
@@ -75,7 +75,7 @@ _SCI_CALLOC(size_t num, size_t size, char *file, int line, char *funct)
 
 
 inline void *
-_SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct)
+_SCI_REALLOC(void *ptr, size_t size, const char *file, int line, const char *funct)
 {
 	void *res;
 #ifdef MALLOC_DEBUG
@@ -87,7 +87,7 @@ _SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct)
 
 
 inline void
-_SCI_FREE(void *ptr, char *file, int line, char *funct)
+_SCI_FREE(void *ptr, const char *file, int line, const char *funct)
 {
 #ifdef MALLOC_DEBUG
 	INFO_MEMORY("_SCI_FREE()", size, file, line, funct);
@@ -104,7 +104,7 @@ _SCI_FREE(void *ptr, char *file, int line, char *funct)
 
 
 inline void *
-_SCI_MEMDUP(void *ptr, size_t size, char *file, int line, char *funct)
+_SCI_MEMDUP(const void *ptr, size_t size, const char *file, int line, const char *funct)
 {
 	void *res;
 #ifdef MALLOC_DEBUG
@@ -124,7 +124,7 @@ _SCI_MEMDUP(void *ptr, size_t size, char *file, int line, char *funct)
 
 
 inline char *
-_SCI_STRDUP(const char *src, char *file, int line, char *funct)
+_SCI_STRDUP(const char *src, const char *file, int line, const char *funct)
 {
 	void *res;
 #ifdef MALLOC_DEBUG
@@ -143,7 +143,7 @@ _SCI_STRDUP(const char *src, char *file, int line, char *funct)
 
 
 inline char *
-_SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct)
+_SCI_STRNDUP(const char *src, size_t length, const char *file, int line, const char *funct)
 {
 	void *res;
 	char *strres;
