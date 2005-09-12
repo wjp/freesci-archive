@@ -42,6 +42,7 @@ reg_t kStrCat(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kStrCmp(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kSetSynonyms(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kLock(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kPalette(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kNumCels(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kNumLoops(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kDrawCel(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -319,6 +320,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*(?)*/	{KF_NEW, "Sort", {kSort, "ooo"}},
 /*(?)*/	{KF_NEW, "AvoidPath", {kAvoidPath, "ii.*"}},
 /*(?)*/	{KF_NEW, "Lock", {kLock, "iii"}},
+/*(?)*/	{KF_NEW, "Palette", {kPalette, "i*"}},
 
   /* Non-experimental Functions without a fixed ID */
 

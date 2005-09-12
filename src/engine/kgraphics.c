@@ -265,12 +265,22 @@ graph_restore_box(state_t *s, reg_t handle)
 
 
 static gfx_color_t
-graph_map_ega_color(state_t *s, int color, int priority, int control)
+graph_map_color(state_t *s, int color, int priority, int control)
 {
-	gfx_color_t retval = s->ega_colors[(color >=0 && color < 16)? color : 0];
+	gfx_color_t retval;
 
-	gfxop_set_color(s->gfx_state, &retval, (color < 0)? -1 : retval.visual.r, retval.visual.g, retval.visual.b,
-			(color == -1)? 255 : 0, priority, control);
+	if (s->resmgr->sci_version < SCI_VERSION_1)
+	{
+		retval = s->ega_colors[(color >=0 && color < 16)? color : 0];
+		gfxop_set_color(s->gfx_state, &retval, (color < 0)? -1 : retval.visual.r, retval.visual.g, retval.visual.b,
+				(color == -1)? 255 : 0, priority, control);
+	} else
+	{
+		retval.visual = s->gfx_state->static_palette[color];
+		retval.alpha = 0;
+		retval.priority = priority;
+		retval.control = control;
+	};
 
 	return retval;
 }
@@ -420,7 +430,7 @@ kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_GRAPH_DRAW_LINE: {
 
-		gfx_color_t gfxcolor = graph_map_ega_color(s, SKPV(5) & 0xf, SKPV_OR_ALT(6, -1), SKPV_OR_ALT(7, -1));
+		gfx_color_t gfxcolor = graph_map_color(s, SKPV(5) & 0xf, SKPV_OR_ALT(6, -1), SKPV_OR_ALT(7, -1));
 
 		SCIkdebug(SCIkGRAPHICS, "draw_line((%d, %d), (%d, %d), col=%d, p=%d, c=%d, mask=%d)\n",
 			  SKPV(2), SKPV(1), SKPV(4), SKPV(3), SKPV(5), SKPV_OR_ALT(6, -1), SKPV_OR_ALT(7, -1),
@@ -465,7 +475,7 @@ kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_GRAPH_FILL_BOX_ANY: {
 
-		gfx_color_t color = graph_map_ega_color(s, SKPV(6), SKPV_OR_ALT(7, -1), SKPV_OR_ALT(8, -1));
+		gfx_color_t color = graph_map_color(s, SKPV(6), SKPV_OR_ALT(7, -1), SKPV_OR_ALT(8, -1));
 
 		color.mask = (byte)UKPV(5);
 
@@ -1241,8 +1251,43 @@ kSetNowSeen(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return s->r_acc;
 } /* kSetNowSeen */
 
+reg_t
+kPalette(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	switch (UKPV(0))
+	{
+	case 5 : {
+		int r = UKPV(1);
+		int g = UKPV(2);
+		int b = UKPV(3);
 
+		int i, delta, bestindex = -1, bestdelta = 450;
 
+		for (i = 0; i < s->gfx_state->static_palette_entries; i++) {
+			int dr = abs (s->gfx_state->static_palette[i].r - r);
+			int dg = abs (s->gfx_state->static_palette[i].g - g);
+			int db = abs (s->gfx_state->static_palette[i].b - b);
+
+			delta = dr*dr + dg * dg + db * db;
+
+			if (delta < bestdelta)
+			{
+				bestdelta = delta;
+				bestindex = i;
+			}
+		}
+
+		// Don't warn about inexact mappings -- it's actually the 
+                // rule rather than the exception
+		return make_reg(0, bestindex);
+	}
+				
+		
+	default :
+		SCIkdebug(SCIkWARNING, "Unimplemented subfunction: %d\n", UKPV(0));
+		return s->r_acc;
+	}
+}	
 
 static void
 _k_draw_control(state_t *s, reg_t obj, int inverse);

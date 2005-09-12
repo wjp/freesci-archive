@@ -1,10 +1,13 @@
+2005-09-12  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c: Beginnings of a palette system.
+
 2005-07-26  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/klists.c: Fix sanity check.
 
 	* src/gfx/resource/sci_pic_0.c: Add sanity check.
 	
-
 2005-07-21  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/resource/sci_pic_0.c: Fix embarassing line draw bug.
