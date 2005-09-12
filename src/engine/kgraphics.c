@@ -1261,7 +1261,7 @@ kPalette(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int g = UKPV(2);
 		int b = UKPV(3);
 
-		int i, delta, bestindex = -1, bestdelta = 450;
+		int i, delta, bestindex = -1, bestdelta = 200000;
 
 		for (i = 0; i < s->gfx_state->static_palette_entries; i++) {
 			int dr = abs (s->gfx_state->static_palette[i].r - r);
