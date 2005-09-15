@@ -1164,7 +1164,7 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 	if (drawenable & GFX_MASK_CONTROL) {
 
 		p0printf(" ctl:%x", control);
-		gfx_draw_line_pixmap_i(pic->control_map, gfx_point(x, y), gfx_point(line.xl, line.yl), control);
+		gfx_draw_line_pixmap_i(pic->control_map, gfx_point(x, y), gfx_point(x + line.xl, y + line.yl), control);
 	}
 
 

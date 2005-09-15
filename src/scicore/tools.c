@@ -191,7 +191,7 @@ _SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...)
 }
 
 void
-_SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *format, ...)
+_SCIGNUkdebug(const char *funcname, state_t *s, const char *file, int line, int area, char *format, ...)
 {
 	va_list xargs;
 	int error = ((area == SCIkWARNING_NR) || (area == SCIkERROR_NR));

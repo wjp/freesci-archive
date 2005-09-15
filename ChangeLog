@@ -1,3 +1,11 @@
+2005-09-15  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/scicore/resource_map.c (sci1_res_type): Properly bound
+	iteration over resource type flags
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_draw_line): Properly pass
+	line end points
+
 2005-09-12  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c: Beginnings of a palette system.

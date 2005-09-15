@@ -99,7 +99,7 @@ _SCIkwarn(struct _state *s, char *file, int line, int area, char *format, ...);
 void
 _SCIkdebug(struct _state *s, char *file, int line, int area, char *format, ...);
 void
-_SCIGNUkdebug(char *funcname, struct _state *s, char *file, int line, int area, char *format, ...);
+_SCIGNUkdebug(const char *funcname, struct _state *s, const char *file, int line, int area, char *format, ...);
 
 /* If mode=1, enables debugging for specified areas. If mode=0, disables
 ** debugging for specified areas.

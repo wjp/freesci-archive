@@ -1277,8 +1277,8 @@ kPalette(state_t *s, int funct_nr, int argc, reg_t *argv)
 			}
 		}
 
-		// Don't warn about inexact mappings -- it's actually the 
-                // rule rather than the exception
+		/* Don't warn about inexact mappings -- it's actually the 
+                ** rule rather than the exception */
 		return make_reg(0, bestindex);
 	}
 				
