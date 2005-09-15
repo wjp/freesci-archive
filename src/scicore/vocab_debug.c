@@ -397,7 +397,8 @@ char** vocabulary_get_knames(resource_mgr_t *resmgr, int* count)
 	{
 		case SCI_VERSION_0:
 		case SCI_VERSION_01:
-		case SCI_VERSION_01_VGA: return vocabulary_get_knames0(resmgr, count);
+		case SCI_VERSION_01_VGA:
+		case SCI_VERSION_01_VGA_ODD: return vocabulary_get_knames0(resmgr, count);
 		case SCI_VERSION_1_EARLY:
 		case SCI_VERSION_1_LATE:
 		case SCI_VERSION_32: return vocabulary_get_knames1(resmgr, count);

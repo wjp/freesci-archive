@@ -91,10 +91,11 @@
 #define SCI_VERSION_0 1
 #define SCI_VERSION_01 2
 #define SCI_VERSION_01_VGA 3
-#define SCI_VERSION_1_EARLY 4
-#define SCI_VERSION_1_LATE 5
-#define SCI_VERSION_1_1 6
-#define SCI_VERSION_32 7
+#define SCI_VERSION_01_VGA_ODD 4
+#define SCI_VERSION_1_EARLY 5
+#define SCI_VERSION_1_LATE 6
+#define SCI_VERSION_1_1 7
+#define SCI_VERSION_32 8
 #define SCI_VERSION_LAST SCI_VERSION_1_LATE /* The last supported SCI version */
 
 #define SCI_VERSION_1 SCI_VERSION_1_EARLY
@@ -241,7 +242,7 @@ scir_free_resource_manager(resource_mgr_t *mgr);
 /**--- Resource map decoding functions ---*/
 
 int
-sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int use_01_vga);
+sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int sci_version);
 /* Reads the SCI0 resource.map file from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
@@ -250,12 +251,12 @@ sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, i
 **                                        (in one large chunk)
 **             (int *) resource_nr_p: Pointer to an int the number of resources
 **                                    read is stored in
-**             (int) use_01_vga: Use the (slightly different) SCI01 VGA (early) layout
+**             (int) sci_version: SCI resource version
 ** Returns   : (int) 0 on success, an SCI_ERROR_* code otherwise
 */
 
 int
-sci1_read_resource_map(char *path, resource_t **resources, int *resource_nr_p);
+sci1_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int sci_version);
 /* Reads the SCI1 resource.map file from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
@@ -264,6 +265,7 @@ sci1_read_resource_map(char *path, resource_t **resources, int *resource_nr_p);
 **                                        (in one large chunk)
 **             (int *) resource_nr_p: Pointer to an int the number of resources
 **                                    read is stored in
+**             (int) sci_version: SCI resource version
 ** Returns   : (int) 0 on success, an SCI_ERROR_* code otherwise
 */
 

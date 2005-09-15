@@ -302,6 +302,7 @@ gfxr_interpreter_get_palette(gfx_resstate_t *state, int version, int *colors_nr,
 	switch (version)
 	{
 	case SCI_VERSION_01_VGA :
+	case SCI_VERSION_01_VGA_ODD :
 	case SCI_VERSION_1_EARLY :
 	case SCI_VERSION_1_LATE :
 		return gfxr_read_pal1(res->id, colors_nr, res->data, res->size);

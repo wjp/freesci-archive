@@ -49,6 +49,7 @@ const char* sci_version_types[] = {
 	"SCI version 0.xxx",
 	"SCI version 0.xxx w/ 1.000 compression",
 	"SCI version 1.000 w/ 0.xxx resource.map",
+	"SCI version 1.000 w/ special resource.map",
 	"SCI version 1.000 (early)",
 	"SCI version 1.000 (late)",
 	"SCI version 1.001",
@@ -93,6 +94,7 @@ static decomp_funct *decompressors[] = {
 	&decompress0,
 	&decompress01,
 	&decompress01,
+	&decompress01,
 	&decompress1e,
 	&decompress1l,
 	&decompress11,
@@ -103,6 +105,7 @@ static patch_sprintf_funct *patch_sprintfers[] = {
 	NULL,
 	&sci0_sprintf_patch_file_name,
 	&sci0_sprintf_patch_file_name,
+	&sci1_sprintf_patch_file_name,
 	&sci1_sprintf_patch_file_name,
 	&sci1_sprintf_patch_file_name,
 	&sci1_sprintf_patch_file_name,
@@ -191,12 +194,12 @@ scir_new_resource_manager(char *dir, int version,
 
 	mgr->resources = NULL;
 
-	if (version <= SCI_VERSION_01_VGA) {
+	if (version <= SCI_VERSION_01_VGA_ODD) {
 		resource_error =
 			sci0_read_resource_map(dir,
 					       &mgr->resources,
 					       &mgr->resources_nr,
-					       version == SCI_VERSION_01_VGA);
+					       version);
 
 		if (resource_error >= SCI_ERROR_CRITICAL) {
 			sciprintf("Resmgr: Error while loading resource map: %s\n",
@@ -221,7 +224,8 @@ scir_new_resource_manager(char *dir, int version,
 		}
 
 		if (!resource_error) {
-			if (version == SCI_VERSION_01_VGA)
+			if (version == SCI_VERSION_01_VGA ||
+			    version == SCI_VERSION_01_VGA_ODD)
 				sci1_read_resource_patches(dir,
 							   &mgr->resources,
 							   &mgr->resources_nr);
@@ -240,7 +244,8 @@ scir_new_resource_manager(char *dir, int version,
 		resource_error =
 			sci1_read_resource_map(dir,
 					       &mgr->resources,
-					       &mgr->resources_nr);
+					       &mgr->resources_nr,
+					       version);
 
 		if (resource_error >= SCI_ERROR_CRITICAL) {
 			sciprintf("Resmgr: Error while loading resource map: %s\n",

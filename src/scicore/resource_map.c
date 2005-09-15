@@ -39,14 +39,14 @@
 
 
 static int
-sci_res_read_entry(byte *buf, resource_t *res, int use_sci_01v)
+sci_res_read_entry(byte *buf, resource_t *res, int sci_version)
 {
 	res->id = buf[0] | (buf[1] << 8);
 	res->type = SCI0_RESID_GET_TYPE(buf);
 	res->number = SCI0_RESID_GET_NUMBER(buf);
 	res->status = SCI_STATUS_NOMALLOC;
 
-	if (use_sci_01v) {
+	if (sci_version == SCI_VERSION_01_VGA_ODD) {
 		res->file = SCI01V_RESFILE_GET_FILE(buf + 2);
 		res->file_offset = SCI01V_RESFILE_GET_OFFSET(buf + 2);
 
@@ -120,7 +120,7 @@ int sci1_parse_header(int fd, int *types, int *lastrt)
 
 
 int
-sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, int use_01_vga)
+sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, int sci_version)
 {
 	int fsize;
 	int fd;
@@ -176,7 +176,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 			int addto = resource_index;
 			int i;
 
-			if (sci_res_read_entry(buf, resources + resource_index, use_01_vga)) {
+			if (sci_res_read_entry(buf, resources + resource_index, sci_version)) {
 				sci_free(resources);
 				close(fd);
 				return SCI_ERROR_RESMAP_NOT_FOUND;
@@ -250,7 +250,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 #define TEST fprintf(stderr, "OK in line %d\n", __LINE__);
 
 int
-sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
+sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, int sci_version)
 {
 	int fsize;
 	int fd;

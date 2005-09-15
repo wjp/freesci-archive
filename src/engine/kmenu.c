@@ -74,8 +74,8 @@ kDrawStatus(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int fgcolor = SKPV_OR_ALT(1, s->status_bar_foreground);
 	int bgcolor = SKPV_OR_ALT(2, s->status_bar_background);
 
-	s->titlebar_port->color=s->ega_colors[fgcolor];
-	s->titlebar_port->bgcolor=s->ega_colors[bgcolor];
+	s->titlebar_port->color.visual=*(get_pic_color(s, fgcolor));
+	s->titlebar_port->bgcolor.visual=*(get_pic_color(s, bgcolor));
 
 	s->status_bar_foreground=fgcolor;
 	s->status_bar_background=bgcolor;

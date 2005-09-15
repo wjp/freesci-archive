@@ -272,6 +272,14 @@ gamestate_restore(state_t *s, char *dirname);
 ** Returns   : (state_t *) NULL on failure, a pointer to a valid state_t otherwise
 */
 
+gfx_pixmap_color_t *
+get_pic_color(state_t *s, int color);
+/* Retrieves the gfx_pixmap_color_t associated with a game color index
+** Parameters: (state_t *) s: The game state
+**             (int) color: The color to look up
+** Returns   : (gfx_pixmap_color_t *) The requested color.
+*/
+
 void
 other_libs_exit(void);
 /* Called directly before FreeSCI ends to allow libraries to clean up
