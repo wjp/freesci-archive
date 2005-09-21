@@ -83,7 +83,7 @@ validate_property(object_t *obj, int index)
 
 	if (index < 0 || index >= obj->variables_nr) {
 		if (sci_debug_flags & 4)
-			sciprintf("[VM] Invalid property #%d (out of [0..%d] requested!\n", index,
+			sciprintf("[VM] Invalid property #%d (out of [0..%d]) requested!\n", index,
 				  obj->variables_nr);
 
 		_dummy_register = NULL_REG;

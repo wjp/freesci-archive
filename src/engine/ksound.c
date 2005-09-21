@@ -83,6 +83,7 @@
 
 #define FROBNICATE_HANDLE(reg) ((reg).segment << 16 | (reg).offset)
 #define DEFROBNICATE_HANDLE(handle) (make_reg((handle >> 16) & 0xffff, handle & 0xffff))
+#define SCRIPT_ASSERT_ZERO(fun) if (fun) script_debug_flag = script_error_flag = 1;
 
 
 static song_iterator_t *
@@ -191,11 +192,11 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 	switch (command) {
 	case _K_SCI0_SOUND_INIT_HANDLE:
 		if (obj.segment) {
-			sfx_add_song(&s->sound,
-				     build_iterator(s, GET_SEL32V(obj, number),
-						    SCI_SONG_ITERATOR_TYPE_SCI0,
-						    handle),
-				     0, handle);
+			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
+							build_iterator(s, GET_SEL32V(obj, number),
+								       SCI_SONG_ITERATOR_TYPE_SCI0,
+								       handle),
+							0, handle));
 			PUT_SEL32V(obj, state, _K_SOUND_STATUS_INITIALIZED);
 		}
 		break;
@@ -406,11 +407,11 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int pri = GET_SEL32V(obj, pri);
 
 		if (obj.segment) {
-			sfx_add_song(&s->sound,
-				     build_iterator(s, GET_SEL32V(obj, number),
-						    SCI_SONG_ITERATOR_TYPE_SCI1,
-						    handle),
-				     0, handle);
+			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
+							build_iterator(s, GET_SEL32V(obj, number),
+								       SCI_SONG_ITERATOR_TYPE_SCI1,
+								       handle),
+							0, handle));
 		}
 		break;
 	}
@@ -655,11 +656,11 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int pri = GET_SEL32V(obj, pri);
 
 		if (obj.segment) {
-			sfx_add_song(&s->sound,
-				     build_iterator(s, GET_SEL32V(obj, number),
-						    SCI_SONG_ITERATOR_TYPE_SCI1,
-						    handle),
-				     0, handle);
+			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
+							 build_iterator(s, GET_SEL32V(obj, number),
+									SCI_SONG_ITERATOR_TYPE_SCI1,
+									handle),
+							 0, handle));
 		}
 		break;
 	}

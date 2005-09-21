@@ -1,3 +1,9 @@
+2005-09-21  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/core.c (sfx_add_song): Slightly changed error reporting
+	when overwriting a playing/suspended song to ensure that no
+	deallocated memory is touched, reported error more properly
+
 2005-09-15  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore: Add another SCI resource version, special-

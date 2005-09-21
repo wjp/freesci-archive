@@ -115,12 +115,13 @@ sfx_all_stop(sfx_state_t *self);
 /*  Song basics  */
 /*****************/
 
-void
+int
 sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t handle);
 /* Adds a song to the internal sound library
 ** Parameters: (song_iterator_t *) it: The iterator describing the song
 **             (int) priority: Initial song priority (higher <-> more important)
 **             (song_handle_t) handle: The handle to associate with the song
+** Returns   : (int) 0 on success, nonzero on error
 */
 
 

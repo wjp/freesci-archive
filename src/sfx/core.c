@@ -659,7 +659,7 @@ sfx_poll_specific(sfx_state_t *self, song_handle_t handle, int *cue)
 /*  Song basics  */
 /*****************/
 
-void
+int
 sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t handle)
 {
 	song_t *song = song_lib_find(self->songlib, handle);
@@ -683,15 +683,17 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 
 	if (song) {
 		_sfx_set_song_status(self, song, SOUND_STATUS_STOPPED);
-		song_lib_remove(self->songlib, handle); /* No duplicates */
 
 		fprintf(stderr, "Overwriting old song (%d) ...\n", song->status);
 		if (song->status == SOUND_STATUS_PLAYING
 		    || song->status == SOUND_STATUS_SUSPENDED) {
-			fprintf(stderr, "WTF is going on here???\n");
+			fprintf(stderr, "Unexpected (error): Song %d still playing/suspended (%d)\n",
+				handle, song->status);
 			songit_free(it);
-			return;
-		}
+			return -1;
+		} else
+			song_lib_remove(self->songlib, handle); /* No duplicates */
+
 	}
 
 	song = song_new(handle, it, priority);
@@ -699,6 +701,8 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 	song_lib_add(self->songlib, song);
 	self->song = NULL; /* As above */
 	_update(self);
+
+	return 0;
 }
 
 
