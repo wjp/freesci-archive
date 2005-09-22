@@ -1,5 +1,8 @@
 2005-09-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/sfx/iterator.c (new_fast_forward_iterator): Copy channel
+	mask from encapsulated iterator in fast-forward iterator
+
 	* src/engine/kstring.c (kFormat): Added support for '%=42s' string
 	formatting
 	

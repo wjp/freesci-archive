@@ -1048,6 +1048,7 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 
 		case _SIMSG_BASEMSG_SET_PLAYMASK: if (msg.ID == self->ID) {
 			self->channel_mask = 0;
+
 			self->device_id
 				= sci0_to_sci1_device_map
 				[sci_ffs(msg.args[0] & 0xff) - 1]
@@ -1303,6 +1304,7 @@ new_fast_forward_iterator(song_iterator_t *capsit, int delta)
 	it->init = (void(*)(song_iterator_t *))
 		_ff_init;
 	it->cleanup = NULL;
+	it->channel_mask = capsit->channel_mask;
 
 
 	return (song_iterator_t *) it;
@@ -1884,5 +1886,3 @@ sfx_iterator_combine(song_iterator_t *it1, song_iterator_t *it2)
 	/* Both are non-NULL: */
 	return songit_new_tee(it1, it2, 1); /* 'may destroy' */
 }
-
-
