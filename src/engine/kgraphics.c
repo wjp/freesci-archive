@@ -2491,7 +2491,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	gfx_color_t black;
 	gfx_color_t white;
 	int priority;
-
+	int argextra = argc == 13 ? 4 : 0;
 
 	y = SKPV(0);
 	x = SKPV(1);
@@ -2503,16 +2503,22 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (x+xl > 319)
 		x -= ((x+xl) - 319);
 
-	flags = SKPV(5);
+	flags = SKPV(5+argextra);
 
-	bgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(8, 15)));
-	priority = SKPV_OR_ALT(6, -1);
-	bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
+	bgcolor.mask = 0;
+	priority = SKPV_OR_ALT(6+argextra, -1);
+	if (SKPV_OR_ALT(8+argextra, 255) >= 0) {
+		if (s->resmgr->sci_version < SCI_VERSION_01_VGA)
+			bgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(8+argextra, 15))); else
+				bgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(8+argextra, 255)));
+		bgcolor.mask = GFX_MASK_VISUAL;
+	}
+
 	bgcolor.priority = priority;
-
+	bgcolor.mask |= priority >= 0 ? GFX_MASK_PRIORITY : 0;
 	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", SKPV(0), SKPV(1), SKPV(2), SKPV(3));
 
-	fgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(7, 0)));
+	fgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(7+argextra, 0)));
 	fgcolor.mask = GFX_MASK_VISUAL;
 	black.visual = *(get_pic_color(s, 0));
 	black.mask = GFX_MASK_VISUAL;
@@ -2523,7 +2529,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 				 fgcolor, bgcolor, s->titlebar_port->font_nr,
 				 white,
 				 black,
-				 argv[4].segment ? kernel_dereference_bulk_pointer(s, argv[4], 0) : NULL, 
+				 argv[4+argextra].segment ? kernel_dereference_bulk_pointer(s, argv[4], 0) : NULL, 
 				 flags);
 
 	ADD_TO_CURRENT_PORT(window);
