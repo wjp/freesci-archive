@@ -1,3 +1,8 @@
+2005-09-22  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/kstring.c (kFormat): Added support for '%=42s' string
+	formatting
+	
 2005-09-21  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/sfx/core.c (sfx_add_song): Slightly changed error reporting

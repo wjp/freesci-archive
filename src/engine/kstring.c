@@ -449,6 +449,11 @@ kReadNumber(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
+#define ALIGN_NONE 0
+#define ALIGN_RIGHT 1
+#define ALIGN_LEFT -1
+#define ALIGN_CENTRE 2
+
 /*  Format(targ_address, textresnr, index_inside_res, ...)
 ** or
 **  Format(targ_address, heap_text_addr, ...)
@@ -505,28 +510,33 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 			}
 		} else if (mode == 1) { /* xfer != '%' */
 			char fillchar = ' ';
-			int align = 0; /* -1: Left, +1: Right */
+			int align = ALIGN_NONE;
 
 			char *writestart = target; /* Start of the written string, used after the switch */
 
 			/* int writelength; -- unused atm */
 
-			if (xfer && (isdigit(xfer) || xfer == '-')) {
+			if (xfer && (isdigit(xfer) || xfer == '-' || xfer == '=')) {
 				char *destp;
 
 				if (xfer == '0')
 					fillchar = '0';
 
-				str_leng = strtol(source -1, &destp, 10);
+				if (xfer == '=') {
+					align = ALIGN_CENTRE;
+					source++;
+				}
+
+				str_leng = strtol(source - 1, &destp, 10);
 
 				if (destp > source)
 					source = destp;
 
 				if (str_leng < 0) {
-					align = -1;
+					align = ALIGN_LEFT;
 					str_leng = -str_leng;
-				} else
-					align = 0;
+				} else if (align != ALIGN_CENTRE)
+					align = ALIGN_RIGHT;
 
 				xfer = *source++;
 			} else
@@ -542,18 +552,47 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 				int slen = strlen(tempsource);
 				int extralen = str_leng - slen;
 				CHECK_OVERFLOW1(target, extralen, NULL_REG);
+				if (extralen < 0)
+					extralen = 0;
 
 				if (reg.segment) /* Heap address? */
 					paramindex++;
 				else
 					paramindex += 2; /* No, text resource address */
 
-				if (align >= 0)
+				switch (align) {
+
+				case ALIGN_NONE:
+				case ALIGN_RIGHT:
 					while (extralen-- > 0)
 						*target++ = ' '; /* Format into the text */
+					break;
+
+				case ALIGN_CENTRE: {
+					int half_extralen = extralen >> 1;
+					while (half_extralen-- > 0)
+						*target++ = ' '; /* Format into the text */
+					break;}
+
+				default: break;
+
+				}
 
 				strcpy(target, tempsource);
 				target += slen;
+
+				switch (align) {
+
+				case ALIGN_CENTRE: {
+					align = 0;
+					int half_extralen = extralen - (extralen >> 1);
+					while (half_extralen-- > 0)
+						*target++ = ' '; /* Format into the text */
+					break;}
+
+				default: break;
+
+				}
 
 				mode = 0;
 			}
