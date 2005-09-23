@@ -31,7 +31,7 @@
 #include <gfx_resource.h>
 #include <gfx_tools.h>
 
-#undef GFXR_DEBUG_PIC0 /* Enable to debug pic0 messages */
+#define GFXR_DEBUG_PIC0 /* Enable to debug pic0 messages */
 
 #define GFXR_PIC0_PALETTE_SIZE 40
 #define GFXR_PIC0_NUM_PALETTES 4
@@ -47,6 +47,9 @@
 
 int sci0_palette = 0;
 
+/* Copied from include/kernel.h */
+#define SCI0_PRIORITY_BAND_FIRST_14_ZONES(nr) ((((nr) == 0)? 0 :  \
+        ((first) + (((nr)-1) * (last - first)) / 14)))
 
 /* Default color maps */
 gfx_pixmap_color_t gfx_sci0_image_colors[SCI0_MAX_PALETTE+1][GFX_SCI0_IMAGE_COLORS_NR] = {
@@ -1939,11 +1942,12 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 	int fill_count = 0;
 	byte op, opx;
 
+#if 0
 #ifdef GFXR_DEBUG_PIC0
 	fillmagc = atoi(getenv("FOO"));
 	fillc = atoi(getenv("FOO2"));
 #endif /* GFXR_DEBUG_PIC0 */
-
+#endif
 	/* Initialize palette */
 	for (i = 0; i < GFXR_PIC0_NUM_PALETTES; i++)
 		memcpy(palette[i], default_palette_table, sizeof(int) * GFXR_PIC0_PALETTE_SIZE);
@@ -2280,9 +2284,12 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 				int bytesize;
 				byte *vismap = pic->visual_map->index_data;
 				int linewidth = 320;
+				int nodraw = 0;
 
 				gfx_pixmap_t *view;
 				byte *data;
+
+//				if (pos != 1300) nodraw = 1;
 
 				p0printf("Embedded view @%d\n", pos);
 
@@ -2295,12 +2302,19 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 
 				GET_ABS_COORDS(posx, posy);
 				bytesize = (*(resource + pos))+(*(resource + pos + 1) << 8);
+				p0printf("(%d, %d)\n", posx, posy);
 				pos += 2;
-				if (!sci1) 
+				if (!sci1 && !nodraw) 
 					view = gfxr_draw_cel0(-1,-1,-1, resource + pos, bytesize, NULL, 0); 
 				else
 					view = gfxr_draw_cel1(-1,-1,-1, 0, resource + pos, bytesize, NULL);
 				pos+=bytesize;
+				if (nodraw) continue;
+				p0printf("(%d, %d)-(%d, %d)\n", 
+					 posx, 
+					 posy, 
+					 posx + view->index_xl,
+					 posy + view->index_yl);
 
 				/* we can only safely replace the palette if it's static
 				 *if it's not for some reason, we should die
@@ -2326,7 +2340,8 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 
 				gfx_xlate_pixmap(view, mode, GFX_XLATE_FILTER_NONE);
 
-				_gfx_crossblit_simple(pic->visual_map->index_data+(sci_titlebar_size*view->index_xl),
+				_gfx_crossblit_simple(pic->visual_map->index_data+(sci_titlebar_size*320)+
+						      posy*320+posx,
 						      view->index_data,
 						      pic->visual_map->index_xl, view->index_xl,
 						      view->index_xl,
@@ -2363,9 +2378,27 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 				goto end_op_loop;
 
 			case PIC_SCI1_OPX_PRIORITY_TABLE_EQDIST:
-				p0printf("Equidistant priority table @%d\n", pos);
+			{
+				int first = getInt16(resource + pos);
+				int last = getInt16(resource + pos + 2);
+				int nr;
+				int *pri_table;
+
+				if (!pic->internal)
+				{
+					pic->internal = sci_malloc(16 * sizeof(int)); 
+				} else
+				{
+					GFXERROR("pic->internal is not NULL (%08x); possible memory corruption!\n", pic->internal); 
+				}	
+
+				pri_table = pic->internal;
+				
+				for (nr = 0; nr < 16; nr ++)
+					pri_table[nr] = SCI0_PRIORITY_BAND_FIRST_14_ZONES(nr);					
 				pos += 4;
 				goto end_op_loop;
+			}
 
 			default: sciprintf("%s L%d: Warning: Unknown opx %02x\n", __FILE__, __LINE__, opx);
 				return;
