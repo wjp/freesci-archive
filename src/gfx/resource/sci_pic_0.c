@@ -31,7 +31,7 @@
 #include <gfx_resource.h>
 #include <gfx_tools.h>
 
-#define GFXR_DEBUG_PIC0 /* Enable to debug pic0 messages */
+#undef GFXR_DEBUG_PIC0 /* Enable to debug pic0 messages */
 
 #define GFXR_PIC0_PALETTE_SIZE 40
 #define GFXR_PIC0_NUM_PALETTES 4
