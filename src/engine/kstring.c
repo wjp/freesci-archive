@@ -520,14 +520,17 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 				char *destp;
 
 				if (xfer == '0')
-					fillchar = '0';
+					fillchar = '0'; else
 
 				if (xfer == '=') {
 					align = ALIGN_CENTRE;
 					source++;
-				}
+				} else 
 
-				str_leng = strtol(source - 1, &destp, 10);
+				if (isdigit(xfer))
+					source--; /* Stepped over length argument */
+
+				str_leng = strtol(source, &destp, 10);
 
 				if (destp > source)
 					source = destp;
@@ -650,8 +653,8 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 						memset(writestart, fillchar, padding);
 					} else {
 						memset(target, ' ', padding);
-						target += padding;
 					}
+					target += padding;
 				}
 			}
 		}else { /* mode != 1 */

@@ -1,5 +1,7 @@
 2005-09-23  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kstring.c (kFormat): Fix string formatting.
+
 	* src/gfx/resource/sci_pic_0.c: Properly implement equidistant
 	priority tables. Perform embedded view positioning properly.
 
