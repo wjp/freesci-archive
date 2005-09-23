@@ -51,6 +51,7 @@
 #define K_CONTROL_EDIT 3
 #define K_CONTROL_ICON 4
 #define K_CONTROL_CONTROL 6
+#define K_CONTROL_CONTROL_ALIAS 7
 #define K_CONTROL_BOX 10
 
 
@@ -1601,7 +1602,8 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 							  (gint8)(state & CONTROL_STATE_FRAMED), (gint8)inverse));
 		break;
 
-	case K_CONTROL_CONTROL: {
+	case K_CONTROL_CONTROL:
+	case K_CONTROL_CONTROL_ALIAS: {
 		char **entries_list = NULL;
 		char *seeker;
 		int entries_nr;
