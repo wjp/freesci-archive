@@ -671,6 +671,24 @@ c_segkill(state_t *s)
   }
 }
 
+static int
+c_mousepos(state_t *s)
+{
+	sci_event_t event;
+
+	sciprintf("Click somewhere in the game window...\n");
+
+	while (event = gfxop_get_event(s->gfx_state, SCI_EVT_MOUSE_RELEASE),
+	       event.type != SCI_EVT_MOUSE_RELEASE)
+	{
+	};
+
+	sciprintf("Mouse pointer at (%d, %d)\n", 
+		  s->gfx_state->pointer_pos.x,
+		  s->gfx_state->pointer_pos.y);
+	return 0;
+}
+
 int
 c_seginfo(state_t *s)
 {
@@ -3393,6 +3411,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_restart_game, "restart", "s*", "Restarts the game.\n\nUSAGE\n\n  restart [-r] [-p]"
 					 " [--play] [--replay]\n\n  There are two ways to restart an SCI\n  game:\n"
 					 "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
+			con_hook_command(c_mousepos, "mousepos", "",
+					 "Reveal the location of a mouse click.\n\n");
 #ifdef __GNUC__
 #warning "Re-enable con:viewinfo"
 #endif

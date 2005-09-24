@@ -1,3 +1,7 @@
+2005-09-24  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/scriptdebug.c (c_mousepos): Added command 'mousepos'.
+
 2005-09-23  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (_k_draw_control): Add control type 7 as
