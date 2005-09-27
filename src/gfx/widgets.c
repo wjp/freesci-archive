@@ -2460,7 +2460,7 @@ gfxw_get_chrono_port(gfxw_visual_t *visual, gfxw_list_t **temp_widgets_list, int
 	gfx_color_t transparent = {0};
 	int id = 0;
 
-	if (flags & GFXW_CHRONO_NON_TOPMOST)
+	if (!(flags & GFXW_CHRONO_NON_TOPMOST))
 	{
 		result = gfxw_find_default_port(visual);
 	} else
@@ -2551,9 +2551,10 @@ void
 gfxw_widget_reparent_chrono(gfxw_visual_t *visual, gfxw_widget_t *view, gfxw_list_t *target)
 {
 	gfxw_list_t *tw;
-	gfxw_port_t *chrono = gfxw_get_chrono_port(visual, &tw, 0);
+	gfxw_port_t *chrono;
 	gfxw_widget_t *intersector;
 
+	chrono = gfxw_get_chrono_port(visual, &tw, GFXW_CHRONO_NO_CREATE);
 	if (chrono == NULL) return;
 
 	if (intersector = gfxw_widget_intersects_chrono(tw, view))
