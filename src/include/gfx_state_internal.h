@@ -220,6 +220,7 @@ typedef struct _gfxw_port {
 	gfxw_list_t *decorations; /* optional window decorations- drawn before the contents */
 	gfxw_widget_t *port_bg; /* Port background widget or NULL */
 	gfx_color_t color, bgcolor;
+	int chrono_port;
 	int font_nr;
 	point_t draw_pos; /* Drawing position */
 	int port_flags; /* interpreter-dependant flags */

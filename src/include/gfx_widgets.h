@@ -38,6 +38,13 @@
 /* Our strategy for dirty rectangle management */
 #define GFXW_DIRTY_STRATEGY GFXOP_DIRTY_FRAMES_CLUSTERS
 
+
+/* Indicates that a Chrono-Port should not be created even if it doesn't exist. */
+#define GFXW_CHRONO_NO_CREATE 1
+
+/* Indicates that non-topmost ports should be scanned for a Chrono-Port. */
+#define GFXW_CHRONO_NON_TOPMOST 2
+
 /* Terminology
 **
 ** Two special terms are used in here: /equivalent/ and /clear/. Their meanings
@@ -503,5 +510,14 @@ gfxw_picviewize_dynview(gfxw_dyn_view_t *dynview);
 ** Returns   : (gfxw_dyn_view_t *) The victim, after his transformation
 ** The only changes are in function and type variables, actually.
 */
+
+gfxw_port_t *
+gfxw_get_chrono_port(gfxw_visual_t *visual, gfxw_list_t **temp_widgets_list, int flags);
+
+void
+gfxw_add_to_chrono(gfxw_visual_t *visual, gfxw_widget_t *widget);
+
+void
+gfxw_widget_reparent_chrono(gfxw_visual_t *visual, gfxw_widget_t *view, gfxw_list_t *target);
 
 #endif /* !_GFX_WIDGETS_H_ */

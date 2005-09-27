@@ -1,3 +1,9 @@
+2005-09-27  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/widgets.c: Add 'chrono port' code.
+
+	* src/engine/kgraphics.c (kDrawCel): Use chrono ports.
+
 2005-09-24  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/scriptdebug.c (c_mousepos): Added command 'mousepos'.

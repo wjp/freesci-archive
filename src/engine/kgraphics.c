@@ -1708,6 +1708,14 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 	while (widget) {
 		reg_t obj = make_reg(widget->ID, widget->subID);
 
+		if (widget->type == GFXW_SORTED_LIST)
+			_k_view_list_do_postdraw(s, GFXWC(widget));
+
+		if (widget->type != GFXW_DYN_VIEW) {
+			widget = (gfxw_dyn_view_t *) widget->next;
+			continue;
+		}
+
 		/*
 		 * this fixes a few problems, but doesn't match SSCI's logic.
 		 * The semantics of the private flag need to be verified before this can be uncommented.
@@ -2191,6 +2199,8 @@ _k_raise_topmost_in_view_list(state_t *s, gfxw_list_t *list, gfxw_dyn_view_t *vi
 
 		gfxw_remove_widget_from_container(view->parent, GFXW(view));
 
+		gfxw_widget_reparent_chrono(s->visual, GFXW(view), GFXWC(list));
+
 		if (view->signal & _K_VIEW_SIG_FLAG_HIDDEN)
 			gfxw_hide_widget(GFXW(view));
  		else
@@ -2411,6 +2421,18 @@ kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return NULL_REG;
 }
 
+static inline void
+add_to_chrono(state_t *s, gfxw_widget_t *widget)
+{
+	gfxw_port_t *chrono_port;
+	gfxw_list_t *tw;
+
+	chrono_port = gfxw_get_chrono_port(s->visual, &tw, 1);
+	tw->add(GFXWC(tw), widget);
+
+	if (!chrono_port->parent)
+		ADD_TO_CURRENT_PORT(chrono_port);
+}
 
 reg_t
 kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
@@ -2422,7 +2444,6 @@ kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int y = SKPV(4);
 	int priority = SKPV_OR_ALT(5, -1);
 	gfxw_view_t *new_view;
-
 
 /*
 	if (!view) {
@@ -2442,9 +2463,11 @@ kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 	new_view = gfxw_new_view(s->gfx_state, gfx_point(x, y), view, loop, cel, 0, priority, -1,
 				 ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET);
 
-
-	ADD_TO_CURRENT_BG_WIDGETS(new_view);
+	add_to_chrono(s, new_view);
 	FULL_REDRAW();
+
+	
+
 	return s->r_acc;
 }
 

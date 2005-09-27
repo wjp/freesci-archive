@@ -783,7 +783,7 @@ _gfxw_new_simple_view(gfx_state_t *state, point_t pos, int view, int loop, int c
 	return widget;
 }
 
-static int
+int
 _gfxwop_view_draw(gfxw_widget_t *widget, point_t pos)
 {
 	gfxw_view_t *view = (gfxw_view_t *) widget;
@@ -1792,7 +1792,7 @@ _gfxwop_list_add_dirty(gfxw_container_t *container, rect_t dirty, int propagate)
 	return _gfxwop_container_add_dirty(container, dirty, propagate);
 }
 
-static inline int
+/* static inline */ int
 _gfxwop_ordered_add(gfxw_container_t *container, gfxw_widget_t *widget, int compare_all)
      /* O(n) */
 {
@@ -2213,6 +2213,7 @@ gfxw_new_port(gfxw_visual_t *visual, gfxw_port_t *predecessor, rect_t area, gfx_
 	widget->bgcolor = bgcolor;
 	widget->font_nr = visual->font_nr;
 	widget->ID = _visual_find_free_ID(visual);
+	widget->chrono_port = 0;
 	visual->port_refs[widget->ID] = widget;
 
 	_gfxw_set_ops_PORT(GFXWC(widget));
@@ -2449,3 +2450,123 @@ gfxw_picviewize_dynview(gfxw_dyn_view_t *dynview)
 
 	return dynview;
 }
+
+/* Chrono-Ports (tm) */
+
+gfxw_port_t *
+gfxw_get_chrono_port(gfxw_visual_t *visual, gfxw_list_t **temp_widgets_list, int flags)
+{
+	gfxw_port_t *result = NULL;
+	gfx_color_t transparent = {0};
+	int id = 0;
+
+	if (flags & GFXW_CHRONO_NON_TOPMOST)
+	{
+		result = gfxw_find_default_port(visual);
+	} else
+	{
+		while (id < visual->port_refs_nr && visual->port_refs[id] &&
+		       !visual->port_refs[id]->chrono_port)
+			id++;
+
+		if (id < visual->port_refs_nr)
+			result = visual->port_refs[id];
+	}
+		
+	if (!result || !result->chrono_port)
+	{
+		if (!(flags & GFXW_CHRONO_NO_CREATE)) return NULL;
+		result = gfxw_new_port(visual, NULL, gfx_rect(0, 0, 320, 200), transparent, transparent);
+		*temp_widgets_list = gfxw_new_list(gfx_rect(0, 0, 320, 200), 1);
+		result->add(GFXWC(result), GFXW(*temp_widgets_list));
+		result->chrono_port = 1;
+		if (temp_widgets_list)
+			*temp_widgets_list = GFXWC(result->contents);
+		return result;
+	};
+
+	if (temp_widgets_list)
+		*temp_widgets_list = GFXWC(result->contents);
+	return result;
+}
+
+static int
+gfxw_check_chrono_overlaps(gfxw_port_t *chrono, gfxw_widget_t *widget)
+{
+	gfxw_list_t *seeker = GFXW(GFXWC(chrono->contents)->contents);
+
+	while (seeker) {
+		if (gfx_rect_equals(seeker->bounds, widget->bounds))
+		{
+			gfxw_annihilate(GFXW(seeker));
+			return 1;
+		}
+
+		seeker = seeker->next;
+	}
+
+	return 0;
+}
+
+void
+gfxw_add_to_chrono(gfxw_visual_t *visual, gfxw_widget_t *widget)
+{
+	gfxw_list_t *tw;
+	gfxw_port_t *chrono = 
+		gfxw_get_chrono_port(visual, &tw, 0);
+
+	gfxw_check_chrono_overlaps(chrono, widget);
+	chrono->add(chrono, widget);
+}
+
+static gfxw_widget_t *
+gfxw_widget_intersects_chrono(gfxw_list_t *tw, gfxw_widget_t *widget)
+{
+	gfxw_widget_t *seeker;
+	gfxw_widget_t *itsport;
+	gfx_dirty_rect_t *rects;
+	int result = 0;
+
+	seeker = tw->contents;
+	while (seeker)
+	{
+		point_t origin;
+		rect_t bounds = widget->bounds;
+
+		bounds = widget->bounds;
+		origin.x = seeker->parent->zone.x;
+		origin.y = seeker->parent->zone.y;
+		gfx_rect_translate(bounds, origin);
+
+		if (gfx_rects_overlap(bounds, seeker->bounds))
+			return seeker;
+
+		seeker = seeker->next;
+	}
+
+	return 0;
+}
+
+void
+gfxw_widget_reparent_chrono(gfxw_visual_t *visual, gfxw_widget_t *view, gfxw_list_t *target)
+{
+	gfxw_list_t *tw;
+	gfxw_port_t *chrono = gfxw_get_chrono_port(visual, &tw, 0);
+	gfxw_widget_t *intersector;
+
+	if (chrono == NULL) return;
+
+	if (intersector = gfxw_widget_intersects_chrono(tw, view))
+	{
+		point_t origin = gfx_point(intersector->parent->zone.x, 
+					   intersector->parent->zone.y);
+
+		gfxw_remove_widget_from_container(chrono, tw);
+		gfxw_remove_widget_from_container(chrono->parent, chrono);
+		gfxw_annihilate(chrono);
+
+		gfx_rect_translate(tw->zone, origin);
+		target->add(target, tw);
+	}
+}
+	
