@@ -2570,4 +2570,15 @@ gfxw_widget_reparent_chrono(gfxw_visual_t *visual, gfxw_widget_t *view, gfxw_lis
 		target->add(target, tw);
 	}
 }
-	
+
+void
+gfxw_widget_kill_chrono(gfxw_visual_t *visual, int window)
+{
+	int i;
+
+	for (i=window; i < visual->port_refs_nr ; i++)
+	{
+		if (visual->port_refs[i] && visual->port_refs[i]->chrono_port)
+			gfxw_annihilate(visual->port_refs[i]);
+	}
+}

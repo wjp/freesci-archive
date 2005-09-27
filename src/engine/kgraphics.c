@@ -2478,7 +2478,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	gfxw_port_t *goner;
 	gfxw_port_t *pred;
 
-
+	gfxw_widget_kill_chrono(s->visual, goner_nr);
 	goner = gfxw_find_port(s->visual, goner_nr);
 	if ((goner_nr < 3) || (goner == NULL)) {
 		SCIkwarn(SCIkERROR, "Removal of invalid window %04x requested\n", goner_nr);

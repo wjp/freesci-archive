@@ -1,5 +1,7 @@
 2005-09-27  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kgraphics.c (kDisposeWindow): Garbage collection.
+
 	* src/engine/widgets.c: Add 'chrono port' code.
 
 	* src/engine/kgraphics.c (kDrawCel): Use chrono ports.

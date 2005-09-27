@@ -520,4 +520,7 @@ gfxw_add_to_chrono(gfxw_visual_t *visual, gfxw_widget_t *widget);
 void
 gfxw_widget_reparent_chrono(gfxw_visual_t *visual, gfxw_widget_t *view, gfxw_list_t *target);
 
+void
+gfxw_widget_kill_chrono(gfxw_visual_t *visual, int window);
+
 #endif /* !_GFX_WIDGETS_H_ */
