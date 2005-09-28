@@ -1,3 +1,7 @@
+2005-09-28  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/operations.c: Support shifted F-keys.
+
 2005-09-03  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/kfile.c (file_open): File open failure now yields -1
