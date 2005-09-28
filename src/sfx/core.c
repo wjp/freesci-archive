@@ -355,6 +355,8 @@ _update_multi_song(sfx_state_t *self)
 				sciprintf("[SFX] Adding song %lx\n", newseeker->it->ID);
 			}
 
+
+
 			player->add_iterator(songit_clone(newseeker->it,
 							  newseeker->delay),
 					     tv);

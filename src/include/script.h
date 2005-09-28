@@ -35,7 +35,7 @@ typedef struct script_opcode_
 } script_opcode;
 
 
-enum {
+typedef enum {
   sci_obj_terminator,
   sci_obj_object,
   sci_obj_code,
