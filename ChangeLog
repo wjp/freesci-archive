@@ -1,3 +1,8 @@
+2005-09-28  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/drivers/sdl_driver.c (sdl_map_key): Add support for
+	shifted F-keys.
+
 2005-09-28  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/include/script.h: Added missing 'typedef'

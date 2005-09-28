@@ -1634,31 +1634,49 @@ _gfxop_scancode(int ch)
 }
 
 static int
-_gfxop_toupper(int c)
+_gfxop_shiftify(int c)
 {
 	char shifted_numbers[] = ")!@#$%^&*(";
-	c = toupper((char)c);
+	
+	if (c & 255 != 0)
+	{
+		c = toupper((char)c);
 
-	if (c >= 'A' && c <= 'Z')
-		return c;
+		if (c >= 'A' && c <= 'Z')
+			return c;
 
-	if (c >= '0' && c <= '9')
-		return shifted_numbers[c-'0'];
+		if (c >= '0' && c <= '9')
+			return shifted_numbers[c-'0'];
+	
+		switch (c) {
+		case SCI_K_TAB: return SCI_K_SHIFT_TAB;
+		case ']': return '}';
+		case '[': return '{';
+		case '`': return '~';
+		case '-': return '_';
+		case '=': return '+';
+		case ';': return ':';
+		case '\'': return '"';
+		case '\\': return '|';
+		case ',': return '<';
+		case '.': return '>';
+		case '/': return '?';
+		default: return c; /* No match */
+		}
+	}
 
-	switch (c) {
-	case SCI_K_TAB: return SCI_K_SHIFT_TAB;
-	case ']': return '}';
-	case '[': return '{';
-	case '`': return '~';
-	case '-': return '_';
-	case '=': return '+';
-	case ';': return ':';
-	case '\'': return '"';
-	case '\\': return '|';
-	case ',': return '<';
-	case '.': return '>';
-	case '/': return '?';
-	default: return c; /* No match */
+	switch (c)
+	{
+	case SCI_K_F1 : return SCI_K_SHIFT_F1;
+	case SCI_K_F2 : return SCI_K_SHIFT_F2;
+	case SCI_K_F3 : return SCI_K_SHIFT_F3;
+	case SCI_K_F4 : return SCI_K_SHIFT_F4;
+	case SCI_K_F5 : return SCI_K_SHIFT_F5;
+	case SCI_K_F6 : return SCI_K_SHIFT_F6;
+	case SCI_K_F7 : return SCI_K_SHIFT_F7;
+	case SCI_K_F8 : return SCI_K_SHIFT_F8;
+	case SCI_K_F9 : return SCI_K_SHIFT_F9;
+	case SCI_K_F10 : return SCI_K_SHIFT_F10;
 	}
 }
 
@@ -1745,7 +1763,7 @@ gfxop_get_event(gfx_state_t *state, unsigned int mask)
 			 ||
 			 (!(event.buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT))
 			  && (event.buckybits & SCI_EVM_CAPSLOCK)))
-			event.character = _gfxop_toupper(event.character);
+			event.character = _gfxop_shiftify(event.character);
 
 		/* Numlockify if appropriate */
 		else if (event.buckybits & SCI_EVM_NUMLOCK)

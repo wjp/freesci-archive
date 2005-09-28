@@ -103,6 +103,17 @@ typedef struct {
 #define SCI_K_F9 (67<<8)
 #define SCI_K_F10 (68<<8)
 
+#define SCI_K_SHIFT_F1 (84<<8)
+#define SCI_K_SHIFT_F2 (85<<8)
+#define SCI_K_SHIFT_F3 (86<<8)
+#define SCI_K_SHIFT_F4 (87<<8)
+#define SCI_K_SHIFT_F5 (88<<8)
+#define SCI_K_SHIFT_F6 (89<<8)
+#define SCI_K_SHIFT_F7 (90<<8)
+#define SCI_K_SHIFT_F8 (91<<8)
+#define SCI_K_SHIFT_F9 (92<<8)
+#define SCI_K_SHIFT_F10 (93<<8)
+
 /*Values for buckybits */
 #define SCI_EVM_RSHIFT          (1<<0)
 #define SCI_EVM_LSHIFT          (1<<1)
