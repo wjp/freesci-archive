@@ -164,9 +164,10 @@ _find_view_priority(state_t *s, int y)
 		return 14; /* Maximum */
 	} else
 	{
-		if (s->version>SCI_VERSION_FTU_PRIORITY_14_ZONES)
-			return SCI0_VIEW_PRIORITY_14_ZONES(y); else
-				return SCI0_VIEW_PRIORITY(y);
+		if (s->version >= SCI_VERSION_FTU_PRIORITY_14_ZONES)
+			return SCI0_VIEW_PRIORITY_14_ZONES(y);
+		else
+			return SCI0_VIEW_PRIORITY(y);
 		
 	}
 }
