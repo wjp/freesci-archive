@@ -1,3 +1,9 @@
+2005-09-30  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/operations.c (gfxop_scan_bitmask): Scanning bitmasks now
+	clips at y offset 10 and aborts with 0 if the clipped area is
+	empty. This fixes climbing down in the submarine tube in IceMan.
+
 2005-09-28  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/drivers/sdl_driver.c (sdl_map_key): Add support for
