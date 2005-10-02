@@ -1,3 +1,8 @@
+2005-10-02  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/scriptconsole.c (c_list): Fix resource display to cap
+	at the appropriate value (instead of 1000).
+
 2005-09-30  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/operations.c (gfxop_scan_bitmask): Scanning bitmasks now

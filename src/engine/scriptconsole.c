@@ -1043,7 +1043,7 @@ c_list (state_t * s)
 					sciprintf ("Unknown resource type: '%s'\n", cmd_params[0].str);
 				else {
 					int i;
-					for (i = 0; i < 1000; i++)
+					for (i = 0; i < sci_max_resource_nr[s->resmgr->sci_version]; i++)
 						if (scir_test_resource (s->resmgr, res, i))
 							sciprintf ("%s.%03d\n", sci_resource_types[res], i);
 				}
