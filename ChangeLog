@@ -1,3 +1,8 @@
+2005-10-02  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/operations.c (_gfxop_shiftify): GCC doesn't like
+	logical AND. Oh well.
+
 2005-09-30  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/operations.c (gfxop_scan_bitmask): Scanning bitmasks now
