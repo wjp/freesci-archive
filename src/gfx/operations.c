@@ -1637,12 +1637,12 @@ _gfxop_scancode(int ch)
 	return ch; /* not found */
 }
 
-static int
+/* static */ int
 _gfxop_shiftify(int c)
 {
 	char shifted_numbers[] = ")!@#$%^&*(";
 	
-	if (c & 255 != 0)
+	if (c < 256)
 	{
 		c = toupper((char)c);
 
