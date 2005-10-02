@@ -1,5 +1,10 @@
 2005-10-02  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kgraphics.c (kDrawPic): I thought we had port
+	clearing in place already. Kill any chrono ports explicitly here.
+
+	* src/gfx/widgets.c: Fix some ChronoPort-related flag goof-ups.
+
 	* src/engine/operations.c (_gfxop_shiftify): GCC doesn't like
 	logical AND. Oh well.
 

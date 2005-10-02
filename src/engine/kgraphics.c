@@ -1024,6 +1024,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 		GFX_ASSERT(gfxop_new_pic(s->gfx_state, pic_nr, 1, palette));
 	}
 
+	gfxw_widget_kill_chrono(s->visual, 0);
 	s->wm_port->widfree(GFXW(s->wm_port));
 	s->picture_port->widfree(GFXW(s->picture_port));
 
@@ -2427,7 +2428,7 @@ add_to_chrono(state_t *s, gfxw_widget_t *widget)
 	gfxw_port_t *chrono_port;
 	gfxw_list_t *tw;
 
-	chrono_port = gfxw_get_chrono_port(s->visual, &tw, 1);
+	chrono_port = gfxw_get_chrono_port(s->visual, &tw, 0);
 	tw->add(GFXWC(tw), widget);
 
 	if (!chrono_port->parent)
@@ -2463,7 +2464,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 	new_view = gfxw_new_view(s->gfx_state, gfx_point(x, y), view, loop, cel, 0, priority, -1,
 				 ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET);
 
-	add_to_chrono(s, new_view);
+	add_to_chrono(s, GFXW(new_view));
 	FULL_REDRAW();
 
 	
@@ -3364,8 +3365,11 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	SCIkdebug(SCIkGRAPHICS, "Display: Commiting text '%s'\n", text);
 
+	/*
 	ADD_TO_CURRENT_FG_WIDGETS(text_handle);
+	*/
 
+	ADD_TO_CURRENT_FG_WIDGETS(GFXW(text_handle));
 	if ((!s->pic_not_valid)&&update_immediately) { /* Refresh if drawn to valid picture */
 		FULL_REDRAW();
 		SCIkdebug(SCIkGRAPHICS, "Refreshing display...\n");

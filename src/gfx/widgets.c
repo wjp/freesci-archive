@@ -2465,17 +2465,18 @@ gfxw_get_chrono_port(gfxw_visual_t *visual, gfxw_list_t **temp_widgets_list, int
 		result = gfxw_find_default_port(visual);
 	} else
 	{
-		while (id < visual->port_refs_nr && visual->port_refs[id] &&
-		       !visual->port_refs[id]->chrono_port)
-			id++;
+		id = visual->port_refs_nr;
+		while (id >= 0 && (!visual->port_refs[id] ||
+				   !visual->port_refs[id]->chrono_port))
+			id--;
 
-		if (id < visual->port_refs_nr)
+		if (id >= 0)
 			result = visual->port_refs[id];
 	}
 		
 	if (!result || !result->chrono_port)
 	{
-		if (!(flags & GFXW_CHRONO_NO_CREATE)) return NULL;
+		if (flags & GFXW_CHRONO_NO_CREATE) return NULL;
 		result = gfxw_new_port(visual, NULL, gfx_rect(0, 0, 320, 200), transparent, transparent);
 		*temp_widgets_list = gfxw_new_list(gfx_rect(0, 0, 320, 200), 1);
 		result->add(GFXWC(result), GFXW(*temp_widgets_list));
@@ -2493,7 +2494,7 @@ gfxw_get_chrono_port(gfxw_visual_t *visual, gfxw_list_t **temp_widgets_list, int
 static int
 gfxw_check_chrono_overlaps(gfxw_port_t *chrono, gfxw_widget_t *widget)
 {
-	gfxw_list_t *seeker = GFXW(GFXWC(chrono->contents)->contents);
+	gfxw_widget_t *seeker = GFXWC(chrono->contents)->contents;
 
 	while (seeker) {
 		if (gfx_rect_equals(seeker->bounds, widget->bounds))
@@ -2516,7 +2517,7 @@ gfxw_add_to_chrono(gfxw_visual_t *visual, gfxw_widget_t *widget)
 		gfxw_get_chrono_port(visual, &tw, 0);
 
 	gfxw_check_chrono_overlaps(chrono, widget);
-	chrono->add(chrono, widget);
+	chrono->add(GFXWC(chrono), widget);
 }
 
 static gfxw_widget_t *
@@ -2526,6 +2527,8 @@ gfxw_widget_intersects_chrono(gfxw_list_t *tw, gfxw_widget_t *widget)
 	gfxw_widget_t *itsport;
 	gfx_dirty_rect_t *rects;
 	int result = 0;
+
+	assert(tw->type == GFXW_SORTED_LIST);
 
 	seeker = tw->contents;
 	while (seeker)
@@ -2562,12 +2565,12 @@ gfxw_widget_reparent_chrono(gfxw_visual_t *visual, gfxw_widget_t *view, gfxw_lis
 		point_t origin = gfx_point(intersector->parent->zone.x, 
 					   intersector->parent->zone.y);
 
-		gfxw_remove_widget_from_container(chrono, tw);
-		gfxw_remove_widget_from_container(chrono->parent, chrono);
-		gfxw_annihilate(chrono);
+		gfxw_remove_widget_from_container(GFXWC(chrono), GFXW(tw));
+		gfxw_remove_widget_from_container(GFXWC(chrono->parent), GFXW(chrono));
+		gfxw_annihilate(GFXW(chrono));
 
 		gfx_rect_translate(tw->zone, origin);
-		target->add(target, tw);
+		target->add(GFXWC(target), GFXW(tw));
 	}
 }
 
@@ -2579,6 +2582,6 @@ gfxw_widget_kill_chrono(gfxw_visual_t *visual, int window)
 	for (i=window; i < visual->port_refs_nr ; i++)
 	{
 		if (visual->port_refs[i] && visual->port_refs[i]->chrono_port)
-			gfxw_annihilate(visual->port_refs[i]);
+			gfxw_annihilate(GFXW(visual->port_refs[i]));
 	}
 }
