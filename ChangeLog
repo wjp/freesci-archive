@@ -1,3 +1,8 @@
+2005-10-04  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/ksound.c (kDoSound:PLAY): Make sure nodePtr and
+	handle are non-zero, as the scripts expect them to be.
+
 2005-10-02  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kDrawPic): I thought we had port

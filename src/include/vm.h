@@ -329,6 +329,7 @@ typedef struct {
 	selector_t size;
 	selector_t palette;
 	selector_t cantBeHere;
+	selector_t nodePtr;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

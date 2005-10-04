@@ -314,6 +314,8 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	reg_t obj = KP_ALT(1, NULL_REG);
 	song_handle_t handle = FROBNICATE_HANDLE(obj);
 
+	s->debug_mode = (1 << SCIkSOUNDCHK_NR);
+
 	if ((s->debug_mode & (1 << SCIkSOUNDCHK_NR))
 	    && command != _K_SCI01_SOUND_UPDATE_CUES) {
 		int i;
@@ -411,7 +413,9 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 							build_iterator(s, GET_SEL32V(obj, number),
 								       SCI_SONG_ITERATOR_TYPE_SCI1,
 								       handle),
-							0, handle));
+							0, handle));	
+			PUT_SEL32(obj, nodePtr, obj);
+			PUT_SEL32(obj, handle, obj);
 		}
 		break;
 	}

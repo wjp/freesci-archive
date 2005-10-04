@@ -198,7 +198,22 @@ _reset_graphics_input(state_t *s)
 
 	/* but this is correct */
 	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
-	s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), s->ega_colors[0], s->ega_colors[15]);
+
+	if (s->resmgr->sci_version >= SCI_VERSION_01_VGA)
+	{
+		gfx_color_t fgcolor;
+		gfx_color_t bgcolor;
+
+		fgcolor.visual = s->gfx_state->resstate->static_palette[0];
+		fgcolor.mask = GFX_MASK_VISUAL;
+		bgcolor.visual = s->gfx_state->resstate->static_palette[255];
+		bgcolor.mask = GFX_MASK_VISUAL;
+
+		s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), 
+						 fgcolor, bgcolor);
+	} else
+		s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), 
+						 s->ega_colors[0], s->ega_colors[15]);
 	s->titlebar_port->color.mask |= GFX_MASK_PRIORITY;
 	s->titlebar_port->color.priority = 11;
 	s->titlebar_port->bgcolor.mask |= GFX_MASK_PRIORITY;
@@ -583,7 +598,7 @@ game_init(state_t *s)
 	s->successor = NULL; /* No successor */
 	s->status_bar_text = NULL; /* Status bar is blank */
 	s->status_bar_foreground = 0;
-	s->status_bar_background = 15;
+	s->status_bar_background = s->resmgr->sci_version >= SCI_VERSION_01_VGA ? 255 : 15;
 
 	sys_string_acquire(s->sys_strings, SYS_STRING_PARSER_BASE, "parser-base", MAX_PARSER_BASE);
 	s->parser_base = make_reg(s->sys_strings_segment, SYS_STRING_PARSER_BASE);
