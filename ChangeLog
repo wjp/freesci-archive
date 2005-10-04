@@ -3,6 +3,9 @@
 	* src/engine/ksound.c (kDoSound:DISPOSE): Stop songs implicitly
 	before removing them.
 
+	* src/engine/ksound.c (kDoSound:INIT): Test for the existence of a
+	sound resource before creating the iterator.
+
 	* src/engine/ksound.c (kDoSound:PLAY): Make sure nodePtr and
 	handle are non-zero, as the scripts expect them to be.
 

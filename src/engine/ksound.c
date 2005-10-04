@@ -406,7 +406,8 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int vol = GET_SEL32V(obj, vol);
 		int pri = GET_SEL32V(obj, pri);
 
-		if (obj.segment) {
+		if (obj.segment && (scir_test_resource(s->resmgr, sci_sound, number)))
+		{
 			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
 							build_iterator(s, GET_SEL32V(obj, number),
 								       SCI_SONG_ITERATOR_TYPE_SCI1,
@@ -659,7 +660,7 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int vol = GET_SEL32V(obj, vol);
 		int pri = GET_SEL32V(obj, pri);
 
-		if (obj.segment) {
+		if (obj.segment && (scir_test_resource(s->resmgr, sci_sound, number))) {
 			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
 							 build_iterator(s, GET_SEL32V(obj, number),
 									SCI_SONG_ITERATOR_TYPE_SCI1,
