@@ -314,8 +314,6 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	reg_t obj = KP_ALT(1, NULL_REG);
 	song_handle_t handle = FROBNICATE_HANDLE(obj);
 
-	s->debug_mode = (1 << SCIkSOUNDCHK_NR);
-
 	if ((s->debug_mode & (1 << SCIkSOUNDCHK_NR))
 	    && command != _K_SCI01_SOUND_UPDATE_CUES) {
 		int i;
@@ -422,6 +420,8 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	case _K_SCI01_SOUND_DISPOSE_HANDLE :
 	{
 		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
 			sfx_remove_song(&s->sound, handle);
 		}
 		break;
