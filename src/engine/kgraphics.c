@@ -771,7 +771,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 	reg_t obj = argv[0];
 	reg_t cliplist_ref = KP_ALT(1, NULL_REG);
 	list_t *cliplist = NULL;
-	gfxw_port_t *port = s->port;
+	gfxw_port_t *port = s->picture_port;
 	word signal;
 	int retval;
 
@@ -800,7 +800,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 	retval = !(illegal_bits
 		   & (edgehit = gfxop_scan_bitmask(s->gfx_state, zone, GFX_MASK_CONTROL)));
 
-	SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
+	SCIkdebug(SCIkBRESEN, "edgehit = %04x (illegalBits %04x)\n", edgehit, illegal_bits);
 	if (retval == 0) {
 		SCIkdebug(SCIkBRESEN, " -> %04x\n", retval);
 		return not_register(s, NULL_REG); /* Can'tBeHere */

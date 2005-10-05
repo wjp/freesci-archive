@@ -647,7 +647,6 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 					   handle, looping);
 			sfx_song_renice(&s->sound,
 					handle, pri);
-			PUT_SEL32V(obj, handle, handle&0xffff);
 		}
 
 		break;
@@ -666,18 +665,27 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 									SCI_SONG_ITERATOR_TYPE_SCI1,
 									handle),
 							 0, handle));
+			PUT_SEL32(obj, nodePtr, obj);
+			PUT_SEL32(obj, handle, obj);
 		}
 		break;
 	}
 	case _K_SCI1_SOUND_DISPOSE_HANDLE :
 	{
 		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
 			sfx_remove_song(&s->sound, handle);
 		}
 		break;
 	}
 	case _K_SCI1_SOUND_STOP_HANDLE :
 	{
+		PUT_SEL32V(obj, signal, -1);
+		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
+		}
 		break;
 	}
 	case _K_SCI1_SOUND_SUSPEND_HANDLE :
