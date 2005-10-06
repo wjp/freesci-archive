@@ -24,6 +24,78 @@
 #include <resource.h>
 #include <ctype.h>
 #include <games.h>
+#include <exe.h>
+
+#define VERSION_DETECT_BUF_SIZE 4096
+
+static int
+scan_file(char *filename, sci_version_t *version)
+{
+	char buf[VERSION_DETECT_BUF_SIZE];
+	char result_string[10]; /* string-encoded result, copied from buf */
+	int characters_left;
+	int state = 0;
+	/* 'state' encodes how far we have matched the version pattern
+	**   "n.nnn.nnn"
+	**
+	**   n.nnn.nnn
+	**  0123456789
+	**
+	** Since we cannot be certain that the pattern does not begin with an
+	** alphanumeric character, some states are ambiguous.
+	** The pattern is expected to be terminated with a non-alphanumeric
+	** character.
+	*/
+
+	exe_file_t *f = exe_open(filename);
+
+	if (!f)
+		return 1;
+
+	do {
+		int i;
+		int accept;
+
+		characters_left = exe_read(f, buf, VERSION_DETECT_BUF_SIZE);
+
+		for (i = 0; i < characters_left; i++) {
+			const char ch = buf[i];
+			accept = 0; /* By default, we don't like this character */
+
+			if (isalnum(ch)) {
+				accept = (state != 1
+					  && state != 5
+					  && state != 9);
+			} else if (ch == '.') {
+				accept = (state == 1
+					  || state == 5);
+			} else if (state == 9
+				   && !isalnum(ch)) {
+
+				result_string[9] = 0; /* terminate string */
+
+				if (!version_parse(result_string, version))
+				{
+					exe_close(f);
+					return 0; /* success! */
+				}
+
+				/* Continue searching. */
+				accept = 0;
+			}
+
+			if (accept)
+				result_string[state++] = ch;
+			else
+				state = 0;
+
+		}
+
+	} while (characters_left == VERSION_DETECT_BUF_SIZE);
+
+	exe_close(f);
+	return 1; /* failure */
+}
 
 void
 version_require_earlier_than(state_t *s, sci_version_t version)
@@ -68,90 +140,51 @@ version_require_later_than(state_t *s, sci_version_t version)
 	}
 }
 
-sci_version_t
-version_parse(char *vn)
+int
+version_parse(char *vn, sci_version_t *result)
 {
-	int major = *vn - '0'; /* One version digit */
-	int minor = atoi(vn + 2);
-	int patchlevel = atoi(vn + 6);
+	char *endptr[3];
+	int major = strtol(vn, &endptr[0], 10);
+	int minor = strtol(vn + 2, &endptr[1], 10);
+	int patchlevel = strtol(vn + 6, &endptr[2], 10);
 
-	return SCI_VERSION(major, minor, patchlevel);
+	if (endptr[0] != vn + 1 || endptr[1] != vn + 5
+	    || *endptr[2] != '\0') {
+		sciprintf("Warning: Failed to parse version string '%s'\n", vn);
+		return 1;
+	}
+
+	*result = SCI_VERSION(major, minor, patchlevel);
+	return 0;
 }
 
-
-#define VERSION_DETECT_BUF_SIZE 4096
 int
 version_detect_from_executable(sci_version_t *result)
 {
-	char buf[VERSION_DETECT_BUF_SIZE];
-	char result_string[10]; /* string-encoded result, copied from buf */
-	int characters_left;
-	int finished = 0;
+	sci_dir_t dir;
+	char *filename;
+	char *masks[] = {"*.exe", "*.EXE", NULL};
+	int masknr = 0;
 
-	int state = 0;
-	/* 'state' encodes how far we have matched the version pattern
-	**   "n.nnn.nnn"
-	** so far:
-	**
-	**   n.nnn.nnn
-	**  0123456789
-	**  456789
-	**  
-	**
-	** Since we cannot be certain that the pattern does not begin with an
-	** alphanumeric character, some states are ambiguous.
-	** The pattern is expected to be terminated with a '\0' character.
-	*/
+	while (masks[masknr] != NULL) {
+		sci_init_dir(&dir);
 
-	/* First try the new filename */
-	int fh = sci_open("sciv.exe", O_RDONLY|O_BINARY);
+		filename = sci_find_first(&dir, masks[masknr]);
 
-	if (!IS_VALID_FD(fh))
-		fh = sci_open("sierra.exe", O_RDONLY|O_BINARY);
-
-	if (!IS_VALID_FD(fh))
-		return 0;
-
-	do {
-		characters_left = read(fh, buf, VERSION_DETECT_BUF_SIZE);
-		int i;
-		int accept;
-
-		for (i = 0; i < characters_left; i++) {
-			const char ch = buf[i];
-			accept = 0; /* By default, we don't like this character */
-
-			/* Warning: This doesn't accomodate for "strange" SCI1+ version
-			** numbers. My perception is that we can't handle those anyway, since
-			** the corresponding files appear to be compressed.  */
-			if (isdigit(ch)) {
-				accept = (state != 1
-					  && state != 5
-					  && state != 9);
-			} else if (ch == '.') {
-				accept = (state == 1
-					  || state == 5);
-			} else if (state == 9
-				   && ch == '\0') {
-
-				result_string[9] = 0; /* terminate string */
-				*result = version_parse(result_string);
-				close (fh);
-
-				return 1; /* success! */
+		while (filename) {
+			if (!scan_file(filename, result)) {
+				sci_finish_find(&dir);
+				return 0;
 			}
 
-			if (accept)
-				result_string[state++] = ch;
-			else
-				state = 0;
-
+			filename = sci_find_next(&dir);
 		}
 
-	} while (characters_left == VERSION_DETECT_BUF_SIZE);
+		masknr++;
+		sci_finish_find(&dir);
+	}
 
-	close(fh);
-	return 0; /* failure */
+	return 1;
 }
 
 #define HASHCODE_MAGIC_RESOURCE_000 0x55555555
@@ -164,7 +197,6 @@ version_guess_from_hashcode(sci_version_t *result, guint32 *code)
 	int fd = -1;
 	int hash_code;
 	guint8 buf[VERSION_DETECT_BUF_SIZE];
-	sci_version_t version = 0;
 
 	if (IS_VALID_FD(fd = sci_open("resource.001", O_RDONLY|O_BINARY))) {
 		hash_code = HASHCODE_MAGIC_RESOURCE_001;

@@ -1,5 +1,5 @@
 
-#line 3 "lex.yy.c"
+#line 3 "config.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -1343,7 +1343,7 @@ crop_value(char *yytext);
 char *
 purge_comments(char *comments);
 
-#line 1347 "lex.yy.c"
+#line 1347 "config.c"
 
 #define INITIAL 0
 
@@ -1497,7 +1497,7 @@ YY_DECL
 #line 316 "config.l"
 
 
-#line 1501 "lex.yy.c"
+#line 1501 "config.c"
 
 	if ( (yy_init) )
 		{
@@ -1625,7 +1625,7 @@ YY_RULE_SETUP
 	while (isspace(*yytext))
 		yytext++;
 
-	conf[cur_section].version = version_parse(yytext);
+	version_parse(yytext, &conf[cur_section].version);
 }
 	YY_BREAK
 case 3:
@@ -1788,7 +1788,7 @@ YY_RULE_SETUP
 #line 481 "config.l"
 ECHO;
 	YY_BREAK
-#line 1792 "lex.yy.c"
+#line 1792 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{

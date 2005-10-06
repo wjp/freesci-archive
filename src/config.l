@@ -355,7 +355,7 @@ version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} {
 	while (isspace(*yytext))
 		yytext++;
 
-	conf[cur_section].version = version_parse(yytext);
+	version_parse(yytext, &conf[cur_section].version);
 }
 
 resource_dir[[:blank:]]*"="[[:blank:]]*.+	if (cur_section) {

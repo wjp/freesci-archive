@@ -134,17 +134,18 @@ version_require_later_than(struct _state *s, sci_version_t version);
 **             (sci_version_t) version: The version that we're later than
 */
 
-sci_version_t
-version_parse(char *vn);
+int
+version_parse(char *vn, sci_version_t *result);
 /* Parse a string containing an SCI version number
 ** Parameters: (char *) vn: The string to parse
-** Returns   : (sci_version_t): The resulting version number
+** Returns   : (int) 0 on success, 1 on failure
+**             (sci_version_t) *result: The resulting version number on success
 */
 
 int
 version_detect_from_executable(sci_version_t *result);
 /* Try to detect version from Sierra executable in cwd
-** Returns   : (int) 0 on failure, 1 on success
+** Returns   : (int) 0 on success, 1 on failure
 **             (sci_version_t) *result: The version number detected on success
 */
 

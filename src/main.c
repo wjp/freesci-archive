@@ -1008,7 +1008,7 @@ main(int argc, char** argv)
 	if (cl_options.version)
 		version = cl_options.version;
 	else {
-		int got_version = version_detect_from_executable(&version);
+		int got_version = !version_detect_from_executable(&version);
 		unsigned int code;
 		sci_version_t hash_version;
 		char *game_name = version_guess_from_hashcode(&hash_version, &code);

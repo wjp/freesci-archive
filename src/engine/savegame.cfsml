@@ -81,8 +81,7 @@ write_sci_version(FILE *fh, sci_version_t *foo)
 int
 read_sci_version(FILE *fh, sci_version_t *foo, char *lastval, int *line, int *hiteof)
 {
-	*foo = version_parse(lastval);
-	return 0;
+	return version_parse(lastval, foo);
 }
 
 void

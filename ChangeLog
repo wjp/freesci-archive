@@ -1,3 +1,19 @@
+2005-10-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/include/versions.h (version_detect_from_executable): Changed
+	return code semantics. (version_parse): Return error code.
+	* src/config.l, src/main.c (main), src/engine/savegame.cfsml
+	(read_sci_version): Updated for changes to semantics listed above.
+	* src/scicore/versions.c: Added support for version number scanning
+	in lzexe-compressed executables. Changed scanner to also accept
+	version strings containing alphabetic characters (these aren't
+	handled by version_parse() yet, however). (version_parse): Added
+	error checking.
+	* src/include/exe.h, src/include/exe_dec.h, src/scicore/exe.c,
+	src/scicore/exe_lzexe.c, src/scicore/exe_raw.c: Added to repository.
+	* src/scicore/Makefile.am, src/include/Makefile.am: Updated for
+	added files.
+
 2005-10-06  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kCanBeHere): Explicitly use the picture
