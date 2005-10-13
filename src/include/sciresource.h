@@ -319,41 +319,38 @@ sci1_read_resource_patches(char *path, resource_t **resources, int *resource_nr_
 /**--- Decompression functions ---**/
 
 
-int decompress0(resource_t *result, int resh);
+int decompress0(resource_t *result, int resh, int sci_version);
 /* Decrypts resource data and stores the result for SCI0-style compression.
 ** Parameters : result: The resource_t the decompressed data is stored in.
 **              resh  : File handle of the resource file
+**              sci_version : Actual SCI resource version
 ** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
 **               encountered.
 */
 
-int decompress01(resource_t *result, int resh);
+int decompress01(resource_t *result, int resh, int sci_version);
 /* Decrypts resource data and stores the result for SCI01-style compression.
 ** Parameters : result: The resource_t the decompressed data is stored in.
 **              resh  : File handle of the resource file
+**              sci_version : Actual SCI resource version
 ** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
 **               encountered.
 */
 
-int decompress1e(resource_t *result, int resh);
-/* Decrypts resource data and stores the result for early SCI1-style compression.
-** Parameters : result: The resource_t the decompressed data is stored in.
-**              resh  : File handle of the resource file
-** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
-**               encountered.
-*/
-
-int decompress1l(resource_t *result, int resh);
-/* Decrypts resource data and stores the result for late SCI1-style compression.
-** Parameters : result: The resource_t the decompressed data is stored in.
-**              resh  : File handle of the resource file
-** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
-**               encountered.
-*/
-
-int decompress11(resource_t *result, int resh);
+int decompress1(resource_t *result, int resh, int sci_version);
 /* Decrypts resource data and stores the result for SCI1.1-style compression.
 ** Parameters : result: The resource_t the decompressed data is stored in.
+**              sci_version : Actual SCI resource version
+**              resh  : File handle of the resource file
+** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
+**               encountered.
+*/
+
+
+int decompress11(resource_t *result, int resh, int sci_version);
+/* Decrypts resource data and stores the result for SCI1.1-style compression.
+** Parameters : result: The resource_t the decompressed data is stored in.
+**              sci_version : Actual SCI resource version
 **              resh  : File handle of the resource file
 ** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
 **               encountered.
