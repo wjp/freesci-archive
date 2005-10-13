@@ -35,7 +35,7 @@ void decryptinit3(void);
 int decrypt3(guint8* dest, guint8* src, int length, int complength);
 int decrypt4(guint8* dest, guint8* src, int length, int complength);
 
-int decompress11(resource_t *result, int resh)
+int decompress11(resource_t *result, int resh, int sci_version)
 {
 	guint16 compressedLength;
 	guint16 compressionMethod, result_size;

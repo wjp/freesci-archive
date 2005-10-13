@@ -508,7 +508,7 @@ byte *view_reorder(byte *inbuffer, int dsize)
 
 
 
-int decompress01(resource_t *result, int resh)
+int decompress01(resource_t *result, int resh, int sci_version)
 {
 	guint16 compressedLength, result_size;
 	guint16 compressionMethod;
@@ -524,7 +524,7 @@ int decompress01(resource_t *result, int resh)
 	result->number = result->id & 0x07ff;
 	result->type = result->id >> 11;
 
-	if ((result->number > 999) || (result->type > sci_invalid_resource))
+	if ((result->number > sci_max_resource_nr[sci_version] || (result->type > sci_invalid_resource)))
 		return SCI_ERROR_DECOMPRESSION_INSANE;
 
 	if ((read(resh, &compressedLength, 2) != 2) ||

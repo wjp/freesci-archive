@@ -232,7 +232,7 @@ int decrypt2(guint8* dest, guint8* src, int length, int complength)
 /* Carl Muckenhoupt's decompression code ends here                         */
 /***************************************************************************/
 
-int decompress0(resource_t *result, int resh)
+int decompress0(resource_t *result, int resh, int sci_version)
 {
 	guint16 compressedLength;
 	guint16 compressionMethod;
@@ -248,7 +248,7 @@ int decompress0(resource_t *result, int resh)
 	result->number = result->id & 0x07ff;
 	result->type = result->id >> 11;
 
-	if ((result->number > 999) || (result->type > sci_invalid_resource))
+	if ((result->number > sci_max_resource_nr[sci_version]) || (result->type > sci_invalid_resource))
 		return SCI_ERROR_DECOMPRESSION_INSANE;
 
 	if ((read(resh, &compressedLength, 2) != 2) ||

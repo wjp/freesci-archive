@@ -56,7 +56,7 @@ const char* sci_version_types[] = {
 	"SCI WIN/32"
 };
 
-const int sci_max_resource_nr[] = {65536, 1000, 1000, 1024, 8192, 8192, 8192, 65536};
+const int sci_max_resource_nr[] = {65536, 1000, 8192, 8192, 8192, 8192, 8192, 65536};
 
 const char* sci_error_types[] = {
 	"No error",
@@ -86,7 +86,7 @@ const char *sci_resource_type_suffixes[] = {"v56","p56","scr","tex","snd",
 int resourcecmp(const void *first, const void *second);
 
 
-typedef int decomp_funct(resource_t *result, int resh);
+typedef int decomp_funct(resource_t *result, int resh, int sci_version);
 typedef void patch_sprintf_funct(char *string, resource_t *res);
 
 static decomp_funct *decompressors[] = {
@@ -95,8 +95,8 @@ static decomp_funct *decompressors[] = {
 	&decompress01,
 	&decompress01,
 	&decompress01,
-	&decompress1e,
-	&decompress1l,
+	&decompress1,
+	&decompress1,
 	&decompress11,
 	NULL
 };
@@ -451,7 +451,7 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 		exit(1);
 	} else {
 		int error = /* Decompress from regular resource file */
-			decompressors[mgr->sci_version](res, fh);
+			decompressors[mgr->sci_version](res, fh, mgr->sci_version);
 
 		if (error) {
 			sciprintf("Error %d occured while reading %s.%03d"

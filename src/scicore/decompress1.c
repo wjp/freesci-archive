@@ -284,25 +284,14 @@ void decryptinit3(void);
 int decrypt3(guint8* dest, guint8* src, int length, int complength);
 int decompress1(resource_t *result, int resh, int early);
 
-int decompress1e(resource_t *result, int resh)
-{
-  return decompress1(result, resh, 1);
-}
-
-int decompress1l(resource_t *result, int resh)
-{
-  return decompress1(result, resh, 0);
-}
-
-
-int decompress1(resource_t *result, int resh, int early)
+int decompress1(resource_t *result, int resh, int sci_version)
 {
 	guint16 compressedLength;
 	guint16 compressionMethod, result_size;
 	guint8 *buffer;
 	guint8 tempid;
 
-	if (early) {
+	if (sci_version == SCI_VERSION_1_EARLY) {
 		if (read(resh, &(result->id),2) != 2)
 			return SCI_ERROR_IO_ERROR;
 
@@ -313,7 +302,7 @@ int decompress1(resource_t *result, int resh, int early)
 		result->number = result->id & 0x07ff;
 		result->type = result->id >> 11;
 
-		if ((result->number >= sci_max_resource_nr[SCI_VERSION_1_EARLY]) || (result->type > sci_invalid_resource))
+		if ((result->number >= sci_max_resource_nr[SCI_VERSION_1_LATE]) || (result->type > sci_invalid_resource))
 			return SCI_ERROR_DECOMPRESSION_INSANE;
 	} else {
 		if (read(resh, &tempid, 1) != 1)

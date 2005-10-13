@@ -1,5 +1,7 @@
 2005-10-13  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/scicore: Pass SCI version number along when decompressing.
+
 	* src/engine/vm.c (run_vm): Fix &rest adjustment being used
 	twice. 
 
