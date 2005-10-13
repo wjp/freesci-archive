@@ -1,3 +1,8 @@
+2005-10-13  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c (run_vm): Fix &rest adjustment being used
+	twice. 
+
 2005-10-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/versions.h (version_detect_from_executable): Changed

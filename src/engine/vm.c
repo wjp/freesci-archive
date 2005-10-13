@@ -271,10 +271,6 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 		return NULL;
 	}
 
-#ifdef __GNUC__
-#warning "Re-enable execute_method debug"
-#endif
-#if 0
   /* Check if a breakpoint is set on this method */
   if (s->have_bp & BREAK_EXPORT)
   {
@@ -296,7 +292,6 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
       bp = bp->next;
     }
   }
-#endif
 
 	return add_exec_stack_entry(s, make_reg( seg, temp ),
 				 sp, calling_obj, argc, argp, -1, calling_obj,
@@ -1054,7 +1049,7 @@ run_vm(state_t *s, int restoring)
 								  + opparams[0]),
 						      xs->sp, xs->objp,
 						      (validate_arithmetic(*call_base))
-						      	+ restadjust,
+						        + restadjust,
 						      call_base, NULL_SELECTOR, xs->objp,
 						      s->execution_stack_pos, xs->local_segment);
 			restadjust = 0; /* Used up the &rest adjustment */
@@ -1116,7 +1111,7 @@ run_vm(state_t *s, int restoring)
 
 			xs->sp[0].offset += restadjust;
 			xs_new = execute_method(s, 0, opparams[0], s_temp, xs->objp,
-				xs->sp[0].offset + restadjust, xs->sp);
+				xs->sp[0].offset, xs->sp);
 			restadjust = 0; /* Used up the &rest adjustment */
 			if (xs_new)    /* in case of error, keep old stack */
 				s->execution_stack_pos_changed = 1;
@@ -1129,7 +1124,7 @@ run_vm(state_t *s, int restoring)
 
 			xs->sp[0].offset += restadjust;
 			xs_new = execute_method(s, opparams[0], opparams[1], s_temp, xs->objp,
-				xs->sp[0].offset + restadjust, xs->sp);
+				xs->sp[0].offset, xs->sp);
 			restadjust = 0; /* Used up the &rest adjustment */
 			
 			if (xs_new)  /* in case of error, keep old stack */
