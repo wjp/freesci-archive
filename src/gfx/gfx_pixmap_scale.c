@@ -54,9 +54,6 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	if (separate_alpha_map && !alpha_dest)
 		alpha_dest = pxm->alpha_map = sci_malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
 
-	if (!separate_alpha_map)
-		result_colors[pxm->color_key] = alpha_color;
-
 	/* Calculate all colors */
 	for (i = 0; i < pxm->colors_nr; i++) {
 		int col;
@@ -71,6 +68,9 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 		}
 		result_colors[i] = col;
 	}
+
+	if (!separate_alpha_map)
+		result_colors[pxm->color_key] = alpha_color;
 
 	for (y = 0; y < pxm->index_yl; y++) {
 		byte *prev_dest = dest;

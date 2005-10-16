@@ -77,7 +77,6 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 #endif
 
 	*colors_nr = counter;
-	fprintf(stderr,"c=%d\n", counter);
 	for (pos = 0; pos < counter; pos++) {
 		unsigned int color = colors[pos];
 

@@ -1,5 +1,10 @@
 2005-10-16  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/gfx/gfx_pixmap_scale.c (FUNCNAME): Properly set alpha colour
+	if we hit an alpha
+	(FUNCNAME): Undid previous modification, instead set
+	'result_colors' table correctly
+
 	* src/gfx/operations.c (_gfxop_set_pointer): Re-compute 'draw_old'
 	to reflect its intended semantics ("we currently have a
 	now-obsolete pointer on the screen and need to remove it")
