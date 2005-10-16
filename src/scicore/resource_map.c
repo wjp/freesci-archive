@@ -166,7 +166,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 		if (read_ok < 0 ) {
 			perror("While reading from resource.map");
 			next_entry = 0;
-		} else if (read_ok != 6) {
+		} else if (read_ok != SCI0_RESMAP_ENTRIES_SIZE) {
 			next_entry = 0;
 		} else if (buf[5] == 0xff) /* Most significant offset byte */
 			next_entry = 0;

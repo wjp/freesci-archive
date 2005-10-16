@@ -785,9 +785,9 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, reg_t *argv)
 					if (namebuf[strlen(namebuf) - 1] == '\n')
 						namebuf[strlen(namebuf) - 1] = 0; /* Remove trailing newline */
 
+					*nameoffsets = s->r_acc; /* Store savegame ID */
 					++s->r_acc.offset; /* Increase number of files found */
 
-					*nameoffsets = nametarget_base;
 					nameoffsets++; /* Make sure the next ID string address is written to the next pointer */
 					strncpy(nametarget, namebuf, SCI_MAX_SAVENAME_LENGTH); /* Copy identifier string */
 					*(nametarget + SCI_MAX_SAVENAME_LENGTH - 1) = 0; /* Make sure it's terminated */

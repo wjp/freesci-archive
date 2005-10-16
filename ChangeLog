@@ -1,3 +1,12 @@
+2005-10-16  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/operations.c (_gfxop_set_pointer): Re-compute 'draw_old'
+	to reflect its intended semantics ("we currently have a
+	now-obsolete pointer on the screen and need to remove it")
+
+	* src/scicore/resource.c: Set resource number limits to 2048 for
+	all versions using SCI0-style resource maps
+
 2005-10-13  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore: Pass SCI version number along when decompressing.

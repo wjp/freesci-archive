@@ -1518,6 +1518,10 @@ _gfxop_set_pointer(gfx_state_t *state, gfx_pixmap_t *pxm)
 
 	} else draw_new = 1;
 
+	if (!state->mouse_pointer_in_hw)
+		draw_old = state->mouse_pointer != NULL;
+
+
 	if (draw_old) {
 		_gfxop_get_pointer_bounds(state, &old_pointer_bounds);
 		REMOVE_POINTER;

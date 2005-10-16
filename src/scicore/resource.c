@@ -56,7 +56,7 @@ const char* sci_version_types[] = {
 	"SCI WIN/32"
 };
 
-const int sci_max_resource_nr[] = {65536, 1000, 8192, 8192, 8192, 8192, 8192, 65536};
+const int sci_max_resource_nr[] = {65536, 1000, 2048, 2048, 2048, 8192, 8192, 65536};
 
 const char* sci_error_types[] = {
 	"No error",
