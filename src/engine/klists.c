@@ -200,10 +200,10 @@ kDisposeList(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (!sane_listp(s, argv[0]))
 		SCIkwarn(SCIkERROR,"List at "PREG" is not sane anymore!\n", PRINT_REG(argv[0]));
 
-	if (!IS_NULL_REG(l->first)) {
+/*	if (!IS_NULL_REG(l->first)) {
 		reg_t n_addr = l->first;
 
-		while (!IS_NULL_REG(n_addr)) { /* Free all nodes */
+		while (!IS_NULL_REG(n_addr)) { /-* Free all nodes *-/
 			node_t *n = LOOKUP_NODE(n_addr);
 			sm_free_node(&s->seg_manager, n_addr);
 			n_addr = n->succ;
@@ -211,6 +211,7 @@ kDisposeList(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 
 	sm_free_list(&s->seg_manager, argv[0]);
+*/
 
 	return s->r_acc;
 }
@@ -503,7 +504,7 @@ kDeleteKey(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (!IS_NULL_REG(n->succ))
 		LOOKUP_NODE(n->succ)->pred = n->pred;
 
-	sm_free_node(&s->seg_manager, node_pos);
+/*	sm_free_node(&s->seg_manager, node_pos);*/
 
 	return make_reg(0, 1); /* Signal success */
 }

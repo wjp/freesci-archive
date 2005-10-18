@@ -207,6 +207,7 @@ kClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 
 	memcpy(clone_obj, parent_obj, sizeof(clone_t));
+	clone_obj->flags = 0;
 	varblock_size = parent_obj->variables_nr * sizeof(reg_t);
 	clone_obj->variables = sci_malloc(varblock_size);
 	memcpy(clone_obj->variables, parent_obj->variables, varblock_size);
@@ -256,10 +257,7 @@ kDisposeClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 #endif
 
-	sci_free(victim_obj->variables);
-	victim_obj->variables = NULL;
-	sm_decrement_lockers(&s->seg_manager, victim_obj->pos.segment, SEG_ID);
-	sm_free_clone(&s->seg_manager, victim_addr);
+	victim_obj->flags |= OBJECT_FLAG_FREED;
 
 	_k_view_list_mark_free(s, victim_addr); /* Free on view list, if neccessary */ 
 
@@ -320,10 +318,8 @@ kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 int
 is_heap_object(state_t *s, reg_t pos)
 {
-#ifdef __GNUC__
-#warning "Optimize me!"
-#endif
-	return obj_get(s, pos) != NULL;
+	object_t *obj = obj_get(s, pos);
+	return (obj != NULL && (!(obj->flags & OBJECT_FLAG_FREED)));
 }
 
 reg_t

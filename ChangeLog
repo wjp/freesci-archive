@@ -1,3 +1,11 @@
+2005-10-18  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/gc.c: Added a mark&sweep garbage
+	collector. Currently, nodes, lists and clones are handled by it;
+	other things emit messages when asked to delete themselves. GC is
+	invoked every 32768 kernel calls by default (cf. gc-interval.2 in
+	the debugger).
+
 2005-10-16  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/gfx_pixmap_scale.c (FUNCNAME): Properly set alpha colour

@@ -145,7 +145,10 @@ typedef struct {
 	int nr;
 } local_variables_t;
 
+#define OBJECT_FLAG_FREED (0x1 << 0)	/* Clone has been marked as 'freed' */
+
 typedef struct {
+	int flags;
 	reg_t pos; /* Object offset within its script; for clones, this is their base */
 	int variables_nr;
 	int variable_names_nr; /* Number of variable names, may be less than variables_nr */
@@ -409,6 +412,11 @@ extern DLLEXTERN int script_abort_flag;
 ** debug exec stack intact.
 ** Set it to SCRIPT_ABORT_WITH_REPLAY to force a replay afterwards.
 */
+
+#define GC_DELAY 32768	/* Number of kernel calls in between gcs; should be < 50000 */
+
+extern int script_gc_interval;
+/* Initially GC_DELAY, can be set at runtime */
 
 extern int script_step_counter;
 /* Number of steps executed */

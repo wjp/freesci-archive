@@ -31,6 +31,9 @@
 #include <engine.h>
 
 
+#define GC_DEBUG /* Debug garbage collection */
+/*#define GC_DEBUG_VERBOSE*/ /* Debug garbage verbosely */
+
 #define SM_MEMORY_POISON	/* Poison memory upon deallocation */
 
 mem_obj_t* mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum type);
@@ -107,14 +110,6 @@ sm_free(seg_manager_t *self, void *pointer);
 ** Effects   : Updates memory counts in 'self'
 */
 
-static reg_t
-sm_find_canonic_address(seg_manager_t *self, reg_t sub_addr);
-/* Finds the canonic address associated with sub_reg
-** Parameters: (reg_t) sub_addr: The base address whose canonic address is to be found
-** For each valid address a, there exists a canonic address c(a) such that c(a) = c(c(a)).
-** This address "governs" a in the sense that deallocating c(a) will deallocate a.
-*/
-
 static void *
 sm_get_canonic_address_memory(seg_manager_t *self, reg_t c_addr);
 /* Retrieves the canonic memory associated with a given address
@@ -133,87 +128,6 @@ sm_find_all_used_addresses(seg_manager_t *self, reg_t addr, void (*note_address)
 /***--------------------------***/
 /** end of forward declarations */
 /***--------------------------***/
-
-/***********************/
-/** Memory management **/
-/***********************/
-
-#if 0
-
-#define SM_GC_MAGIC 0xbacafade
-#define GC_BITMASK 0x3		/* # mask of bits reserved for the GC; increasing this
-				** will increase memory report granularity (you might rather
-				** want to shift the memory allocation size a bit) */
-
-#define GET_DATA_AND_PREDATA				\
-	size_t *data = (((size_t *)pointer) - 1);	\
-	int *predata = ((int *)data) - 1;		\
-	VERIFY ( *predata == SM_GC_MAGIC, "Non-gcable memory" )
-
-
-static unsigned int
-sm_gc_get_mark(void *pointer)
-{
-	GET_DATA_AND_PREDATA;
-
-	return *data & GC_BITMASK;
-}
-
-static void
-sm_gc_set_mark(void *pointer, int tag)
-{
-	GET_DATA_AND_PREDATA;
-	VERIFY ( (tag & GC_BITMASK) == tag, "Tag too large" );
-
-	*data = (*data & ~GC_BITMASK) | tag;
-}
-
-#define SM_ALLOCATE(allocator, self, size)				\
-{									\
-	int *predata = (int *)(allocator);				\
-	*predata = SM_GC_MAGIC;						\
-	byte *data = (byte *)(predata + 1);				\
-	void *retval = data + sizeof(size_t);				\
-	size = (size & ~GC_BITMASK) + ((size & GC_BITMASK)? (GC_BITMASK + 1) : 0);	\
-									\
-	self->mem_allocated += size;					\
-	*((size_t *)data) = size | (self->gc_mark_bits);		\
-									\
-	return retval;							\
-}
-
-static void *
-sm_malloc(seg_manager_t *self, size_t size)
-     SM_ALLOCATE(sci_malloc(4 + size + sizeof(size_t)), self, size);
-
-static void *
-sm_calloc(seg_manager_t *self, size_t size)
-     SM_ALLOCATE(sci_calloc(1, 4 + size + sizeof(size_t)), self, size);
-
-#undef SM_ALLOCATE
-
-static void
-sm_free(seg_manager_t *self, void *pointer)
-{
-	GET_DATA_AND_PREDATA;
-
-	size_t size = *data & ~GC_BITMASK;
-	self->mem_allocated -= size;
-
-#ifdef SM_MEMORY_POISON
-	size_t poison_size = size - GC_BITMASK;
-	if (poison_size > 0)
-		memset(pointer, 0x55, poison_size);
-#endif
-
-	sci_free(predata);
-}
-
-#undef GET_DATA_AND_PREDATA
-#undef GC_BITMASK
-#undef SM_GC_MAGIC
-
-#endif
 
 #define sm_malloc(_, size) sci_malloc(size)
 #define sm_calloc(_, size) sci_calloc(1, size)
@@ -935,13 +849,14 @@ sm_script_obj_init(seg_manager_t *self, reg_t obj_pos)
 		"Function area pointer stored beyond end of script\n" );
 		
 	{
-		byte *data = scr->buf + base;
+		byte *data = (byte *) (scr->buf + base);
 		int funct_area = getUInt16( data + SCRIPT_FUNCTAREAPTR_OFFSET );
 		int variables_nr;
 		int functions_nr;
 		int is_class;
 		int i;
 
+		obj->flags = 0;
 		obj->pos = make_reg(obj_pos.segment, base);
 
 		VERIFY ( base + funct_area < scr->buf_size,
@@ -1041,7 +956,7 @@ sm_script_initialise_locals(seg_manager_t *self, reg_t location)
 	locals = _sm_alloc_locals_segment(self, scr, count);
 	if (locals) {
 		int i;
-		byte *base = scr->buf + location.offset;
+		byte *base = (byte *) (scr->buf + location.offset);
 
 		for (i = 0; i < count; i++)
 			locals->locals[i].offset = getUInt16(base + i*2);
@@ -1305,7 +1220,7 @@ sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr)
 
 	mobj->data.dynmem.description = descr;
 
-	return mobj->data.dynmem.buf;
+	return (unsigned char *) (mobj->data.dynmem.buf);
 }
 
 int
@@ -1320,4 +1235,427 @@ sm_free_dynmem(seg_manager_t *self, reg_t addr)
 
 	_sm_deallocate(self, addr.segment, 1);
 	return 0; /* OK */
+}
+
+
+/************************************************************/
+/* ------------------- Segment interface ------------------ */
+/************************************************************/
+
+
+static void
+free_at_address_stub (seg_interface_t *self, reg_t sub_addr)
+{
+	sciprintf("  Request to free "PREG"\n", PRINT_REG(sub_addr));
+	/* STUB */
+}
+
+
+
+static reg_t
+find_canonic_address_base (seg_interface_t *self, reg_t addr)
+{
+	addr.offset = 0;
+	return addr;
+}
+
+static reg_t
+find_canonic_address_id (seg_interface_t *self, reg_t addr)
+{
+	return addr;
+}
+
+static void
+free_at_address_nop (seg_interface_t *self, reg_t sub_addr)
+{
+}
+
+static void
+list_all_deallocatable_nop (seg_interface_t *self, void *param, void (*note) (void*param, reg_t addr))
+{
+}
+
+static void
+list_all_deallocatable_base (seg_interface_t *self, void *param, void (*note) (void*param, reg_t addr))
+{
+	(*note) (param, make_reg (self->seg_id, 0));
+}
+
+static void
+list_all_outgoing_references_nop (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+{
+}
+
+static void
+deallocate_self (seg_interface_t *self)
+{
+	sci_free (self);
+}
+
+
+
+
+static void
+list_all_outgoing_references_script (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+{
+	script_t *script = &(self->mobj->data.script);
+
+	if (addr.offset <= script->buf_size
+	    && addr.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
+	    && RAW_IS_OBJECT(script->buf + addr.offset)) {
+		int idx = RAW_GET_CLASS_INDEX(script->buf + addr.offset);
+		if (idx >= 0 && idx < script->objects_nr) {
+			object_t *obj = script->objects + idx;
+			int i;
+			
+			/* Note all local variables, if we have a local variable environment */
+			if (script->locals_segment)
+				(*note) (param, make_reg(script->locals_segment, 0));
+
+			for (i = 0; i < obj->variables_nr; i++)
+				(*note) (param, obj->variables[i]);
+		} else {
+			fprintf(stderr, "Request for outgoing script-object reference at "PREG" yielded invalid index %d\n", PRINT_REG(addr), idx);
+		}
+	} else {
+/*		fprintf(stderr, "Unexpected request for outgoing script-object references at "PREG"\n", PRINT_REG(addr));*/
+			/* Happens e.g. when we're looking into strings */
+	}
+}
+
+/*-------------------- script --------------------*/
+static seg_interface_t seg_interface_script = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_SCRIPT,
+	/* type = */	"script",
+	/* find_canonic_address = */		find_canonic_address_base,
+	/* free_at_address = */			free_at_address_stub,
+	/* list_all_deallocatable = */		list_all_deallocatable_base,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_script,
+	/* deallocate_self = */			deallocate_self
+};
+
+
+#define LIST_ALL_DEALLOCATABLE(kind, kind_field) \
+	mem_obj_t *mobj = self->mobj;					\
+	kind##_table_t * table = &(mobj->data.kind_field);		\
+	int i;								\
+									\
+	for (i = 0; i < table->max_entry; i++)				\
+		if (ENTRY_IS_VALID(table, i))				\
+			(*note) (param, make_reg(self->seg_id, i));
+
+static void
+list_all_deallocatable_clones (seg_interface_t *self, void *param, void (*note) (void*param, reg_t addr))
+{
+	LIST_ALL_DEALLOCATABLE(clone, clones);
+}
+
+static void
+list_all_outgoing_references_clones (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+{
+	mem_obj_t *mobj = self->mobj;
+	clone_table_t *clone_table = &(mobj->data.clones);
+	clone_t *clone;
+	int i;
+	seg_id_t owner_segment;
+
+	assert (addr.segment == self->seg_id);
+	
+	if (!(ENTRY_IS_VALID(clone_table, addr.offset))) {
+		fprintf(stderr, "Unexpected request for outgoing references from clone at "PREG"\n", PRINT_REG(addr));
+		return;
+	}
+
+	clone = &(clone_table->table[addr.offset].entry);
+
+	/* Emit all member variables (including references to the 'super' delegate) */
+	for (i = 0; i < clone->variables_nr; i++)
+		(*note) (param, clone->variables[i]);
+
+	/* Note that this also includes the 'base' object, which is part of the script and therefore also
+	** emits the locals. */
+}
+
+
+void
+free_at_address_clones(seg_interface_t *self, reg_t addr)
+{
+	object_t *victim_obj;
+
+	assert (addr.segment == self->seg_id);
+
+	victim_obj = &(self->mobj->data.clones.table[addr.offset].entry);
+
+#ifdef GC_DEBUG
+	if (!(victim_obj->flags & OBJECT_FLAG_FREED))
+		sciprintf("[GC] Warning: Clone "PREG" not reachable and not freed (freeing now)\n",
+			  PRINT_REG(addr));
+#  ifdef GC_DEBUG_VERBOSE
+	else
+		sciprintf("[GC-DEBUG] Clone "PREG": Freeing\n", PRINT_REG(addr));
+#  endif
+#endif
+
+	sci_free(victim_obj->variables);
+	victim_obj->variables = NULL;
+	sm_decrement_lockers(self->segmgr, victim_obj->pos.segment, SEG_ID);
+	sm_free_clone(self->segmgr, addr);
+}
+
+/*-------------------- clones --------------------*/
+static seg_interface_t seg_interface_clones = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_CLONES,
+	/* type = */	"clones",
+	/* find_canonic_address = */		find_canonic_address_id,
+	/* free_at_address = */			free_at_address_clones,
+	/* list_all_deallocatable = */		list_all_deallocatable_clones,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_clones,
+	/* deallocate_self = */			deallocate_self
+};
+
+
+static reg_t
+find_canonic_address_locals (seg_interface_t *self, reg_t addr)
+{
+	local_variables_t *locals = &(self->mobj->data.locals);
+	/* Reference the owning script */
+	seg_id_t owner_seg = sm_seg_get(self->segmgr, locals->script_id);
+
+	assert (owner_seg >= 0);
+
+	return make_reg(owner_seg, 0);
+}
+
+static void
+list_all_outgoing_references_locals (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+{
+	mem_obj_t *mobj = self->mobj;
+	local_variables_t *locals = &(self->mobj->data.locals);
+	int i;
+
+	assert (addr.segment == self->seg_id);
+
+	for (i = 0; i < locals->nr; i++)
+		(*note) (param, locals->locals[i]);
+}
+
+/*-------------------- locals --------------------*/
+static seg_interface_t seg_interface_locals = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_LOCALS,
+	/* type = */	"locals",
+	/* find_canonic_address = */		find_canonic_address_locals,
+	/* free_at_address = */			free_at_address_stub,
+	/* list_all_deallocatable = */		list_all_deallocatable_nop,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_locals,
+	/* deallocate_self = */			deallocate_self
+};
+
+
+static void
+list_all_outgoing_references_stack (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+{
+	int i;
+fprintf(stderr, "Emitting %d stack entries\n", self->mobj->data.stack.nr);
+	for (i = 0; i < self->mobj->data.stack.nr; i++) 
+		(*note) (param, self->mobj->data.stack.entries[i]);
+fprintf(stderr, "DONE");
+}
+
+/*-------------------- stack --------------------*/
+static seg_interface_t seg_interface_stack = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_STACK,
+	/* type = */	"stack",
+	/* find_canonic_address = */		find_canonic_address_base,
+	/* free_at_address = */			free_at_address_nop,
+	/* list_all_deallocatable = */		list_all_deallocatable_nop,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_stack,
+	/* deallocate_self = */			deallocate_self
+};
+
+/*-------------------- system strings --------------------*/
+static seg_interface_t seg_interface_sys_strings = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_SYS_STRINGS,
+	/* type = */	"system strings",
+	/* find_canonic_address = */		find_canonic_address_id,
+	/* free_at_address = */			free_at_address_nop,
+	/* list_all_deallocatable = */		list_all_deallocatable_nop,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_nop,
+	/* deallocate_self = */			deallocate_self
+};
+
+static void
+list_all_deallocatable_list (seg_interface_t *self, void *param, void (*note) (void*param, reg_t addr))
+{
+	LIST_ALL_DEALLOCATABLE(list, lists);
+}
+
+static void
+list_all_outgoing_references_list (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+{
+	list_table_t *table = &(self->mobj->data.lists);
+	list_t *list = &(table->table[addr.offset].entry);
+
+	if (!ENTRY_IS_VALID(table, addr.offset)) {
+		fprintf(stderr, "Invalid list referenced for outgoing references: "PREG"\n", PRINT_REG(addr));
+		return;
+	}
+
+	note (param, list->first);
+	note (param, list->last);
+	/* We could probably get away with just one of them, but
+	** let's be conservative here. */
+}
+
+static void
+free_at_address_lists (seg_interface_t *self, reg_t sub_addr)
+{
+	sm_free_list (self->segmgr, sub_addr);
+}
+
+/*-------------------- lists --------------------*/
+static seg_interface_t seg_interface_lists = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_LISTS,
+	/* type = */	"lists",
+	/* find_canonic_address = */		find_canonic_address_id,
+	/* free_at_address = */			free_at_address_lists,
+	/* list_all_deallocatable = */		list_all_deallocatable_list,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_list,
+	/* deallocate_self = */			deallocate_self
+};
+
+static void
+list_all_deallocatable_nodes (seg_interface_t *self, void *param, void (*note) (void*param, reg_t addr))
+{
+	LIST_ALL_DEALLOCATABLE(node, nodes);
+}
+
+static void
+list_all_outgoing_references_nodes (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+{
+	node_table_t *table = &(self->mobj->data.nodes);
+	node_t *node = &(table->table[addr.offset].entry);
+
+	if (!ENTRY_IS_VALID(table, addr.offset)) {
+		fprintf(stderr, "Invalid node referenced for outgoing references: "PREG"\n", PRINT_REG(addr));
+		return;
+	}
+
+	/* We need all four here. Can't just stick with 'pred' OR 'succ' because node operations allow us
+	** to walk around from any given node */
+	note (param, node->pred);
+	note (param, node->succ);
+	note (param, node->key);
+	note (param, node->value);
+}
+
+static void
+free_at_address_nodes (seg_interface_t *self, reg_t sub_addr)
+{
+	sm_free_node (self->segmgr, sub_addr);
+}
+
+/*-------------------- nodes --------------------*/
+static seg_interface_t seg_interface_nodes = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_NODES,
+	/* type = */	"nodes",
+	/* find_canonic_address = */		find_canonic_address_id,
+	/* free_at_address = */			free_at_address_nodes,
+	/* list_all_deallocatable = */		list_all_deallocatable_nodes,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_nodes,
+	/* deallocate_self = */			deallocate_self
+};
+
+static void
+list_all_deallocatable_hunk (seg_interface_t *self, void *param, void (*note) (void*param, reg_t addr))
+{
+	LIST_ALL_DEALLOCATABLE(hunk, hunks);
+}
+
+/*-------------------- hunk --------------------*/
+static seg_interface_t seg_interface_hunk = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_HUNK,
+	/* type = */	"hunk",
+	/* find_canonic_address = */		find_canonic_address_id,
+	/* free_at_address = */			free_at_address_stub,
+	/* list_all_deallocatable = */		list_all_deallocatable_hunk,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_nop,
+	/* deallocate_self = */			deallocate_self
+};
+
+
+
+/*-------------------- dynamic memory --------------------*/
+static seg_interface_t seg_interface_dynmem = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_DYNMEM,
+	/* type = */	"dynamic memory",
+	/* find_canonic_address = */		find_canonic_address_base,
+	/* free_at_address = */			free_at_address_stub,
+	/* list_all_deallocatable = */		list_all_deallocatable_base,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_nop,
+	/* deallocate_self = */			deallocate_self
+};
+
+static seg_interface_t* seg_interfaces[MEM_OBJ_MAX] = {
+	&seg_interface_script,
+	&seg_interface_clones,
+	&seg_interface_locals,
+	&seg_interface_stack,
+	&seg_interface_sys_strings,
+	&seg_interface_lists,
+	&seg_interface_nodes,
+	&seg_interface_hunk,
+	&seg_interface_dynmem
+};
+
+
+seg_interface_t *
+get_seg_interface(seg_manager_t *self, seg_id_t segid)
+{
+	mem_obj_t *mobj;
+	seg_interface_t *retval;
+
+	if (!sm_check(self, segid))
+		return NULL; /* Invalid segment */
+
+	mobj = self->heap[segid];
+	retval = sci_malloc(sizeof(seg_interface_t));
+	memcpy(retval, seg_interfaces[mobj->type - 1], sizeof (seg_interface_t));
+
+	if (mobj->type != retval->type_id) {
+		fprintf(stderr, "Improper segment interface for %d", mobj->type );
+		exit(1);
+	}
+
+	retval->segmgr = self;
+	retval->mobj = mobj;
+	retval->seg_id = segid;
+
+	return retval;
 }

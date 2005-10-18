@@ -339,6 +339,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->kernel_opt_flags = 0;
 	
 	sm_init(&s->seg_manager);
+	s->gc_countdown = GC_DELAY - 1;
 
 
 	if (!version) {

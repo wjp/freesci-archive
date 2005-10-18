@@ -16,4 +16,5 @@ EXTRA_DIST = old_objects.h graphics_glx.h kernel.h event.h    \
 	sfx_timer.h sfx_player.h gfx_res_options.h	      \
 	sfx_audiobuf.h sfx_time.h sfx_softseq.h sci_midi.h    \
 	sfx_core.h sfx_pcm.h listener.h sfx_mixer.h	      \
-	sfx_iterator_internal.h game_select.h exe.h exe_dec.h
+	sfx_iterator_internal.h game_select.h exe.h exe_dec.h \
+	reg_t_hashmap.h

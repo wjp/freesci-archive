@@ -48,6 +48,7 @@ int script_abort_flag = 0; /* Set to 1 to abort execution */
 int script_error_flag = 0; /* Set to 1 if an error occured, reset each round by the VM */
 int script_checkloads_flag = 0; /* Print info when scripts get (un)loaded */
 int script_step_counter = 0; /* Counts the number of steps executed */
+int script_gc_interval = GC_DELAY; /* Number of steps in between gcs */
 
 extern int _debug_step_running; /* scriptdebug.c */
 extern int _debug_seeking; /* scriptdebug.c */
@@ -624,6 +625,15 @@ pointer_add(state_t *s, reg_t base, int offset)
 	}
 }
 
+static inline void
+gc_countdown(state_t *s)
+{
+	if (!s->gc_countdown--) {
+		s->gc_countdown = script_gc_interval;
+		run_gc(s);
+	}
+}
+
 static byte _fake_return_buffer[2] = {op_ret << 1, op_ret << 1};
 
 void
@@ -1060,6 +1070,8 @@ run_vm(state_t *s, int restoring)
 		}
 
 		case 0x21: /* callk */
+			gc_countdown(s);
+
 			xs->sp -= (opparams[1] >> 1)+1;
 			if (s->version >= SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 				xs->sp -= restadjust;
@@ -2183,4 +2195,5 @@ quit_vm()
 	_debug_seeking = 0;
 	_debug_step_running = 0;
 }
+
 

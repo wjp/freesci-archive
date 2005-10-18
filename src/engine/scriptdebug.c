@@ -32,6 +32,7 @@
 #include <vocabulary.h>
 #include <kernel_compat.h>
 #include <kernel_types.h>
+#include <gc.h>
 #include <sci_midi.h>
 #ifdef HAVE_UNISTD_H
 /* Assume this is a sufficient precondition */
@@ -3211,6 +3212,88 @@ c_sleep(state_t *s)
         return 0;
 }
 
+static void
+_print_address(void * _, reg_t addr)
+{
+	if (addr.segment)
+		sciprintf("  "PREG"\n", PRINT_REG(addr));
+}
+
+#define GET_SEG_INTERFACE(seg_id) \
+	seg_interface_t * seg_interface = get_seg_interface(&(s->seg_manager), seg_id);	\
+	if (!seg_interface) {								\
+		sciprintf("Unknown segment : %x\n", seg_id);				\
+		return 1;								\
+	}
+
+static int
+c_gc_show_reachable(state_t *s)
+{
+	reg_t addr = cmd_params[0].reg;
+
+	GET_SEG_INTERFACE(addr.segment);
+
+	sciprintf("Reachable from "PREG":\n", PRINT_REG(addr));
+	seg_interface->list_all_outgoing_references(seg_interface, addr, NULL, _print_address);
+
+	seg_interface->deallocate_self(seg_interface);
+	return 0;
+}
+
+static int
+c_gc_show_freeable(state_t *s)
+{
+	reg_t addr = cmd_params[0].reg;
+
+	GET_SEG_INTERFACE(addr.segment);
+
+	sciprintf("Freeable in segment %04x:\n", addr.segment);
+	seg_interface->list_all_deallocatable(seg_interface, NULL, _print_address);
+
+	seg_interface->deallocate_self(seg_interface);
+	return 0;
+}
+
+static int
+c_gc_normalise(state_t *s)
+{
+	reg_t addr = cmd_params[0].reg;
+
+	GET_SEG_INTERFACE(addr.segment);
+
+	addr = seg_interface->find_canonic_address(seg_interface, addr);
+	sciprintf(" "PREG"\n", PRINT_REG(addr));
+
+	seg_interface->deallocate_self(seg_interface);
+	return 0;
+
+}
+
+static int
+c_gc(state_t *s)
+{
+	run_gc(s);
+	return 0;
+}
+
+static void
+print_all_of_them(void *_1, reg_t reg, int _2)
+{
+	sciprintf(" - "PREG"\n", PRINT_REG(reg));
+}
+
+static int
+c_gc_list_reachable(state_t *s)
+{
+	reg_t_hash_map_ptr use_map = find_all_used_references(s);
+
+	sciprintf("Reachable references (normalised):\n");
+	apply_to_reg_t_hash_map(use_map, NULL, print_all_of_them);
+
+	free_reg_t_hash_map (use_map);
+}
+
+
 void
 script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *objp,
 	     unsigned int *restadjust, 
@@ -3569,6 +3652,35 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  sfx-01-header.1\n\n");
                         con_hook_command(c_sleep, "sleep", "i", "Suspends everything for the\n"
 					 " specified number of seconds");
+			con_hook_command(c_gc_show_reachable, "gc-list-reachable", "!a",
+					 "Prints all addresses directly reachable from\n"
+					 "  the memory object specified as parameter.\n\n"
+					 "SEE ALSO\n\n"
+					 "  gc-list-freeable.1, gc-normalise.1, gc.1,\n"
+					 "  gc-all-reachable.1");
+			con_hook_command(c_gc_show_freeable, "gc-list-freeable", "!a",
+					 "Prints all addresses freeable in the segment\n"
+					 "  associated with the address (offset is ignored).\n\n"
+					 "SEE ALSO\n\n"
+					 "  gc-list-freeable.1, gc-normalise.1, gc.1,\n"
+					 "  gc-all-reachable.1");
+			con_hook_command(c_gc_normalise, "gc-normalise", "!a",
+					 "Prints the \"normal\" address of a given address,\n"
+					 "  i.e. the address we would free in order to free\n"
+					 "  the object associated with the original address.\n\n"
+					 "SEE ALSO\n\n"
+					 "  gc-list-freeable.1, gc-list-reachable.1, gc.1,\n"
+					 "  gc-all-reachable.1");
+			con_hook_command(c_gc, "gc", "",
+					 "Performs garbage collection.\n\n"
+					 "SEE ALSO\n\n"
+					 "  gc-list-freeable.1, gc-list-reachable.1,\n"
+					 "  gc-all-reachable.1, gc-normalise.1");
+			con_hook_command(c_gc_list_reachable, "gc-all-reachable", "",
+					 "Lists all reachable objects, normalised.\n\n"
+					 "SEE ALSO\n\n"
+					 "  gc-list-freeable.1, gc-list-reachable.1,\n"
+					 "  gc.1, gc-normalise.1");
 
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
@@ -3580,6 +3692,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 				     "  0x0002: Break on warnings\n  \0x0004: Print VM warnings\n");
 			con_hook_int(&_weak_validations, "weak_validations", "Set != 0 to turn some validation errors\n"
 				     "  into warnings\n");
+			con_hook_int(&script_gc_interval, "gc-interval", "Number of kernel calls in between gcs");
 
 			con_hook_page("codebugging",
 				      "Co-debugging allows to run two (sufficiently\n"

@@ -96,6 +96,14 @@ free_##TYPE##_hash_map(TYPE##_hash_map_ptr map);                            \
 ** Parameters: (TYPE##_hash_map_t *) map: The map to free                   \
 ** Returns   : (void)                                                       \
 */                                                                          \
+														    \
+void														    \
+apply_to_##TYPE##_hash_map(TYPE##_hash_map_ptr map, void *param, void (*note) (void *param, TYPE name, int value)); \
+/* Iterates over all entries in the hash map and invokes 'note'							    \
+** Parameters: (TYPE##_hash_map_t *) map: The map to iterate over						    \
+**             (void *) param: Some parameter to pass to 'note'							    \
+**             ((voidptr * TYPE * value) -> void) note: The callback to invoke for each entry			    \
+*/                                                                            					    \
                                                                             \
 int                                                                         \
 TYPE##_hash_map_check_value(TYPE##_hash_map_ptr map, TYPE value, char add, char *was_added);  \

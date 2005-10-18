@@ -85,7 +85,20 @@ print_##TYPE##_hash_map(TYPE##_hash_map_t *map)			\
 	print_##TYPE##_nodes(map->holes);			\
 	fprintf(stderr,"\n");					\
 }                                                               \
-										\
+                                                                \
+void														 \
+apply_to_##TYPE##_hash_map(TYPE##_hash_map_t *map, void *param, void (*note)(void *param, TYPE name, int value)) \
+{														 \
+	int i;													 \
+	for (i = 0; i < HASH_MAX; i++) {									 \
+		TYPE##_hash_map_node_t *node = map->nodes[i];							 \
+		while (node) {											 \
+			note(param, node->name, node->value);							 \
+			node = node->next;									 \
+		}												 \
+	}													 \
+}														 \
+														 \
 										\
 static void									\
 free_##TYPE##_hash_map_node_t##_recursive(TYPE##_hash_map_node_t *node)		\

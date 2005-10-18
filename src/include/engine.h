@@ -232,6 +232,7 @@ typedef struct _state
 	script_t scripttable[1000]; /* Table of all scripts */
 
 	seg_manager_t seg_manager;
+	int gc_countdown; /* Number of kernel calls until next gc */
 
 	int selector_names_nr; /* Number of selector names */
 	char **selector_names; /* Zero-terminated selector name list */

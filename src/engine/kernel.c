@@ -34,6 +34,7 @@
 #include <gfx_operations.h>
 #include <kernel_types.h>
 
+
 /* New kernel functions */
 reg_t kStrLen(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kGetFarText(struct _state *s, int funct_nr, int argc, reg_t *argv);
