@@ -164,6 +164,7 @@ gfxr_init_pic(gfx_mode_t *mode, int ID, int sci1)
 								     200 * mode->yfact, ID, 0, 0));
 	pic->visual_map->colors = gfx_sci0_pic_colors;
 	pic->visual_map->colors_nr = GFX_SCI0_PIC_COLORS_NR;
+	pic->visual_map->color_key = GFX_PIXMAP_COLOR_KEY_NONE;
 
 	pic->visual_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 	pic->priority_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
