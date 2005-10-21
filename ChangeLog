@@ -1,7 +1,8 @@
 2005-10-21  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* Removed the sciconsole (the stand-alone tool). No-one ever used
-	it anyway.
+	it anyway. Also killed the 'demo' code; I'd be very surprised
+	if it even still compiled.
 
 2005-10-21  Lars Skovlund  <lskovlun@image.dk>
 
