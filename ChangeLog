@@ -1,3 +1,8 @@
+2005-10-21  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/resource_map.c (sci1_read_resource_map): Add SCI1.1
+	support.
+
 2005-10-18  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/gc.c: Added a mark&sweep garbage

@@ -242,7 +242,7 @@ scir_free_resource_manager(resource_mgr_t *mgr);
 /**--- Resource map decoding functions ---*/
 
 int
-sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int sci_version);
+sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int *sci_version);
 /* Reads the SCI0 resource.map file from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
@@ -256,7 +256,7 @@ sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, i
 */
 
 int
-sci1_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int sci_version);
+sci1_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int *sci_version);
 /* Reads the SCI1 resource.map file from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
@@ -453,6 +453,10 @@ _scir_add_altsource(resource_t *res, int file, unsigned int file_offset);
       ((((bytes)[1]) << 8) \
       | (((bytes)[0]) << 0))
 
+#define SCI11_RESFILE_GET_OFFSET(bytes) \
+    ((((bytes)[4]) << 17) \
+      | (((bytes)[3]) << 9) \
+      | (((bytes)[2]) << 1))
 
 #endif
 

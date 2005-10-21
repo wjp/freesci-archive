@@ -194,12 +194,13 @@ scir_new_resource_manager(char *dir, int version,
 
 	mgr->resources = NULL;
 
-	if (version <= SCI_VERSION_01_VGA_ODD) {
+	if (version <= SCI_VERSION_01_VGA_ODD
+	    /* || version == SCI_VERSION_AUTODETECT -- subsumed by the above line */) {
 		resource_error =
 			sci0_read_resource_map(dir,
 					       &mgr->resources,
 					       &mgr->resources_nr,
-					       version);
+					       &version);
 
 		if (resource_error >= SCI_ERROR_CRITICAL) {
 			sciprintf("Resmgr: Error while loading resource map: %s\n",
@@ -239,13 +240,15 @@ scir_new_resource_manager(char *dir, int version,
 	}
 
 	if ((version == SCI_VERSION_1_EARLY)||
-	    (version == SCI_VERSION_1_LATE))
+	    (version == SCI_VERSION_1_LATE)||
+	    (version == SCI_VERSION_1_1)||
+	    (version == SCI_VERSION_AUTODETECT))
 	{
 		resource_error =
 			sci1_read_resource_map(dir,
 					       &mgr->resources,
 					       &mgr->resources_nr,
-					       version);
+					       &version);
 
 		if (resource_error >= SCI_ERROR_CRITICAL) {
 			sciprintf("Resmgr: Error while loading resource map: %s\n",
