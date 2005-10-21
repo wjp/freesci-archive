@@ -1,3 +1,8 @@
+2005-10-21  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* Removed the sciconsole (the stand-alone tool). No-one ever used
+	it anyway.
+
 2005-10-21  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/resource_map.c (sci1_read_resource_map): Add SCI1.1
