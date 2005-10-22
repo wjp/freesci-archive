@@ -1,3 +1,7 @@
+2005-10-22  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/operations.c: Backported bugfix for 'Show'.
+
 2005-10-02  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/operations.c (_gfxop_shiftify): GCC doesn't like

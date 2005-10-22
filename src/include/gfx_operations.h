@@ -108,6 +108,8 @@ typedef struct {
 
 	gfx_resstate_t *resstate; /* Resource state */
 
+	gfx_pixmap_t *priority_map; /* back buffer priority map (unscaled) */
+	gfx_pixmap_t *static_priority_map; /* static buffer priority map (unscaled) */
 	gfx_pixmap_t *control_map; /* back buffer control map */
 
 
@@ -132,6 +134,10 @@ typedef struct {
 	int palette_nr; /* Palette number of the current pic */
 
 	gfx_input_event_t *events;
+
+	gfx_pixmap_t *fullscreen_override; /* An optional override picture which must have unscaled
+					   ** full-screen size, which overrides all other visibility, and
+					   ** which is generally slow */
 
 	gfxr_pic_t *pic, *pic_unscaled; /* The background picture and its unscaled equivalent */
 

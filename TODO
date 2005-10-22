@@ -2,7 +2,6 @@ TODO for 0.3.5:
 
 Primary goals:
 	* update calle, callk docs
-	* operations.c: Add full support for state->visible_map
 
 Secondary goals:
 	+ Change "version dependancies" to global "interpreter type flags"

@@ -28,6 +28,9 @@
 #include <sci_memory.h>
 #include <gfx_operations.h>
 
+
+#define PRECISE_PRIORITY_MAP /* Duplicate all operations on the local priority map as appropriate */
+
 #undef GFXW_DEBUG_DIRTY /* Enable to debug stuff relevant for dirty rects
 			 ** in widget management  */
 
@@ -36,6 +39,19 @@
 #else
 #  define DDIRTY if (0) fprintf
 #endif
+
+/* Default color maps */
+#define DEFAULT_COLORS_NR 16
+gfx_pixmap_color_t default_colors[DEFAULT_COLORS_NR] =
+	{{GFX_COLOR_SYSTEM, 0x00, 0x00, 0x00}, {GFX_COLOR_SYSTEM, 0x00, 0x00, 0xaa},
+	 {GFX_COLOR_SYSTEM, 0x00, 0xaa, 0x00}, {GFX_COLOR_SYSTEM, 0x00, 0xaa, 0xaa},
+	 {GFX_COLOR_SYSTEM, 0xaa, 0x00, 0x00}, {GFX_COLOR_SYSTEM, 0xaa, 0x00, 0xaa},
+	 {GFX_COLOR_SYSTEM, 0xaa, 0x55, 0x00}, {GFX_COLOR_SYSTEM, 0xaa, 0xaa, 0xaa},
+	 {GFX_COLOR_SYSTEM, 0x55, 0x55, 0x55}, {GFX_COLOR_SYSTEM, 0x55, 0x55, 0xff},
+	 {GFX_COLOR_SYSTEM, 0x55, 0xff, 0x55}, {GFX_COLOR_SYSTEM, 0x55, 0xff, 0xff},
+	 {GFX_COLOR_SYSTEM, 0xff, 0x55, 0x55}, {GFX_COLOR_SYSTEM, 0xff, 0x55, 0xff},
+	 {GFX_COLOR_SYSTEM, 0xff, 0xff, 0x55}, {GFX_COLOR_SYSTEM, 0xff, 0xff, 0xff}}; /* "Normal" EGA */
+
 
 #define POINTER_VISIBLE_BUT_CLIPPED 2
 
@@ -157,35 +173,51 @@ _gfxop_grab_pixmap(gfx_state_t *state, gfx_pixmap_t **pxmp, int x, int y,
 					  priority? GFX_MASK_PRIORITY : GFX_MASK_VISUAL);
 }
 
+#define DRAW_LOOP(condition)										\
+{													\
+	rect_t drawrect = gfx_rect(pos.x, pos.y, pxm->index_xl, pxm->index_yl);				\
+	int offset, base_offset;									\
+	int read_offset, base_read_offset;								\
+	int x,y;											\
+													\
+	if (!pxm->index_data) {										\
+		GFXERROR("Attempt to draw control color %d on pixmap %d/%d/%d without index data!\n",	\
+			 color, pxm->ID, pxm->loop, pxm->cel);						\
+		return;											\
+	}												\
+													\
+	if (_gfxop_clip(&drawrect, gfx_rect(0, 0, 320, 200)))						\
+		return;											\
+													\
+	offset = base_offset = drawrect.x + drawrect.y * 320;						\
+	read_offset = base_read_offset = (drawrect.x - pos.x) + ((drawrect.y - pos.y) * pxm->index_xl);	\
+													\
+	for (y = 0; y < drawrect.yl; y++) {								\
+		for (x = 0; x < drawrect.xl; x++)							\
+			if (pxm->index_data[read_offset++] != GFX_COLOR_INDEX_TRANSPARENT) {		\
+				if (condition)								\
+					map->index_data[offset++] = color;				\
+				else									\
+					++offset;							\
+			} else ++offset;								\
+													\
+		offset = base_offset += 320;								\
+		read_offset = base_read_offset += pxm->index_xl;					\
+	}												\
+}
+
 static void
 _gfxop_draw_control(gfx_pixmap_t *map, gfx_pixmap_t *pxm, int color, point_t pos)
-{
-	rect_t drawrect = gfx_rect(pos.x, pos.y, pxm->index_xl, pxm->index_yl);
-	int offset, base_offset;
-	int read_offset, base_read_offset;
-	int x,y;
+DRAW_LOOP(1) /* Always draw */
 
-	if (!pxm->index_data) {
-		GFXERROR("Attempt to draw control color %d on pixmap %d/%d/%d without index data!\n",
-			 color, pxm->ID, pxm->loop, pxm->cel);
-		return;
-	}
+#ifdef PRECISE_PRIORITY_MAP
+static void
+_gfxop_draw_priority(gfx_pixmap_t *map, gfx_pixmap_t *pxm, int color, point_t pos)
+DRAW_LOOP(map->index_data[offset] < color) /* Draw only lower priority */
+#endif
 
-	if (_gfxop_clip(&drawrect, gfx_rect(0, 0, 320, 200)))
-		return;
+#undef DRAW_LOOP
 
-	offset = base_offset = drawrect.x + drawrect.y * 320;
-	read_offset = base_read_offset = (drawrect.x - pos.x) + ((drawrect.y - pos.y) * pxm->index_xl);
-
-	for (y = 0; y < drawrect.yl; y++) {
-		for (x = 0; x < drawrect.xl; x++)
-			if (pxm->index_data[read_offset++] < GFX_COLOR_INDEX_TRANSPARENT)
-				map->index_data[offset++] = color;
-
-		offset = base_offset += 320;
-		read_offset = base_read_offset += pxm->index_xl;
-	}
-}
 
 static int
 _gfxop_install_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm)
@@ -232,15 +264,24 @@ _gfxop_install_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm)
 
 static int
 _gfxop_draw_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm, int priority, int control,
-		   rect_t src, rect_t dest, rect_t clip, int static_buf, gfx_pixmap_t *control_map)
+		   rect_t src, rect_t dest, rect_t clip, int static_buf, gfx_pixmap_t *control_map,
+		   gfx_pixmap_t *priority_map)
 {
 	int error;
 	rect_t clipped_dest = gfx_rect(dest.x, dest.y, dest.xl, dest.yl);
 
-	if (control >= 0)
-		_gfxop_draw_control(control_map, pxm, control,
-				    gfx_point(dest.x / driver->mode->xfact,
-					      dest.y / driver->mode->yfact));
+	if (control >= 0 || priority >= 0) {
+		point_t original_pos = gfx_point(dest.x / driver->mode->xfact,
+						     dest.y / driver->mode->yfact);
+
+		if (control >= 0)
+			_gfxop_draw_control(control_map, pxm, control, original_pos);
+
+#ifdef PRECISE_PRIORITY_MAP
+		if (priority >= 0)
+			_gfxop_draw_priority(priority_map, pxm, priority, original_pos);
+#endif
+	}
 
 	if (_gfxop_clip(&clipped_dest, clip))
 		return GFX_OK;
@@ -358,7 +399,7 @@ _gfxop_draw_pointer(gfx_state_t *state)
 					   gfx_rect(0, 0, ppxm->xl, ppxm->yl),
 					   gfx_rect(x, y, ppxm->xl, ppxm->yl),
 					   gfx_rect(0, 0, xfact * 320 , yfact * 200),
-					   0, state->control_map);
+					   0, state->control_map, state->priority_map);
 
 		if (error)
 			return error;
@@ -515,7 +556,11 @@ _gfxop_clear_dirty_rec(gfx_state_t *state, struct _dirty_rect *rect)
 	fprintf(stderr, "\tClearing dirty (%d %d %d %d)\n",
 		GFX_PRINT_RECT(rect->rect));
 #endif
-	retval = _gfxop_update_box(state, rect->rect);
+	if (!state->fullscreen_override)
+		retval = _gfxop_update_box(state, rect->rect);
+	else
+		retval = GFX_OK;
+
 	retval |= _gfxop_clear_dirty_rec(state, rect->next);
 
 	free(rect);
@@ -525,6 +570,14 @@ _gfxop_clear_dirty_rec(gfx_state_t *state, struct _dirty_rect *rect)
 
 /*** Exported operations ***/
 
+static void
+init_aux_pixmap(gfx_pixmap_t **pixmap)
+{
+	*pixmap = gfx_pixmap_alloc_index_data(gfx_new_pixmap(320, 200, GFX_RESID_NONE, 0, 0));
+	(*pixmap)->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+	(*pixmap)->colors_nr = DEFAULT_COLORS_NR;
+	(*pixmap)->colors = default_colors;
+}
 
 static int
 _gfxop_init_common(gfx_state_t *state, gfx_options_t *options, void *misc_payload)
@@ -563,8 +616,11 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options, void *misc_payloa
 
 	state->mouse_pointer = state->mouse_pointer_bg = NULL;
 	state->mouse_pointer_visible = 0;
-	state->control_map = gfx_pixmap_alloc_index_data(gfx_new_pixmap(320, 200, GFX_RESID_NONE, 0, 0));
-	state->control_map->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+
+	init_aux_pixmap(&(state->control_map));
+	init_aux_pixmap(&(state->priority_map));
+	init_aux_pixmap(&(state->static_priority_map));
+
 	state->options = options;
 	state->mouse_pointer_in_hw = 0;
 	state->disable_dirty = 0;
@@ -635,6 +691,16 @@ gfxop_exit(gfx_state_t *state)
 		state->control_map = NULL;
 	}
 
+	if (state->priority_map) {
+		gfx_free_pixmap(state->driver, state->priority_map);
+		state->priority_map = NULL;
+	}
+
+	if (state->static_priority_map) {
+		gfx_free_pixmap(state->driver, state->static_priority_map);
+		state->static_priority_map = NULL;
+	}
+
 	if (state->mouse_pointer_bg) {
 		gfx_free_pixmap(state->driver, state->mouse_pointer_bg);
 		state->mouse_pointer_bg = NULL;
@@ -694,7 +760,7 @@ gfxop_scan_bitmask(gfx_state_t *state, rect_t area, gfx_map_mask_t map)
 		retval |= _gfxop_scan_one_bitmask(pic->visual_map, area);
 
 	if (map & GFX_MASK_PRIORITY)
-		retval |= _gfxop_scan_one_bitmask(pic->priority_map, area);
+		retval |= _gfxop_scan_one_bitmask(state->priority_map, area);
 	if (map & GFX_MASK_CONTROL)
 		retval |= _gfxop_scan_one_bitmask(state->control_map, area);
 
@@ -703,21 +769,35 @@ gfxop_scan_bitmask(gfx_state_t *state, rect_t area, gfx_map_mask_t map)
 
 
 int
-gfxop_set_visible_map(gfx_state_t *state, gfx_map_mask_t map)
+gfxop_set_visible_map(gfx_state_t *state, gfx_map_mask_t visible_map)
 {
-	BASIC_CHECKS(GFX_ERROR);
+	switch (visible_map) {
 
-	if (map != GFX_MASK_VISUAL
-	    && map != GFX_MASK_PRIORITY
-	    && map != GFX_MASK_CONTROL) {
-		GFXWARN("Attempt to set invalid visible map #%d\n", map);
+	case GFX_MASK_VISUAL:
+		state->fullscreen_override = NULL;
+		if (visible_map != state->visible_map) {
+			rect_t rect = gfx_rect(0, 0, 320, 200);
+			gfxop_clear_box(state, rect);
+			gfxop_update_box(state, rect);
+		}
+		break;
+
+	case GFX_MASK_PRIORITY:
+		state->fullscreen_override = state->priority_map;
+		break;
+
+	case GFX_MASK_CONTROL:
+		state->fullscreen_override = state->control_map;
+		break;
+
+	default:
+		fprintf(stderr, "Invalid display map %d selected!\n", visible_map);
 		return GFX_ERROR;
 	}
 
-	state->visible_map = map;
+	state->visible_map = visible_map;
 	return GFX_OK;
 }
-
 
 #define MIN_X 0
 #define MIN_Y 0
@@ -1309,6 +1389,13 @@ gfxop_clear_box(gfx_state_t *state, rect_t box)
 	    && (sci0_palette == 1)) {
 		BREAKPOINT();
 	}
+
+	_gfxop_clip(&box, gfx_rect(0, 0, 320, 200));
+#ifdef PRECISE_PRIORITY_MAP
+	if (state->pic_unscaled)
+		gfx_copy_pixmap_box_i(state->priority_map, state->static_priority_map, box);
+#endif
+
 	_gfxop_scale_rect(&box, state->driver->mode);
 
 	return _gfxop_buffer_propagate_box(state, box, GFX_BUFFER_BACK);
@@ -1326,6 +1413,14 @@ gfxop_update(gfx_state_t *state)
 	retval = _gfxop_clear_dirty_rec(state, state->dirty_rects);
 
 	state->dirty_rects = NULL;
+
+	if (state->fullscreen_override) {
+		/* We've been asked to re-draw the active full-screen image, essentially. */
+		rect_t rect = gfx_rect(0, 0, 320, 200);
+		gfx_xlate_pixmap(state->fullscreen_override, state->driver->mode, GFX_XLATE_FILTER_NONE);
+		gfxop_draw_pixmap(state, state->fullscreen_override, rect, gfx_point(0,0));
+		retval |= _gfxop_update_box(state, rect);
+	}
 
 	if (retval) {
 		GFXERROR("Clearing the dirty rectangles failed!\n");
@@ -1880,7 +1975,10 @@ _gfxop_draw_cel_buffer(gfx_state_t *state, int nr, int loop, int cel,
 				  gfx_rect(0, 0, pxm->xl, pxm->yl),
 				  gfx_rect(pos.x, pos.y, pxm->xl, pxm->yl),
 				  state->clip_zone,
-				  static_buf , state->control_map);
+				  static_buf , state->control_map,
+				  static_buf
+				  ? state->static_priority_map
+				  : state->priority_map);
 }
 
 
@@ -1924,35 +2022,13 @@ gfxop_draw_cel_static_clipped(gfx_state_t *state, int nr, int loop, int cel,
 static int
 _gfxop_set_pic(gfx_state_t *state)
 {
-	gfx_pixmap_t *pxm = NULL;
 	byte unscaled = (state->options->pic0_unscaled);
 	gfx_copy_pixmap_box_i(state->control_map, state->pic->control_map, gfx_rect(0, 0, 320, 200));
-	state->control_map->colors_nr = state->pic->control_map->colors_nr;
-	state->control_map->colors = state->pic->control_map->colors;
+	gfx_copy_pixmap_box_i(state->priority_map, state->pic_unscaled->priority_map, gfx_rect(0, 0, 320, 200));
+	gfx_copy_pixmap_box_i(state->static_priority_map, state->pic_unscaled->priority_map, gfx_rect(0, 0, 320, 200));
 
-
-	switch (state->visible_map) {
-
-	case GFX_MASK_VISUAL:
-		pxm = unscaled? state->pic_unscaled->visual_map : state->pic->visual_map;
-		break;
-
-	case GFX_MASK_PRIORITY:
-		pxm = state->pic->priority_map;
-		break;
-
-	case GFX_MASK_CONTROL:
-		pxm = state->pic->control_map;
-		break;
-
-
-	default:
-		GFXERROR("Attempt to draw invalid map #%d!\n", state->visible_map);
-		return GFX_ERROR;
-	}
-
-	_gfxop_install_pixmap(state->driver, pxm);
-	return state->driver->set_static_buffer(state->driver, pxm, state->pic->priority_map);
+	_gfxop_install_pixmap(state->driver, state->pic->visual_map);
+	return state->driver->set_static_buffer(state->driver, state->pic->visual_map, state->pic->priority_map);
 }
 
 
@@ -1972,12 +2048,12 @@ gfxop_new_pic(gfx_state_t *state, int nr, int flags, int default_palette)
 	state->tag_mode = 1;
 	state->palette_nr = default_palette;
 
-	state->pic = gfxr_get_pic(state->resstate, nr, state->visible_map, flags, default_palette, 1);
+	state->pic = gfxr_get_pic(state->resstate, nr, GFX_MASK_VISUAL, flags, default_palette, 1);
 
 	if (state->driver->mode->xfact == 1 && state->driver->mode->yfact == 1)
 		state->pic_unscaled = state->pic;
 	else
-		state->pic_unscaled = gfxr_get_pic(state->resstate, nr, state->visible_map, flags, default_palette, 0);
+		state->pic_unscaled = gfxr_get_pic(state->resstate, nr, GFX_MASK_VISUAL, flags, default_palette, 0);
 
 	if (!state->pic || !state->pic_unscaled) {
 		GFXERROR("Could not retreive background pic %d!\n", nr);
@@ -2010,12 +2086,12 @@ gfxop_add_to_pic(gfx_state_t *state, int nr, int flags, int default_palette)
 	}
 
 	if (!(state->pic = gfxr_add_to_pic(state->resstate, state->pic_nr, nr,
-					   state->visible_map, flags, state->palette_nr, default_palette, 1))) {
+					   GFX_MASK_VISUAL, flags, state->palette_nr, default_palette, 1))) {
 		GFXERROR("Could not add pic #%d to pic #%d!\n", state->pic_nr, nr);
 		return GFX_ERROR;
 	}
 	state->pic_unscaled = gfxr_add_to_pic(state->resstate, state->pic_nr, nr,
-					      state->visible_map, flags,
+					      GFX_MASK_VISUAL, flags,
 					      state->palette_nr,
 					      default_palette, 1);
 
@@ -2266,7 +2342,7 @@ gfxop_draw_text(gfx_state_t *state, gfx_text_handle_t *handle, rect_t zone)
 
 		_gfxop_draw_pixmap(state->driver, pxm, handle->priority, handle->control,
 				   gfx_rect(0, 0, pxm->xl, pxm->yl), pos, state->clip_zone, 0,
-				   state->control_map);
+				   state->control_map, state->priority_map);
 
 		pos.y += line_height;
 	}
@@ -2322,7 +2398,7 @@ gfxop_draw_pixmap(gfx_state_t *state, gfx_pixmap_t *pxm, rect_t zone, point_t po
 
 	return _gfxop_draw_pixmap(state->driver, pxm, -1, -1, zone, target,
 				  gfx_rect(0, 0, 320*state->driver->mode->xfact,
-					   200*state->driver->mode->yfact), 0, NULL);
+					   200*state->driver->mode->yfact), 0, NULL, NULL);
 }
 
 int
