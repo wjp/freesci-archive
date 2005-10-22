@@ -61,10 +61,10 @@ void dbg_print( char* msg, int i ) {
 /*-- forward declarations --*/
 /*--------------------------*/
 
-static void
+void
 sm_script_initialise_locals_zero(seg_manager_t *self, seg_id_t seg, int count);
 
-static void
+void
 sm_script_initialise_locals(seg_manager_t *self, reg_t location);
 
 static void

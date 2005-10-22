@@ -1,3 +1,17 @@
+2005-10-22  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/kgraphics.c (kShow): Added calls to
+	gfxop_set_visible_map
+
+	* src/gfx/operations.c: Various changes to draw to the priority
+	map and to the static priority map
+	(DRAW_LOOP): Bugfix (forgotten increment) when drawing to control
+	(and now also priority) map
+	(gfxop_set_visible_map): Implemented properly
+
+	* src/include/gfx_operations.h: gfx_state_t now also maintains a
+	priority map and a static priority map
+
 2005-10-21  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* Removed the sciconsole (the stand-alone tool). No-one ever used

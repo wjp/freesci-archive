@@ -174,7 +174,8 @@ gfxr_endianness_adjust(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
         byte *data;
 
         if (!pixmap || !pixmap->data || !mode) {
-                GFXERROR("gfxr_endianness_adjust(): Invoked with invalid values");
+                GFXERROR("gfxr_endianness_adjust(): Invoked with invalid values\n");
+		BREAKPOINT();
                 return NULL;
         }
 

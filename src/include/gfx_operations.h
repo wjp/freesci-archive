@@ -108,7 +108,9 @@ typedef struct {
 
 	gfx_resstate_t *resstate; /* Resource state */
 
-	gfx_pixmap_t *control_map; /* back buffer control map */
+	gfx_pixmap_t *priority_map; /* back buffer priority map (unscaled) */
+	gfx_pixmap_t *static_priority_map; /* static buffer priority map (unscaled) */
+	gfx_pixmap_t *control_map; /* back buffer control map (only exists unscaled in the first place) */
 
 
 	int mouse_pointer_visible; /* Whether the pointer is drawn right now */
@@ -132,6 +134,10 @@ typedef struct {
 	int palette_nr; /* Palette number of the current pic */
 
 	gfx_input_event_t *events;
+
+	gfx_pixmap_t *fullscreen_override; /* An optional override picture which must have unscaled
+					   ** full-screen size, which overrides all other visibility, and
+					   ** which is generally slow */
 
 	gfxr_pic_t *pic, *pic_unscaled; /* The background picture and its unscaled equivalent */
 
@@ -209,6 +215,10 @@ gfxop_set_visible_map(gfx_state_t *state, gfx_map_mask_t map);
 ** Parameters: (gfx_state_t *) state: The state to modify
 **             (gfx_map_mask_t) map: The GFX_MASK to set
 ** Returns   : (int) GFX_OK, or GFX_ERROR if map was invalid
+** 'visible_map' can be any of GFX_MASK_VISUAL, GFX_MASK_PRIORITY and GFX_MASK_CONTROL; the appropriate
+** map (as far as its contents are known to the graphics subsystem) is then subsequently drawn to the
+** screen at each update. If this is set to anything other than GFX_MASK_VISUAL, slow full-screen updates
+** are performed. Mostly useful for debugging.
 ** The screen needs to be updated for the changes to take effect.
 */
 

@@ -361,7 +361,30 @@ _ascertain_port_contents(gfxw_port_t *port)
 reg_t
 kShow(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->pic_visible_map = sci_ffs(UKPV_OR_ALT(0, 1)) - 1;
+	int old_map = s->pic_visible_map;
+
+	s->pic_visible_map = UKPV_OR_ALT(0, 1);
+
+	switch (s->pic_visible_map) {
+
+	case GFX_MASK_VISUAL:
+	case GFX_MASK_PRIORITY:
+	case GFX_MASK_CONTROL:
+		gfxop_set_visible_map(s->gfx_state, s->pic_visible_map);
+		if (old_map != s->pic_visible_map) {
+
+			if (s->pic_visible_map == GFX_MASK_VISUAL) /* Full widget redraw */
+				s->visual->draw(GFXW(s->visual), gfx_point(0,0));
+
+			gfxop_update(s->gfx_state);
+			sciprintf("Switching visible map to %x\n", s->pic_visible_map);
+		}
+		break;
+
+	default:
+		SCIkwarn(SCIkWARNING, "Show(%x) selects unknown map\n", s->pic_visible_map);
+
+	}
 
 	s->pic_not_valid = 2;
 	return s->r_acc;
