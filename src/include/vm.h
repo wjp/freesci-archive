@@ -758,6 +758,14 @@ kalloc(struct _state *s, char *type, int space);
 ** Returns   : (reg_t) The handle
 */
 
+int
+has_kernel_function(struct _state *s, char *kname);
+/* Detects whether a particular kernel function is required in the game
+** Parameters: (state_t *) s: Pointer to the state_t to operate on
+**             (char *) kname: The name of the desired kernel function
+** Returns   : (int) 1 if the kernel function is listed in the kernel table,
+**                   0 otherwise
+*/
 
 byte *
 kmem(struct _state *s, reg_t handle);

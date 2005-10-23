@@ -387,7 +387,8 @@ static char** vocabulary_get_knames1(resource_mgr_t *resmgr, int *count)
       pos+=len+1;
     }
   *count=used;
-  t= sci_realloc(t, used*sizeof(char*));
+  t= sci_realloc(t, (used+1)*sizeof(char*));
+  t[used]=NULL;
   return t;
 }
 
@@ -400,7 +401,8 @@ char** vocabulary_get_knames(resource_mgr_t *resmgr, int* count)
 		case SCI_VERSION_01_VGA:
 		case SCI_VERSION_01_VGA_ODD: return vocabulary_get_knames0(resmgr, count);
 		case SCI_VERSION_1_EARLY:
-		case SCI_VERSION_1_LATE:
+	        case SCI_VERSION_1_LATE:
+	        case SCI_VERSION_1_1:
 		case SCI_VERSION_32: return vocabulary_get_knames1(resmgr, count);
 		default: return 0;
 	}

@@ -366,6 +366,20 @@ kalloc(state_t *s, char *type, int space)
 	return reg;
 }
 
+int
+has_kernel_function(state_t *s, char *kname)
+{
+	int i = 0;
+
+	while (s->kernel_names[i])
+	{
+		if (!strcmp(s->kernel_names[i], kname))
+			return 1;
+		i++;
+	}
+
+	return 0;
+}
 
 /* Returns a pointer to the memory indicated by the specified handle */
 byte *

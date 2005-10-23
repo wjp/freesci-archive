@@ -1,3 +1,10 @@
+2005-10-23  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/vocab_debug.c (load_knames1): Fixed a list termination
+	bug.
+	* src/engine/kernel.c (has_kernel_function): Added, for versioning
+	purposes.
+
 2005-10-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/kgraphics.c (kShow): Added calls to
