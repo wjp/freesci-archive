@@ -106,6 +106,7 @@ int sci1_parse_header(int fd, int *types, int *lastrt)
 			read_ok=0;
 		if (rtype!=0xff)
 		{
+			printf("Writing %d\n", rtype);
 			types[rtype&0x7f]=(offset[1]<<8)|(offset[0]);
 			*lastrt = rtype&0x7f;
 		}
@@ -243,6 +244,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	*resource_p = resources;
 	*resource_nr_p = resource_index;
 
+	*sci_version = SCI_VERSION_0;
 	return 0;
 }
 

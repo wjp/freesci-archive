@@ -232,6 +232,30 @@ int decrypt2(guint8* dest, guint8* src, int length, int complength)
 /* Carl Muckenhoupt's decompression code ends here                         */
 /***************************************************************************/
 
+int sci0_get_compression_method(int resh)
+{
+	guint16 compressedLength;
+	guint16 compressionMethod;
+	guint16 result_size;
+	guint8 *buffer;
+
+	/* Dummy variable */
+	if (read(resh, &result_size, 2) != 2)
+		return SCI_ERROR_IO_ERROR;
+
+	if ((read(resh, &compressedLength, 2) != 2) ||
+	    (read(resh, &result_size, 2) != 2) ||
+	    (read(resh, &compressionMethod, 2) != 2))
+		return SCI_ERROR_IO_ERROR;
+
+#ifdef WORDS_BIGENDIAN
+	compressionMethod = GUINT16_SWAP_LE_BE_CONSTANT(compressionMethod);
+#endif
+
+	return compressionMethod;
+}
+
+
 int decompress0(resource_t *result, int resh, int sci_version)
 {
 	guint16 compressedLength;

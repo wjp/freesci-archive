@@ -1,5 +1,7 @@
 2005-10-24  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/scicore: Implemented autodetection of resource file formats.
+
 	* src/engine/vm.c: Add pointer arithmetic for local variables (preliminary)
 
 	* src/engine/vm.c (run_vm): Fix lofss opcode, for SCI Studio games.
