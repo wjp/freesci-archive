@@ -1,3 +1,7 @@
+2005-10-25  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c (script_instantiate): Fix typo.
+
 2005-10-24  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/vm.c (script_uninstantiate): Mark script as deleted

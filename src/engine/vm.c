@@ -781,7 +781,6 @@ run_vm(state_t *s, int restoring)
 		if (script_abort_flag)
 			return; /* Emergency */
 
-
 		/* Debug if this has been requested: */
 		if (script_debug_flag || sci_debug_flags) {
 			script_debug(s, &(xs->addr.pc), &(xs->sp), &(xs->fp),
@@ -1788,7 +1787,7 @@ script_instantiate(state_t *s, int script_nr)
 	int marked_for_deletion; 
 		int seg = sm_seg_get ( &s->seg_manager, script_nr );
 	if (sm_script_is_loaded (&s->seg_manager, script_nr, SCRIPT_ID)) {
-		sm_script_marked_deleted(&s->seg_manager, script_nr);
+		marked_for_deletion = sm_script_marked_deleted(&s->seg_manager, script_nr);
 
 		if (!marked_for_deletion) {  
 		sm_increment_lockers( &s->seg_manager, seg, SEG_ID );
