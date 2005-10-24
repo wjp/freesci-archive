@@ -202,6 +202,7 @@ typedef struct {
 	code_block_t *code;
 	int code_blocks_nr;
 	int code_blocks_allocated;
+	int marked_as_deleted;
 } script_t;
 
 typedef struct {

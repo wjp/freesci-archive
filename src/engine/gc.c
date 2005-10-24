@@ -20,7 +20,7 @@
 
 #include <gc.h>
 
-#define WORKLIST_CHUNK_SIZE 3
+#define WORKLIST_CHUNK_SIZE 32
 
 #define DEBUG_GC
 /*#define DEBUG_GC_VERBOSE*/
@@ -56,7 +56,7 @@ worklist_push(worklist_t **wlp, reg_t_hash_map_ptr hashmap, reg_t reg)
 		return;
 
 #ifdef DEBUG_GC_VERBOSE
-	fprintf(stderr, ">>> "PREG"\n", PRINT_REG(reg)); 
+/*	fprintf(stderr, "[GC] Adding "PREG"\n", PRINT_REG(reg));  */
 #endif
 
 	reg_t_hash_map_check_value(hashmap, reg, 1, &added);
@@ -227,7 +227,7 @@ find_all_used_references(state_t *s)
 		reg_t reg = worklist_pop(&worklist);
 		if (reg.segment != s->stack_segment) { /* No need to repeat this one */
 #ifdef DEBUG_GC_VERBOSE
-			fprintf(stderr, "Checking "PREG"\n", PRINT_REG(reg)); 
+			fprintf(stderr, "[GC] Checking "PREG"\n", PRINT_REG(reg)); 
 #endif
 			if (reg.segment < sm->heap_size
 			    && interfaces[reg.segment])
@@ -282,6 +282,7 @@ run_gc(state_t *s)
 	deallocator_t deallocator;
 	seg_manager_t *sm = &(s->seg_manager);
 
+	c_segtable(s);
 #ifdef DEBUG_GC
 	sciprintf("[GC] Running...\n");
 	memset(&(deallocator.segcount), 0, sizeof(int) * (MEM_OBJ_MAX + 1));

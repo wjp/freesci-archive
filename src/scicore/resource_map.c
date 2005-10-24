@@ -176,7 +176,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 			int addto = resource_index;
 			int i;
 
-			if (sci_res_read_entry(buf, resources + resource_index, sci_version)) {
+			if (sci_res_read_entry(buf, resources + resource_index, *sci_version)) {
 				sci_free(resources);
 				close(fd);
 				return SCI_ERROR_RESMAP_NOT_FOUND;

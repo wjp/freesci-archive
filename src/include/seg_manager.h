@@ -139,7 +139,10 @@ sm_gc(seg_manager_t *self, struct _state *s);
 /*==============================================================*/
 
 
-int
+void
+sm_free_script ( mem_obj_t* mem );
+
+mem_obj_t*
 sm_allocate_script(struct _seg_manager_t* self, struct _state *s, int script_nr, int* seg_id);
 /* Allocate a script into the segment manager
 ** Parameters: (int) script_nr: number of the script to load
@@ -151,7 +154,7 @@ sm_allocate_script(struct _seg_manager_t* self, struct _state *s, int script_nr,
 */
 
 int
-sm_deallocate_script(struct _seg_manager_t* self, struct _state *s, int script_nr);
+sm_deallocate_script(struct _seg_manager_t* self, int script_nr);
 /* Forcefully deallocate a previously allocated script
 ** Parameters: (int) script_nr: number of the script to deallocate
 ** Returns   : (int) 1 on success, 0 on failure

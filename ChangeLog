@@ -1,3 +1,15 @@
+2005-10-24  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/vm.c (script_uninstantiate): Mark script as deleted
+	instead of actually deleting it, leave rest up to gc
+
+	* src/engine/seg_manager.c (free_at_address_script): Added freeing
+	for scripts
+
+	* src/scicore/resource_map.c: Fixed *sci_version vs. sci_version bug
+
+	* src/engine/gc.c (WORKLIST_CHUNK_SIZE): Chunk size updated to 32
+
 2005-10-24  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore: Implemented autodetection of resource file formats.

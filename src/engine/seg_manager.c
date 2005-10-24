@@ -67,9 +67,6 @@ sm_script_initialise_locals_zero(seg_manager_t *self, seg_id_t seg, int count);
 void
 sm_script_initialise_locals(seg_manager_t *self, reg_t location);
 
-static void
-sm_free_script ( mem_obj_t* mem );
-
 static int
 _sm_deallocate (seg_manager_t* self, int seg, int recursive);
 
@@ -215,28 +212,33 @@ void sm_destroy (seg_manager_t* self) {
 **             1 - allocated successfully
 **             seg_id - allocated segment id
 */
-int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, int* seg_id) {
+mem_obj_t* sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, int* seg_id) {
 	int seg;
 	char was_added;
 	mem_obj_t* mem;
-	resource_t *script;
-	script_t *scr;
 
 	seg = int_hash_map_check_value (self->id_seg_map, script_nr, 1, &was_added);
 	if (!was_added) {
 		*seg_id = seg;
-		return 1;
+		return self->heap[*seg_id];
 	}
 
 	/* allocate the mem_obj_t */
 	mem = mem_obj_allocate(self, seg, script_nr, MEM_OBJ_SCRIPT);
 	if (!mem) {
 		sciprintf("%s, %d, Not enough memory, ", __FILE__, __LINE__ );
-		return 0;
+		return NULL;
 	}
 
+	*seg_id = seg;
+	return mem;
+	}
+
+int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr) 
+{
 	/* allocate the script.buf */
-	script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
+	script_t *scr;
+	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		mem->data.script.buf_size = script->size + getUInt16(script->data)*2; 
 		/* locals_size = getUInt16(script->data)*2; */
@@ -267,8 +269,8 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 	scr->code_blocks_allocated = 0;
 
 	scr->nr = script_nr;
+	scr->marked_as_deleted = 0;
 
-	*seg_id = seg;
 	return 1;
 };
 
@@ -341,7 +343,25 @@ _sm_deallocate (seg_manager_t* self, int seg, int recursive)
 	return 1;
 }
 
-int sm_deallocate_script (seg_manager_t* self, struct _state *s, int script_nr) {
+int sm_script_marked_deleted(seg_manager_t* self, int script_nr)
+{
+	int seg = sm_seg_get( self, script_nr );
+	VERIFY ( sm_check (self, seg), "invalid seg id" );
+			 
+	script_t *scr = &(self->heap[seg]->data.script);
+	return scr->marked_as_deleted;
+}
+
+void sm_mark_script_deleted(seg_manager_t* self, int script_nr)
+{
+	int seg = sm_seg_get( self, script_nr );
+	VERIFY ( sm_check (self, seg), "invalid seg id" );
+
+	script_t *scr = &(self->heap[seg]->data.script);
+	scr->marked_as_deleted = 1;
+}
+
+int sm_deallocate_script (seg_manager_t* self, int script_nr) {
 	int seg = sm_seg_get( self, script_nr );
 
 	_sm_deallocate(self, seg, 1);
@@ -392,7 +412,7 @@ mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum 
 /* 	object->variables = NULL; */
 /* }; */
 
-static void
+void
 sm_free_script ( mem_obj_t* mem )
 {
 	if( !mem ) return;
@@ -898,12 +918,21 @@ _sm_alloc_locals_segment(seg_manager_t *self, script_t *scr, int count)
 		scr->locals_block = NULL;
 		return NULL;
 	} else {
-		mem_obj_t *mobj = alloc_nonscript_segment(self, MEM_OBJ_LOCALS,
-							  &scr->locals_segment);
-		local_variables_t *locals = scr->locals_block = &(mobj->data.locals);
+		mem_obj_t *mobj;
+		local_variables_t *locals;
 
+		if (scr->locals_segment) {
+			mobj = self->heap[scr->locals_segment];
+			VERIFY(mobj != NULL, "Re-used locals segment was NULL'd out");
+			VERIFY(mobj->type == MEM_OBJ_LOCALS, "Re-used locals segment did not consist of local variables");
+			VERIFY(mobj->data.locals.script_id == scr->nr, "Re-used locals segment belonged to other script");
+		} else
+			mobj = alloc_nonscript_segment(self, MEM_OBJ_LOCALS,
+							  &scr->locals_segment);
+
+		locals = scr->locals_block = &(mobj->data.locals);
 		locals->script_id = scr->nr;
-		locals->locals = sci_calloc(sizeof(reg_t), count);
+		locals->locals = sci_calloc(count, sizeof(reg_t));
 		locals->nr = count;
 
 		return locals;
@@ -1293,7 +1322,20 @@ deallocate_self (seg_interface_t *self)
 }
 
 
+static void
+free_at_address_script (seg_interface_t *self, reg_t addr)
+{
+	VERIFY(self->mobj->type == MEM_OBJ_SCRIPT, "Trying to free a non-script!");
+	script_t *script = &(self->mobj->data.script);
+/*
+	sciprintf("[GC] Freeing script "PREG"\n", PRINT_REG(addr));
+	if (script->locals_segment)
+		sciprintf("[GC] Freeing locals %04x:0000\n", script->locals_segment);
+*/
 
+	if (script->marked_as_deleted)
+		sm_deallocate_script(self->segmgr, script->nr);
+}
 
 static void
 list_all_outgoing_references_script (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
@@ -1331,7 +1373,7 @@ static seg_interface_t seg_interface_script = {
 	/* type_id = */	MEM_OBJ_SCRIPT,
 	/* type = */	"script",
 	/* find_canonic_address = */		find_canonic_address_base,
-	/* free_at_address = */			free_at_address_stub,
+	/* free_at_address = */			free_at_address_script,
 	/* list_all_deallocatable = */		list_all_deallocatable_base,
 	/* list_all_outgoing_references = */	list_all_outgoing_references_script,
 	/* deallocate_self = */			deallocate_self
@@ -1377,6 +1419,8 @@ list_all_outgoing_references_clones (seg_interface_t *self, reg_t addr, void *pa
 
 	/* Note that this also includes the 'base' object, which is part of the script and therefore also
 	** emits the locals. */
+	(*note) (param, clone->pos);
+	sciprintf("[GC] Reporting clone-pos "PREG"\n", PRINT_REG(clone->pos));
 }
 
 
@@ -1398,7 +1442,10 @@ free_at_address_clones(seg_interface_t *self, reg_t addr)
 		sciprintf("[GC-DEBUG] Clone "PREG": Freeing\n", PRINT_REG(addr));
 #  endif
 #endif
-
+/*
+	sciprintf("[GC] Clone "PREG": Freeing\n", PRINT_REG(addr));
+	sciprintf("[GC] Clone had pos "PREG"\n", PRINT_REG(victim_obj->pos));
+*/
 	sci_free(victim_obj->variables);
 	victim_obj->variables = NULL;
 	sm_decrement_lockers(self->segmgr, victim_obj->pos.segment, SEG_ID);

@@ -30,6 +30,7 @@
 #include <versions.h>
 #include <kdebug.h>
 #include <kernel_types.h>
+#include <seg_manager.h>
 
 #if !defined (_WIN32) && !defined (__BEOS__) && !defined (_DREAMCAST)
 #include <sys/resource.h>
@@ -1770,6 +1771,7 @@ script_instantiate(state_t *s, int script_nr)
 	int seg_id;
 	int relocation = -1;
 	int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
+	mem_obj_t *mem;
 
 
 	if (!script) {
@@ -1783,20 +1785,31 @@ script_instantiate(state_t *s, int script_nr)
 		return 0;
 	}
 
-	if (sm_script_is_loaded (&s->seg_manager, script_nr, SCRIPT_ID)) { /* Is it already loaded? */
+	int marked_for_deletion; 
 		int seg = sm_seg_get ( &s->seg_manager, script_nr );
+	if (sm_script_is_loaded (&s->seg_manager, script_nr, SCRIPT_ID)) {
+		sm_script_marked_deleted(&s->seg_manager, script_nr);
+
+		if (!marked_for_deletion) {  
 		sm_increment_lockers( &s->seg_manager, seg, SEG_ID );
 		return seg;
 	}
-
-/* fprintf(stderr,"Allocing %d(0x%x)\n", script->size, script->size); */
-	if (!sm_allocate_script( &s->seg_manager, s, script_nr, &seg_id )) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
+		else
+		{
+			seg_id = seg;
+			mem = s->seg_manager.heap[seg];
+			sm_free_script(mem);
+		}
+	}
+	else if (!(mem = sm_allocate_script( &s->seg_manager, s, script_nr, &seg_id ))) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
 		sciprintf("Not enough heap space for script size 0x%x of script 0x%x,"
 			  " should this happen?`\n",
 			  script->size, script_nr);
 		script_debug_flag = script_error_flag = 1;
 		return 0;
 	}
+
+	sm_initialise_script(mem, s, script_nr);
 
 	reg.segment = seg_id;
 	reg.offset = 0;
@@ -2023,7 +2036,7 @@ script_uninstantiate(state_t *s, int script_nr)
 
   /* Otherwise unload it completely */
   /* Explanation: I'm starting to believe that this work is done by SCI itself. */
-	sm_deallocate_script( &s->seg_manager, s, script_nr );
+	sm_mark_script_deleted( &s->seg_manager, script_nr );
 
 	if (script_checkloads_flag)
 		sciprintf("Unloaded script 0x%x.\n", script_nr);

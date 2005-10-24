@@ -2040,14 +2040,14 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, list_t *list, int optio
 			}
 		}
 
+
 		widget = _k_make_dynview_obj(s, obj, options, sequence_nr--,
 					     funct_nr, argc, argv);
-		if (widget) {
+		if (widget) 
 			GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
 
 			node = LOOKUP_NODE(next_node); /* Next node */
 		}
-	}
 
 
 	widget = (gfxw_dyn_view_t *) (*widget_list)->contents;
