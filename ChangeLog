@@ -1,3 +1,9 @@
+2005-10-24  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c: Add pointer arithmetic for local variables (preliminary)
+
+	* src/engine/vm.c (run_vm): Fix lofss opcode, for SCI Studio games.
+	
 2005-10-23  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/vocab_debug.c (load_knames1): Fixed a list termination

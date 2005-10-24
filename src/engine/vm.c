@@ -611,6 +611,7 @@ pointer_add(state_t *s, reg_t base, int offset)
 
 	switch (mobj->type) {
 
+	case MEM_OBJ_LOCALS:
 	case MEM_OBJ_SCRIPT:
 	case MEM_OBJ_STACK:
 	case MEM_OBJ_DYNMEM:
@@ -1340,10 +1341,13 @@ run_vm(state_t *s, int restoring)
 
 		case 0x3a: /* lofss */
 			r_temp.segment = xs->addr.pc.segment;
-			r_temp.offset = xs->addr.pc.offset + opparams[0];
+
+			if (s->version >= SCI_VERSION_FTU_LOFS_ABSOLUTE)
+			        r_temp.offset = opparams[0]; else
+				r_temp.offset = xs->addr.pc.offset + opparams[0];
 #ifndef DISABLE_VALIDATIONS
 			if (r_temp.offset >= code_buf_size) {
-				sciprintf("VM: lofsa operation overflowed: "PREG" beyond end"
+				sciprintf("VM: lofss operation overflowed: "PREG" beyond end"
 					  " of script (at %04x)\n", PRINT_REG(r_temp),
 					  code_buf_size);
 				script_error_flag = script_debug_flag = 1;
