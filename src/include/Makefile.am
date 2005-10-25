@@ -1,7 +1,7 @@
 SUBDIRS = win32 beos
 EXTRA_DIST = old_objects.h graphics_glx.h kernel.h event.h    \
-	soundserver.h kdebug.h sci_conf.h resource.h script.h \
-	vocabulary.h sound.h uinput.h console.h script.h vm.h \
+	kdebug.h sci_conf.h resource.h script.h \
+	vocabulary.h uinput.h console.h script.h vm.h \
 	engine.h util.h heap.h menubar.h versions.h sci_dos.h \
 	gfx_driver.h  gfx_operations.h  gfx_options.h         \
 	gfx_resmgr.h gfx_resource.h  gfx_widgets.h            \
