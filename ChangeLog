@@ -1,3 +1,7 @@
+2005-10-25  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore: Improved autodetection.
+
 2005-10-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/scicore/exe_lzexe.c: Removed use of void * arithmetic (GCC

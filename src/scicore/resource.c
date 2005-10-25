@@ -407,18 +407,6 @@ scir_new_resource_manager(char *dir, int version,
 			resource_error = 0;
 		}
 
-		if (!resource_error) {
-			if (version == SCI_VERSION_01_VGA ||
-			    version == SCI_VERSION_01_VGA_ODD)
-				sci1_read_resource_patches(dir,
-							   &mgr->resources,
-							   &mgr->resources_nr);
-			else
-				sci0_read_resource_patches(dir,
-							   &mgr->resources,
-							   &mgr->resources_nr);
-		}
-
 	}
 
 	if ((version == SCI_VERSION_1_EARLY)||
@@ -454,12 +442,7 @@ scir_new_resource_manager(char *dir, int version,
 			resource_error = 0;
 		}
 
-		if (!resource_error)
-		{
-			sci1_read_resource_patches(dir,
-						   &mgr->resources,
-						   &mgr->resources_nr);
-		}
+		resmap_version = SCI_VERSION_1;
 	}
 		
 	if (!mgr->resources || !mgr->resources_nr) {
@@ -491,9 +474,6 @@ scir_new_resource_manager(char *dir, int version,
 				if (version == SCI_VERSION_01_VGA)
 				{
 					sciprintf("Resmgr: Detected KQ5 or similar\n");
-					sci1_read_resource_patches(dir,
-								   &mgr->resources,
-								   &mgr->resources_nr);
 				} else {
 					sciprintf("Resmgr: Detected SCI0\n");
 					version = SCI_VERSION_0;
@@ -504,9 +484,6 @@ scir_new_resource_manager(char *dir, int version,
 				if (version == SCI_VERSION_01_VGA)
 				{
 					sciprintf("Resmgr: Detected KQ5 or similar\n");
-					sci1_read_resource_patches(dir,
-								   &mgr->resources,
-								   &mgr->resources_nr);
 				} else {
 					if (scir_test_resource(mgr, sci_vocab, 912)) {
 						sciprintf("Resmgr: Running KQ1 or similar, using SCI0 resource encoding\n");
@@ -521,14 +498,15 @@ scir_new_resource_manager(char *dir, int version,
 				if (version == SCI_VERSION_01_VGA)
 				{
 					sciprintf("Resmgr: Detected KQ5 or similar\n");
-					sci1_read_resource_patches(dir,
-								   &mgr->resources,
-								   &mgr->resources_nr);
 				} else {
 					sciprintf("Resmgr: Warning: Could not find vocabulary; assuming SCI0 w/o parser\n");
 					version = SCI_VERSION_0;
 				}
 			} break;
+		case SCI_VERSION_01_VGA_ODD:
+			version = resmap_version;
+			sciprintf("Resmgr: Detected Jones/CD or similar\n");
+			break;
 		case SCI_VERSION_1:
 		{
 			resource_t *res = scir_test_resource(mgr, sci_script, 0);
@@ -537,17 +515,25 @@ scir_new_resource_manager(char *dir, int version,
 			_scir_load_resource(mgr, res);
 			
 			if (res->status == SCI_STATUS_NOMALLOC)
-			{
 			    mgr->sci_version = version = SCI_VERSION_1_LATE;
-			    _scir_load_resource(mgr, res);
-			}
-			
+
+			/* No need to handle SCI 1.1 here - it was done in resource_map.c */
 			break;
 		}
 		default:
 			sciprintf("Resmgr: Warning: While autodetecting: Couldn't"
 				  " determine SCI version!\n");
 		}
+
+	if (!resource_error)
+	  if (version <= SCI_VERSION_01)
+	    sci0_read_resource_patches(dir,
+				       &mgr->resources,
+				       &mgr->resources_nr);
+	  else
+	    sci1_read_resource_patches(dir,
+				       &mgr->resources,
+				       &mgr->resources_nr);
 
 	mgr->sci_version = version;
 

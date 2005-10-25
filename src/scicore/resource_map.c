@@ -38,7 +38,43 @@
 #define SCI1_RESMAP_ENTRIES_SIZE 6
 #define SCI11_RESMAP_ENTRIES_SIZE 5
 
+static int
+detect_odd_sci01(int fh)
+{
+    byte buf[6];
+    int files_ok = 1;
+    int fsize, resources_nr, tempfh, read_ok;
+    char filename[14];
+        
+    if ((fsize = sci_fd_size(fh)) < 0) {
+	perror("Error occured while trying to get filesize of resource.map");
+	return SCI_ERROR_RESMAP_NOT_FOUND;
+    }
 
+    resources_nr = fsize / SCI0_RESMAP_ENTRIES_SIZE;
+    
+    while (resources_nr-->1)
+    {
+        read_ok = read(fh, &buf, SCI0_RESMAP_ENTRIES_SIZE);
+
+	if (read_ok)
+	{	
+		sprintf(filename, "resource.%03i", SCI0_RESFILE_GET_FILE(buf+2));
+		tempfh = sci_open(filename, O_RDONLY | O_BINARY);
+    
+		files_ok &= (tempfh != SCI_INVALID_FD);
+
+		if (tempfh == SCI_INVALID_FD)
+			sciprintf("Opening %s failed: Jones\n", filename);
+		close(tempfh);
+	}
+    }
+
+    lseek(fh, 0, SEEK_SET);
+
+    return files_ok;
+}
+		
 static int
 sci_res_read_entry(byte *buf, resource_t *res, int sci_version)
 {
@@ -106,7 +142,6 @@ int sci1_parse_header(int fd, int *types, int *lastrt)
 			read_ok=0;
 		if (rtype!=0xff)
 		{
-			printf("Writing %d\n", rtype);
 			types[rtype&0x7f]=(offset[1]<<8)|(offset[0]);
 			*lastrt = rtype&0x7f;
 		}
@@ -149,6 +184,20 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 
 	lseek(fd, 0, SEEK_SET);
 
+	switch (detect_odd_sci01(fd))
+	{
+	    case 0 : /* Odd SCI01 */
+		if (*sci_version == SCI_VERSION_AUTODETECT)
+		    *sci_version = SCI_VERSION_01_VGA_ODD;
+		break;
+	    case 1 : /* SCI0 or normal SCI01 */
+		if (*sci_version == SCI_VERSION_AUTODETECT)
+		    *sci_version = SCI_VERSION_0;
+		break;
+	    default : /* Neither, or error occurred */
+		return SCI_ERROR_RESMAP_NOT_FOUND;
+	}
+	
 	if ((fsize = sci_fd_size(fd)) < 0) {
 		perror("Error occured while trying to get filesize of resource.map");
 		return SCI_ERROR_RESMAP_NOT_FOUND;
@@ -244,7 +293,6 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	*resource_p = resources;
 	*resource_nr_p = resource_index;
 
-	*sci_version = SCI_VERSION_0;
 	return 0;
 }
 
