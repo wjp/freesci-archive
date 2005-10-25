@@ -312,7 +312,7 @@ lzexe_read(exe_handle_t *handle, void *buf, int count)
 		if (copy > left)
 			copy = left;
 
-		memcpy(buf + done, handle->buffer, copy);
+		memcpy((char *) buf + done, handle->buffer, copy);
 
 		/* Move remaining data to start of buffer. */
 		for (i = copy; i < size; i++)
