@@ -576,7 +576,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			       "\n"
 			       EXPLAIN_OPTION("--gamedir dir\t", "-ddir", "read game resources from dir")
 			       EXPLAIN_OPTION("--run\t\t", "-r", "do not start the debugger")
-			       EXPLAIN_OPTION("--sci-version\t", "-Vver", "set the version for sciv to emulate")
+			       EXPLAIN_OPTION("--sci-version\t", "-Vver", "set the version for freesci to emulate")
 			       EXPLAIN_OPTION("--version\t", "-v", "display version number and exit")
 			       EXPLAIN_OPTION("--debug\t", "-D", "start up in debug mode")
 			       EXPLAIN_OPTION("--help\t", "-h", "display this help text and exit")
@@ -651,7 +651,8 @@ find_config(char *game_name, config_entry_t *conf, int conf_entries,
 	for (i = 1; i < conf_entries; i++)
 		if (!strcasecmp(conf[i].name, game_name)) {
 			conf_nr = i;
-			*version = conf[i].version;
+			if (version) 
+				*version = conf[i].version;
 		}
 
 	return conf_nr;
@@ -1001,12 +1002,15 @@ main(int argc, char** argv)
 	/* so if no resource are found in the working dir, invoke the game selection screen */
 	if (!game_name && !game_select_resource_found())
 	{
-		game_select(cl_options, confs, conf_entries, freesci_dir);
+		conf_nr = game_select(cl_options, confs, conf_entries, freesci_dir);
+		if (conf_nr < 0) return 1;
+		active_conf = confs + conf_nr;
 	}
 #endif
 
-	if (cl_options.version)
-		version = cl_options.version;
+	if (cl_options.version || (active_conf && active_conf->version))
+		version = cl_options.version ? cl_options.version
+		  : active_conf ? active_conf->version : 0;
 	else {
 		int got_version = !version_detect_from_executable(&version);
 		unsigned int code;
@@ -1201,7 +1205,7 @@ main(int argc, char** argv)
 	if (!gfx_driver) {
 		if (gfx_driver_name)
 			fprintf(stderr,"Failed to find graphics driver \"%s\"\n"
-				"Please run 'sciv -v' to get a list of all "
+				"Please run 'freesci -v' to get a list of all "
 				"available drivers.\n", gfx_driver_name);
 		else
 			fprintf(stderr,"No default gfx driver available.\n");
@@ -1622,12 +1626,12 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 	if (!gfx_driver) {
 		if (gfx_driver_name)
 			fprintf(stderr,"Failed to find graphics driver \"%s\"\n"
-				"Please run 'sciv -v' to get a list of all "
+				"Please run 'freesci -v' to get a list of all "
 				"available drivers.\n", gfx_driver_name);
 		else
 			fprintf(stderr,"No default gfx driver available.\n");
 
-		return 1;
+		return -2;
 	}
 
 
@@ -1646,7 +1650,7 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 	}
 
 	if (game_select_init_gfx(confs, &cl_options, gfx_driver, 0))
-		return 1;
+		return -2;
 
 	/* Sort all the games in alphabetical order, do this on a copy of the original config structure */
 	sorted_confs = malloc(sizeof(config_entry_t) * conf_entries);
@@ -1700,10 +1704,15 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 	if (font_small_allocated == 1)
 		gfxr_free_font(font_small);
 
+	if (selected_game > 0)
+		selected_game = find_config(sorted_confs[selected_game].name, confs, 
+					    conf_entries, NULL); else
+  	        selected_game = -1;				    
+
 	free(sorted_confs);
 	free(game_list);
 
 	gfx_driver->exit(gfx_driver);
 
-	return 0;
+	return selected_game;
 }
