@@ -188,12 +188,14 @@ _scir_load_from_patch_file(int fh, resource_t *res, char *filename)
 }
 
 static void
-_scir_load_resource(resource_mgr_t *mgr, resource_t *res)
+_scir_load_resource(resource_mgr_t *mgr, resource_t *res, int protect)
 {
 	char *cwd = sci_getcwd();
 	char filename[14];
 	int fh;
+	resource_t backup;
 
+	memcpy(&backup, res, sizeof(resource_t));
 	/* Enter resource directory */
 	chdir(mgr->resource_path);
 
@@ -251,6 +253,10 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 				  " from resource file: %s\n",
 				  error, sci_resource_types[res->type], res->number,
 				  sci_error_types[error]);
+
+			if (protect)
+				memcpy(res, &backup, sizeof(resource_t));
+
 			res->data = NULL;
 			res->status = SCI_STATUS_NOMALLOC;
 			res->size = 0;
@@ -512,7 +518,7 @@ scir_new_resource_manager(char *dir, int version,
 			resource_t *res = scir_test_resource(mgr, sci_script, 0);
 			
 			mgr->sci_version = version = SCI_VERSION_1_EARLY;
-			_scir_load_resource(mgr, res);
+			_scir_load_resource(mgr, res, 1);
 			
 			if (res->status == SCI_STATUS_NOMALLOC)
 			    mgr->sci_version = version = SCI_VERSION_1_LATE;
@@ -711,7 +717,7 @@ scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock)
 		return NULL;
 
 	if (!retval->status)
-		_scir_load_resource(mgr, retval);
+		_scir_load_resource(mgr, retval, 0);
 
 	else if (retval->status == SCI_STATUS_ENQUEUED)
 		_scir_remove_from_lru(mgr, retval);

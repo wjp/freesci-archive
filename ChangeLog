@@ -1,3 +1,7 @@
+2005-10-26  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore: Yet more autodetection improvements.
+
 2005-10-25  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore: Improved autodetection.

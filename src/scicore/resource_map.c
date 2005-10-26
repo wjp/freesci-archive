@@ -64,8 +64,6 @@ detect_odd_sci01(int fh)
     
 		files_ok &= (tempfh != SCI_INVALID_FD);
 
-		if (tempfh == SCI_INVALID_FD)
-			sciprintf("Opening %s failed: Jones\n", filename);
 		close(tempfh);
 	}
     }
@@ -174,9 +172,9 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 
 	read(fd, &buf, 4);
 
-	if (buf[0] == 0x80 ||
-	    buf[1] % 3 == 0 ||
-	    buf[3] == 0x81)
+	if ((buf[0] == 0x80) &&
+	    (buf[1] % 3 == 0) &&
+	    (buf[3] == 0x81))
 	{
 		close(fd);
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
@@ -415,13 +413,6 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 		
 		res->id = res->number | (res->type << 16);
 
-#if 0
-		fprintf(stderr, "Read [%04x] %6d.%s\tresource.%03d, %08x\n",
-			res->id, res->number,
-			sci_resource_type_suffixes[res->type],
-			res->file, res->file_offset);
-#endif
-
 		if (resources[resource_index].file > max_resfile_nr)
 			max_resfile_nr =
 				resources[resource_index].file;
@@ -432,6 +423,13 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 				addto = i;
 				fresh = 0;
 			}
+
+#if 0
+		fprintf(stderr, "Read [%04x] %6d.%s\tresource.%03d, %08x ==> %d\n",
+			res->id, res->number,
+			sci_resource_type_suffixes[res->type],
+			res->file, res->file_offset, addto);
+#endif
 
 		_scir_add_altsource(resources + addto,
 				    resources[resource_index].file,
