@@ -304,6 +304,8 @@ int adlibemu_stop_note(int chn, int note, int velocity)
 {
   int i, op=255;
 
+  //  sciprintf("Note off %d %d %d\n", chn, note, velocity);
+
   for (i=0;i<ADLIB_VOICES && op==255;i++) {
     if (oper_chn[i] == chn)
       if (oper_note[i] == note)
@@ -345,6 +347,8 @@ int adlibemu_stop_note(int chn, int note, int velocity)
 int adlibemu_start_note(int chn, int note, int velocity)
 {
   int op, volume_L, volume_R, inst = 0;
+
+  //  sciprintf("Note on %d %d %d\n", chn, note, velocity);
 
   if (velocity == 0) {
     return adlibemu_stop_note(chn, note, velocity);
@@ -588,6 +592,8 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 de
       break;
     case 0x0a:
       pan[channel] = velocity;
+      break;
+    case 0x4b:
       break;
     case 0x7b:  { /* all notes off */
       int i = 0;

@@ -780,6 +780,25 @@ sfx_song_set_loops(sfx_state_t *self, song_handle_t handle, int loops)
 		player->iterator_message(msg);
 }
 
+void
+sfx_song_set_hold(sfx_state_t *self, song_handle_t handle, int hold)
+{
+	song_t *song = song_lib_find(self->songlib, handle);
+	song_iterator_message_t msg
+		= songit_make_message(handle, SIMSG_SET_HOLD(hold));
+	ASSERT_SONG(song);
+
+#ifdef DEBUG_SONG_API
+	fprintf(stderr, "[sfx-core] Setting loops on %08lx to %d\n",
+		handle, loops);
+#endif
+	songit_handle_message(&(song->it), msg);
+
+	if (player/* && player->send_iterator_message*/)
+		/* FIXME: The above should be optional! */
+		player->iterator_message(msg);
+}
+
 int
 sfx_get_volume(sfx_state_t *self)
 {

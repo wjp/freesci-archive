@@ -149,6 +149,7 @@ _parse_sci_midi_command(base_song_iterator_t *self, unsigned char *buf,	int *res
 	midi_op = cmd >> 4;
 	midi_channel = cmd & 0xf;
 	paramsleft = MIDI_cmdlen[midi_op];
+
 #if 0
 if (1) {
 	fprintf(stderr, "[IT]: off=%x, cmd=%02x, takes %d args ",
@@ -260,6 +261,25 @@ if (1) {
 		case SCI_MIDI_SET_VELOCITY:
 			break;
 
+		case SCI_MIDI_HOLD:
+		{
+			// Safe cast: This controller is only used in SCI1
+			sci1_song_iterator_t *self1 = (sci1_song_iterator_t *) self;
+
+			if (buf[2] == self1->hold)
+			{
+				channel->offset = channel->initial_offset;
+				channel->notes_played = 0;
+				channel->state = SI_STATE_COMMAND;
+				channel->total_timepos = 0;
+	
+				self1->channels_looped = self1->active_channels-1;
+				
+				return SI_LOOP;
+			}
+
+			break;
+		}
 		case 0x04: /* UNKNOWN NYI (happens in LSL2 gameshow) */
 		case 0x46: /* UNKNOWN NYI (happens in LSL3 binoculars) */
 		case 0x61: /* UNKNOWN NYI (special for adlib? Iceman) */
@@ -664,6 +684,14 @@ _sci1_song_init(sci1_song_iterator_t *self)
 	self->next_sample = 0;
 
 	CHECK_FOR_END_ABSOLUTE(0);
+	if (SONGDATA(0) == 0xf0)
+	{
+		int priority = SONGDATA(1);
+
+		// FIXME: Do something with this! 
+		// sciprintf("Song has priority %d\n", priority);
+		offset += 8;
+	}
 	while (SONGDATA(0) != 0xff
 	       && SONGDATA(0) != self->device_id) {
 		offset++;
@@ -1098,6 +1126,9 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 			** the way we're testing in the decoding section.  */
 			break;
 
+		case _SIMSG_BASEMSG_SET_HOLD:
+			self->hold = msg.args[0];
+			break;
 		case _SIMSG_BASEMSG_SET_RHYTHM:
 			/* Ignore */
 			break;
@@ -1132,6 +1163,7 @@ _sci1_init(sci1_song_iterator_t *self)
 	self->initialised = 0;
 	self->delay_remaining = 0;
 	self->loops = 0;
+	self->hold = 0;
 }
 
 static void

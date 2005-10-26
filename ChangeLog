@@ -1,5 +1,7 @@
 2005-10-26  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/sfx: Add support for SCI_MIDI_HOLD.
+
 	* src/main.c (game_select): Return an index instead of a boolean
 	value. 
 

@@ -2,6 +2,7 @@ The SCI01+ sound resource format
 
 Originally written by Rickard Lind, 2000-01-05
 Extensively rewritten by Lars Skovlund, 2002-10-27
+Again updated by Lars Skovlund, 2005-10-12
 
 Used in:
 Quest for Glory II: Trial by Fire (QfG2)
@@ -24,6 +25,18 @@ data for one specific channel or a digital sample.
 SCI1 resources are the same, except that sample chunks are no longer
 allowed (since they are now separate resources).
 
+  Optional Priority Header
+  ------------------------
+
+  Some SCI1 songs contain an 8-byte header before the track list. At
+  least on PC platforms, its data is mostly unused. The priority value
+  is used if the script does not override it.
+
+  offset   size         description
+    -------------------------------------------------------
+      0	   byte		0xf0 Priority header marker byte
+      1    byte		Recommended priority for this song
+      2    6 bytes	Apparently unused
 
   Track List
   ----------
@@ -97,9 +110,10 @@ allowed (since they are now separate resources).
     ------------------------
 
     This chunk begins with a 2 byte header. The low nibble of the
-    first byte indicates the channel number. The high nibble should be
-    ignored since its only function is to support some black magic in
-    the header parser. The second byte tells us how many notes will be
+    first byte indicates the channel number. The high nibble controls
+    certain aspects of (dynamic) track channel/hardware channel mapping.
+    
+    The second byte tells us how many notes will be
     playing simultaneously in the channel. From the third byte onward
     is the MIDI track data which looks just like normal SCI0 MIDI
     track data, but all status bytes are targeted at one specific MIDI
