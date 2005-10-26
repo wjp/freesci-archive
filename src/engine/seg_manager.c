@@ -1448,7 +1448,6 @@ free_at_address_clones(seg_interface_t *self, reg_t addr)
 */
 	sci_free(victim_obj->variables);
 	victim_obj->variables = NULL;
-	sm_decrement_lockers(self->segmgr, victim_obj->pos.segment, SEG_ID);
 	sm_free_clone(self->segmgr, addr);
 }
 
