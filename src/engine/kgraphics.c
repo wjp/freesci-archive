@@ -333,6 +333,12 @@ kSetCursor_SCI11(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kSetCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
+	if (has_kernel_function(s, "MoveCursor"))
+	{
+		SCIkwarn(SCIkERROR, "KQ5/CD special semantics not implemented yet!\n", argc);
+		return s->r_acc;
+	}
+		
 	if (SKPV_OR_ALT(1,1)) {
 		s->mouse_pointer_nr = SKPV(0);
 	} else
@@ -1332,8 +1338,10 @@ kPalette(state_t *s, int funct_nr, int argc, reg_t *argv)
                 ** rule rather than the exception */
 		return make_reg(0, bestindex);
 	}
-				
 		
+	case 4 :
+	case 6 :
+		break;
 	default :
 		SCIkdebug(SCIkWARNING, "Unimplemented subfunction: %d\n", UKPV(0));
 		return s->r_acc;
@@ -2417,6 +2425,13 @@ kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 		unsigned int port_nr = SKPV(0);
 		gfxw_port_t *new_port;
 
+		/* We depart from official semantics here, sorry!
+		   Reasoning: Sierra SCI does not clip ports while we do.
+		   Therefore a draw to the titlebar port (which is the
+		   official semantics) cuts off the lower part of the
+		   icons in an SCI1 icon bar. */
+		if (port_nr == -1) port_nr = s->wm_port->ID;
+
 		new_port = gfxw_find_port(s->visual, port_nr);
 
 		if (!new_port) {
@@ -2487,7 +2502,11 @@ kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 	new_view = gfxw_new_view(s->gfx_state, gfx_point(x, y), view, loop, cel, 0, priority, -1,
 				 ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET);
 
+#if 0
 	add_to_chrono(s, GFXW(new_view));
+#else
+	ADD_TO_CURRENT_PICTURE_PORT(GFXW(new_view));
+#endif
 	FULL_REDRAW();
 
 	
