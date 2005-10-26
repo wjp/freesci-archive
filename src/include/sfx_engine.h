@@ -160,5 +160,12 @@ sfx_song_set_loops(sfx_state_t *self, song_handle_t handle, int loops);
 **             (int) loops: Number of loops to set
 */
 
+void
+sfx_song_set_hold(sfx_state_t *self, song_handle_t handle, int hold);
+/* Sets the number of loops for the specified song
+** Parameters: (song_handle_t) handle: The song handle to reference
+**             (int) hold: Number of loops to setn
+*/
+
 
 #endif /* !defined(_SFX_ENGINE_H_) */

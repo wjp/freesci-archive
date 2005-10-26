@@ -133,6 +133,7 @@ typedef struct {
 	int channels_looped; /* Number of channels that are ready to loop */
 
 	int delay_remaining; /* Number of ticks that haven't been polled yet */
+	int hold;                                                                               \
 } sci1_song_iterator_t;
 
 #define PLAYMASK_NONE 0x0
