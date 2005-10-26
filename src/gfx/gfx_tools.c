@@ -355,7 +355,7 @@ gfx_alloc_color(gfx_palette_t *pal, gfx_pixmap_color_t *color)
 
 	color->global_index = bestcolor;
 
-	GFXWARN("Out of palette colors- doing approximated mapping!\n");
+//	GFXWARN("Out of palette colors- doing approximated mapping!\n");
 	return GFX_OK;
 }
 

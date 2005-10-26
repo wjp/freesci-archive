@@ -119,6 +119,9 @@ midi_hexdump(byte *data, int size, int notational_offset)
 	int offset = 0;
 	int prev = 0;
 
+	if (*data == 0xf0) /* SCI1 priority spec */
+		offset = 8;
+
 	while (offset < size) {
 		int old_offset = offset;
 		int offset_mod;
@@ -209,6 +212,9 @@ sci01_song_header_dump(byte *data, int size)
 
 	sciprintf ("SCI01 song track mappings:\n");
 
+	if (*data == 0xf0) /* SCI1 priority spec */
+		offset = 8;
+
 	CHECK_FOR_END_ABSOLUTE(0);
 	while (SONGDATA(0) != 0xff) {
 		byte device_id = data[offset];
@@ -218,7 +224,7 @@ sci01_song_header_dump(byte *data, int size)
 		while (SONGDATA(0) != 0xff) {
 			int track_offset;
 			int end;
-			byte header1;
+			byte header1, header2;
 
 			CHECK_FOR_END_ABSOLUTE(offset + 7);
 
@@ -226,18 +232,24 @@ sci01_song_header_dump(byte *data, int size)
 
 			track_offset = getUInt16(data + offset);
 			header1 = data[track_offset];
+			header2 = data[track_offset+1];
 			track_offset += 2;
 
 			if (track_offset < smallest_start)
 				smallest_start = track_offset;
 			end = getUInt16(data + offset + 2);
 			sciprintf("  - %04x -- %04x",
-				  track_offset, end);
+				  track_offset, track_offset + end);
 
 			if (track_offset == 0xfe)
 				sciprintf(" (PCM data)\n");
 			else
-				sciprintf(" (channel %x)\n", header1 & 0xf);
+				sciprintf(" (channel %d, special %d,"
+					  " %d playing notes, %d foo)\n", 
+					  header1 & 0xf, 
+					  header1 >> 4, 
+					  header2 & 0xf,
+					  header2 >> 4);
 
 			offset += 4;
 		}

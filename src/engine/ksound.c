@@ -192,6 +192,7 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 	switch (command) {
 	case _K_SCI0_SOUND_INIT_HANDLE:
 		if (obj.segment) {
+			sciprintf("Initializing song number %d\n", GET_SEL32V(obj, number));
 			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
 							build_iterator(s, GET_SEL32V(obj, number),
 								       SCI_SONG_ITERATOR_TYPE_SCI0,
@@ -408,6 +409,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		if (obj.segment && (scir_test_resource(s->resmgr, sci_sound, number)))
 		{
+			sciprintf("Initializing song number %d\n", GET_SEL32V(obj, number));
 			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
 							build_iterator(s, GET_SEL32V(obj, number),
 								       SCI_SONG_ITERATOR_TYPE_SCI1,
@@ -660,6 +662,7 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int pri = GET_SEL32V(obj, pri);
 
 		if (obj.segment && (scir_test_resource(s->resmgr, sci_sound, number))) {
+			sciprintf("Initializing song number %d\n", GET_SEL32V(obj, number));
 			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
 							 build_iterator(s, GET_SEL32V(obj, number),
 									SCI_SONG_ITERATOR_TYPE_SCI1,
@@ -698,6 +701,10 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI1_SOUND_HOLD_HANDLE :
 	{
+		int value = SKPV(2);
+
+		sfx_song_set_hold(&s->sound,
+				  handle, value);
 		break;
 	}
 	case _K_SCI1_SOUND_UNUSED2 :

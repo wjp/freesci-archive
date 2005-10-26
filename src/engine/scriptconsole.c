@@ -858,7 +858,12 @@ c_version (state_t * s)
 	}
 
 	sciprintf ("FreeSCI, version " VERSION "\n");
-	sciprintf ("Running %s\n", sci_version_types[s->resmgr->sci_version]);
+	sciprintf ("Resource file version:        %s\n", sci_version_types[s->resmgr->sci_version]);
+	sciprintf ("Emulated interpreter version: %d.%03d.%03d\n", 
+		   SCI_VERSION_MAJOR(s->version),
+		   SCI_VERSION_MINOR(s->version),
+		   SCI_VERSION_PATCHLEVEL(s->version));
+		   
 	return 0;
 }
 
