@@ -1,5 +1,11 @@
 2005-10-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/dc/keyboard.h, src/dc/keyboard.c: Added to repository.
+	* src/gfx/drivers/dc_driver.c, Makefile: Forward ported recent
+	changes from stable to glutton.
+
+2005-10-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/dc/Makefile: Updated.
 	* src/dc/dc.c: Temporarily added dummy isatty() and scanf().
 
