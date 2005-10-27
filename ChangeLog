@@ -1,3 +1,8 @@
+2005-10-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/Makefile: Updated.
+	* src/dc/dc.c: Temporarily added dummy isatty() and scanf().
+
 2005-10-27  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kDrawCel): Temporarily disable

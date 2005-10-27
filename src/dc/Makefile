@@ -15,6 +15,7 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/dc/snprintf.o \
 	$(FSCI_BASE)/src/dc/texture.o \
 	$(FSCI_BASE)/src/engine/game.o \
+	$(FSCI_BASE)/src/engine/gc.o \
 	$(FSCI_BASE)/src/engine/grammar.o \
 	$(FSCI_BASE)/src/engine/kernel.o \
 	$(FSCI_BASE)/src/engine/kevent.o \
@@ -29,6 +30,8 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/engine/ksound.o \
 	$(FSCI_BASE)/src/engine/kstring.o \
 	$(FSCI_BASE)/src/engine/said.o \
+	$(FSCI_BASE)/src/engine/savegame.o \
+	$(FSCI_BASE)/src/engine/scriptconsole.o \
 	$(FSCI_BASE)/src/engine/scriptdebug.o \
 	$(FSCI_BASE)/src/engine/seg_manager.o \
 	$(FSCI_BASE)/src/engine/sys_strings.o \
@@ -52,7 +55,6 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_font.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_pal_1.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_pic_0.o \
-	$(FSCI_BASE)/src/gfx/resource/sci_pic_1.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_resmgr.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_view_0.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_view_1.o \
@@ -67,16 +69,21 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/scicore/decompress01.o \
 	$(FSCI_BASE)/src/scicore/decompress1.o \
 	$(FSCI_BASE)/src/scicore/decompress11.o \
+	$(FSCI_BASE)/src/scicore/exe.o \
+	$(FSCI_BASE)/src/scicore/exe_lzexe.o \
+	$(FSCI_BASE)/src/scicore/exe_raw.o \
 	$(FSCI_BASE)/src/scicore/fnmatch.o \
 	$(FSCI_BASE)/src/scicore/int_hashmap.o \
 	$(FSCI_BASE)/src/scicore/modules.o \
 	$(FSCI_BASE)/src/scicore/old_objects.o \
+	$(FSCI_BASE)/src/scicore/reg_t_hashmap.o \
 	$(FSCI_BASE)/src/scicore/resource.o \
 	$(FSCI_BASE)/src/scicore/resource_map.o \
 	$(FSCI_BASE)/src/scicore/resource_patch.o \
 	$(FSCI_BASE)/src/scicore/sci_memory.o \
 	$(FSCI_BASE)/src/scicore/script.o \
 	$(FSCI_BASE)/src/scicore/tools.o \
+	$(FSCI_BASE)/src/scicore/versions.o \
 	$(FSCI_BASE)/src/scicore/vocab.o \
 	$(FSCI_BASE)/src/scicore/vocab_debug.o \
 	$(FSCI_BASE)/src/sfx/iterator.o \
@@ -121,9 +128,9 @@ rm-elf:
 rm-bin:
 	-rm -f $(BIN_TARGET)
 
-config.h: config.h.in
+config.h: config.h.in ../../configure.in
 	cp config.h.in config.h
-	echo -e '\n#define VERSION "0.6.2-'`date +%Y%m%d`'"' >> config.h
+	sed -n -e 's/AM_INIT_AUTOMAKE(.*,[[:blank:]]*\([[:graph:]]*\)[[:blank:]]*)/#define VERSION "\1"/p' ../../configure.in >> config.h
 
 $(ELF_TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(ELF_TARGET) $(KOS_START) \
