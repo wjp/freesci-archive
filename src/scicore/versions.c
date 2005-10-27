@@ -62,16 +62,14 @@ scan_file(char *filename, sci_version_t *version)
 			const char ch = buf[i];
 			accept = 0; /* By default, we don't like this character */
 
-			if (isalnum(ch)) {
+			if (isalnum((unsigned char) ch)) {
 				accept = (state != 1
 					  && state != 5
 					  && state != 9);
 			} else if (ch == '.') {
 				accept = (state == 1
 					  || state == 5);
-			} else if (state == 9
-				   && !isalnum(ch)) {
-
+			} else if (state == 9) {
 				result_string[9] = 0; /* terminate string */
 
 				if (!version_parse(result_string, version))
@@ -81,7 +79,6 @@ scan_file(char *filename, sci_version_t *version)
 				}
 
 				/* Continue searching. */
-				accept = 0;
 			}
 
 			if (accept)
