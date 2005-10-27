@@ -123,7 +123,7 @@ version_detect_from_executable(sci_version_t *result)
 			/* Warning: This doesn't accomodate for "strange" SCI1+ version
 			** numbers. My perception is that we can't handle those anyway, since
 			** the corresponding files appear to be compressed.  */
-			if (isdigit(ch)) {
+			if (isdigit((unsigned char) ch)) {
 				accept = (state != 1
 					  && state != 5
 					  && state != 9);

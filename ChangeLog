@@ -1,3 +1,8 @@
+2005-10-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/scicore/versions.c (version_detect_from_executable): Pass an
+	unsigned char to isdigit() instead of a char.
+
 2005-10-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/operations.c: Backported bugfix for 'Show'.
