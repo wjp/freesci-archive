@@ -46,6 +46,16 @@
 #include <kernel.h>
 #include <gfx_state_internal.h>
 
+#ifdef _MSC_VER
+#	ifndef VERSION
+#		ifdef NDEBUG
+#			define VERSION "0.3.4"
+#		else
+#			define VERSION __TIMESTAMP__
+#		endif
+#	endif
+#endif
+
 #define FREESCI_SAVEGAME_VERSION 5
 
 #ifndef FREESCI_GAMEDIR

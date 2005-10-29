@@ -112,9 +112,10 @@ version_detect_from_executable(sci_version_t *result)
 		return 0;
 
 	do {
-		characters_left = read(fh, buf, VERSION_DETECT_BUF_SIZE);
 		int i;
 		int accept;
+
+		characters_left = read(fh, buf, VERSION_DETECT_BUF_SIZE);
 
 		for (i = 0; i < characters_left; i++) {
 			const char ch = buf[i];

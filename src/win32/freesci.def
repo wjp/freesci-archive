@@ -30,6 +30,7 @@ EXPORTS
   con_parse
   con_hook_command
   con_passthrough DATA
+  con_gfx_init
   sci_hexdump
   sciprintf
   open_console_file

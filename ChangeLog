@@ -1,3 +1,38 @@
+2005-10-29  Alex Angas  <arangas@internode.on.net>
+
+	* src/gfx/gfx_crossblit.c:
+	* src/gfx/gfx_pixmap_scale.c:
+	* src/gfx/gfx_tools.c:
+	* src/gfx/drivers/sdl_driver.c:
+	* src/gfx/drivers/sci_view_0.c:
+	* src/scicore/sci_memory.c: Removed Win32 optimization pragmas (now handled
+	by project settings).
+
+	* src/include/engine.h: Moved VERSION from project files to here for Win32 as
+	__TIMESTAMP__ was not being updated on builds.
+
+	* src/include/game_select.h: Copied MSVC_FUNCTYPECAST_KLUDGE from main.c.
+
+	* src/menu/game_select.c: Changed WIN32_ (invalid) to _MSC_VER.
+
+	* src/menu/game_select_screen.c: Changed "game_select.h" to <game_select.h>
+
+	* src/scicore/versions.c (version_detect_from_executable): Moved two
+	declarations before statement.
+
+	* src/win32/freesci.def: Added con_gfx_init.
+
+	* src/win32/freesci.sln: Removed sciunpack. Added ChangeLog and README.Win32.
+
+	* src/win32/fsci_dll.vcproj: Updated Purify configuration with settings
+	recommended in Purify help file. Added missing compilation files. Added
+	path to SDL library (as per README.Win32) in all configurations.
+	Turned off buffer overrun checks on Release configuration and enabled
+	maximum speed optimization on both fsci_dll and sciv projects (as per MSDN).
+
+	* src/win32/sciv.vcproj: Updated Purify configuration with settings
+	recommended in Purify help file. Added missing compilation files.
+
 2005-10-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/scicore/versions.c (version_detect_from_executable): Pass an

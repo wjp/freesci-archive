@@ -4,18 +4,8 @@
 ** EXTRA_BYTE_OFFSET: Extra source byte offset for copying (used on big-endian machines in 24 bit mode)
 */
 
-/* set optimisations for Win32: */
-/* g on: enable global optimizations */
-/* t on: use fast code */
-/* y on: suppress creation of frame pointers on stack */
-/* s off: disable minimize size code */
 #ifdef _WIN32
 #	include <memory.h>
-#	ifndef SATISFY_PURIFY
-#		pragma optimize( "s", off )
-#		pragma optimize( "gty", on )
-#		pragma intrinsic( memcpy, memset )
-#	endif
 #endif
 
 #include <sci_memory.h>

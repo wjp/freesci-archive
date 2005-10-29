@@ -31,9 +31,6 @@
 /* set optimisations for Win32: */
 #ifdef _WIN32
 #	include <memory.h>
-#	ifndef SATISFY_PURIFY
-#		pragma intrinsic( memcpy, memset )
-#	endif
 #endif
 
 
@@ -206,7 +203,7 @@ gfx_free_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm)
 	if (pxm->data)
 		free(pxm->data);
 
-	if (pxm->colors && !(pxm->flags & GFX_PIXMAP_FLAG_EXTERNAL_PALETTE))
+	if ((pxm->colors) && !(pxm->flags & GFX_PIXMAP_FLAG_EXTERNAL_PALETTE))
 		free(pxm->colors);
 
 	free(pxm);

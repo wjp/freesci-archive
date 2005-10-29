@@ -26,7 +26,7 @@
 ***************************************************************************/
 #include <sci_memory.h>
 #include <gfx_operations.h>
-#include "game_select.h"
+#include <game_select.h>
 
 
 #define MILLION 1000000

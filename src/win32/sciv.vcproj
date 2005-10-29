@@ -20,7 +20,7 @@
 			WholeProgramOptimization="TRUE">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
+				Optimization="2"
 				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
@@ -29,19 +29,16 @@
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
-				PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=\&quot;0.3.4\&quot;;WIN32;_CONSOLE;HAVE_SDL;HAVE_GETOPT_H;HAVE_USLEEP;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;WANT_CONSOLE"
+				PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;WIN32;_CONSOLE;HAVE_SDL;HAVE_GETOPT_H;HAVE_USLEEP;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;WANT_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="TRUE"
-				EnableEnhancedInstructionSet="0"
-				UsePrecompiledHeader="0"
+				BufferSecurityCheck="FALSE"
 				PrecompiledHeaderFile=".\sciv_Release/sciv.pch"
 				AssemblerListingLocation=".\sciv_Release/"
 				ObjectFile=".\sciv_Release/"
 				ProgramDataBaseFileName=".\sciv_Release/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
@@ -52,7 +49,6 @@
 				AdditionalDependencies="Release\fsci.lib winmm.lib"
 				OutputFile="..\..\bin\freesci.exe"
 				LinkIncremental="1"
-				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/freesci.pdb"
 				SubSystem="1"
@@ -93,10 +89,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
-				PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;freesci\&quot;;VERSION=__TIMESTAMP__;HAVE_GETOPT_H;HAVE_LIBPNG;WIN32;_CONSOLE;HAVE_STRING_H;HAVE_SYS_STAT_H;HAVE_FCNTL_H"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="0"
+				PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;freesci\&quot;;HAVE_GETOPT_H;HAVE_LIBPNG;WIN32;_CONSOLE;HAVE_STRING_H;HAVE_SYS_STAT_H;HAVE_FCNTL_H"
+				RuntimeLibrary="3"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\sciv_Purify/sciv.pch"
@@ -105,7 +101,6 @@
 				ProgramDataBaseFileName=".\sciv_Purify/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
@@ -116,7 +111,6 @@
 				AdditionalDependencies="Purify\fsci.lib winmm.lib"
 				OutputFile="Purify\freesci.exe"
 				LinkIncremental="1"
-				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Purify/freesci.pdb"
 				GenerateMapFile="TRUE"
@@ -160,10 +154,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
-				PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;freesci\&quot;;VERSION=__TIMESTAMP__;HAVE_GETOPT_H;WIN32;_CONSOLE;HAVE_STRING_H;HAVE_SYS_STAT_H;HAVE_FCNTL_H;WANT_CONSOLE"
-				BasicRuntimeChecks="0"
+				PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;freesci\&quot;;HAVE_GETOPT_H;WIN32;_CONSOLE;HAVE_STRING_H;HAVE_SYS_STAT_H;HAVE_FCNTL_H;WANT_CONSOLE"
 				RuntimeLibrary="3"
-				BufferSecurityCheck="FALSE"
+				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\sciv_Debug/sciv.pch"
 				AssemblerListingLocation=".\sciv_Debug/"
@@ -182,7 +175,6 @@
 				AdditionalDependencies="Debug\fsci.lib winmm.lib"
 				OutputFile="Debug\freesci.exe"
 				LinkIncremental="1"
-				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/freesci.pdb"
 				SubSystem="1"
@@ -350,6 +342,33 @@
 						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
+			<Filter
+				Name="scicore"
+				Filter="">
+				<File
+					RelativePath="..\scicore\versions.c">
+				</File>
+			</Filter>
+			<Filter
+				Name="menu"
+				Filter="">
+				<File
+					RelativePath="..\menu\game_select.c">
+				</File>
+				<File
+					RelativePath="..\menu\game_select_init.c">
+				</File>
+				<File
+					RelativePath="..\menu\game_select_screen.c">
+				</File>
+			</Filter>
+			<Filter
+				Name="gfx"
+				Filter="">
+				<File
+					RelativePath="..\gfx\font.c">
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -362,6 +381,9 @@
 			</File>
 			<File
 				RelativePath="..\include\event.h">
+			</File>
+			<File
+				RelativePath="..\include\game_select.h">
 			</File>
 			<File
 				RelativePath="..\include\games.h">

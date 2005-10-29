@@ -42,11 +42,6 @@
 
 #ifdef _MSC_VER
 #	include <crtdbg.h>
-#	ifndef SATISFY_PURIFY
-#		pragma optimize( "s", off )
-#		pragma optimize( "gty", on )
-#		pragma intrinsic( memcpy, strlen )
-#	endif
 #endif
 
 

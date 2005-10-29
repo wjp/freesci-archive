@@ -30,11 +30,6 @@
 /* s off: disable minimize size code */
 #ifdef _WIN32
 #	include <memory.h>
-#	ifndef SATISFY_PURIFY
-#		pragma optimize( "s", off )
-#		pragma optimize( "gty", on )
-#		pragma intrinsic( memcpy, memset )
-#	endif
 #endif
 
 #include <sci_memory.h>

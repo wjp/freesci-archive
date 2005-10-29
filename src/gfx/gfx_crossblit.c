@@ -35,18 +35,8 @@
 ** BYTESPP: Bytes per pixel
 */
 
-/* set optimisations for Win32: */
-/* g on: enable global optimizations */
-/* t on: use fast code */
-/* y on: suppress creation of frame pointers on stack */
-/* s off: disable minimize size code */
 #ifdef _WIN32
 #	include <memory.h>
-#	ifndef SATISFY_PURIFY
-#		pragma optimize( "s", off )
-#		pragma optimize( "gty", on )
-#		pragma intrinsic( memcpy, memset )
-#	endif
 #endif
 
 static void FUNCTION_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_line,

@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="fsci_dll"
+	RootNamespace="fsci_dll"
 	SccProjectName=""
 	SccLocalPath="">
 	<Platforms>
@@ -20,7 +21,7 @@
 			WholeProgramOptimization="TRUE">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="2"
 				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
@@ -29,20 +30,18 @@
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
-				PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;WANT_CONSOLE"
+				PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;WANT_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
-				BufferSecurityCheck="TRUE"
-				EnableFunctionLevelLinking="TRUE"
+				BufferSecurityCheck="FALSE"
+				EnableFunctionLevelLinking="FALSE"
 				EnableEnhancedInstructionSet="0"
-				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\fsci_dll_Release/fsci_dll.pch"
 				AssemblerListingLocation=".\fsci_dll_Release/"
 				ObjectFile=".\fsci_dll_Release/"
 				ProgramDataBaseFileName=".\fsci_dll_Release/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
@@ -53,7 +52,7 @@
 				AdditionalDependencies="SDL.lib d3d8.lib dxerr8.lib winmm.lib"
 				OutputFile="..\..\bin\fsci.dll"
 				LinkIncremental="1"
-				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="..\..\..\SDL\lib"
 				ModuleDefinitionFile=".\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/fsci.pdb"
@@ -99,10 +98,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
-				PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;WANT_CONSOLE"
-				BasicRuntimeChecks="0"
+				PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;WANT_CONSOLE"
 				RuntimeLibrary="3"
-				BufferSecurityCheck="FALSE"
+				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\fsci_dll_Debug/fsci_dll.pch"
 				AssemblerListingLocation=".\fsci_dll_Debug/"
@@ -110,7 +108,6 @@
 				ProgramDataBaseFileName=".\fsci_dll_Debug/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
@@ -121,7 +118,7 @@
 				AdditionalDependencies="SDL.lib d3d8.lib dxerr8.lib winmm.lib"
 				OutputFile="Debug\fsci.dll"
 				LinkIncremental="1"
-				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="..\..\..\SDL\lib"
 				ModuleDefinitionFile=".\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/fsci.pdb"
@@ -166,19 +163,17 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
-				PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="0"
+				PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+				RuntimeLibrary="3"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\fsci_dll_Purify/fsci_dll.pch"
 				AssemblerListingLocation=".\fsci_dll_Purify/"
 				ObjectFile=".\fsci_dll_Purify/"
 				ProgramDataBaseFileName=".\fsci_dll_Purify/"
-				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
@@ -189,7 +184,7 @@
 				AdditionalDependencies="SDL.lib d3d8.lib dxerr8.lib winmm.lib"
 				OutputFile="Purify\fsci.dll"
 				LinkIncremental="1"
-				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="..\..\..\SDL\lib"
 				ModuleDefinitionFile=".\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Purify/fsci.pdb"
@@ -978,6 +973,12 @@
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\gfx\font-5x8.c">
+				</File>
+				<File
+					RelativePath="..\gfx\font-6x10.c">
 				</File>
 				<File
 					RelativePath="..\gfx\font.c">
@@ -2206,6 +2207,9 @@
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\scicore\versions.c">
 				</File>
 				<File
 					RelativePath="..\scicore\vocab.c">

@@ -31,6 +31,11 @@
 #include <gfx_tools.h>
 #include <engine.h>
 
+#ifdef _MSC_VER
+#  define MSVC_FUNCTYPECAST_KLUDGE (void *)
+#else
+#  define MSVC_FUNCTYPECAST_KLUDGE
+#endif
 
 typedef void *lookup_funct_t(char *path, char *name);
 
