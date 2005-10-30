@@ -3,10 +3,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fsci_dll", "fsci_dll.vcproj
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sciunpack", "sciunpack.vcproj", "{BA9C9A52-2879-4B25-8C86-65CBA68D334F}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sciv", "sciv.vcproj", "{100095B0-309B-4CE2-8DD3-826294FE9534}"
 	ProjectSection(ProjectDependencies) = postProject
 		{EDC41BC6-74B3-41CB-B110-32CFD1368461} = {EDC41BC6-74B3-41CB-B110-32CFD1368461}
@@ -17,15 +13,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "..\sfx\tests\tests
 	EndProjectSection
 EndProject
 Global
-	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
-		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
-	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Purify = Purify
 		Release = Release
-	EndGlobalSection
-	GlobalSection(ProjectDependencies) = postSolution
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
 		{EDC41BC6-74B3-41CB-B110-32CFD1368461}.Debug.ActiveCfg = Debug|Win32
@@ -34,12 +25,6 @@ Global
 		{EDC41BC6-74B3-41CB-B110-32CFD1368461}.Purify.Build.0 = Purify|Win32
 		{EDC41BC6-74B3-41CB-B110-32CFD1368461}.Release.ActiveCfg = Release|Win32
 		{EDC41BC6-74B3-41CB-B110-32CFD1368461}.Release.Build.0 = Release|Win32
-		{BA9C9A52-2879-4B25-8C86-65CBA68D334F}.Debug.ActiveCfg = Debug|Win32
-		{BA9C9A52-2879-4B25-8C86-65CBA68D334F}.Debug.Build.0 = Debug|Win32
-		{BA9C9A52-2879-4B25-8C86-65CBA68D334F}.Purify.ActiveCfg = Debug|Win32
-		{BA9C9A52-2879-4B25-8C86-65CBA68D334F}.Purify.Build.0 = Debug|Win32
-		{BA9C9A52-2879-4B25-8C86-65CBA68D334F}.Release.ActiveCfg = Release|Win32
-		{BA9C9A52-2879-4B25-8C86-65CBA68D334F}.Release.Build.0 = Release|Win32
 		{100095B0-309B-4CE2-8DD3-826294FE9534}.Debug.ActiveCfg = Debug|Win32
 		{100095B0-309B-4CE2-8DD3-826294FE9534}.Debug.Build.0 = Debug|Win32
 		{100095B0-309B-4CE2-8DD3-826294FE9534}.Purify.ActiveCfg = Purify|Win32
@@ -53,8 +38,15 @@ Global
 		{3C6F6B16-D092-495C-B611-03FFDBFF27FC}.Release.ActiveCfg = Release|Win32
 		{3C6F6B16-D092-495C-B611-03FFDBFF27FC}.Release.Build.0 = Release|Win32
 	EndGlobalSection
+	GlobalSection(SolutionItems) = postSolution
+		..\..\ChangeLog = ..\..\ChangeLog
+		..\..\README.Win32 = ..\..\README.Win32
+	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
 	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
 	EndGlobalSection
 EndGlobal

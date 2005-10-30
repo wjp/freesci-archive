@@ -20,14 +20,17 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
+				Optimization="2"
 				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="TRUE"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
 				PreprocessorDefinitions="NDEBUG;HAVE_MEMCHR;PACKAGE=\&quot;FreeSCI\&quot;;X_DISPLAY_MISSING;HAVE_SDL;_WINDOWS;_USRDLL;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;WIN32;_CONSOLE;HAVE_STRING_H;WANT_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="TRUE"
+				BufferSecurityCheck="FALSE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\fsci_dll_Release/fsci_dll.pch"
 				AssemblerListingLocation=".\fsci_dll_Release/"
@@ -42,16 +45,17 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO"
 				AdditionalDependencies="SDL.lib winmm.lib"
 				OutputFile="..\..\bin\fsci.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="..\..\..\SDL\lib"
 				ModuleDefinitionFile=".\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/fsci.pdb"
 				ImportLibrary=".\Release/fsci.lib"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				MkTypLibCompatible="TRUE"
@@ -92,6 +96,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
 				PreprocessorDefinitions="_DEBUG;DEBUG_SOUND_SERVER;PACKAGE=\&quot;FreeSCI\&quot;;X_DISPLAY_MISSING;HAVE_SDL;_WINDOWS;_USRDLL;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;WIN32;_CONSOLE;HAVE_STRING_H;HAVE_MEMCHR;WANT_CONSOLE"
+				StringPooling="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				RuntimeTypeInfo="TRUE"
@@ -113,6 +118,7 @@
 				OutputFile="Debug\fsci.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="..\..\..\SDL\lib"
 				ModuleDefinitionFile=".\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/fsci.pdb"
@@ -160,12 +166,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
-				PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=\&quot;0.3.4\&quot;;WIN32;_CONSOLE;HAVE_SDL;HAVE_GETOPT_H;HAVE_USLEEP;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;SATISFY_PURIFY;YY_NO_UNISTD_H;WANT_CONSOLE;X_DISPLAY_MISSING;HAVE_MEMCHR"
-				StringPooling="TRUE"
+				PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=\&quot;0.3.4\&quot;;WIN32;_CONSOLE;HAVE_SDL;HAVE_GETOPT_H;HAVE_USLEEP;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;SATISFY_PURIFY;YY_NO_UNISTD_H;WANT_CONSOLE;X_DISPLAY_MISSING;HAVE_MEMCHR;WANT_CONSOLE"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="FALSE"
-				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\fsci_dll_Purify/fsci_dll.pch"
 				AssemblerListingLocation=".\fsci_dll_Purify/"
@@ -173,7 +177,6 @@
 				ProgramDataBaseFileName=".\fsci_dll_Purify/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
@@ -185,6 +188,7 @@
 				OutputFile="Purify\fsci.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="..\..\..\SDL\lib"
 				ModuleDefinitionFile=".\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Purify/fsci.pdb"
@@ -289,6 +293,9 @@
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\gc.c">
 				</File>
 				<File
 					RelativePath="..\engine\grammar.c">
@@ -672,6 +679,12 @@
 				</File>
 				<File
 					RelativePath="..\engine\said.c">
+				</File>
+				<File
+					RelativePath="..\engine\savegame.c">
+				</File>
+				<File
+					RelativePath="..\engine\scriptconsole.c">
 				</File>
 				<File
 					RelativePath="..\engine\scriptdebug.c">
@@ -1352,9 +1365,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\gfx\resource\sci_pic_1.c">
-					</File>
-					<File
 						RelativePath="..\gfx\resource\sci_resmgr.c">
 						<FileConfiguration
 							Name="Release|Win32">
@@ -1715,6 +1725,15 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\scicore\exe.c">
+				</File>
+				<File
+					RelativePath="..\scicore\exe_lzexe.c">
+				</File>
+				<File
+					RelativePath="..\scicore\exe_raw.c">
+				</File>
+				<File
 					RelativePath="..\scicore\hashmap.c">
 				</File>
 				<File
@@ -1751,6 +1770,9 @@
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\scicore\reg_t_hashmap.c">
 				</File>
 				<File
 					RelativePath="..\scicore\resource.c">
@@ -1956,6 +1978,9 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\scicore\versions.c">
+				</File>
+				<File
 					RelativePath="..\scicore\vocab.c">
 					<FileConfiguration
 						Name="Release|Win32">
@@ -2150,7 +2175,16 @@
 				RelativePath="..\include\event.h">
 			</File>
 			<File
+				RelativePath="..\include\exe.h">
+			</File>
+			<File
+				RelativePath="..\include\exe_dec.h">
+			</File>
+			<File
 				RelativePath="..\sound\fmopl.h">
+			</File>
+			<File
+				RelativePath="..\include\gc.h">
 			</File>
 			<File
 				RelativePath="..\include\gfx_driver.h">
@@ -2220,6 +2254,9 @@
 			</File>
 			<File
 				RelativePath="..\include\pcmout.h">
+			</File>
+			<File
+				RelativePath="..\include\reg_t_hashmap.h">
 			</File>
 			<File
 				RelativePath="..\include\resource.h">

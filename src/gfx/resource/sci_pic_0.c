@@ -2289,13 +2289,14 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 
 				gfx_pixmap_t *view;
 				byte *data;
+				gfx_mode_t *mode;
 
 //				if (pos != 1300) nodraw = 1;
 
 				p0printf("Embedded view @%d\n", pos);
 
 				/* Set up mode structure for resizing the view */
-				gfx_mode_t *mode = gfx_new_mode(
+				mode = gfx_new_mode(
 					pic->visual_map->index_xl/320,
 					pic->visual_map->index_yl/200, 
 					1, /* 1bpp, which handles masks and the rest for us */

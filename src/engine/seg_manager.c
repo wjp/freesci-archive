@@ -345,19 +345,21 @@ _sm_deallocate (seg_manager_t* self, int seg, int recursive)
 
 int sm_script_marked_deleted(seg_manager_t* self, int script_nr)
 {
+	script_t *scr;
 	int seg = sm_seg_get( self, script_nr );
 	VERIFY ( sm_check (self, seg), "invalid seg id" );
 			 
-	script_t *scr = &(self->heap[seg]->data.script);
+	scr = &(self->heap[seg]->data.script);
 	return scr->marked_as_deleted;
 }
 
 void sm_mark_script_deleted(seg_manager_t* self, int script_nr)
 {
+	script_t *scr;
 	int seg = sm_seg_get( self, script_nr );
 	VERIFY ( sm_check (self, seg), "invalid seg id" );
 
-	script_t *scr = &(self->heap[seg]->data.script);
+	scr = &(self->heap[seg]->data.script);
 	scr->marked_as_deleted = 1;
 }
 
@@ -1325,8 +1327,9 @@ deallocate_self (seg_interface_t *self)
 static void
 free_at_address_script (seg_interface_t *self, reg_t addr)
 {
+	script_t *script;
 	VERIFY(self->mobj->type == MEM_OBJ_SCRIPT, "Trying to free a non-script!");
-	script_t *script = &(self->mobj->data.script);
+	script = &(self->mobj->data.script);
 /*
 	sciprintf("[GC] Freeing script "PREG"\n", PRINT_REG(addr));
 	if (script->locals_segment)

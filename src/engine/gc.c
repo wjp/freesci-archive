@@ -116,13 +116,14 @@ typedef struct {
 void
 store_normalised(void *pre_normaliser, reg_t reg, int _)
 {
+	seg_interface_t *interfce;
 	normaliser_t *normaliser = (normaliser_t *) pre_normaliser;
-	seg_interface_t *interface = (reg.segment < normaliser->interfaces_nr)
+	interfce = (reg.segment < normaliser->interfaces_nr)
 		? normaliser->interfaces[reg.segment]
 		: NULL;
 
-	if (interface) {
-		reg = interface->find_canonic_address(interface, reg);
+	if (interfce) {
+		reg = interfce->find_canonic_address(interfce, reg);
 		reg_t_hash_map_check_value(normaliser->normal_map, reg, 1, NULL);
 	}
 }
@@ -251,7 +252,7 @@ find_all_used_references(state_t *s)
 
 
 typedef struct {
-	seg_interface_t *interface;
+	seg_interface_t *interfce;
 #ifdef DEBUG_GC
 	char *segnames[MEM_OBJ_MAX + 1];
 	int segcount[MEM_OBJ_MAX + 1];
@@ -267,9 +268,9 @@ free_unless_used (void *pre_use_map, reg_t addr)
 
 	if (0 > reg_t_hash_map_check_value(use_map, addr, 0, NULL)) {
 		/* Not found -> we can free it */
-		deallocator->interface->free_at_address(deallocator->interface, addr);
+		deallocator->interfce->free_at_address(deallocator->interfce, addr);
 #ifdef DEBUG_GC
-		deallocator->segcount[deallocator->interface->type_id]++;
+		deallocator->segcount[deallocator->interfce->type_id]++;
 #endif
 	}
 
@@ -292,24 +293,24 @@ run_gc(state_t *s)
 
 	for (seg_nr = 1; seg_nr < sm->heap_size; seg_nr++)
 		if (sm->heap[seg_nr] != NULL) {
-			deallocator.interface = get_seg_interface(sm, seg_nr);
+			deallocator.interfce = get_seg_interface(sm, seg_nr);
 #ifdef DEBUG_GC
-			deallocator.segnames[deallocator.interface->type_id] = deallocator.interface->type;
+			deallocator.segnames[deallocator.interfce->type_id] = deallocator.interfce->type;
 #endif
 
-			deallocator.interface->list_all_deallocatable(deallocator.interface,
+			deallocator.interfce->list_all_deallocatable(deallocator.interfce,
 								      &deallocator,
 								      free_unless_used);
 
-			deallocator.interface->deallocate_self(deallocator.interface);
+			deallocator.interfce->deallocate_self(deallocator.interfce);
 		}
 
 	free_reg_t_hash_map(deallocator.use_map);
 
 #ifdef DEBUG_GC
 	{
-		sciprintf("[GC] Summary:\n");
 		int i;
+		sciprintf("[GC] Summary:\n");
 		for (i = 0; i <= MEM_OBJ_MAX; i++)
 			if (deallocator.segcount[i])
 				sciprintf("\t%d\t* %s\n",

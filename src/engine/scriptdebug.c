@@ -34,6 +34,9 @@
 #include <kernel_types.h>
 #include <gc.h>
 #include <sci_midi.h>
+#ifdef _MSC_VER
+#	include <sci_win32.h>
+#endif
 #ifdef HAVE_UNISTD_H
 /* Assume this is a sufficient precondition */
 #  include <signal.h>

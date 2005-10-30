@@ -1,3 +1,26 @@
+2005-10-30  Alex Angas  <arangas@internode.on.net>
+
+	* src/scicore/resource.c (sci_test_view_type): Default init of
+	mgr->sci_version if SCI version cannot be detected.
+
+	* src/engine/gc.c: Renamed reserved word 'interface' to interfce.
+
+	* src/engine/gc.c:
+	* src/engine/kstring.c:
+	* src/engine/scriptdebug.c:
+	* src/engine/seg_manager.c:
+	* src/engine/vm.c:
+	* src/gfx/sci_widgets.c:
+	* src/gfx/resource/sci_pic_0.c: Fixed misc compilation errors.
+
+	* src/win32/freesci.sln: removed sciunpack.
+
+	* src/win32/fsci_dll.vcproj:
+	* src/win32/sciv.vcproj: Updated build configurations to include SDL
+	library reference. Set Release optimization settings as per MSDN.
+	Added missing files to project.
+	* src/win32/tests/tests.vcproj: Attempted to fix compilation.
+
 2005-10-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/scicore/versions.c (scan_file): Pass an unsigned char to

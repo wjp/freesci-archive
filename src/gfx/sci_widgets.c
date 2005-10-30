@@ -350,6 +350,10 @@ gfxw_list_t *
 sciw_new_edit_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int font, unsigned int cursor,
 		      char inverse)
 {
+	gfxw_text_t *text_handle;
+	long draw_cursor;
+	long foo;
+
 	gfxw_list_t *list;
 	int cursor_height = gfxop_get_font_height(port->visual->gfx_state, font);
 
@@ -359,10 +363,6 @@ sciw_new_edit_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int 
 	zone.yl++;
 
 	list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
-	gfxw_text_t *text_handle;
-	long draw_cursor;
-	long foo;
-
 	gfxw_set_id(GFXW(list), ID.segment, ID.offset);
 	zone.x = 1;
 	zone.y = 1;
@@ -466,6 +466,12 @@ sciw_new_list_control(gfxw_port_t *port, reg_t ID, rect_t zone, int font_nr, cha
 {
 	gfxw_list_t *list;
 
+	char arr_up[2], arr_down[2];
+	int i;
+
+	int font_height;
+	int columns;
+
 	zone.x--;
 	zone.y--;
 	zone.xl++;
@@ -473,10 +479,8 @@ sciw_new_list_control(gfxw_port_t *port, reg_t ID, rect_t zone, int font_nr, cha
 
 	list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 
-	char arr_up[2], arr_down[2];
-	int i;
-	int font_height = gfxop_get_font_height(port->visual->gfx_state, font_nr);
-	int columns = (zone.yl - 20);
+	font_height = gfxop_get_font_height(port->visual->gfx_state, font_nr);
+	columns = (zone.yl - 20);
 
 	if (font_height <= 0) {
 		GFXERROR("Attempt to create list control with invalid font %d\n", font_nr);

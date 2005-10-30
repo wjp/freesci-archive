@@ -289,6 +289,8 @@ sci_test_view_type(resource_mgr_t *mgr)
 	resource_t *res;
 	int i;
 
+	mgr->sci_version = SCI_VERSION_AUTODETECT;
+
 	for (i=0;i<1000;i++)
 	{
 		res = scir_test_resource(mgr, sci_view, i);

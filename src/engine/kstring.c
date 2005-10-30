@@ -587,8 +587,9 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 				switch (align) {
 
 				case ALIGN_CENTRE: {
+					int half_extralen;
 					align = 0;
-					int half_extralen = extralen - (extralen >> 1);
+					half_extralen = extralen - (extralen >> 1);
 					while (half_extralen-- > 0)
 						*target++ = ' '; /* Format into the text */
 					break;}

@@ -1771,7 +1771,8 @@ script_instantiate(state_t *s, int script_nr)
 	int relocation = -1;
 	int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
 	mem_obj_t *mem;
-
+	int marked_for_deletion; 
+	int seg;
 
 	if (!script) {
 		sciprintf("Script 0x%x requested but not found\n", script_nr);
@@ -1784,8 +1785,7 @@ script_instantiate(state_t *s, int script_nr)
 		return 0;
 	}
 
-	int marked_for_deletion; 
-		int seg = sm_seg_get ( &s->seg_manager, script_nr );
+	seg = sm_seg_get ( &s->seg_manager, script_nr );
 	if (sm_script_is_loaded (&s->seg_manager, script_nr, SCRIPT_ID)) {
 		marked_for_deletion = sm_script_marked_deleted(&s->seg_manager, script_nr);
 

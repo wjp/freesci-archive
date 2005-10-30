@@ -21,14 +21,19 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/D VERSION=\&quot;0.6.2-devel\&quot;"
-				Optimization="1"
+				Optimization="2"
 				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="TRUE"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
+				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
 				PreprocessorDefinitions="HAVE_SDL;NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;HAVE_GETOPT_H;HAVE_USLEEP;WIN32;_CONSOLE;HAVE_STRING_H"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="TRUE"
+				BufferSecurityCheck="FALSE"
+				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\sciv_Release/sciv.pch"
 				AssemblerListingLocation=".\sciv_Release/"
 				ObjectFile=".\sciv_Release/"
@@ -43,15 +48,16 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO"
 				AdditionalDependencies=".\Release\fsci.lib SDL.lib winmm.lib"
 				OutputFile="..\..\bin\freesci.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="..\..\..\SDL\lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/freesci.pdb"
 				SubSystem="1"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				TypeLibraryName=".\Release/sciv.tlb"
@@ -255,6 +261,15 @@
 				RelativePath="..\config.l">
 			</File>
 			<File
+				RelativePath="..\scicore\exe.c">
+			</File>
+			<File
+				RelativePath="..\scicore\exe_lzexe.c">
+			</File>
+			<File
+				RelativePath="..\scicore\exe_raw.c">
+			</File>
+			<File
 				RelativePath="..\menu\game_select_init.c">
 			</File>
 			<File
@@ -359,6 +374,12 @@
 						DebugInformationFormat="3"/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath="..\scicore\tools.c">
+			</File>
+			<File
+				RelativePath="..\scicore\versions.c">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -371,6 +392,12 @@
 			</File>
 			<File
 				RelativePath="..\include\event.h">
+			</File>
+			<File
+				RelativePath="..\include\exe.h">
+			</File>
+			<File
+				RelativePath="..\include\exe_dec.h">
 			</File>
 			<File
 				RelativePath="..\include\game_select.h">
@@ -440,6 +467,9 @@
 			</File>
 			<File
 				RelativePath="..\include\sci_memory.h">
+			</File>
+			<File
+				RelativePath="..\include\win32\sci_win32.h">
 			</File>
 			<File
 				RelativePath="..\include\sciresource.h">
