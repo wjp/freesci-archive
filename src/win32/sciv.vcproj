@@ -21,7 +21,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="1"
@@ -39,20 +38,21 @@
 				ProgramDataBaseFileName=".\sciv_Release/"
 				BrowseInformation="1"
 				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO"
 				AdditionalDependencies="Release\fsci.lib winmm.lib"
 				OutputFile="..\..\bin\freesci.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/freesci.pdb"
 				SubSystem="1"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				TypeLibraryName=".\Release/sciv.tlb"
@@ -91,9 +91,10 @@
 				Optimization="0"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
-				PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;freesci\&quot;;HAVE_GETOPT_H;HAVE_LIBPNG;WIN32;_CONSOLE;HAVE_STRING_H;HAVE_SYS_STAT_H;HAVE_FCNTL_H"
-				RuntimeLibrary="3"
-				RuntimeTypeInfo="TRUE"
+				PreprocessorDefinitions="SATISFY_PURIFY;NDEBUG;PACKAGE=\&quot;freesci\&quot;;HAVE_GETOPT_H;HAVE_LIBPNG;WIN32;_CONSOLE;HAVE_STRING_H;HAVE_SYS_STAT_H;HAVE_FCNTL_H;WANT_CONSOLE"
+				StringPooling="TRUE"
+				RuntimeLibrary="2"
+				BufferSecurityCheck="FALSE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\sciv_Purify/sciv.pch"
 				AssemblerListingLocation=".\sciv_Purify/"
@@ -101,13 +102,13 @@
 				ProgramDataBaseFileName=".\sciv_Purify/"
 				BrowseInformation="1"
 				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO"
 				AdditionalDependencies="Purify\fsci.lib winmm.lib"
 				OutputFile="Purify\freesci.exe"
 				LinkIncremental="1"
@@ -116,7 +117,8 @@
 				GenerateMapFile="TRUE"
 				MapFileName="Purify/freesci.map"
 				SubSystem="1"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				TypeLibraryName=".\Purify/sciv.tlb"
@@ -157,6 +159,7 @@
 				PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;freesci\&quot;;HAVE_GETOPT_H;WIN32;_CONSOLE;HAVE_STRING_H;HAVE_SYS_STAT_H;HAVE_FCNTL_H;WANT_CONSOLE"
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="TRUE"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\sciv_Debug/sciv.pch"
 				AssemblerListingLocation=".\sciv_Debug/"
@@ -171,14 +174,14 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO"
 				AdditionalDependencies="Debug\fsci.lib winmm.lib"
 				OutputFile="Debug\freesci.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/freesci.pdb"
 				SubSystem="1"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				TypeLibraryName=".\Debug/sciv.tlb"

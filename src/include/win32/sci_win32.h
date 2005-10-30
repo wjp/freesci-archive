@@ -1,6 +1,6 @@
 #include <windows.h>
-#ifdef _WIN32
 
+#ifdef _WIN32
 #	ifdef sleep
 #		undef sleep
 #	endif
@@ -22,4 +22,3 @@
 	{ (rect_t).x, (rect_t).y, (rect_t).x + (rect_t).xl, (rect_t).y + (rect_t).yl }
 
 #endif
-

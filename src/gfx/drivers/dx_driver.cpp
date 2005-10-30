@@ -1,5 +1,5 @@
 /***************************************************************************
- dx_driver.cpp Copyright (C) 2002,2003 Alexander R Angas,
+ dx_driver.cpp Copyright (C) 2002,2003,2005 Alexander R Angas,
                Copyright (C) 1999 Dmitry Jemerov
 
  This program may be modified and copied freely according to the terms of
@@ -33,6 +33,7 @@
             - Fixed: Rearrange of draw_filled_rect() and draw_line()
 			- TODO: implement mouse
             - TODO: allow setting of adapter
+   20051029 - Fixed: Crash when not running 3D accelerator
                 -- Alex Angas
 
 ***************************************************************************/
@@ -42,8 +43,6 @@
 #ifndef __cplusplus
 #error NOTE: This file MUST be compiled as C++. In Visual C++, use the /Tp command line option.
 #endif
-
-//#define _WIN32_WINNT 0x0400	// For TrackMouseEvent
 
 #include <windows.h>
 #include <d3d8.h>
@@ -69,10 +68,7 @@ extern "C" {
 
 #define DODX(cmd, proc)        \
 		hr = cmd;              \
-		if ( hr != D3D_OK ) {  \
-			sciprintf("%s(): Failure in %i\n  %s\n  %s\n", #proc, __LINE__, #cmd, DXGetErrorString8(hr));  \
-			BREAKPOINT();      \
-		}
+		DXTrace(__FILE__, __LINE__, hr, #cmd" from "#proc, 1);
 
 #define SAFE_RELEASE(p)  \
 	if (p)               \
@@ -126,6 +122,8 @@ struct gfx_dx_struct_t
 	LPDIRECT3DTEXTURE8 visuals[NUM_VISUAL_BUFFERS];
 	LPDIRECT3DTEXTURE8 priority_visuals[NUM_PRIORITY_BUFFERS];
 	gfx_pixmap_t *priority_maps[NUM_PRIORITY_BUFFERS];
+
+	LPDIRECT3DTEXTURE8 cursor;		// Mouse cursor
 
 	WNDCLASSEX wc;		// Window class
 	HWND hWnd;			// Window
@@ -222,7 +220,11 @@ InitD3D(struct _gfx_driver *drv)
 	}
 
 	// Get device caps.
-	DODX((dx_state->g_pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &(dx_state->g_d3dcaps))), InitD3D);
+	hr = dx_state->g_pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &(dx_state->g_d3dcaps));
+	if ( FAILED( hr ) ) {
+		sciprintf("Sorry, you do not have a 3D accelerated video driver installed.\n");
+		return GFX_FATAL;
+	}
 
 	// Get current display mode and optimise for this screen.
 	DODX((dx_state->g_pD3D->GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &dx_state->g_d3ddm )), InitD3D);
@@ -373,7 +375,7 @@ dx_init_specific(struct _gfx_driver *drv,
 	// Register the window class.
 	ZeroMemory( &(dx_state->wc), sizeof(WNDCLASSEX) );
 	dx_state->wc.cbSize = sizeof(WNDCLASSEX);
-	dx_state->wc.style = CS_HREDRAW | CS_VREDRAW;
+	dx_state->wc.style = CS_HREDRAW | CS_VREDRAW | CS_NOCLOSE;
 	dx_state->wc.lpfnWndProc = MsgProc;
 	dx_state->wc.hInstance = GetModuleHandle(NULL);
 	dx_state->wc.lpszClassName = DX_CLASS_NAME;
@@ -386,7 +388,7 @@ dx_init_specific(struct _gfx_driver *drv,
 	// Create the application's window.
 	dx_state->hWnd = CreateWindow(
 		DX_CLASS_NAME, "FreeSCI",
-		WS_OVERLAPPEDWINDOW,
+		0,
 		CW_USEDEFAULT, CW_USEDEFAULT, dx_state->xsize, dx_state->ysize,
 		GetDesktopWindow(), NULL, dx_state->wc.hInstance, NULL );
 
@@ -410,8 +412,7 @@ dx_init_specific(struct _gfx_driver *drv,
 	if (d3dret != GFX_OK)
 		return d3dret;
 
-	// Set up mouse tracking
-#if(_WIN32_WINNT >= 0x0400)
+/*	// Set up mouse tracking
 	TRACKMOUSEEVENT trkMouse;
 	ZeroMemory(&trkMouse, sizeof(TRACKMOUSEEVENT));
 	trkMouse.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -421,8 +422,7 @@ dx_init_specific(struct _gfx_driver *drv,
 	{
 		sciprintf("dx_init_specific(): TrackMouseEvent failed (%u)\n", GetLastError());
 	}
-#endif
-
+*/
 	// Show the window
 	ShowWindow( dx_state->hWnd, SW_SHOWDEFAULT );
 	UpdateWindow( dx_state->hWnd );
@@ -860,29 +860,33 @@ static int
 dx_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 {
 	HRESULT hr;
-	sciprintf("WARNING: dx_set_pointer() unimplemented\n");
+/*	sciprintf("WARNING: dx_set_pointer() unimplemented\n");
 	DODX( (dx_state->g_pd3dDevice->ShowCursor(FALSE)), dx_set_pointer );
-/*
-	LPDIRECT3DSURFACE8 pntSurf;
+	*/
+	int i, xs;
+	byte *s, *d;
 	D3DLOCKED_RECT lockedRect;
+	LPDIRECT3DTEXTURE8 pntTex;
+	DODX( (dx_state->g_pd3dDevice->CreateTexture(pointer->xl, pointer->yl, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &pntTex )), dx_set_pointer );
 
-	rect_t src = { 0, 0, pointer->index_xl, pointer->index_yl };
-	rect_t dst = { 0, 0, pointer->index_xl, pointer->index_yl };
+	// Do gfx crossblit
+	DODX( (pntTex->LockRect(0, &lockedRect, NULL, 0)), dx_set_pointer );
+	s = pointer->data;
+	d = (byte *) lockedRect.pBits;
+	xs = drv->mode->bytespp * pointer->xl;
 
+	for(i = 0; i < pointer->yl; i++)
+	{
+		memcpy(d, s, xs);
+		s += xs;
+		d += lockedRect.Pitch;
+	}
+	DODX( (pntTex->UnlockRect(0)), dx_set_pointer );
 
-	DODX( (dx_state->g_pd3dDevice->CreateImageSurface(pointer->index_xl, pointer->index_yl, D3DFMT_A8R8G8B8, &pntSurf)), dx_set_pointer );
+	dx_state->cursor = pntTex;
 
-	DODX( (pntSurf->LockRect(&lockedRect, NULL, 0)), dx_set_pointer );
+	DODX( (dx_state->g_pd3dDevice->SetCursorProperties(0, 0, (LPDIRECT3DSURFACE8)pntTex)), dx_set_pointer );
 
-	_gfx_crossblit_simple((byte*)lockedRect.pBits, pointer->index_data,
-		lockedRect.Pitch, pointer->xl * dx_state->bpp,
-		pointer->index_xl, pointer->index_yl, dx_state->bpp);
-
-	DODX( (pntSurf->UnlockRect()), dx_set_pointer );
-
-	DODX( (dx_state->g_pd3dDevice->SetCursorProperties(0, 0, pntSurf)), dx_set_pointer );
-	DODX( (dx_state->g_pd3dDevice->ShowCursor(TRUE)), dx_set_pointer );
-*/
 	return GFX_OK;
 }
 
@@ -978,19 +982,17 @@ static void add_key_event (gfx_dx_struct_t *ctx, int data)
 	add_queue_event (ctx, SCI_EVT_KEYBOARD, data, buckybits);
 }
 
-
-/*
 static int
 add_mouse_event(struct _gfx_driver *drv, int type, int data, LPARAM lParam, WPARAM wParam)
 {
-	drv->pointer_x = GET_X_LPARAM(lParam);
+/* TODO
+drv->pointer_x = GET_X_LPARAM(lParam);
 	drv->pointer_y = GET_Y_LPARAM(lParam);
 
 //TODO:	add_queue_event (ctx,type, data, buckybits);
+*/
 	return 0;
 }
-*/
-
 
 /* Check for Windows messages. */
 static int
@@ -1088,7 +1090,6 @@ ProcessMessages(struct _gfx_driver *drv)
 				}
 				break;
 
-#if(_WIN32_WINNT >= 0x0400)
 			case WM_MOUSEMOVE:
 				// Turn off mouse cursor
 				ShowCursor(FALSE);
@@ -1098,7 +1099,6 @@ ProcessMessages(struct _gfx_driver *drv)
 				// Turn on mouse cursor
 				ShowCursor(TRUE);
 				break;
-#endif
 
 			case WM_DESTROY:
 				PostQuitMessage( 0 );
@@ -1116,12 +1116,12 @@ ProcessMessages(struct _gfx_driver *drv)
 extern "C"
 gfx_driver_t gfx_driver_dx = {
 	"directx",
-	"0.2",
+	"0.3",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,	/* mode */
 	0, 0,	/* mouse pointer position */
-	/*GFX_CAPABILITY_MOUSE_POINTER | GFX_CAPABILITY_COLOR_MOUSE_POINTER | */ GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_FINE_LINES | GFX_CAPABILITY_WINDOWED /*| GFX_CAPABILITY_MOUSE_SUPPORT*/,
+	GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER | /*GFX_CAPABILITY_COLOR_MOUSE_POINTER | */ GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_FINE_LINES | GFX_CAPABILITY_WINDOWED,
 	0,
 	dx_set_param,
 	dx_init_specific,
@@ -1135,7 +1135,7 @@ gfx_driver_t gfx_driver_dx = {
 	dx_grab_pixmap,
 	dx_update,
 	dx_set_static_buffer,
-	NULL,//dx_set_pointer,
+	dx_set_pointer,
 	NULL,
 	dx_get_event,
 	dx_usleep,

@@ -1,3 +1,17 @@
+2005-10-30  Alex Angas  <arangas@internode.on.net>
+
+	* src/gfx/drivers/dx_driver.cpp: Now creating mouse pointer as texture,
+	other minor updates.
+
+	* src/include/win32/sci_win32.h:
+	* src/win32/getopt.c:
+	* src/win32/usleep.c: Line break fixes.
+
+	* src/sound/sound.c: Disabled win32e sound driver as it's completely broken
+
+	* src/win32/fsci_dll.vcproj:
+	* src/win32/sciv.vcproj: Further updates to Purify configuration.
+
 2005-10-29  Alex Angas  <arangas@internode.on.net>
 
 	* src/gfx/gfx_crossblit.c:

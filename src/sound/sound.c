@@ -77,7 +77,7 @@ sound_server_t *sound_servers[] = {
 
 #  ifdef _WIN32
 	&sound_server_win32p,
-	&sound_server_win32e,
+/*	&sound_server_win32e,*/
 #  endif
 
 #  ifdef ARM_WINCE

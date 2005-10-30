@@ -22,7 +22,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="1"
@@ -42,13 +41,13 @@
 				ProgramDataBaseFileName=".\fsci_dll_Release/"
 				BrowseInformation="1"
 				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO"
 				AdditionalDependencies="SDL.lib d3d8.lib dxerr8.lib winmm.lib"
 				OutputFile="..\..\bin\fsci.dll"
 				LinkIncremental="1"
@@ -57,7 +56,8 @@
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/fsci.pdb"
 				ImportLibrary=".\Release/fsci.lib"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
@@ -108,13 +108,13 @@
 				ProgramDataBaseFileName=".\fsci_dll_Debug/"
 				BrowseInformation="1"
 				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO"
 				AdditionalDependencies="SDL.lib d3d8.lib dxerr8.lib winmm.lib"
 				OutputFile="Debug\fsci.dll"
 				LinkIncremental="1"
@@ -123,7 +123,8 @@
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/fsci.pdb"
 				ImportLibrary=".\Debug/fsci.lib"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
@@ -165,8 +166,10 @@
 				Optimization="0"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
-				PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-				RuntimeLibrary="3"
+				PreprocessorDefinitions="SATISFY_PURIFY;NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;WANT_CONSOLE"
+				StringPooling="TRUE"
+				RuntimeLibrary="2"
+				BufferSecurityCheck="FALSE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\fsci_dll_Purify/fsci_dll.pch"
@@ -174,13 +177,13 @@
 				ObjectFile=".\fsci_dll_Purify/"
 				ProgramDataBaseFileName=".\fsci_dll_Purify/"
 				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO"
 				AdditionalDependencies="SDL.lib d3d8.lib dxerr8.lib winmm.lib"
 				OutputFile="Purify\fsci.dll"
 				LinkIncremental="1"
@@ -191,7 +194,8 @@
 				GenerateMapFile="TRUE"
 				MapFileName="Purify/fsci.map"
 				ImportLibrary=".\Purify/fsci.lib"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
