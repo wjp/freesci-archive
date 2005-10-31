@@ -1,3 +1,8 @@
+2005-10-31  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/resource.c (scir_new_resource_manager): Fix resource
+	sorting failure under some circumstances.
+
 2005-10-30  Alex Angas  <arangas@internode.on.net>
 
 	* src/scicore/resource.c (sci_test_view_type): Default init of
@@ -38,6 +43,8 @@
 	* src/dc/dc.c: Temporarily added dummy isatty() and scanf().
 
 2005-10-27  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c: Chrono-ports are back, with changes.
 
 	* src/engine/kgraphics.c (kDrawCel): Temporarily disable
 	chrono-ports. 

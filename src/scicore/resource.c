@@ -468,10 +468,10 @@ scir_new_resource_manager(char *dir, int version,
 	mgr->lru_first = NULL;
 	mgr->lru_last = NULL;
 
+	mgr->allow_patches = allow_patches;
+
 	qsort(mgr->resources, mgr->resources_nr, sizeof(resource_t),
 	      resourcecmp); /* Sort resources */
-
-	mgr->allow_patches = allow_patches;
 
 	if (version == SCI_VERSION_AUTODETECT)
 		switch (resmap_version) {
@@ -534,14 +534,19 @@ scir_new_resource_manager(char *dir, int version,
 		}
 
 	if (!resource_error)
-	  if (version <= SCI_VERSION_01)
-	    sci0_read_resource_patches(dir,
-				       &mgr->resources,
-				       &mgr->resources_nr);
-	  else
-	    sci1_read_resource_patches(dir,
-				       &mgr->resources,
-				       &mgr->resources_nr);
+	{
+		if (version <= SCI_VERSION_01)
+			sci0_read_resource_patches(dir,
+						   &mgr->resources,
+						   &mgr->resources_nr);
+		else
+			sci1_read_resource_patches(dir,
+						   &mgr->resources,
+						   &mgr->resources_nr);
+
+		qsort(mgr->resources, mgr->resources_nr, sizeof(resource_t),
+		      resourcecmp); /* Sort resources */
+	}
 
 	mgr->sci_version = version;
 
