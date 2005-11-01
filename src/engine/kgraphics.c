@@ -335,7 +335,13 @@ kSetCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	if (has_kernel_function(s, "MoveCursor"))
 	{
-		SCIkwarn(SCIkERROR, "KQ5/CD special semantics not implemented yet!\n", argc);
+		switch (argc)
+		{
+		case 9 :
+			gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2));
+			break;
+		}
+
 		return s->r_acc;
 	}
 		
@@ -355,6 +361,28 @@ kSetCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	return s->r_acc;
 
+}
+
+reg_t
+kMoveCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	point_t newpos;
+
+	newpos = s->gfx_state->pointer_pos;
+
+	if (argc > 1)
+	{
+		newpos.x = s->gfx_state->pointer_pos.x+s->picture_port->bounds.x;
+		newpos.y = SKPV(0)+s->picture_port->bounds.y;
+	} else
+	{
+		newpos.x = SKPV(1)+s->picture_port->bounds.x;
+		newpos.y = SKPV(0)+s->picture_port->bounds.y;
+	}
+
+	GFX_ASSERT(gfxop_set_pointer_position(s->gfx_state, newpos));
+
+	return s->r_acc;
 }
 
 static inline void

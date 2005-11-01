@@ -51,6 +51,7 @@ reg_t kCoordPri(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kPriCoord(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kShakeScreen(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kSetCursor(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kMoveCursor(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kShow(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kPicNotValid(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kOnControl(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -190,7 +191,7 @@ static int sci_max_allowed_unknown_kernel_functions[] = {
 
 sci_kernel_function_t kfunct_mappers[] = {
 /*00*/	DEFUN("Load", kLoad, "ii*"),
-/*01*/	{KF_NEW, "UnLoad", {kUnLoad, "i."}},
+/*01*/	{KF_NEW, "UnLoad", {kUnLoad, "ii*"}},
 /*02*/	{KF_NEW, "ScriptID", {kScriptID,  "ii*"}},
 /*03*/	{KF_NEW, "DisposeScript", {kDisposeScript, "i"}},
 /*04*/	{KF_NEW, "Clone", {kClone, "o"}},
@@ -230,6 +231,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*26*/	{KF_NEW, "SetSynonyms", {kSetSynonyms, "o"}},
 /*27*/	{KF_NEW, "HaveMouse", {kHaveMouse, ""}},
 /*28*/	{KF_NEW, "SetCursor", {kSetCursor, "i*"}},
+/*28*/	{KF_NEW, "MoveCursor", {kMoveCursor, "ii*"}},
 /*29*/	{KF_NEW, "FOpen", {kFOpen, "ri"}},
 /*2a*/	{KF_NEW, "FPuts", {kFPuts, "ir"}},
 /*2b*/	{KF_NEW, "FGets", {kFGets, "rii"}},
@@ -271,6 +273,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*4f*/	{KF_NEW, "BaseSetter", {kBaseSetter, "o"}},
 /*50*/	{KF_NEW, "DirLoop", {kDirLoop, "oi"}},
 /*51*/	{KF_NEW, "CanBeHere", {kCanBeHere, "ol*"}},
+/*51*/	{KF_NEW, "CantBeHere", {kCanBeHere, "ol*"}},
 /*52*/	{KF_NEW, "OnControl", {kOnControl, "i*"}},
 /*53*/	{KF_NEW, "InitBresen", {kInitBresen, "oi*"}},
 /*54*/	{KF_NEW, "DoBresen", {kDoBresen, "o"}},
@@ -700,7 +703,17 @@ kstub(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kNOP(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: NOP\n", funct_nr);
+	char *problem = s->kfunct_table[funct_nr].orig_name ?
+		"unmapped" : "NOP";
+
+	SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: %s", funct_nr, problem);
+
+	if (s->kfunct_table[funct_nr].orig_name)
+	  {
+	    sciprintf(" (but its name is known to be %s)", s->kfunct_table[funct_nr].orig_name);
+	  }
+
+	sciprintf("\n");
 	return NULL_REG;
 }
 
@@ -803,7 +816,7 @@ script_map_kernel(state_t *s)
 	int functnr;
 	int mapped = 0;
 	int ignored = 0;
-	int functions_nr = s->kernel_names_nr + 1;
+	int functions_nr = s->kernel_names_nr;
 	int max_functions_nr
 		= sci_max_allowed_unknown_kernel_functions[s->resmgr
 							   ->sci_version];
@@ -839,11 +852,19 @@ script_map_kernel(state_t *s)
 
 		if (found == -1) {
 			if (sought_name)
+			{
 				sciprintf("Warning: Kernel function %s[%x] unmapped\n",
 					  s->kernel_names[functnr], functnr);
+				s->kfunct_table[functnr].fun = kNOP;
+			} else
+			{
+				sciprintf("Warning: Flagging kernel function %x as unknown\n",
+					  functnr);
+				s->kfunct_table[functnr].fun = k_Unknown;
+			}
 
 			s->kfunct_table[functnr].signature = NULL;
-			s->kfunct_table[functnr].fun = k_Unknown;
+			s->kfunct_table[functnr].orig_name = sought_name;
 		} else switch (kfunct_mappers[found].type) {
 
 		case KF_OLD:

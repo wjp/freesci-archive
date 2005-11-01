@@ -1,3 +1,13 @@
+2005-11-01  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (kMoveCursor): New kernel call.
+
+	* src/engine/kgraphics.c (kSetCursor): Adapted to KQ5/CD
+	semantics.
+
+	* src/engine/kernel.c (script_map_kernel): Differentiate Unknown
+	and NOP/unmapped functions.
+
 2005-10-31  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/resource.c (scir_new_resource_manager): Fix resource

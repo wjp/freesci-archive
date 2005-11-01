@@ -381,6 +381,7 @@ typedef reg_t kfunct(struct _state *s, int funct_nr, int argc, reg_t *argv);
 typedef struct {
 	kfunct *fun; /* The actual function */
 	char *signature;  /* kfunct signature */
+	char *orig_name; /* Original name, in case we couldn't map it */
 } kfunct_sig_pair_t;
 
 #define KF_OLD 0
