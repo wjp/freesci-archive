@@ -84,9 +84,7 @@
 #endif
 
 #ifdef _DREAMCAST
-#  include <dc.h>
 #  include <selectgame.h>
-#  define PATH_MAX 255
 #endif
 
 #ifdef _MSC_VER
@@ -251,11 +249,6 @@ init_directories(char *work_dir, char *game_id)
 		else /* mkdir() succeeded */
 			chdir(game_id);
 	}
-
-#ifdef _DREAMCAST 
-	/* Set dreamcast work dir to ramdisk */
-	fs_chdir("/ram");
-#endif
 
 	getcwd(work_dir, PATH_MAX);
 
@@ -443,20 +436,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->mouse = ON;
 	cl_options->res_version = SCI_VERSION_AUTODETECT;
 	cl_options->show_rooms = 0;
-#ifdef _DREAMCAST 
 
-	/* On the Dreamcast there is no command line, so we don't try to read
-	** any options and just set the savegame_name to NULL and return a
-	** game name of NULL. We set the path to the config file to
-	** "/ram/config", this file is created by the Dreamcast game
-	** selection menu.
-	*/
-
-	savegame_name = NULL;
-	commandline_config_file = sci_strdup("/ram/config");
-	return NULL;
-
-#else /* !_DREAMCAST */
 #ifdef HAVE_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:f:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
@@ -621,7 +601,6 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 
 	return
 		argv[optind];
-#endif /* !_DREAMCAST */
 }
 
 
@@ -940,15 +919,20 @@ main(int argc, char** argv)
 #endif
 	char *module_path			= SCI_DEFAULT_MODULE_PATH;
 	resource_mgr_t *resmgr;
+#ifdef _DREAMCAST
+	/* Fake command line arguments. */
+	char *args[] = {"/cd/freesci.bin", "-f/ram/config", NULL};
+	argv = args;
+	argc = 2;
+	chdir("/ram");
+#endif
 
 	init_console(); /* So we can get any output */
 
 	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
 
 	/* remember where freesci executable is located */
-#ifndef _DREAMCAST
 	get_file_directory(freesci_dir, argv[0]);
-#endif
 
 	getcwd(startdir, PATH_MAX);
 	script_debug_flag = cl_options.script_debug_flag;
@@ -997,7 +981,6 @@ main(int argc, char** argv)
 		free(cl_options.gamedir);
 	}
 
-#ifndef _DREAMCAST
 	/* by now, if the user specified a game name or a game directory, the working dir has been changed */
 	/* so if no resource are found in the working dir, invoke the game selection screen */
 	if (!game_name && !game_select_resource_found())
@@ -1006,7 +989,6 @@ main(int argc, char** argv)
 		if (conf_nr < 0) return 1;
 		active_conf = confs + conf_nr;
 	}
-#endif
 
 	if (cl_options.version || (active_conf && active_conf->version))
 		version = cl_options.version ? cl_options.version

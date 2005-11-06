@@ -1,5 +1,5 @@
 
-#line 3 "lex.yy.c"
+#line 3 "config.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -1089,10 +1089,6 @@ char *yytext;
 
 #endif
 
-#ifdef _DREAMCAST   
-#  include <dc.h>
-#endif
-
 config_entry_t *conf;
 int cur_section=0; /* Size-1 and current section in conf */
 char *exported_conf_path; /* Path which the config file was found in */
@@ -1343,7 +1339,7 @@ crop_value(char *yytext);
 char *
 purge_comments(char *comments);
 
-#line 1347 "lex.yy.c"
+#line 1343 "config.c"
 
 #define INITIAL 0
 
@@ -1494,10 +1490,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 316 "config.l"
+#line 312 "config.l"
 
 
-#line 1501 "lex.yy.c"
+#line 1497 "config.c"
 
 	if ( (yy_init) )
 		{
@@ -1582,7 +1578,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 318 "config.l"
+#line 314 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1617,7 +1613,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 351 "config.l"
+#line 347 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1630,7 +1626,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 361 "config.l"
+#line 357 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1643,7 +1639,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 371 "config.l"
+#line 367 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1655,7 +1651,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 380 "config.l"
+#line 376 "config.l"
 {
 /* driver parameters */
 	char *subsys_name = yytext;
@@ -1687,7 +1683,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 410 "config.l"
+#line 406 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1710,7 +1706,7 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 429 "config.l"
+#line 425 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1733,14 +1729,14 @@ YY_RULE_SETUP
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 449 "config.l"
+#line 445 "config.l"
 {
 	gfx_update_conf(&(conf[cur_section].gfx_options), purge_comments(yytext));
 }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 453 "config.l"
+#line 449 "config.l"
 {
 	char *filename = strchr(yytext, '<');
 	char *end = strchr(filename, '>');
@@ -1762,17 +1758,17 @@ case 10:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 470 "config.l"
+#line 466 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 472 "config.l"
+#line 468 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 474 "config.l"
+#line 470 "config.l"
 {
 	yy_delete_buffer(YY_CURRENT_BUFFER );
 	yyterminate();
@@ -1780,15 +1776,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 479 "config.l"
+#line 475 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 481 "config.l"
+#line 477 "config.l"
 ECHO;
 	YY_BREAK
-#line 1792 "lex.yy.c"
+#line 1788 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2753,7 +2749,7 @@ void yyfree (void * ptr )
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 481 "config.l"
+#line 477 "config.l"
 
 
 

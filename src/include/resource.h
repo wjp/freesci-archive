@@ -41,12 +41,7 @@
  ** -- Christoph Reichenbach
  **/
 
-#ifdef _DREAMCAST
-#  define SCI_INVALID_FD 0
-#else
-#  define SCI_INVALID_FD -1
-#endif
-
+#define SCI_INVALID_FD -1
 #define IS_VALID_FD(a) ((a) != SCI_INVALID_FD) /* Tests validity of a file descriptor */
 
 #ifdef _WIN32
@@ -107,23 +102,6 @@
 #  define DLLEXTERN
 #endif /* !_WIN32 */
 
-#ifdef _DREAMCAST
-#  define strcasecmp stricmp
-#  define open fs_open
-#  define read fs_read
-#  define close fs_close 
-#  define chdir fs_chdir
-#  define lseek fs_seek
-#  define perror(S) fprintf(stderr, S)
-#  define unlink fs_unlink
-#  define write fs_write
-#  define mkdir(D,M) fs_mkdir(D)
-#  define creat(D,M) fs_open(D, O_WRONLY)
-#  define putchar(C) fputc(C, stdout)
-#  define getc(S) fgetc(S)  
-#  define sleep(S) thd_sleep((S)*1000)
-#endif
-
 #ifdef __BEOS__
 #  include <kernel/OS.h>
 #  define usleep snooze
@@ -169,7 +147,7 @@
 #  define G_DIR_SEPARATOR_S "/"
 #endif
 
-#if defined(__MORPHOS__) || defined(_DREAMCAST) || defined(_MSC_VER) || defined(ARM_WINCE)
+#if defined(__MORPHOS__) || defined(_MSC_VER) || defined(ARM_WINCE)
 #  define PATH_MAX 255
 #endif
 

@@ -858,12 +858,12 @@ dc_copy_rect_buffer(byte *src, byte *dest, int srcline, int destline,
 static int
 dc_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
-	if (!stricmp(attribute, "render_mode")) {
-		if (!stricmp(value, "vram")) {
+	if (!strcasecmp(attribute, "render_mode")) {
+		if (!strcasecmp(value, "vram")) {
 			flags &= ~SCI_DC_RENDER_PVR;
 			return GFX_OK;
 		}
-		else if (!stricmp(value, "pvr")) {
+		else if (!strcasecmp(value, "pvr")) {
 			flags |= SCI_DC_RENDER_PVR;
 			return GFX_OK;
 		}
@@ -872,12 +872,12 @@ dc_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 			return GFX_FATAL;
 		}
 	}
-	if (!stricmp(attribute, "refresh_rate")) {
-		if (!stricmp(value, "60Hz")) {
+	if (!strcasecmp(attribute, "refresh_rate")) {
+		if (!strcasecmp(value, "60Hz")) {
 			flags &= ~SCI_DC_REFRESH_50HZ;
 			return GFX_OK;
 		}
-		else if (!stricmp(value, "50Hz")) {
+		else if (!strcasecmp(value, "50Hz")) {
 			flags |= SCI_DC_REFRESH_50HZ;
 			return GFX_OK;
 		}

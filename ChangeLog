@@ -1,3 +1,14 @@
+2005-11-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/bsearch.c, src/dc/dc.c, src/dc/snd_stream.c,
+	src/dc/snprintf.c, src/dc/stream.h.: Removed from repository.
+	* src/config.l, src/main.c, src/dc/config.h.in, src/dc/dc.h,
+	src/engine/game.c, src/engine/vm.c, src/gfx/drivers/dc_driver.c,
+	src/dc/Makefile, src/include/resource.h, src/include/scitypes.h,
+	src/scicore/tools.c: Adapted Dreamcast port to KOS 1.3.x.
+
+	* src/Makefile.am, src/include/Makefile.am: Updated EXTRA_DIST.
+
 2005-11-01  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kMoveCursor): New kernel call.

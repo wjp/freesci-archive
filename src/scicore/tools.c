@@ -41,8 +41,6 @@
 #endif
 
 #ifdef _DREAMCAST
-#  include <arch/timer.h>
-#  include <dc.h>
 #  include <kos/thread.h>
 #endif
 
@@ -216,7 +214,7 @@ _SCIGNUkdebug(const char *funcname, state_t *s, const char *file, int line, int 
 }
 
 
-#if defined(HAVE_SYS_TIME_H) || defined(_DREAMCAST)
+#if defined(HAVE_SYS_TIME_H)
 void
 sci_gettime(long *seconds, long *useconds)
 {
@@ -361,62 +359,7 @@ sci_finish_find(sci_dir_t *dir)
 	}
 }
 
-#elif defined(_DREAMCAST)
-/******** Dir: DREAMCAST CODE ********/
-
-void
-sci_init_dir(sci_dir_t *dir)   
-{
-	dir->dir = 0;
-	dir->mask_copy = NULL;
-}
-
-char *
-sci_find_first(sci_dir_t *dir, char *mask)
-{
-	if (dir->dir)
-		fs_close(dir->dir);
-
-	/* Opening "." does not work */
-	if (!(dir->dir = fs_open(fs_getwd(), O_RDONLY | O_DIR))) {
-		sciprintf("%s, L%d: fs_open(fs_getwd(), O_RDONLY | O_DIR) failed!\n",__FILE__, __LINE__);
-		return NULL;
-	}                                                                                
-
-	dir->mask_copy = sci_strdup(mask);
-
-	return sci_find_next(dir);
-}
-                                                                                                
-char *
-sci_find_next(sci_dir_t *dir)
-{
-	dirent_t *match;
-
-	while ((match = fs_readdir(dir->dir))) {
-		if (match->name[0] == '.')
-			continue;
-
-		if (!fnmatch(dir->mask_copy, match->name, 0))
-			return match->name;
-	}
-
-	sci_finish_find(dir);
-	return NULL;
-}
-                                                                                                                        
-void
-sci_finish_find(sci_dir_t *dir)
-{
-	if (dir->dir) {
-		fs_close(dir->dir);
-		dir->dir = 0;
-		free(dir->mask_copy);
-		dir->mask_copy = NULL;
-	}
-}
-
-#else /* !_WIN32 && !_DREAMCAST */
+#else /* !_WIN32 */
 /******** Dir: UNIX CODE ********/
 
 void
@@ -533,7 +476,7 @@ sci_get_homedir(void)
 #elif defined(__unix__) || !defined(X_DISPLAY_MISSING) || defined (__BEOS__) || defined(MACOSX)
 	return getenv("HOME");
 #elif defined(_DREAMCAST)
-	return "/ram";
+	return NULL;
 #else
 #  error Please add a $HOME policy for your platform!
 #endif

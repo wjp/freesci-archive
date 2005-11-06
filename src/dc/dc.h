@@ -30,12 +30,6 @@
 
 #include <stdio.h>
 
-/* Constants missing from KOS's errno.h */
-
-#ifndef EINTR
-#define EINTR 4
-#endif
-
 /* Functions implemented in dc_save.c */
 
 /* Returns a string with the VFS path to the first VMU.
@@ -90,17 +84,5 @@ int dc_retrieve_mirrored(char *game_name);
 ** Returns   : 0 on success, -1 on error.
 */
 int dc_store_mirrored(char *game_name);
-
-/* Functions missing from KOS */
-
-/* Implemented in dc.c */
-struct tm *localtime(const time_t *);
-#undef fprintf
-int fprintf(FILE *, const char *, ...);
-char *getcwd(char *, size_t);
-
-/* Implemented in bsearch.c */
-void *bsearch(const void *, const void *, size_t, size_t,
-	int (*)(const void *, const void *));
 
 #endif  /* __DC_H */
