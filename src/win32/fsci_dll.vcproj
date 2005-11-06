@@ -48,10 +48,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib d3d8.lib dxerr8.lib winmm.lib"
+				AdditionalDependencies="SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib"
 				OutputFile="..\..\bin\fsci.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\SDL\lib"
+				IgnoreDefaultLibraryNames="libci.lib"
 				ModuleDefinitionFile=".\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/fsci.pdb"
@@ -115,10 +116,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib d3d8.lib dxerr8.lib winmm.lib"
+				AdditionalDependencies="SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib"
 				OutputFile="Debug\fsci.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\SDL\lib"
+				IgnoreDefaultLibraryNames="libci.lib"
 				ModuleDefinitionFile=".\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/fsci.pdb"
@@ -184,10 +186,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib d3d8.lib dxerr8.lib winmm.lib"
+				AdditionalDependencies="SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib"
 				OutputFile="Purify\fsci.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\SDL\lib"
+				IgnoreDefaultLibraryNames="libci.lib"
 				ModuleDefinitionFile=".\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Purify/fsci.pdb"
@@ -232,6 +235,9 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
+			<File
+				RelativePath="..\gfx\drivers\dx_driver.h">
+			</File>
 			<File
 				RelativePath="usleep.c">
 				<FileConfiguration

@@ -1,3 +1,14 @@
+2005-11-06  Alex Angas  <arangas@internode.on.net>
+
+	* src/gfx/drivers/dx_driver.h: New file.
+
+	* src/gfx/drivers/dx_driver.cpp: Mouse support.
+
+	* src/gfx/drivers/sdl_driver.c: Removed references to Win32 optimization.
+
+	* src/win32/fsci_dll.dsp:
+	* src/win32/fsci_dll.vcproj: Added dx_driver.h and required settings.
+
 2005-10-30  Alex Angas  <arangas@internode.on.net>
 
 	* src/gfx/drivers/dx_driver.cpp: Now creating mouse pointer as texture,

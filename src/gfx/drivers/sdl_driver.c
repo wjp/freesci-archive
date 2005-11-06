@@ -23,11 +23,6 @@
 
 ***************************************************************************/
 
-/* set optimisations for Win32: */
-/* g on: enable global optimizations */
-/* t on: use fast code */
-/* y on: suppress creation of frame pointers on stack */
-/* s off: disable minimize size code */
 #ifdef _WIN32
 #	include <memory.h>
 #endif
