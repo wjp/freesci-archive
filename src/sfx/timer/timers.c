@@ -32,9 +32,16 @@
 extern sfx_timer_t sfx_timer_sigalrm;
 #endif
 
+#ifdef _DREAMCAST
+extern sfx_timer_t sfx_timer_pthread;
+#endif
+
 sfx_timer_t *sfx_timers[] = {
 #ifdef HAVE_SETITIMER
 	&sfx_timer_sigalrm,
+#endif
+#ifdef _DREAMCAST
+	&sfx_timer_pthread,
 #endif
 	NULL
 };

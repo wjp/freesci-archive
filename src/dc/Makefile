@@ -3,14 +3,17 @@ ELF_TARGET = freesci.elf
 
 FSCI_BASE = ../..
 
-OBJS =	$(FSCI_BASE)/src/config.o \
-	$(FSCI_BASE)/src/dc/3dutils.o \
-	$(FSCI_BASE)/src/dc/bkg.o \
-	$(FSCI_BASE)/src/dc/dc_save.o \
-	$(FSCI_BASE)/src/dc/gamemenu.o \
-	$(FSCI_BASE)/src/dc/keyboard.o \
-	$(FSCI_BASE)/src/dc/selectgame.o \
-	$(FSCI_BASE)/src/dc/texture.o \
+OBJS = \
+	$(FSCI_BASE)/src/config.o \
+	3dutils.o \
+	aica_drv.o \
+	bkg.o \
+	dc_save.o \
+	gamemenu.o \
+	keyboard.o \
+	selectgame.o \
+	snd_stream.o \
+	texture.o \
 	$(FSCI_BASE)/src/engine/game.o \
 	$(FSCI_BASE)/src/engine/gc.o \
 	$(FSCI_BASE)/src/engine/grammar.o \
@@ -94,9 +97,11 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/sfx/player/polled.o \
 	$(FSCI_BASE)/src/sfx/device/devices.o \
 	$(FSCI_BASE)/src/sfx/timer/timers.o \
+	$(FSCI_BASE)/src/sfx/timer/pthread.o \
 	$(FSCI_BASE)/src/sfx/seq/sequencers.o \
 	$(FSCI_BASE)/src/sfx/mixer/mixers.o \
 	$(FSCI_BASE)/src/sfx/mixer/soft.o \
+	$(FSCI_BASE)/src/sfx/mixer/dc.o \
 	$(FSCI_BASE)/src/sfx/pcm_device/pcm_devices.o \
 	$(FSCI_BASE)/src/sfx/pcm_device/audiobuf.o \
 	$(FSCI_BASE)/src/sfx/softseq/softsequencers.o \
@@ -105,12 +110,30 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/sfx/softseq/opl2.o \
 	$(FSCI_BASE)/src/sfx/softseq/pcspeaker.o
 
+AICA_OBJS = \
+	$(FSCI_BASE)/src/dc/aica_crt0.o \
+	$(FSCI_BASE)/src/dc/aica_main.o \
+	$(FSCI_BASE)/src/dc/aica_sup.o
+
 all: $(BIN_TARGET)
+
+aica_%.o: aica_%.c
+	$(DC_ARM_CC) $(DC_ARM_CFLAGS) $(DC_ARM_INCS) -c $< -o $@
+
+aica_%.o: aica_%.s
+	$(DC_ARM_AS) $(DC_ARM_AFLAGS) $< -o $@
 
 %.o: %.c config.h
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LOCAL_CFLAGS) -D_arch_$(KOS_ARCH) $(KOS_ALL_INCS) -c $< -o $@
 
-include $(KOS_BASE)/Makefile.rules
+aica.drv: aica.elf
+	$(DC_ARM_OBJCOPY) -O binary $< $@
+
+aica.elf: $(AICA_OBJS)
+	$(DC_ARM_CC) -Wl,-Ttext,0x00000000 -nostartfiles -nostdlib -e reset -o $@ $(AICA_OBJS) -lgcc
+
+aica_drv.o: aica.drv
+	$(KOS_BASE)/utils/bin2o/bin2o $< snd_stream_drv $@
 
 KOS_LOCAL_CFLAGS := -I$(FSCI_BASE)/src/include -I$(FSCI_BASE)/src/dc \
 	-I$(FSCI_BASE)/src/include/beos -D_DREAMCAST -DHAVE_CONFIG_H \

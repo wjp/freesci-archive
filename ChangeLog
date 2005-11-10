@@ -1,3 +1,15 @@
+2005-11-10  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/aica.h, src/dc/aica_cmd_iface.h, src/dc/aica_crt0.s,
+	src/dc/aica_main.c, src/dc/aica_sup.c, src/dc/snd_stream.c,
+	src/dc/stream.h, src/sfx/mixer/dc.c, src/sfx/timer/pthread.c: Added
+	to repository.
+	* src/sfx/mixer/mixers.c: Added Dreamcast mixer.
+	* src/sfx/timers/timers.c: Added Dreamcast timer.
+	* src/dc/Makefile: Updated for added files.
+	* src/Makefile.am, src/sfx/mixer/Makefile.am,
+	src/sfx/timer/Makefile.am: Updated EXTRA_DIST.
+
 2005-11-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/bsearch.c, src/dc/dc.c, src/dc/snd_stream.c,
