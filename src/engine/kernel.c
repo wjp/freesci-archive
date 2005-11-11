@@ -519,10 +519,12 @@ kGetTime(state_t *s, int funct_nr, int argc, reg_t *argv)
 	time_t the_time;
 	int retval = 0; /* Avoid spurious warning */
 
+#if 0
 	/* Reset optimization flags: If this function is called,
 	** the game may be waiting for a timeout  */
 	s->kernel_opt_flags &= ~(KERNEL_OPT_FLAG_GOT_EVENT
 				 | KERNEL_OPT_FLAG_GOT_2NDEVENT);
+#endif
 
 #ifdef _WIN32
 	if (TIMERR_NOERROR != timeBeginPeriod(1))

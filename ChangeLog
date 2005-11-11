@@ -1,3 +1,11 @@
+2005-11-11  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kernel.c (kGetTime): Scripts that call this regularly
+	are not necessarily well-behaved.
+
+	* src/engine/kevent.c (kGetEvent): Fetch the game speed from game
+	variables and use it when penalizing CPU-hogging games.
+
 2005-11-10  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/aica.h, src/dc/aica_cmd_iface.h, src/dc/aica_crt0.s,

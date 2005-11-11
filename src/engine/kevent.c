@@ -29,6 +29,8 @@
 
 int stop_on_event;
 
+#define SCI_VARIABLE_GAME_SPEED 3
+
 reg_t
 kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
@@ -42,7 +44,9 @@ kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (s->kernel_opt_flags & KERNEL_OPT_FLAG_GOT_2NDEVENT) {
 		/* Penalty time- too many requests to this function without
 		** waiting!  */
-		gfxop_usleep(s->gfx_state, 1000000 / 60);
+		int delay = s->script_000->locals_block->locals[SCI_VARIABLE_GAME_SPEED].offset;
+
+		gfxop_usleep(s->gfx_state, (1000000 * delay) / 60);
 	}
   
 	/*If there's a simkey pending, and the game wants a keyboard event, use the
