@@ -52,6 +52,7 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 	gfx_pixmap_t *retval = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xl, yl, id, loop, cel));
 	byte *dest = retval->index_data;
 
+	retval->color_key = resource[6];
 	retval->xoffset = (mirrored)? xhot : -xhot;
 	retval->yoffset = -yhot;
 

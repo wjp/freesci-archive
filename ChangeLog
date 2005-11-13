@@ -1,3 +1,8 @@
+2005-11-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/resource/sci_view_1.c (gfxr_draw_cel1): Read color key
+	from byte 6 of the header.
+
 2005-11-11  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kernel.c (kGetTime): Scripts that call this regularly
