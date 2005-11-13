@@ -1,5 +1,10 @@
 2005-11-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/scicore/decompress01.c (view_reorder): Fixed bug where last
+	color in palette would not be copied.
+
+2005-11-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/gfx/resource/sci_view_1.c (gfxr_draw_cel1): Read color key
 	from byte 6 of the header.
 

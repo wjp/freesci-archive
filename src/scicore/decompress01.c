@@ -498,7 +498,7 @@ byte *view_reorder(byte *inbuffer, int dsize)
 		*(writer++) = c;
 
 	seeker -= 4; /* The missing four. Don't ask why. */
-	memcpy(writer, seeker, 4*256);
+	memcpy(writer, seeker, 4*256+4);
 	
 	free(cc_pos);
 	free(cc_lengths);
