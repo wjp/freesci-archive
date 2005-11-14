@@ -62,7 +62,10 @@ detect_odd_sci01(int fh)
 		sprintf(filename, "resource.%03i", SCI0_RESFILE_GET_FILE(buf+2));
 		tempfh = sci_open(filename, O_RDONLY | O_BINARY);
     
-		files_ok &= (tempfh != SCI_INVALID_FD);
+		if (tempfh == SCI_INVALID_FD) {
+			files_ok = 0;
+			break;
+		}
 
 		close(tempfh);
 	}

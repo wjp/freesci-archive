@@ -1,3 +1,8 @@
+2005-11-14  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/scicore/resource_map (detect_odd_sci01): Don't try to close
+	invalid fd.
+
 2005-11-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/scicore/decompress01.c (view_reorder): Fixed bug where last
