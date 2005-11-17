@@ -943,7 +943,7 @@ main(int argc, char** argv)
 
 	/* by now, if the user specified a game name or a game directory, the working dir has been changed */
 	/* so if no resource are found in the working dir, invoke the game selection screen */
-	if (!game_select_resource_found()) {
+	if (conf_entries > 1 && !game_select_resource_found()) {
 		conf_nr = game_select(gamestate, cl_options, gfx_state, gfx_options,
 				      confs, conf_entries, startdir);
 		if (conf_nr < 0)

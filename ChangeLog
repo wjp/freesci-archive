@@ -1,3 +1,8 @@
+2005-11-17  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/main.c (main): Start game selection menu only when there are
+	game configuration entries.
+
 2005-11-06  Alex Angas  <arangas@internode.on.net>
 
 	* src/gfx/drivers/dx_driver.h: New file.
