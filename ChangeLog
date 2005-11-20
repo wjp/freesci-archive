@@ -1,3 +1,8 @@
+2005-11-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* configure.in, src/Makefile.am, src/tools/Makefile.am: Only link to
+	libm when found.
+
 2005-11-17  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/main.c (main): Start game selection menu only when there are
