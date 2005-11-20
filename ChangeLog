@@ -1,5 +1,15 @@
 2005-11-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/engine/game.c, src/engine/vm.c: Removed BeOS check.
+	* src/include/scitypes.h: Removed BeOS types.
+	* src/scicore/tools.c (sci_sched_yield): Added BeOS implementation.
+
+	* src/gfx/drivers/sdl_driver.c, src/sound/pcmout_sdl.c,
+	src/sound/thread_ss_sdl.c: Removed path element from SDL include
+	statements.
+
+2005-11-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* configure.in, src/Makefile.am, src/tools/Makefile.am: Only link to
 	libm when found.
 

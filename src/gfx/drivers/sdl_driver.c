@@ -35,11 +35,11 @@
 
 #ifndef _MSC_VER
 #  include <sys/time.h>
-#  include <SDL/SDL.h>
 #else
-#  include <SDL.h>
 #  include <sci_win32.h>
 #endif
+
+#include <SDL.h>
 
 #ifndef SDL_DISABLE
 #	define SDL_DISABLE 0

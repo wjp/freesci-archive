@@ -23,10 +23,9 @@
 
 #ifndef _MSC_VER
 #       include <sys/time.h>
-#       include <SDL/SDL.h>
-#else
-#       include <SDL.h>
 #endif
+
+#include <SDL.h>
 
 static gint16 *buffer;
 

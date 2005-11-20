@@ -32,15 +32,14 @@
 #ifdef HAVE_SDL
 
 #ifndef _MSC_VER
-#  include <SDL/SDL.h>
-#  include <SDL/SDL_thread.h>
 #  include <sys/timeb.h>
 #else
-#  include <SDL.h>
-#  include <SDL_thread.h>
 #  include <sci_win32.h>
 #  include <windows.h>
 #endif
+
+#include <SDL.h>
+#include <SDL_thread.h>
 
 extern sound_server_t sound_server_sdl;
 
