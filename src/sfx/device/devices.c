@@ -34,12 +34,18 @@
 #ifdef HAVE_ALSA
 extern struct _midi_device sfx_device_midi_alsa;
 #endif
+#if !defined(_DOS) && !defined(_WIN32) && !defined(_DREAMCAST) && !defined(__MORPHOS__) && !defined(ARM_WINCE) && !defined(_GP32)
+extern struct _midi_device sfx_device_midi_unixraw;
+#endif
 
 #include <resource.h>
 
 static struct _midi_device *devices_midi[] = {
 #ifdef HAVE_ALSA
 		&sfx_device_midi_alsa,
+#endif
+#if !defined(_DOS) && !defined(_WIN32) && !defined(_DREAMCAST) && !defined(__MORPHOS__) && !defined(ARM_WINCE) && !defined(_GP32)
+		&sfx_device_midi_unixraw,
 #endif
 		NULL
 };
