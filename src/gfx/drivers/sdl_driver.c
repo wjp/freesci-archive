@@ -45,14 +45,9 @@
 
 #if !defined(_MSC_VER)
 #  include <sys/time.h>
-#  if defined(SDL_HEADER_IMMEDIATE)
-#    include <SDL.h>
-#  else
-#    include <SDL/SDL.h>
-#  endif
-#else
-#	include <SDL.h>
 #endif
+
+#include <SDL.h>
 
 #ifndef SDL_DISABLE
 #	define SDL_DISABLE 0

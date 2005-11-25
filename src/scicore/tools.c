@@ -44,6 +44,10 @@
 #  include <kos/thread.h>
 #endif
 
+#ifdef __BEOS__
+#  include <be/kernel/OS.h>
+#endif
+
 #ifdef HAVE_MEMFROB
 void *memfrob(void *s, size_t n);
 #endif
@@ -548,6 +552,14 @@ void
 sci_sched_yield()
 {
 	thd_pass();
+}
+
+#elif defined (__BEOS__)
+
+void
+sci_sched_yield()
+{
+	snooze(0);
 }
 
 #else

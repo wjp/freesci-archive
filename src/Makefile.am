@@ -17,7 +17,7 @@ LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	sfx/libscisoundlib.a \
 	sfx/device/libscisounddevice.a \
 	menu/libscimenu.a \
-	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ -lm @SDL_LIBS@
+	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ @LIB_M@ @SDL_LIBS@
 bin_PROGRAMS = freesci
 bin_SCRIPTS = sciv
 freesci_SOURCES = config.l main.c

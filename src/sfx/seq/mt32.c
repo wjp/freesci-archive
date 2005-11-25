@@ -24,10 +24,11 @@
 #endif
 #include <sfx_sequencer.h>
 
-#ifdef HAVE_SYS_SOUNDCARD_H
-
 #include <sys/ioctl.h>
 #include <sys/time.h>
+#ifdef __BEOS__
+#  include <be/kernel/OS.h>
+#endif
 
 static int delta = 0; /* Accumulated delta time */
 static midi_writer_t *midi_writer = NULL;
@@ -517,12 +518,12 @@ midi_mt32_sysex_delay(void)
   /* Under Win32, we won't get any sound, in any case... */
 #ifdef HAVE_USLEEP
 	usleep(320 * 63); /* One MIDI byte is 320us, 320us * 63 > 20ms */
-#  else
-#    ifdef _WIN32
+#elif defined (_WIN32)
 	Sleep(((320 * 63) / 1000) + 1);
-#    else
+#elif defined (__BEOS__)
+	snooze(320 * 63);
+#else
 	sleep(1);
-#  endif
 #endif
 	return 0;
 }
@@ -613,5 +614,3 @@ sfx_sequencer_t sfx_sequencer_mt32 = {
 	32,  /* Max polyphony */
 	0 /* Does not require any write-ahead by its own */
 };
-
-#endif /* HAVE_SYS_SOUNDCARD_H */

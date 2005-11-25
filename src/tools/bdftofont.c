@@ -102,13 +102,9 @@ convert_font(FILE *in_file, FILE *out_file)
 	for (i = 0; i < chars_nr; i++) {
 		int rh = GLYPH(i).bbx.height;
 		int rw = GLYPH(i).bbx.width;
-		int xoff = GLYPH(i).bbx.x_offset;
-		int yoff = GLYPH(i).bbx.y_offset;
+		int xoff = 0; /* GLYPH(i).bbx.x_offset; */
+		int yoff = 0; /* GLYPH(i).bbx.y_offset; */
 		int j, k;
-
-		yoff = 0;
-		xoff = 0;
-
 		int top_pad = yoff;
 		int bot_pad = (char_height - rh) - top_pad;
 		int bytes_to_read = (GLYPH(i).bytes) / rh;
@@ -167,8 +163,8 @@ convert_font(FILE *in_file, FILE *out_file)
 int
 main(int argc, char **argv)
 {
-	bdf_setup();
 	FILE *f = NULL;
+	bdf_setup();
 
 	if (argc < 3) {
 		fprintf(stderr, "Usage: %s <font.bdf> <outfile.font>\n ", argv[0]);

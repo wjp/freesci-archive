@@ -252,7 +252,7 @@ dnl AC_SUBST(ac_ggi_o)
 
 AC_CHECK_LIB(m, cos, [LIB_M="-lm"], [LIB_M=""])
 dnl AC_CHECK_LIB(c, sprintf, [LIB_C="-lc"], [LIB_C=""])
-LIBS="$LIBS $LIB_M"  # libc is added later, during the efence check
+AC_SUBST(LIB_M)
 
 AC_CHECK_HEADERS(Xm/MwmUtil.h)
 

@@ -1670,7 +1670,7 @@ c_vmvars(state_t *s)
 	return 0;
 }
 
-#ifdef HAVE_FORK
+#ifdef HAVE_SYSV_IPC
 static int _codebug_pid = 0;
 static int _codebug_stdin[2];
 static int _codebug_stdout[2];
@@ -3636,7 +3636,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "Steps until the global variable with the\n"
 					 "specified index is modified.\n\nSEE ALSO\n\n"
 					 "  s.1, snk.1, so.1, bpx.1");
-#ifdef HAVE_FORK
+#ifdef HAVE_SYSV_IPC
 			con_hook_command(c_codebug, "codebug", "!s",
 					 "Starts codebugging mode\n\nUSAGE\n\n"
 					 "  codebug path/to/old/freesci\n\n"
@@ -3751,6 +3751,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 	while (_debugstate_valid) {
 		int skipfirst = 0;
 		char *commandstring;
+		char *input;
 
 		/* Suspend music playing */
 		sfx_suspend(&s->sound, 1);
@@ -3759,7 +3760,6 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 #  ifndef FORCE_CONSOLE
 		if (!have_windowed) {
 #  endif
-			char *input;
 			con_gfx_show(s->gfx_state);
 			input = con_gfx_read(s->gfx_state);
 			con_gfx_hide(s->gfx_state);
@@ -3779,7 +3779,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			skipfirst = 1;
 
 #endif
-#ifdef HAVE_FORK
+#ifdef HAVE_SYSV_IPC
 		if (commandstring
 		    && commandstring[0] != '.') {
 			codebug_send_command(commandstring + skipfirst);

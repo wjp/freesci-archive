@@ -25,14 +25,9 @@
 
 #if !defined(_MSC_VER)
 #  include <sys/time.h>
-#  if defined(SDL_HEADER_IMMEDIATE)
-#    include <SDL.h>
-#  else
-#    include <SDL/SDL.h>
-#  endif
-#else
-#  include <SDL.h>
 #endif
+
+#include <SDL.h>
 
 #define DELTA_TIME_LIMIT 10000 /* Report errors above this delta time */
 

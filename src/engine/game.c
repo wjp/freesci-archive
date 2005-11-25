@@ -46,7 +46,7 @@
 #include <kdebug.h>
 #include <kernel_types.h>
 
-#if !defined (_WIN32) && !defined (__BEOS__)
+#if !defined (_WIN32)
 #include <sys/resource.h>
 #endif
 
