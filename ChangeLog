@@ -1,3 +1,7 @@
+2005-11-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/scicore/tools.c: Added missing BeOS #include.
+
 2005-11-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/game.c, src/engine/vm.c: Removed BeOS check.
