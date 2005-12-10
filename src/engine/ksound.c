@@ -599,6 +599,45 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
+	if ((s->debug_mode & (1 << SCIkSOUNDCHK_NR))
+	    && command != _K_SCI1_SOUND_UPDATE_CUES) {
+		int i;
+
+		SCIkdebug(SCIkSOUND, "Command 0x%x", command);
+		switch (command) {
+		case 0: sciprintf("[MasterVolume]"); break;
+		case 1: sciprintf("[Mute]"); break;
+		case 2: sciprintf("[NOP(2)]"); break;
+		case 3: sciprintf("[GetPolyphony]"); break;
+		case 4: sciprintf("[GetAudioCapability]"); break;
+		case 5: sciprintf("[GlobalSuspend]"); break;
+		case 6: sciprintf("[Init]"); break;
+		case 7: sciprintf("[Dispose]"); break;
+		case 8: sciprintf("[Play]"); break;
+		case 9: sciprintf("[Stop]"); break;
+		case 10: sciprintf("[SuspendHandle]"); break;
+		case 11: sciprintf("[Fade]"); break;
+		case 12: sciprintf("[Hold]"); break;
+		case 13: sciprintf("[Unused(13)]"); break;
+		case 14: sciprintf("[SetVolume]"); break;
+		case 15: sciprintf("[SetPriority]"); break;
+		case 16: sciprintf("[SetLoop]"); break;
+		case 17: sciprintf("[UpdateCues]"); break;
+		case 18: sciprintf("[MidiSend]"); break;
+		case 19: sciprintf("[Reverb]"); break;
+		case 20: sciprintf("[UpdateVolPri]"); break;
+		default: sciprintf("[unknown]"); break;
+		}
+
+		sciprintf("(");
+		for (i = 1; i < argc; i++) {
+			sciprintf(PREG, PRINT_REG(argv[i]));
+			if (i + 1 < argc)
+				sciprintf(", ");
+		}
+		sciprintf(")\n");
+	}
+
 	switch (command)
 	{
 	case _K_SCI1_SOUND_MASTER_VOLME :
@@ -697,6 +736,13 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI1_SOUND_FADE_HANDLE :
 	{
+	/* FIXME: The next couple of lines actually STOP the handle, rather
+	** than fading it! */
+		PUT_SEL32V(obj, signal, -1);
+		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
+		}
 		break;
 	}
 	case _K_SCI1_SOUND_HOLD_HANDLE :

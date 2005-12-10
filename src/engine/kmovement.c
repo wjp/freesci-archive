@@ -65,7 +65,7 @@ kSetJump(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if ((dy < 0) && (!y))
 		y = -(int)sqrt(-2 * gy * dy);
 
-	SCIkdebug(SCIkBRESEN, "SetJump for object at %x", object);
+	SCIkdebug(SCIkBRESEN, "SetJump for object at "PREG"\n", PRINT_REG(object));
 	SCIkdebug(SCIkBRESEN, "xStep: %d, yStep: %d\n", x, y);
 
 	PUT_SEL32V(object, xStep, x);
@@ -298,14 +298,14 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 	s->r_acc = make_reg(0, -1);
 
 	if (!is_heap_object(s, avoider)) {
-		SCIkwarn(SCIkWARNING, "DoAvoider() where avoider %04x is not an object\n", avoider);
+		SCIkwarn(SCIkWARNING, "DoAvoider() where avoider "PREG" is not an object\n", PRINT_REG(avoider));
 		return NULL_REG;
 	}
 
 	client = GET_SEL32(avoider, client);
 
 	if (!is_heap_object(s, client)) {
-		SCIkwarn(SCIkWARNING, "DoAvoider() where client %04x is not an object\n", client);
+		SCIkwarn(SCIkWARNING, "DoAvoider() where client "PREG" is not an object\n", PRINT_REG(client));
 		return NULL_REG;
 	}
 
@@ -315,7 +315,7 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	if (!is_heap_object(s, mover)) {
 		if (mover.segment) {
-			SCIkwarn(SCIkWARNING, "DoAvoider() where mover %04x is not an object\n", mover);
+			SCIkwarn(SCIkWARNING, "DoAvoider() where mover "PREG" is not an object\n", PRINT_REG(mover));
 		}
 		return s->r_acc;
 	}
@@ -326,8 +326,9 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 	SCIkdebug(SCIkBRESEN, "Doing avoider %04x (dest=%d,%d)\n", avoider, destx, desty);
 
 	if (invoke_selector(INV_SEL(mover, doit, 1) , 0)) {
-		SCIkwarn(SCIkERROR, "Mover %04x of avoider %04x"
-			 " doesn't have a doit() funcselector\n", mover, avoider);
+		SCIkwarn(SCIkERROR, "Mover "PREG" of avoider "PREG
+			 " doesn't have a doit() funcselector\n", 
+			 PRINT_REG(mover), PRINT_REG(avoider));
 		return NULL_REG;
 	}
 
@@ -336,8 +337,8 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return s->r_acc; /* Return gracefully. */
 
 	if (invoke_selector(INV_SEL(client, isBlocked, 1) , 0)) {
-		SCIkwarn(SCIkERROR, "Client %04x of avoider %04x doesn't"
-			 " have an isBlocked() funcselector\n", client, avoider);
+		SCIkwarn(SCIkERROR, "Client "PREG" of avoider "PREG" doesn't"
+			 " have an isBlocked() funcselector\n", PRINT_REG(client), PRINT_REG(avoider));
 		return NULL_REG;
 	}
 
@@ -345,8 +346,8 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 	dy = desty - GET_SEL32V(client, y);
 	angle = get_angle(dx, dy);
 
-	SCIkdebug(SCIkBRESEN, "Movement (%d,%d), angle %d is %s blocked\n",
-		  dx, dy, angle, (s->r_acc.offset)? "": "not");
+	SCIkdebug(SCIkBRESEN, "Movement (%d,%d), angle %d is %sblocked\n",
+		  dx, dy, angle, (s->r_acc.offset)? " ": "not ");
 
 	if (s->r_acc.offset) { /* isBlocked() returned non-zero */
 		int rotation = (rand() & 1)? 45 : (360-45); /* Clockwise/counterclockwise */
@@ -356,7 +357,7 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int ystep = GET_SEL32V(client, yStep);
 		int moves;
 
-		SCIkdebug(SCIkBRESEN, " avoider %04x\n", avoider);
+		SCIkdebug(SCIkBRESEN, " avoider "PREG"\n", PRINT_REG(avoider));
 
 		for (moves = 0; moves < 8; moves++) {
 			int move_x = (int) (sin(angle * PI / 180.0) * (xstep));
@@ -369,8 +370,9 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 				  oldx, oldy, angle, move_x, move_y);
 
 			if (invoke_selector(INV_SEL(client, canBeHere, 1) , 0)) {
-				SCIkwarn(SCIkERROR, "Client %04x of avoider %04x doesn't"
-					 " have a canBeHere() funcselector\n", client, avoider);
+				SCIkwarn(SCIkERROR, "Client "PREG" of avoider "PREG" doesn't"
+					 " have a canBeHere() funcselector\n", 
+					 PRINT_REG(client), PRINT_REG(avoider));
 				return NULL_REG;
 			}
 
@@ -390,8 +392,8 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 				angle -= 360;
 		}
 
-		SCIkwarn(SCIkWARNING, "DoAvoider failed for avoider %04x\n",
-			 avoider);
+		SCIkwarn(SCIkWARNING, "DoAvoider failed for avoider "PREG"\n",
+			 PRINT_REG(avoider));
 
 	} else {
 		int heading = GET_SEL32V(client, heading);
@@ -405,8 +407,9 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		if (looper.segment) {
 			if (invoke_selector(INV_SEL(looper, doit, 1), 2, angle, client)) {
-				SCIkwarn(SCIkERROR, "Looper %04x of avoider %04x doesn't"
-					 " have a doit() funcselector\n", looper, avoider);
+				SCIkwarn(SCIkERROR, "Looper "PREG" of avoider "PREG" doesn't"
+					 " have a doit() funcselector\n", 
+					 PRINT_REG(looper), PRINT_REG(avoider));
 			} else return s->r_acc;
 		} else
 		/* No looper? Fall back to DirLoop */

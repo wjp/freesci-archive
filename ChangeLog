@@ -1,3 +1,9 @@
+2005-12-10  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/ksound.c: Add SCI1 debug printfs.
+
+	* src/engine/kmovement.c: Fix error messages to use PREG and friends.
+
 2005-11-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* configure.in, src/Makefile.am: Only link to libm when found.
