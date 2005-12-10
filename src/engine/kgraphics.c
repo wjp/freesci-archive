@@ -331,18 +331,32 @@ kSetCursor_SCI11(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 reg_t
+kSetCursor_KQ5(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	switch (argc)
+	{
+	case 3 :
+		gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2), NULL);
+		break;
+	case 9 : {
+		point_t hotspot = gfx_point(SKPV(3), SKPV(4));
+		
+//		sciprintf("Setting hotspot at %d/%d\n", hotspot.x, hotspot.y);
+
+		gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2), &hotspot);
+		break;
+	}
+	}
+
+	return s->r_acc;
+}
+
+reg_t
 kSetCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	if (has_kernel_function(s, "MoveCursor"))
 	{
-		switch (argc)
-		{
-		case 9 :
-			gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2));
-			break;
-		}
-
-		return s->r_acc;
+		return kSetCursor_KQ5(s, funct_nr, argc, argv);
 	}
 		
 	if (SKPV_OR_ALT(1,1)) {
@@ -363,21 +377,33 @@ kSetCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 }
 
+extern int oldx, oldy;
+
 reg_t
 kMoveCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	point_t newpos;
+	static point_t oldpos = {0};
 
 	newpos = s->gfx_state->pointer_pos;
 
-	if (argc > 1)
+	if (argc == 1)
 	{
-		newpos.x = s->gfx_state->pointer_pos.x+s->picture_port->bounds.x;
-		newpos.y = SKPV(0)+s->picture_port->bounds.y;
+		/* Case ignored on IBM PC */
 	} else
 	{
-		newpos.x = SKPV(1)+s->picture_port->bounds.x;
-		newpos.y = SKPV(0)+s->picture_port->bounds.y;
+		newpos.x = SKPV(0)+s->port->zone.x;
+		newpos.y = SKPV(1)+s->port->zone.y;
+
+		if (newpos.x > s->port->zone.x+s->port->zone.xl)
+			newpos.x = s->port->zone.x+s->port->zone.xl;
+		if (newpos.y > s->port->zone.y+s->port->zone.yl)
+			newpos.y = s->port->zone.y+s->port->zone.yl;
+
+		if (newpos.x < 0) newpos.x=0;
+		if (newpos.y < 0) newpos.y=0;
+
+		oldpos = newpos;
 	}
 
 	GFX_ASSERT(gfxop_set_pointer_position(s->gfx_state, newpos));
@@ -1182,8 +1208,7 @@ set_base(state_t *s, reg_t object)
 
 	xbase = x - xmod - (xsize >> 1);
 	xend = xbase + xsize;
-	// Used to be: 	yend = y /* - ymod */ + 1; (fixes SQ3 rail death)
-	yend = y - ymod + 1; 
+	yend = y /* - ymod */ + 1;
 	ybase = yend - ystep;
 
 	SCIkdebug(SCIkBASESETTER, "(%d,%d)+/-(%d,%d), (%d x %d) -> (%d, %d) to (%d, %d)\n",

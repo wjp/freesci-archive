@@ -1,5 +1,7 @@
 2005-12-10  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kgraphics.c: Incorporate KQ5/CD cursor fixes.
+
 	* src/engine/ksound.c: Add SCI1 debug printfs.
 
 	* src/engine/kmovement.c: Fix error messages to use PREG and friends.
