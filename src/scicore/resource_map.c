@@ -175,6 +175,19 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 
 	read(fd, &buf, 4);
 
+	/* Theory: An SCI1 map file begins with an index that allows us to seek quickly
+	   to a particular resource type. The entries are three bytes long; one byte
+	   resource type, two bytes start position and so on. 
+	   The below code therefore tests for three things:
+	   
+	   Is the first resource type 'view'?
+	   Do those entries start at an offset that is an exact multiple of the
+	   index entry size?
+	   Is the second resource type 'pic'?
+	   
+	   This requires that a given game has both views and pics, 
+	   a safe assumption usually. */
+	   
 	if ((buf[0] == 0x80) &&
 	    (buf[1] % 3 == 0) &&
 	    (buf[3] == 0x81))

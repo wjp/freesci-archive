@@ -283,8 +283,8 @@ run_gc(state_t *s)
 	deallocator_t deallocator;
 	seg_manager_t *sm = &(s->seg_manager);
 
-	c_segtable(s);
 #ifdef DEBUG_GC
+	c_segtable(s);
 	sciprintf("[GC] Running...\n");
 	memset(&(deallocator.segcount), 0, sizeof(int) * (MEM_OBJ_MAX + 1));
 #endif

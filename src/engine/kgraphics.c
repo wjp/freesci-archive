@@ -678,7 +678,8 @@ kTextSize(state_t *s, int funct_nr, int argc, reg_t *argv)
 	SCIkdebug(SCIkSTRINGS, "GetTextSize '%s' -> %dx%d\n", text, width, height);
 
 	dest[2] = make_reg(0, height);
-	dest[3] = make_reg(0, maxwidth? maxwidth : width);
+//	dest[3] = make_reg(0, maxwidth? maxwidth : width);
+	dest[3] = make_reg(0, width);
 
 	return s->r_acc;
 }

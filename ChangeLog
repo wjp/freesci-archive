@@ -1,3 +1,14 @@
+2005-12-11  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (kTextSize): Fix reporting of text
+	widths.
+
+	* src/scicore/resource_map.c (sci0_read_resource_map): Add
+	descriptive comment like I promised to ages ago.
+
+	* src/engine/gc.c (run_gc): Fix verbose error output when debug
+	define isn't set.
+
 2005-12-10  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c: Incorporate KQ5/CD cursor fixes.
