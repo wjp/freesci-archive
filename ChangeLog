@@ -1,3 +1,12 @@
+2005-12-12  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/operations.c (gfx_set_pointer_view): Forgot some changes
+	here in a previous commit.
+
+	* src/gfx/drivers/sdl_drivers.c (sdl_map_key): Fix Ctrl-Backquote
+	on the Macintosh. 
+	
+
 2005-12-11  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kTextSize): Fix reporting of text

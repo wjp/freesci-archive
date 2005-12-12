@@ -998,9 +998,13 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 	case SDLK_LEFTBRACKET:
 	case SDLK_RIGHTBRACKET:
 	case SDLK_LESS:
+	case SDLK_DOLLAR:
 	case SDLK_GREATER: return rkey;
 	case SDLK_SPACE: return ' ';
 
+#ifdef MACOSX
+	case SDLK_WORLD_0:
+#endif
 	case SDLK_BACKQUOTE:
 		if (keysym.mod & KMOD_CTRL)
 			return '`';

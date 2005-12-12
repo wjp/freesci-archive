@@ -418,12 +418,13 @@ gfxop_set_pointer_cursor(gfx_state_t *state, int nr);
 */
 
 int
-gfxop_set_pointer_view(gfx_state_t *state, int nr, int loop, int cel);
+gfxop_set_pointer_view(gfx_state_t *state, int nr, int loop, int cel, point_t *hotspot);
 /* Sets the mouse pointer to a view resource
 ** Parameters: (gfx_state_t *) state: The affected state
 **             (int) nr: Number of the view resource to use
 **             (int) loop: View loop to use
 **             (int) cel: View cel to use
+**             (point_t *) hotspot: Manually set hotspot to use, or NULL for default.
 ** Returns   : (int) GFX_OK or GFX_FATAL
 ** Use gfxop_set_pointer_cursor(state, GFXOP_NO_POINTER) to disable the
 ** pointer.
