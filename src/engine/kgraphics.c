@@ -321,7 +321,7 @@ kSetCursor_SCI11(state_t *s, int funct_nr, int argc, reg_t *argv)
 	switch (argc)
 	{
 	case 3 :
-		GFX_ASSERT(gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2)));
+                GFX_ASSERT(gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2), NULL));
 		break;
 	default :
 		SCIkwarn(SCIkERROR, "kSetCursor: Unhandled case: %d arguments given!\n", argc);

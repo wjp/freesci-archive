@@ -1,3 +1,8 @@
+2005-12-22  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (kSetCursor_SCI11): Forgot some changes
+	here in a previous commit.
+
 2005-12-12  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/operations.c (gfx_set_pointer_view): Forgot some changes
