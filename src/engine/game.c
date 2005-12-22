@@ -574,8 +574,8 @@ game_init(state_t *s)
 
 	srand(time(NULL)); /* Initialize random number generator */
 
-	memset(s->hunk, sizeof(s->hunk), 0); /* Sets hunk to be unused */
-	memset(s->clone_list, sizeof(s->clone_list), 0); /* No clones */
+	memset(s->hunk, 0, sizeof(s->hunk)); /* Sets hunk to be unused */
+	memset(s->clone_list, 0, sizeof(s->clone_list)); /* No clones */
 
 	/*	script_dissect(0, s->selector_names, s->selector_names_nr); */
 	game_obj = script0 + GET_HEAP(s->scripttable[0].export_table_offset + 2);

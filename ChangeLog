@@ -1,3 +1,8 @@
+2005-12-22  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/game.c (game_init): Swapped parameters in memset() to
+	be "as intended" (Patch by Markus Meissner)
+
 2005-11-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/scicore/tools.c: Added missing BeOS #include.
