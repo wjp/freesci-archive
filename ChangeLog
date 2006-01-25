@@ -1,3 +1,14 @@
+2006-01-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kernel.c (kfunct_mappers): Applied signature changes
+	discussed on IRC a few months ago.
+
+	* src/engine/kfile.c (write_filename_to_mem): Copy 12 bytes instead
+	of 11. (kFileIO): Corrected some mixed-up arguments.
+
+	* src/engine/seg_manager.c (sm_dereference): Added a '\n' to the
+	error message.
+
 2005-12-22  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kSetCursor_SCI11): Forgot some changes
