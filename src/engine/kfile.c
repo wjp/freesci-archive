@@ -979,8 +979,8 @@ write_filename_to_mem(state_t *s, reg_t address, char *string)
 	char *mem = kernel_dereference_bulk_pointer(s, address, 0);
 
 	if (string) {
-		memset(mem, 0, 12);
-		strncpy(mem, string, 11);
+		memset(mem, 0, 13);
+		strncpy(mem, string, 12);
 	}
 
 	return string;
@@ -1059,9 +1059,9 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     }
     case K_FILEIO_WRITE_RAW :
     {
-	char *buf = kernel_dereference_bulk_pointer(s, argv[1], 0);
-	int size = UKPV(2);
-	int handle = UKPV(3);
+	int handle = UKPV(1);
+	char *buf = kernel_dereference_bulk_pointer(s, argv[2], 0);
+	int size = UKPV(3);
 
 	fwrite_wrapper(s, handle, buf, size);
 	break;
@@ -1084,9 +1084,9 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     }
     case K_FILEIO_WRITE_STRING :
     {
-	int size = UKPV(2);
-	char *buf = kernel_dereference_bulk_pointer(s, argv[1], size);
-	int handle = UKPV(3);
+	int handle = UKPV(1);
+	int size = UKPV(3);
+	char *buf = kernel_dereference_bulk_pointer(s, argv[2], size);
 
 	if (buf)
 		fputs_wrapper(s, handle, size, buf);
@@ -1104,7 +1104,7 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     case K_FILEIO_FIND_FIRST :
     {
 	char *mask = kernel_dereference_bulk_pointer(s, argv[1], 0);
-	reg_t buf = argv[1];
+	reg_t buf = argv[2];
 	/* int attr = UKPV(3); */ /* We won't use this, Win32 might, though... */
 
 #ifndef _WIN32

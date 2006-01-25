@@ -1171,7 +1171,7 @@ sm_dereference(seg_manager_t *self, reg_t pointer, int *size)
 	if (!pointer.segment
 	    || (pointer.segment >= self->heap_size)
 	    || !self->heap[pointer.segment]) {
-		sciprintf("Error: Attempt to dereference invalid pointer "PREG"!",
+		sciprintf("Error: Attempt to dereference invalid pointer "PREG"!\n",
 			  PRINT_REG(pointer));
 		return NULL; /* Invalid */
 	}
