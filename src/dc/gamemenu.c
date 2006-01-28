@@ -541,9 +541,9 @@ int game_menu_render() {
 	}
 	
 	else if (menu_state == 3) {
+		draw_poly_strf(32.0f, info_y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"Starting game, please wait...");
 		if (load_queued < 4) {
-			draw_poly_strf(32.0f, info_y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-				"Starting game, please wait...");
 			load_queued++;
 			return 0;
 		} else {

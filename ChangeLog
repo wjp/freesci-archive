@@ -1,3 +1,20 @@
+2006-01-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/gamemenu.c (game_menu_render): Make sure the "please wait"
+	message remains on-screen during the loading of a game.
+
+	* src/dc/options.h (dc_options): Updated for recent changes.
+
+	* src/dc/Makefile: Build fix.
+
+	* src/sfx/mixer/dc.c (query_timestamp): Streaming is now restarted
+	if the PCM buffering is too far ahead. (sfx_pcm_driver_dc): Added
+	fake Dreamcast PCM driver.
+	* src/sfx/pcm_device/pcm_devices.c: Updated.
+	* src/sfx/softseq/opl2.c: Added suitable PCM defaults for Dreamcast.
+
+	* src/sfx/seq/mt32.c: Fixed some #includes.
+
 2006-01-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/kernel.c (kfunct_mappers): Applied signature changes

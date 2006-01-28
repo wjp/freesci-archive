@@ -23,8 +23,8 @@
 #  include <unistd.h>
 #endif
 #include <sfx_sequencer.h>
+#include <resource.h>
 
-#include <sys/ioctl.h>
 #include <sys/time.h>
 #ifdef __BEOS__
 #  include <be/kernel/OS.h>
@@ -155,8 +155,6 @@ static struct {
 static int
 midiout_write_block(byte *buf, int len, int delta)
 {
-	int retval;
-
 	if (delta)
 		midi_writer->delay(midi_writer, delta);
 

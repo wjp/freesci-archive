@@ -27,6 +27,9 @@ extern sfx_pcm_device_t sfx_pcm_driver_sdl;
 #	ifdef HAVE_ALSA
 extern sfx_pcm_device_t sfx_pcm_driver_alsa;
 #	endif
+#	ifdef _DREAMCAST
+extern sfx_pcm_device_t sfx_pcm_driver_dc;
+#	endif
 #endif
 
 sfx_pcm_device_t *pcmout_drivers[] = {
@@ -36,6 +39,9 @@ sfx_pcm_device_t *pcmout_drivers[] = {
 #	endif
 #	ifdef HAVE_ALSA
 		&sfx_pcm_driver_alsa,
+#	endif
+#	ifdef _DREAMCAST
+		&sfx_pcm_driver_dc,
 #	endif
 #endif
 	NULL

@@ -36,15 +36,15 @@ struct dc_option_t {
 /* 0 = stable, 1 = glutton */
 #define DC_OPTIONS_TAG_MAJOR 1
 /* Increase after every modification to the dc_options struct. */
-#define DC_OPTIONS_TAG_MINOR 0
+#define DC_OPTIONS_TAG_MINOR 1
 #define NUM_DC_OPTIONS 6
 
 struct dc_option_t dc_options[NUM_DC_OPTIONS] = {
 /* 0 */		{ "Video Mode", "Letterboxed\0Full-Screen\0" },
 /* 1 */		{ "Dithering", "256 Color Dithering\0Interpolate\00016 Color Dithering\0" },
 /* 2 */		{ "Antialiasing", "Off\0On\0" },
-/* 3 */		{ "SCI Version", "Autodetect\0001.000.172\0001.000.200\0" },
-/* 4 */		{ "Resource Version", "Autodetect\0002\0003\0005\0" },
+/* 3 */		{ "SCI Version", "Autodetect\0001.000.000\0001.000.200\0001.000.510\0" },
+/* 4 */		{ "Resource Version", "Autodetect\0001\0002\0003\0004\0005\0006\0" },
 /* 5 */		{ "Pic Port Bounds", "Default\0\"0, 0, 320, 200\"\0" }
 };
 

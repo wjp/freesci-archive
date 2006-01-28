@@ -104,6 +104,7 @@ OBJS = \
 	$(FSCI_BASE)/src/sfx/mixer/dc.o \
 	$(FSCI_BASE)/src/sfx/pcm_device/pcm_devices.o \
 	$(FSCI_BASE)/src/sfx/pcm_device/audiobuf.o \
+	$(FSCI_BASE)/src/sfx/seq/mt32.o \
 	$(FSCI_BASE)/src/sfx/softseq/softsequencers.o \
 	$(FSCI_BASE)/src/sfx/softseq/SN76496.o \
 	$(FSCI_BASE)/src/sfx/softseq/fmopl.o \

@@ -35,6 +35,7 @@
 #define FEED_MODE_IDLE 1
 #define FEED_MODE_DIEING 2
 #define FEED_MODE_DEAD 3
+#define FEED_MODE_RESTART 4
 
 typedef struct feed_state {
 	/* Queue entry. */
@@ -86,10 +87,21 @@ query_timestamp(feed_state_t *state)
 
 		switch (val) {
 		case PCM_FEED_TIMESTAMP:
-			state->mode = FEED_MODE_ALIVE;
 			state->gap = sfx_timestamp_frame_diff(stamp, state->time);
-			if (state->gap < 0)
-				state->gap = 0;
+
+			if (state->gap >= 0)
+				state->mode = FEED_MODE_ALIVE;
+			else {
+				long secs, usecs;
+
+				state->mode = FEED_MODE_RESTART;
+				sci_gettime(&secs, &usecs);
+				state->time = sfx_new_timestamp(secs, usecs, feed->conf.rate);
+				state->gap = sfx_timestamp_frame_diff(stamp, state->time);
+
+				if (state->gap < 0)
+					state->gap = 0;
+			}
 			break;
 		case PCM_FEED_IDLE:
 			state->mode = FEED_MODE_IDLE;
@@ -249,6 +261,12 @@ mix_process(sfx_pcm_mixer_t *self)
 			state->feed->destroy(state->feed);
 			TAILQ_REMOVE(&feeds, state, entry);
 		}
+		else if (state->mode == FEED_MODE_RESTART) {
+			snd_stream_stop(state->handle);
+			snd_stream_start(state->handle, state->feed->conf.rate,
+					 state->feed->conf.stereo != SFX_PCM_MONO);
+			state->mode = FEED_MODE_ALIVE;
+		}
 		state = state_next;
 	}
 
@@ -264,6 +282,33 @@ static void
 mix_resume(sfx_pcm_mixer_t *self)
 {
 }
+
+static int
+pcm_init(sfx_pcm_device_t *self)
+{
+	return SFX_OK;
+}
+
+static void
+pcm_exit(sfx_pcm_device_t *self)
+{
+}
+
+sfx_pcm_device_t sfx_pcm_driver_dc = {
+	"dc",
+	"0.1",
+
+	pcm_init,
+	pcm_exit,
+	NULL,
+	NULL,
+	NULL,
+
+	{0, 0, 0},
+	0,
+	NULL,
+	NULL
+};
 
 sfx_pcm_mixer_t sfx_pcm_mixer_dc = {
 	"dc",

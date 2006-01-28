@@ -24,7 +24,15 @@
 
 #include "fmopl.h"
 
+#ifdef _DREAMCAST
+#define SAMPLE_RATE 22050
+#define CHANNELS SFX_PCM_MONO
+#define STEREO 0
+#else
 #define SAMPLE_RATE 44100
+#define CHANNELS SFX_PCM_STEREO_LR
+#define STEREO 1
+#endif
 
 
 /* local function declarations */
@@ -43,7 +51,7 @@ static void opl2_allstop(sfx_softseq_t *self);
 #define OPL_INTERNAL_FREQ    3579545
 
 static int ready = 0;
-static int pcmout_stereo = 1;
+static int pcmout_stereo = STEREO;
 
 static int register_base[11] = {
     0x20, 0x23, 0x40, 0x43,
@@ -681,5 +689,5 @@ sfx_softseq_t sfx_softseq_opl2 = {
 	0x4,	/* Play flags */
 	0,	/* No rhythm channel (9) */
 	ADLIB_VOICES, /* # of voices */
-	{SAMPLE_RATE, SFX_PCM_STEREO_LR, SFX_PCM_FORMAT_S16_NATIVE}
+	{SAMPLE_RATE, CHANNELS, SFX_PCM_FORMAT_S16_NATIVE}
 };
