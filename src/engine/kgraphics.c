@@ -185,7 +185,7 @@ _find_priority_band(state_t *s, int nr)
 	else {
 		int retval;
 
-		if (s->version > SCI_VERSION_FTU_PRIORITY_14_ZONES)
+		if (s->version >= SCI_VERSION_FTU_PRIORITY_14_ZONES)
 			retval = SCI0_PRIORITY_BAND_FIRST_14_ZONES(nr);
 		else
 			retval = SCI0_PRIORITY_BAND_FIRST(nr);

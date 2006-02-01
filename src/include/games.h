@@ -58,6 +58,14 @@ sci_game_t sci_games[] = {
 	{ 0x7132D6D8, SCI_VERSION(0,000,629), "QfG1" },
 	{ 0xF8F4913F, SCI_VERSION(0,000,685), "SQ3" },
 	{ 0x34FBC324, SCI_VERSION(0,000,999), "SQ3/DE" }, /* S.old.114 */
+	{ 0xE4A3234D, SCI_VERSION(0,000,506), "Fun Seekers Guide v1.02"},
+	{ 0x85AFE241, SCI_VERSION(0,000,519), "Hoyle 1 v1.000.104"},
+	{ 0xE0E070C3, SCI_VERSION(0,000,572), "Hoyle 2 v1.000.011"},
+	{ 0xD0B8794E, SCI_VERSION(0,000,668), "Iceman v1.023"},
+	{ 0x94EA377B, SCI_VERSION(0,000,631), "The Colonel's Bequest v1.000.046"},
+	{ 0x28543FDF, SCI_VERSION(0,000,453), "Astro Chicken"},
+	{ 0x31F46F7D, SCI_VERSION(0,000,453), "Space Quest III v1.0V int"},
+	{ 0xAA2C94B9, SCI_VERSION(0,000,685), "Mixed-Up Mother Goose v1.011 Int.#8.2.90"},
 
 	/* Undetermined Amiga versions: */
 /*	{ 0x8AE5F854, SCI_VERSION(), "ARTHUR" }, */
