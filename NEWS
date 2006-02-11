@@ -1,3 +1,21 @@
+Two years after the last release of FreeSCI, another one sees the
+light of day. The sound system has stabilized a bit (it doesn't crash
+anymore, but still sounds funny from time to time :-), and an
+autodetection scheme has been written for SCI1 games. This means that
+most SCI1 games run without game-specific quirks in the configuration
+file. A color adjustment scheme has been implemented - this is part of
+our intention to provide (perhaps with the aid of our users ;-) a
+graphical improvement over the original interpreters; the system is
+currently implemented by means of the config file. Partial palette
+support has been implemented, so that text displayed in SCI1 games is
+now readable.
+
+
+
+
+
+-- 0.6.1 --
+
 Yet another version of FreeSCI has hit the streets, more than a year after
 its predecessor. This time with a totally redesigned sound system and
 partial support for SCI1.0. The new sound system includes support for digital
