@@ -177,7 +177,7 @@ _reset_graphics_input(state_t *s)
 
 	s->priority_first = 42; /* Priority zone 0 ends here */
 
-	if (s->version <= SCI_VERSION_FTU_PRIORITY_14_ZONES)
+	if (s->version < SCI_VERSION_FTU_PRIORITY_14_ZONES)
 		s->priority_last = 200; else
 		s->priority_last = 190;
 

@@ -162,7 +162,7 @@ _find_view_priority(state_t *s, int y)
 		return 14; /* Maximum */
 	} else
 	{
-		if (s->version>SCI_VERSION_FTU_PRIORITY_14_ZONES)
+		if (s->version >= SCI_VERSION_FTU_PRIORITY_14_ZONES)
 			return SCI0_VIEW_PRIORITY_14_ZONES(y); else
 				return SCI0_VIEW_PRIORITY(y);
 		
@@ -1142,7 +1142,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	s->priority_first = 42;
 
-	if (s->version <= SCI_VERSION_FTU_PRIORITY_14_ZONES)
+	if (s->version < SCI_VERSION_FTU_PRIORITY_14_ZONES)
 		s->priority_last = 200;
 	else
 		s->priority_last = 190;

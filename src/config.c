@@ -1,5 +1,5 @@
 
-#line 3 "config.c"
+#line 3 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -1339,7 +1339,7 @@ crop_value(char *yytext);
 char *
 purge_comments(char *comments);
 
-#line 1343 "config.c"
+#line 1343 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -1493,7 +1493,7 @@ YY_DECL
 #line 312 "config.l"
 
 
-#line 1497 "config.c"
+#line 1497 "lex.yy.c"
 
 	if ( (yy_init) )
 		{
@@ -1784,7 +1784,7 @@ YY_RULE_SETUP
 #line 477 "config.l"
 ECHO;
 	YY_BREAK
-#line 1788 "config.c"
+#line 1788 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2514,7 +2514,6 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 
 /** Setup the input buffer state to scan a string. The next call to yylex() will
  * scan from a @e copy of @a str.
- * @param str a NUL-terminated string to scan
  * @param yy_str a NUL-terminated string to scan
  * 
  * @return the newly allocated buffer state object.
