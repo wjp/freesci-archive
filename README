@@ -296,6 +296,16 @@ a Sun keyboard. Default is 'false'.
 - fullscreen = true | false
 kinda self-explanatory, eh?  :)
 
+2.1.1.4 Dreamcast driver:
+-------------------------
+- render_mode = vram | pvr
+Determines the rendering mode to use. VRAM mode uses the framebuffer
+directly, while PVR mode renders a textured quad. Default is 'vram'.
+
+- refresh_rate = 50Hz | 60Hz
+Determines whether a 50Hz or 60Hz refresh rate will be used. Default is
+60Hz.
+
 2.2.1 Patterns
 --------------
   The pattern specifies which resources the alteration applies to; for
