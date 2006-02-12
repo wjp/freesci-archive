@@ -1,3 +1,7 @@
+2006-02-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README.DC: Added.
+
 2006-02-11  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/kgraphics.c (_find_view_priority): Fixed 14 priority
