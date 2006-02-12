@@ -306,6 +306,16 @@ directly, while PVR mode renders a textured quad. Default is 'vram'.
 Determines whether a 50Hz or 60Hz refresh rate will be used. Default is
 60Hz.
 
+
+2.2 Graphical per-resource customisation
+----------------------------------------
+FreeSCI supports a number of ways for customising the way in which graphics
+contained in SCI games are rendered on a per-resource level, i.e. by
+specifying certain options explicitly for the resource under consideration.
+ This is expressed by specifying two things to FreeSCI (per customisation
+step): A pattern and an alteration, terminated by a semicolon (';')
+character.
+
 2.2.1 Patterns
 --------------
   The pattern specifies which resources the alteration applies to; for
