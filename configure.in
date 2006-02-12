@@ -318,6 +318,7 @@ AC_CONFIG_FILES([Makefile    \
         doc/misc/Makefile \
         doc/man/Makefile \
         conf/Makefile \
+        custom/Makefile \
 	src/Makefile  \
 	src/scicore/Makefile \
 	src/engine/Makefile \

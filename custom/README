@@ -1,0 +1,6 @@
+Per-resource graphical customisation for SCI games
+--------------------------------------------------
+
+Use the %include<> directive or copy and paste them into your ~/.freesci after
+the appropriate game section (cf. sample configuration file) to spice up your
+graphics just a little bit.

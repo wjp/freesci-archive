@@ -14,6 +14,17 @@ cursor_filter = trilinear
 pic_filter = trilinear
 view_filter = trilinear
 
+## Per-resource graphical customisation: Adjust brightness of some pictures
+## a little bit to make the games look nicer.
+##
+## To get this to work, you will have to copy the scifx files into your
+## ~/.freesci subdirectory.
+#
+# [lsl2]
+# %include<lsl2.scifx>
+#
+# [sq3]
+# %include<sq3.scifx>
 
 ## Example game: Uncomment this and update it for each of your games.
 ## The below will allow you to run the game 'FooQuest', whose resources
