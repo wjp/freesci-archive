@@ -109,7 +109,7 @@ check_features()
 
 	helper = 0x100;
 #ifdef __DECC
-	helper = asm("amask %0, %v0", helper);
+	axp_have_mvi = asm("amask %0, %v0", helper);
 #else
 	__asm__ ("amask %1, %0"
 		 : "=r"(axp_have_mvi)

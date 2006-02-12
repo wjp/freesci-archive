@@ -56,7 +56,7 @@ gfxr_interpreter_get_static_palette(gfx_resstate_t *state, int version, int *col
 }
 
 int
-sciprintf(char *fmt, ...)
+sciprintf(const char *fmt, ...)
 {
 	va_list argp;
 	va_start(argp, fmt);
@@ -716,9 +716,9 @@ test_a(void)
 
 
 #define TEST_LINE(x, y, xl, yl) \
-	gfxop_draw_line(state, gfx_rect(x, y, xl, yl), blue, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL); \
+	gfxop_draw_line(state, gfx_point(x, y), gfx_point((x)+(xl), (y)+(yl)), blue, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL); \
 	gfxop_set_clip_zone(state, gfx_rect(140, 60, 40, 40)); \
-	gfxop_draw_line(state, gfx_rect(x, y, xl, yl), red, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL); \
+	gfxop_draw_line(state, gfx_point(x, y), gfx_point((x)+(xl), (y)+(yl)), red, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL); \
 	gfxop_set_clip_zone(state, gfx_rect(0, 0, 320, 200));
 
 #define LINES_NR 19
@@ -755,20 +755,20 @@ test_b(void)
 	MESSAGE("Some tests will include 'fine' lines.\nNote that support for those is\noptional.");
 	waitkey();
 
-	gfxop_draw_line(state, gfx_rect(30, 30, 260, 0), red, GFX_LINE_MODE_FINE, GFX_LINE_STYLE_NORMAL);
-	gfxop_draw_line(state, gfx_rect(30, 40, 260, 0), blue, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
-	gfxop_draw_line(state, gfx_rect(30, 50, 260, 0), green, GFX_LINE_MODE_FINE, GFX_LINE_STYLE_STIPPLED);
-	gfxop_draw_line(state, gfx_rect(30, 60, 260, 0), white, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_STIPPLED);
+	gfxop_draw_line(state, gfx_point(30, 30), gfx_point(290, 30), red, GFX_LINE_MODE_FINE, GFX_LINE_STYLE_NORMAL);
+	gfxop_draw_line(state, gfx_point(30, 40), gfx_point(290, 40), blue, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
+	gfxop_draw_line(state, gfx_point(30, 50), gfx_point(290, 50), green, GFX_LINE_MODE_FINE, GFX_LINE_STYLE_STIPPLED);
+	gfxop_draw_line(state, gfx_point(30, 60), gfx_point(290, 60), white, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_STIPPLED);
 	update();
 	MESSAGE("B.0: horizontal lines:\nYou should now be seeing (top-down):\nred-fine, blue-normal,\ngreen-fine-stippled, white-stippled");
 	waitkey();
 
 	clear();
-	gfxop_draw_line(state, gfx_rect(30, 30, 260, 100), blue, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
-	gfxop_draw_line(state, gfx_rect(30, 130, 260, -100), blue, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
+	gfxop_draw_line(state, gfx_point(30, 30), gfx_point(290, 130), blue, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
+	gfxop_draw_line(state, gfx_point(30, 130), gfx_point(290, 30), blue, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
 	gfxop_set_clip_zone(state, gfx_rect(140, 60, 40, 40));
-	gfxop_draw_line(state, gfx_rect(30, 30, 260, 100), red, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
-	gfxop_draw_line(state, gfx_rect(30, 130, 260, -100), red, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
+	gfxop_draw_line(state, gfx_point(30, 30), gfx_point(290, 130), red, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
+	gfxop_draw_line(state, gfx_point(30, 130), gfx_point(290, 30), red, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
 	gfxop_set_clip_zone(state, gfx_rect(0, 0, 320, 200));
 	update();
 	MESSAGE("B.1: line clipping:\nTwo identical pairs of lines.\nblue lines are unclipped,\nred ones are clipped.");
@@ -891,10 +891,11 @@ test_d(void)
 		} else if (event.type == SCI_EVT_MOUSE_RELEASE)
 
 			if (pressed) {
+				point_t line_pt = gfx_point(line.x, line.y);
 				pressed = 0;
 				line.xl = state->pointer_pos.x - line.x;
 				line.yl = state->pointer_pos.y - line.y;
-				gfxop_draw_line(state, line, red, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
+				gfxop_draw_line(state, state->pointer_pos, line_pt, red, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
 
 				if (line.xl < 0) {
 					line.x += line.xl;

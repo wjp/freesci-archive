@@ -1,3 +1,11 @@
+2006-02-11  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/kgraphics.c (_find_view_priority): Fixed 14 priority
+	zone comparisons according to Hugues' recipe
+
+	* src/include/games.h: Forward-"ported" Hugues' list of new game
+	IDs
+
 2006-02-01  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/kgraphics.c (_find_priority_band): Treat

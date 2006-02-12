@@ -4,7 +4,7 @@ AC_CONFIG_SRCDIR([acinclude.m4])
 
 AC_CANONICAL_TARGET([])
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.6.1-devel)
+AM_INIT_AUTOMAKE(freesci, 0.6.2-pre0)
 
 AC_PROG_CC
 #AC_LIBTOOL_DLOPEN
@@ -185,6 +185,7 @@ if test x"$have_x" = xyes; then
 		fi
 		AC_CHECK_LIB(Xi, XGrabDevice, [X_LIBS="$X_LIBS -lXi"])
 		AC_CHECK_LIB(X11, XOpenDisplay, [X_LIBS="$X_LIBS -lX11"])
+		AC_CHECK_LIB(Xext, XShmAttach, [X_LIBS="$X_LIBS -lXext"])
 
 		fsci_xlib_driver="yes"
 	fi
