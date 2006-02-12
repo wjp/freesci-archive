@@ -111,11 +111,11 @@ other files to be included (as with the C preprocessor) by using the notation
 where [filename] is the name of the file to be included; as far as the
 configuration file reader is concerned, this is equivalent to replacing
 the entire statement with the contents of the file [filename]. FreeSCI
-automatically checks for and warns about circular inclusion.
-  A variety of configuration options may be specified.
+automatically checks for and warns about circular inclusion. Include files
+should be stored in the same directory.
 
-
-Currently, the configuration file may contain:
+A variety of configuration options may be specified. Currently, the
+configuration file may contain:
 
 - Comments preceeded by a hash '#' sign
 
