@@ -231,25 +231,6 @@ Currently, the configuration file may contain:
   cause too many pixels to be drawn, resulting in bulky images.
   This does not have any effect when running unscaled.
 
-- midi_device:  The equivalent of what sound driver you select in a SCI
-  game.  For example, MT-32, Adlib, etc.  Currently, 'mt32' and 'mt32gm'
-  are the only options.  (the latter is a GM mapping of the MT32 driver)
-  If you have none of the above, leave it set to 'mt32gm' (default)
-
-- midiout_driver:  If you elected to use a "real" midi device (eg the
-  MT32 or a General MIDI synth), set this to 'unixraw' or 'alsaraw' if
-  you have it connected to your PC's MIDI port.  If you have no MIDI
-  devices, 'null' is also valid, and it sends all data to /dev/null.
-  Finally, you can use 'ossseq', which uses the OSS /dev/sequencer.
-  Which is the default.  :)
-
-- sound_server:  FreeSCI has different ways to handle the concurrent processing
-  of sound output. They are:
-  * sdl: A threaded SDL sound server
-  * unix: A forked-off sound server
-  Generally, the sdl sound server (default) should provide better performance,
-  if available.
-
 - module_path: A list of directories modules (gfx drivers etc.) are searched
   in. Directories are separated with the platform's default directory
   separator (':' on UNIX) and are searched in order of appearance.
@@ -314,82 +295,6 @@ key (relative to a PC-style keyboard layout). The resulting layout resembles
 a Sun keyboard. Default is 'false'.
 - fullscreen = true | false
 kinda self-explanatory, eh?  :)
-
-2.1.2 Midiout subsystem
------------------------
-This subsystem is responsible for addressing the sound hardware. Its prefix is
-'midiout'.
-
-2.1.2.1 ALSARaw driver:
------------------------
-This driver (driver ID 'alsaraw') passes output through to ALSA's raw MIDI output
-devices.
-
-Options:
-- card: The sound card number to use. Defaults to 0.
-- device: The sound device within the card to use. Default 0.
-
-2.1.2.2 UNIXRaw driver:
------------------------
-This driver (ID 'unixraw') handles output to the traditional /dev/midi* devices,
-such as those provided by OSS/Free.
-
-Options:
-- device: The device file to use for output (defaults to /dev/midi00)
-
-2.1.2.3 OSSseq driver:
-----------------------
-The OSS sequencer driver ('ossseq') issues MIDI commands to /dev/sequencer. It
-can be used to address a variety of sound hardware, including many synthesizer
-chips (such as the EMU8k or EMU10k). If you don't have an external MIDI device,
-this is most likely what you want to use.
-
-Options:
-- device: Number of the sequencer device to address (defauls to '1'). Try
-  altering this value if you can't hear anything.
-- recorder: Allows to record the events sent to /dev/sequencer, plus a
-  preceeding 0-byte. Useful for debugging.
-
-2.1.2.4 Win32 MCI driver:
------------------------
-This driver (ID 'win32mci') handles output to MCI MIDI Output devices in
-Windows 95/98/NT4/2000. 
-
-Options:
-- device: MCI Device number (as output by FreeSCI during initialization).
-  This defaults to the last MCI MIDIout device found in the system, but
-  can be set in the config file using "midiout.win32mci.device = x". 
-
-2.1.2.5 OSS Sequencer/OPL3 driver
----------------------------------
-This driver (ID 'ossopl3') abuses the MT-32/GM target and uses the OPL3
-FM chip commonly found on soundcards to play the music.
-
-Options:
-- device: Defaults to /dev/sequencer
-- patchpath:  Location to the instrument data (drums.o3, std.o3).
-              Defaults to /etc/midi
-
-2.1.3 PCM subsystem
--------------------
-This subsystem is responsible for getting PCM music and effects out.
-Its prefix is 'pcmout'.  Currently all sound is output in 16-bit mono.
-
-Options:
-pcmout_driver:  Defaults to 'sdl', can also be 'null' to disable pcmout
-                entirely.
-pcmout_rate:    Sample rate in Hz.  Defaults to 22050, can go up to
-                48000.
-pcmout_stereo:  1 for stereo, 0 for mono.  Defaults to stereo.
-
-2.2 Graphical per-resource customisation
-----------------------------------------
-FreeSCI supports a number of ways for customising the way in which  graphics
-contained in SCI games are rendered on a per-resource level, i.e. by
-specifying certain options explicitly for the resource under consideration.
-  This is expressed by specifying two things to FreeSCI (per customisation
-step): A pattern and an alteration, terminated by a semicolon (';')
-character.
 
 2.2.1 Patterns
 --------------
