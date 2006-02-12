@@ -941,7 +941,7 @@ main(int argc, char** argv)
 	printf(" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,\n"
 		   " Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel, Lars Skovlund,\n"
 		   " Rink Springer, Petr Vyhnak, Solomon Peachy, Matt Hargett, Alex Angas\n"
-		   " Walter van Niftrik, Rainer Canavan, Ruediger Hanke\n"
+                   " Walter van Niftrik, Rainer Canavan, Ruediger Hanke, Hugues Valois\n"
 	       "This program is free software. You can copy and/or modify it freely\n"
 	       "according to the terms of the GNU general public license, v2.0\n"
 	       "or any later version, at your option.\n"
