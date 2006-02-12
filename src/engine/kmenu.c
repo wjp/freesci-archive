@@ -186,7 +186,7 @@ struct {
 	 "\n\n"
 	 "Vyacheslav Dikonov\nConfig script improvements"
 	 "\n\n"
-	 "Walter van Niftrik\nPort to the Dreamcast platform",
+	 "Walter van Niftrik\nPorts to the Dreamcast and GP32 platforms",
 	 0, 15},
 	{"The CSCI5573 Team at CU Boulder",
 	 "Xiaojun Chen\nSean Terrell\nChristoph Reichenbach\n\n"
