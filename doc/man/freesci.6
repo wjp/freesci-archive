@@ -45,9 +45,10 @@ below for a complete listing.
 .TP
 .BR \fIgame\fR
 An identifier describing the game to start. This identifier (GAME_ID) must be
-declared in the configuration file. If omitted, the interpreter will attempt
-to read resource files from the current working directory (or the
-directory specified by the \fB\-\-gamedir\fR option).
+declared in the configuration file. If omitted, the interpreter will test whether
+a configuration file is present; if so, it will present a graphical game selection
+screen and otherwise attempt to read resource files from the current working
+directory (or the directory specified by the \fB\-\-gamedir\fR option).
 
 .TP
 .BR \fIsavegame\fR
@@ -175,6 +176,10 @@ The config file section before the first game\-specific section is the
 global configuration section; anything specified here will be used as
 the setting for any game that does not explicitly request different
 settings.
+
+.P
+It is possible to include other files with the \fB%include<#>\fR directive. FreeSCI
+will automatically detect and warn about circular inclusions.
 
 .P
 Here is a complete listing of all options supported:
@@ -385,6 +390,12 @@ Selects the OSS sequencer device number; this defaults to \fB1\fR.
 Chooses a file the OSS sequencer should print debug output to. This is
 not particularly helpful for everyday use, and disabled by default.
 
+.TP
+PER-RESOURCE COLOUR CUSTOMISATION:
+
+.TP
+FreeSCI allows the brightness and hue of in-game images to be customised. A complete description of this mechanism can be found in the accompanying README.
+
 
 .SH EXAMPLES
 Here is an exemplary configuartion file:
@@ -393,7 +404,7 @@ Here is an exemplary configuartion file:
 .nf
 .RS
 # FreeSCI configuration file
-# For FreeSCI version 0.3.2
+# For FreeSCI version 0.3.5
 
 # default values:
 
@@ -499,11 +510,11 @@ listing of all known and current bugs.
 
 .SH AUTHORS
 .P
-FreeSCI is copyright (c) 1999,2000,2001 by the following people:
+FreeSCI is copyright (c) 1999-2006 by the following people:
 
 .IP \(bu
 .PD 0
-Christoph Reichenbach <\fIcreichen@rbg.informatik.tu\-darmstadt.de\fR>
+Christoph Reichenbach <\fIcreichen@gmail.com\fR>
 .IP \(bu
 Carl Muckenhoupt <\fIcarl@wurb.com\fR>
 .IP \(bu
@@ -524,6 +535,14 @@ Solomon Peachy <\fIpizza@shaftnet.org\fR>
 Rickard Lind <\fIrpl@dd.chalmers.se\fR>
 .IP \(bu
 Rink Springer <\fIrink@springer.cx\fR>
+.IP \(bu
+Hugues Valois <\fIhugues_valois@hotmail.com\fR>
+.IP \(bu
+Ruediger Hanke <\fItomjoad@muenster.de\fR>
+.IP \(bu
+Alexander Angas <\fIwgd@adelaide.on.net\fR>
+.IP \(bu
+Walter van Niftrik <\fIw.f.b.w.v.niftrik@stud.tue.nl\fR>
 .PD 0.4v
 
 .P
