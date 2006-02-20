@@ -3400,6 +3400,9 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 		case K_DISPLAY_WIDTH:
 
 			area.xl = UKPV(argpt++);
+			if (area.xl == 0)
+				area.xl = MAX_TEXT_WIDTH_MAGIC_VALUE;
+
 			SCIkdebug(SCIkGRAPHICS, "Display: set_width(%d)\n", area.xl);
 			break;
 

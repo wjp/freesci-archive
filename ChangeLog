@@ -1,3 +1,8 @@
+2006-02-20  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (kDisplay): Treat width requests of 0 as
+	MAX_TEXT_WIDTH_MAGIC_VALUE, same as kTextSize. 
+
 2006-02-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README: Added section on Dreamcast graphics driver.
