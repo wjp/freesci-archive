@@ -652,6 +652,10 @@ game_exit(state_t *s)
 		sci_free(s->execution_stack);
 	}
 
+	sfx_exit(&s->sound);
+/* Reinit because some other code depends on having a valid state */
+	game_init_sound(s); 
+
 	sm_destroy(&s->seg_manager);
 	
 	if (s->synonyms_nr) {

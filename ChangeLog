@@ -1,3 +1,8 @@
+2006-02-25  Lars Skovlund  <lskovlun@image.dkl>
+
+	* src/engine/game.c (game_exit): Free the sound state (and
+	re-allocate it due to brain damage). 
+
 2006-02-20  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kDisplay): Treat width requests of 0 as
