@@ -710,7 +710,8 @@ kNOP(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: %s", funct_nr, problem);
 
-	if (s->kfunct_table[funct_nr].orig_name)
+	if (s->kfunct_table[funct_nr].orig_name &&
+	    strcmp(s->kfunct_table[funct_nr].orig_name, SCRIPT_UNKNOWN_FUNCTION_STRING))
 	  {
 	    sciprintf(" (but its name is known to be %s)", s->kfunct_table[funct_nr].orig_name);
 	  }
