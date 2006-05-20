@@ -1,3 +1,16 @@
+2006-05-19  Walter van Niftrik <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kpathing.c, src/scicore/script.c, src/include/vm.h:
+	Added pathfinding implementation.
+	* src/include/kdebug.h, src/engine/scriptdebug.c: Added debuglog +P
+	mode for pathfinding.
+	* src/engine/kstring.c (kStrCpy): Added hack for converting reg_t to
+	raw for AvoidPath.
+
+	* src/include/list.h, src/include/aatree.h, src/scicore/aatree.c:
+	Added to repository.
+	* src/include/Makefile.am, src/scicore/Makefile.am: Updated.
+
 2006-03-07  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kernel.c (kNOP): Check whether the name of the NOPed

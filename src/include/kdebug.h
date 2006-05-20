@@ -30,7 +30,7 @@
 #define _SCI_KDEBUG_H_
 
 struct _state;
-#define SCIk_DEBUG_MODES 17
+#define SCIk_DEBUG_MODES 18
 
 #define SCIkERROR_NR -2
 #define SCIkWARNING_NR -1
@@ -40,6 +40,7 @@ struct _state;
 #define SCIkGFXDRIVER_NR 8
 #define SCIkBASESETTER_NR 9
 #define SCIkPARSER_NR 10
+#define SCIkAVOIDPATH_NR 17
 
 #define SCIkERROR      s, __FILE__, __LINE__, SCIkERROR_NR
 #define SCIkWARNING    s, __FILE__, __LINE__, SCIkWARNING_NR
@@ -60,6 +61,7 @@ struct _state;
 #define SCIkTIME       s, __FILE__, __LINE__, 14
 #define SCIkROOM       s, __FILE__, __LINE__, 15
 #define SCIkEMU	       s, __FILE__, __LINE__, 16
+#define SCIkAVOIDPATH  s, __FILE__, __LINE__, SCIkAVOIDPATH_NR
 
 #define SCI_KERNEL_DEBUG
 

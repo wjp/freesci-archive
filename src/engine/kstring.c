@@ -402,8 +402,21 @@ kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int length = SKPV(2);
 
 		if (length>=0)
-			strncpy(dest, src, length); else
-				memcpy(dest, src, -length); 
+			strncpy(dest, src, length);
+		else {
+			if (s->seg_manager.heap[argv[0].segment]->type == MEM_OBJ_DYNMEM) {
+				char *srcp = src;
+				
+				int i;
+				SCIkdebug(SCIkWARNING, "Performing reg_t to raw conversion for AvoidPath\n");
+				for (i = 0; i < -length; i++) {
+					if (!(i % 2))
+						srcp += 2;
+					dest[i] = *srcp++;
+				}
+			} else
+				memcpy(dest, src, -length);
+		}
 	}
 	else
 		strcpy(dest, src);

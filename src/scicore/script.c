@@ -207,6 +207,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(moveSpeed, "moveSpeed");
   FIND_SELECTOR(cantBeHere, "cantBeHere");
   FIND_SELECTOR(nodePtr, "nodePtr");
+  FIND_SELECTOR(points, "points");
 }
 
 int

@@ -2636,7 +2636,7 @@ handle_config_update(const generic_config_flag_t *flags_list, int flags_nr,
 
 			if (!flag) {
 				sciprintf("Invalid/unknown mode flag '%c'\n",
-					  changestring);
+					  changestring[j]);
 				return;
 			}
 			flags |= flag;
@@ -2690,7 +2690,8 @@ const generic_config_flag_t SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 	{"File I/O", 'F', (1 << 13)},
 	{"Time", 't', (1 << 14)},
 	{"Room numbers", 'r', (1 << 15)},
-	{"FreeSCI 0.3.3 kernel emulation", 'e', (1 << 16)}
+	{"FreeSCI 0.3.3 kernel emulation", 'e', (1 << 16)},
+	{"Pathfinding", 'P', (1 << SCIkAVOIDPATH_NR)}
 } ;
 
 
@@ -3482,11 +3483,10 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values"
 					 " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"
 					 "  c: Character handling\n  m: Memory management\n  f: Function call checks\n"
-					 "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter"
-					 "\n  p: Parser\n  M: The menu system\n  S: Said specs\n  F: File I/O\n  t: GetTime"
-					 "\n  e: 0.3.3 kernel emulation\n"
-					 "\n  r: Room numbers\n"
-					 "\n  *: Everything\n\n"
+					 "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter\n"
+					 "  p: Parser\n  M: The menu system\n  S: Said specs\n  F: File I/O\n  t: GetTime\n"
+					 "  e: 0.3.3 kernel emulation\n  r: Room numbers\n  P: Pathfinding\n"
+					 "  *: Everything\n\n"
 					 "  If invoked withour parameters,\n  it will list all activated\n  debug options.\n\n"
 					 "SEE ALSO\n"
 					 "  gfx_debuglog.1, sfx_debuglog.1\n");

@@ -334,6 +334,8 @@ typedef struct {
 	selector_t palette;
 	selector_t cantBeHere;
 	selector_t nodePtr;
+
+	selector_t points; /* Used by AvoidPath() */
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {
