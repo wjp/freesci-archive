@@ -650,24 +650,20 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_MEMORY_PEEK : {
 		byte *ref = kernel_dereference_bulk_pointer(s, argv[1], 2);
-		if (ref)
-			return make_reg(0, getInt16(ref));
-		else {
+
+		if (!ref) {
 			SCIkdebug(SCIkERROR, "Attempt to poke invalid memory at "PREG"!\n",
 				  PRINT_REG(argv[1]));
 			return s->r_acc;
 		}
+		if (s->seg_manager.heap[argv[1].segment]->type == MEM_OBJ_LOCALS)
+			return *((reg_t *) ref); else
+			return make_reg(0, getInt16(ref));
 	}
 		break;
 
 	case K_MEMORY_POKE : {
 		byte *ref = kernel_dereference_bulk_pointer(s, argv[1], 2);
-
-		if (argv[2].segment) {
-			SCIkdebug(SCIkERROR, "Attempt to poke memory reference "PREG" to "PREG"!\n",
-				  PRINT_REG(argv[2]), PRINT_REG(argv[1]));
-			return s->r_acc;
-		}
 
 		if (!ref) {
 			SCIkdebug(SCIkERROR, "Attempt to poke invalid memory at "PREG"!\n",
@@ -675,11 +671,21 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 			return s->r_acc;
 		}
 
-		putInt16(ref, argv[2].offset);
+		if (s->seg_manager.heap[argv[1].segment]->type == MEM_OBJ_LOCALS)
+			*((reg_t *) ref) = argv[2]; else
+			{
+				if (argv[2].segment) {
+					SCIkdebug(SCIkERROR, "Attempt to poke memory reference "PREG" to "PREG"!\n",
+						  PRINT_REG(argv[2]), PRINT_REG(argv[1]));
+					return s->r_acc;
+					putInt16(ref, argv[2].offset);
+				}
+				
+			}
 		return s->r_acc;
-	}
 		break;
 
+	}
 	}
 
 	return s->r_acc;

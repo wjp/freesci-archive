@@ -613,6 +613,9 @@ pointer_add(state_t *s, reg_t base, int offset)
 	switch (mobj->type) {
 
 	case MEM_OBJ_LOCALS:
+		base.offset += 2*offset;
+		return base;
+
 	case MEM_OBJ_SCRIPT:
 	case MEM_OBJ_STACK:
 	case MEM_OBJ_DYNMEM:
