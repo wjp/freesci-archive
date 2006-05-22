@@ -992,25 +992,40 @@ run_vm(state_t *s, int restoring)
 		case 0x13: /* ugt? */
 			s->r_prev = s->r_acc;
 			r_temp = POP32();
-			s->r_acc = make_reg(0, (r_temp.segment == s->r_acc.segment) && r_temp.offset > s->r_acc.offset);
+
+			if (s->r_acc.segment == 0 &&
+			    s->r_acc.offset == 1000)
+				s->r_acc = make_reg(0, r_temp.segment != 0); else
+					s->r_acc = make_reg(0, (r_temp.segment == s->r_acc.segment) && r_temp.offset > s->r_acc.offset);
 			break;
 
 		case 0x14: /* uge? */
 			s->r_prev = s->r_acc;
 			r_temp = POP32();
-			s->r_acc = make_reg(0, (r_temp.segment == s->r_acc.segment) && r_temp.offset >= s->r_acc.offset);
+
+			if (s->r_acc.segment == 0 &&
+			    s->r_acc.offset == 1000)
+				s->r_acc = make_reg(0, r_temp.segment != 0); else
+					s->r_acc = make_reg(0, (r_temp.segment == s->r_acc.segment) && r_temp.offset >= s->r_acc.offset);
 			break;
 
 		case 0x15: /* ult? */
 			s->r_prev = s->r_acc;
 			r_temp = POP32();
-			s->r_acc = make_reg(0, (r_temp.segment == s->r_acc.segment) && r_temp.offset < s->r_acc.offset);
+			if (s->r_acc.segment == 0 &&
+			    s->r_acc.offset == 1000)
+				s->r_acc = make_reg(0, r_temp.segment == 0); else
+					s->r_acc = make_reg(0, (r_temp.segment == s->r_acc.segment) && r_temp.offset < s->r_acc.offset);
 			break;
 
 		case 0x16: /* ule? */
 			s->r_prev = s->r_acc;
 			r_temp = POP32();
-			s->r_acc = make_reg(0, (r_temp.segment == s->r_acc.segment) && r_temp.offset <= s->r_acc.offset);
+
+			if (s->r_acc.segment == 0 &&
+			    s->r_acc.offset == 1000)
+				s->r_acc = make_reg(0, r_temp.segment == 0); else
+					s->r_acc = make_reg(0, (r_temp.segment == s->r_acc.segment) && r_temp.offset <= s->r_acc.offset);
 			break;
 
 		case 0x17: /* bt */
