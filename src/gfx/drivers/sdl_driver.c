@@ -177,7 +177,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	S->primary = NULL;
 
-	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
+	i = SDL_HWSURFACE | SDL_HWPALETTE;
 
 	if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
@@ -331,7 +331,7 @@ sdl_init(struct _gfx_driver *drv)
 	}
 	SDL_EnableUNICODE(SDL_ENABLE);
 
-	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
+	i = SDL_HWSURFACE | SDL_HWPALETTE;
 	if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
 	}
@@ -794,7 +794,7 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
 	case GFX_BUFFER_FRONT:
 		if (SDL_BlitSurface(S->visual[data_source], &srect, S->primary, &drect))
 			SDLERROR("primary surface update failed!\n");
-		SDL_Flip(S->primary);
+		SDL_UpdateRect(S->primary, drect.x, drect.y, drect.w, drect.h);
 		break;
 	default:
 		GFXERROR("Invalid buffer %d in update!\n", buffer);

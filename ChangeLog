@@ -1,3 +1,7 @@
+2006-07-17  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/drivers/sdl_driver.c: Removed double buffering code.
+
 2006-05-22  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kernel.c, src/engine/vm.c: Added special pointer
