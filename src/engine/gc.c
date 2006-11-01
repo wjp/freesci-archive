@@ -22,7 +22,7 @@
 
 #define WORKLIST_CHUNK_SIZE 32
 
-#define DEBUG_GC
+/*#define DEBUG_GC*/
 /*#define DEBUG_GC_VERBOSE*/
 
 typedef struct _worklist {
@@ -284,7 +284,7 @@ run_gc(state_t *s)
 	seg_manager_t *sm = &(s->seg_manager);
 
 #ifdef DEBUG_GC
-	c_segtable(s);
+//	c_segtable(s);
 	sciprintf("[GC] Running...\n");
 	memset(&(deallocator.segcount), 0, sizeof(int) * (MEM_OBJ_MAX + 1));
 #endif

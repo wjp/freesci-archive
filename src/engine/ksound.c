@@ -86,6 +86,16 @@
 #define SCRIPT_ASSERT_ZERO(fun) if (fun) script_debug_flag = script_error_flag = 1;
 
 
+static int
+get_builtin_priority(state_t *s, int song_nr)
+{
+	resource_t *song = scir_find_resource(s->resmgr, sci_sound, song_nr, 0);
+
+	if (song->data[0] == 0xf0)
+	  return song->data[1]; else
+	    return 50;
+}
+
 static song_iterator_t *
 build_iterator(state_t *s, int song_nr, int type, songit_id_t id)
 {
@@ -407,6 +417,8 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int vol = GET_SEL32V(obj, vol);
 		int pri = GET_SEL32V(obj, pri);
 
+		if (number == 886) break;
+
 		if (obj.segment && (scir_test_resource(s->resmgr, sci_sound, number)))
 		{
 			sciprintf("Initializing song number %d\n", GET_SEL32V(obj, number));
@@ -700,6 +712,13 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int vol = GET_SEL32V(obj, vol);
 		int pri = GET_SEL32V(obj, pri);
 
+		if (GET_SEL32V(obj, nodePtr))
+		{
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
+			sfx_remove_song(&s->sound, handle);
+		}
+
 		if (obj.segment && (scir_test_resource(s->resmgr, sci_sound, number))) {
 			sciprintf("Initializing song number %d\n", GET_SEL32V(obj, number));
 			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
@@ -736,12 +755,29 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI1_SOUND_FADE_HANDLE :
 	{
-	/* FIXME: The next couple of lines actually STOP the handle, rather
-	** than fading it! */
-		PUT_SEL32V(obj, signal, -1);
+		fade_params_t fade;
 		if (obj.segment) {
-			sfx_song_set_status(&s->sound,
-					    handle, SOUND_STATUS_STOPPED);
+			fade.final_volume = UKPV(2);
+			fade.ticks_per_step = UKPV(3);
+			fade.step_size = UKPV(4);
+			fade.action = UKPV(5) ?
+				FADE_ACTION_FADE_AND_STOP :
+				FADE_ACTION_FADE_AND_CONT;
+
+			sfx_song_set_fade(&s->sound,
+					  handle,
+					  &fade);
+
+			/* FIXME: The next couple of lines actually STOP the handle, rather
+			** than fading it! */
+			if (UKPV(5))
+			{
+				PUT_SEL32V(obj, signal, -1);
+				PUT_SEL32V(obj, nodePtr, 0);
+				PUT_SEL32V(obj, handle, 0);
+				sfx_song_set_status(&s->sound,
+						    handle, SOUND_STATUS_STOPPED);
+			}
 		}
 		break;
 	}

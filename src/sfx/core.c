@@ -136,6 +136,7 @@ _dump_songs(sfx_state_t *self)
 {
 	song_t *song = self->song;
 
+#if 0
 	fprintf(stderr, "Cue iterators:\n");
 	song = *(self->songlib.lib);
 	while (song) {
@@ -149,6 +150,7 @@ _dump_songs(sfx_state_t *self)
 		fprintf(stderr, "Audio iterator:\n");
 		player->iterator_message(songit_make_message(0, SIMSG_PRINT(1)));
 	}
+#endif
 }
 
 
@@ -687,7 +689,7 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 	if (song) {
 		_sfx_set_song_status(self, song, SOUND_STATUS_STOPPED);
 
-		fprintf(stderr, "Overwriting old song (%d) ...\n", song->status);
+		fprintf(stderr, "Overwriting old song (%08lx) ...\n", handle);
 		if (song->status == SOUND_STATUS_PLAYING
 		    || song->status == SOUND_STATUS_SUSPENDED) {
 			fprintf(stderr, "Unexpected (error): Song %d still playing/suspended (%d)\n",
@@ -745,6 +747,26 @@ sfx_song_set_status(sfx_state_t *self, song_handle_t handle, int status)
 	_update(self);
 }
 
+void
+sfx_song_set_fade(sfx_state_t *self, song_handle_t handle, 
+		  fade_params_t *params)
+{
+	static char *stopmsg[] = {"??? Should not happen", "Do not stop afterwards","Stop afterwards"};
+	song_t *song = song_lib_find(self->songlib, handle);
+
+	ASSERT_SONG(song);
+
+#ifdef DEBUG_SONG_API
+	fprintf(stderr, "[sfx-core] Setting fade params of %08lx to "
+		"final volume %d in steps of %d per %d ticks. %s.\n",
+		handle, fade->final_volume, fade->step_size, fade->ticks_per_step,
+		stopmsg[fade->action]);
+#endif
+
+	SIMSG_SEND(song->it, SIMSG_SET_FADE(params));
+
+	_update(self);
+}
 
 void
 sfx_song_renice(sfx_state_t *self, song_handle_t handle, int priority)

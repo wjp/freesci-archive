@@ -38,6 +38,17 @@
 #define SI_PCM -5 /* Found a PCM */
 #define SI_MORPH -255 /* Song iterator requested self-morph. */
 
+#define FADE_ACTION_NONE              0
+#define FADE_ACTION_FADE_AND_STOP     1
+#define FADE_ACTION_FADE_AND_CONT     2
+
+typedef struct {
+	int ticks_per_step;
+	int final_volume;
+	int step_size;
+	int action;
+} fade_params_t;
+
 #define SONG_ITERATOR_MESSAGE_ARGUMENTS_NR 2
 
 /* Helper defs for messages */
@@ -53,7 +64,8 @@
 #define _SIMSG_BASEMSG_ACK_MORPH 4 /* Acknowledge self-morph */
 #define _SIMSG_BASEMSG_STOP 5 /* Stop iterator */
 #define _SIMSG_BASEMSG_PRINT 6 /* Print self to stderr, after printing param1 tabs */
-#define _SIMSG_BASEMSG_SET_HOLD 7
+#define _SIMSG_BASEMSG_SET_HOLD 7 /* Set value of hold parameter to expect */
+#define _SIMSG_BASEMSG_SET_FADE 8 /* Set fade parameters */
 
 /* "Plastic" (discardable) wrapper messages */
 #define _SIMSG_PLASTICWRAP 1 /* Any base decoder */
@@ -68,6 +80,7 @@
 #define SIMSG_STOP _SIMSG_BASE,_SIMSG_BASEMSG_STOP,0,0
 #define SIMSG_PRINT(indentation) _SIMSG_BASE,_SIMSG_BASEMSG_PRINT,(indentation),0
 #define SIMSG_SET_HOLD(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_HOLD,(x),0
+#define SIMSG_SET_FADE(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_FADE,(x),0
 
 /* Message transmission macro: Takes song reference, message reference */
 #define SIMSG_SEND(o, m) songit_handle_message(&(o), songit_make_message((o)->ID, m))
@@ -85,6 +98,7 @@ typedef struct {
 #define INHERITS_SONG_ITERATOR \
 	songit_id_t ID;										  \
 	guint16 channel_mask;									  \
+        fade_params_t fade;                                                                       \
 	int (*next) (song_iterator_t *self, unsigned char *buf, int *buf_size);			  \
 	sfx_pcm_feed_t * (*get_pcm_feed) (song_iterator_t *s);					  \
 	song_iterator_t * (* handle_message)(song_iterator_t *self, song_iterator_message_t msg); \
@@ -100,6 +114,7 @@ typedef struct _song_iterator {
 
 	songit_id_t ID;
 	guint16 channel_mask; /* Bitmask of all channels this iterator will use */
+        fade_params_t fade;                                                                       
 
 	int (*next) (struct _song_iterator *self,
 		     unsigned char *buf, int *result);
