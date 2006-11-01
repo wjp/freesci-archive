@@ -81,19 +81,32 @@
 #define _K_SCI1_SOUND_UPDATE_VOL_PRI 20
 
 
+#define SCI1_SOUND_FLAG_MAY_PAUSE        1 /* Only here for completeness; The interpreter doesn't touch this bit */
+#define SCI1_SOUND_FLAG_SCRIPTED_PRI     2 /* but does touch this */
+
 #define FROBNICATE_HANDLE(reg) ((reg).segment << 16 | (reg).offset)
 #define DEFROBNICATE_HANDLE(handle) (make_reg((handle >> 16) & 0xffff, handle & 0xffff))
 #define SCRIPT_ASSERT_ZERO(fun) if (fun) script_debug_flag = script_error_flag = 1;
 
 
-static int
-get_builtin_priority(state_t *s, int song_nr)
+static void
+script_set_priority(state_t *s, reg_t obj, int priority)
 {
+	int song_nr = GET_SEL32V(obj, number);
 	resource_t *song = scir_find_resource(s->resmgr, sci_sound, song_nr, 0);
+	int flags = GET_SEL32V(obj, flags);
 
-	if (song->data[0] == 0xf0)
-	  return song->data[1]; else
-	    return 50;
+	if (priority == -1)
+	{
+		if (song->data[0] == 0xf0)
+			priority = song->data[1]; else
+			SCIkdebug(SCIkWARNING, "Attempt to unset song priority when there is no built-in value!\n");
+
+		flags &= ~SCI1_SOUND_FLAG_SCRIPTED_PRI;
+	} else flags |= SCI1_SOUND_FLAG_SCRIPTED_PRI;
+
+	sfx_song_renice(&s->sound, FROBNICATE_HANDLE(obj), priority);
+	PUT_SEL32V(obj, flags, flags);
 }
 
 static song_iterator_t *
@@ -167,6 +180,9 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 	reg_t obj = KP_ALT(1, NULL_REG);
 	word command = UKPV(0);
 	song_handle_t handle = FROBNICATE_HANDLE(obj);
+	int number = obj.segment ? 
+	  GET_SEL32V(obj, number) : 
+	  -1; /* We were not going to use it anyway */
 
 	if (s->debug_mode & (1 << SCIkSOUNDCHK_NR)) {
 		int i;
@@ -204,7 +220,7 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 		if (obj.segment) {
 			sciprintf("Initializing song number %d\n", GET_SEL32V(obj, number));
 			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
-							build_iterator(s, GET_SEL32V(obj, number),
+							build_iterator(s, number,
 								       SCI_SONG_ITERATOR_TYPE_SCI0,
 								       handle),
 							0, handle));
@@ -284,8 +300,7 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 		if (obj.segment) {
 			sfx_song_set_loops(&s->sound,
 					   handle, GET_SEL32V(obj, loop));
-			sfx_song_renice(&s->sound,
-					handle, GET_SEL32V(obj, priority));
+			script_set_priority(s, obj, GET_SEL32V(obj, pri));
 		}
 		break;
 
@@ -323,7 +338,10 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	word command = UKPV(0);
 	reg_t obj = KP_ALT(1, NULL_REG);
-	song_handle_t handle = FROBNICATE_HANDLE(obj);
+	song_handle_t handle = FROBNICATE_HANDLE(obj);	
+	int number = obj.segment ? 
+	  GET_SEL32V(obj, number) : 
+	  -1; /* We were not going to use it anyway */
 
 	if ((s->debug_mode & (1 << SCIkSOUNDCHK_NR))
 	    && command != _K_SCI01_SOUND_UPDATE_CUES) {
@@ -411,19 +429,15 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI01_SOUND_INIT_HANDLE :
 	{
-		int number = GET_SEL32V(obj, number);
-
 		int looping = GET_SEL32V(obj, loop);
 		int vol = GET_SEL32V(obj, vol);
 		int pri = GET_SEL32V(obj, pri);
 
-		if (number == 886) break;
-
 		if (obj.segment && (scir_test_resource(s->resmgr, sci_sound, number)))
 		{
-			sciprintf("Initializing song number %d\n", GET_SEL32V(obj, number));
+			sciprintf("Initializing song number %d\n", number);
 			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
-							build_iterator(s, GET_SEL32V(obj, number),
+							build_iterator(s, number,
 								       SCI_SONG_ITERATOR_TYPE_SCI1,
 								       handle),
 							0, handle));	
@@ -456,8 +470,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		sfx_song_set_loops(&s->sound,
 				   handle, looping);
-		sfx_song_renice(&s->sound,
-				handle, pri);
+		sfx_song_renice(&s->sound, handle, pri);
 
 		SCIkdebug(SCIkSOUND, "[sound01-update-handle] -- CUE "PREG);
 
@@ -608,6 +621,9 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 	word command = UKPV(0);
 	reg_t obj = KP_ALT(1, NULL_REG);
 	song_handle_t handle = FROBNICATE_HANDLE(obj);
+	int number = obj.segment ? 
+	  GET_SEL32V(obj, number) : 
+	  -1; /* We were not going to use it anyway */
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
@@ -706,8 +722,6 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI1_SOUND_INIT_HANDLE :
 	{
-		int number = GET_SEL32V(obj, number);
-
 		int looping = GET_SEL32V(obj, loop);
 		int vol = GET_SEL32V(obj, vol);
 		int pri = GET_SEL32V(obj, pri);
@@ -720,9 +734,9 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		}
 
 		if (obj.segment && (scir_test_resource(s->resmgr, sci_sound, number))) {
-			sciprintf("Initializing song number %d\n", GET_SEL32V(obj, number));
+			sciprintf("Initializing song number %d\n", number);
 			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
-							 build_iterator(s, GET_SEL32V(obj, number),
+							 build_iterator(s, number,
 									SCI_SONG_ITERATOR_TYPE_SCI1,
 									handle),
 							 0, handle));
@@ -799,6 +813,9 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI1_SOUND_SET_HANDLE_PRIORITY :
 	{
+		int value = SKPV(2);
+
+		script_set_priority(s, obj, value);
 		break;
 	}
 	case _K_SCI1_SOUND_SET_HANDLE_LOOP :

@@ -2720,6 +2720,7 @@ c_debuglog(state_t *s)
 }
 
 #define SFX_DEBUG_MODES 2
+#define FROBNICATE_HANDLE(reg) ((reg).segment << 16 | (reg).offset)
 
 static int
 c_sfx_debuglog(state_t *s)
@@ -2732,6 +2733,21 @@ c_sfx_debuglog(state_t *s)
 	return c_handle_config_update(sfx_debug_modes, SFX_DEBUG_MODES,
 				      "sound subsystem",
 				      &(s->sound.debug));
+}
+
+static int
+c_sfx_remove(state_t *s)
+{
+	reg_t id = cmd_params[0].reg;
+	int handle = FROBNICATE_HANDLE(id);
+
+	if (id.segment) {
+		sfx_song_set_status(&s->sound,
+				    handle, SOUND_STATUS_STOPPED);
+		sfx_remove_song(&s->sound, handle);
+		}
+
+	return 0;
 }
 
 #define GFX_DEBUG_MODES 4
@@ -3436,6 +3452,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 
 			_debug_commands_not_hooked = 0;
 
+			con_hook_command(c_sfx_remove, "sfx_remove", "!a", 
+					 "Kills a playing sound.");
 			con_hook_command(c_debuginfo, "registers", "", "Displays all current register values");
 			con_hook_command(c_vmvars, "vmvars", "!sia*", "Displays or changes variables in the VM\n\nFirst parameter is either g(lobal), l(ocal), t(emp) or p(aram).\nSecond parameter is the var number\nThird parameter (if specified) is the value to set the variable to");
 			con_hook_command(c_sci_version, "sci_version", "", "Prints the SCI version currently being emulated");
@@ -3707,6 +3725,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 				     "  0x0002: Break on warnings\n  \0x0004: Print VM warnings\n");
 			con_hook_int(&_weak_validations, "weak_validations", "Set != 0 to turn some validation errors\n"
 				     "  into warnings\n");
+
 			con_hook_int(&script_gc_interval, "gc-interval", "Number of kernel calls in between gcs");
 
 			con_hook_page("codebugging",

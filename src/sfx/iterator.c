@@ -67,6 +67,7 @@ memchr(void *_data, int c, int n)
 static void
 _common_init(base_song_iterator_t *self)
 {
+	self->fade.action = FADE_ACTION_NONE;
 	self->resetflag = 0;
 	self->loops = 0;
 }
@@ -259,6 +260,8 @@ if (1) {
 			break;
 
 		case SCI_MIDI_SET_VELOCITY:
+			BREAKPOINT();
+			printf("%d is setting velocity to %d\n", self->ID, buf[2]);
 			break;
 
 		case SCI_MIDI_HOLD:
@@ -548,6 +551,16 @@ fprintf(stderr, "** CLONE INCREF for new %p from %p at %p\n", mem, self, mem->da
 				self->channel.playmask |= (1 << MIDI_RHYTHM_CHANNEL);
 			break;
 
+		case _SIMSG_BASEMSG_SET_FADE:
+		{
+			fade_params_t *fp = (struct fade_params_t *) msg.args[0];
+			self->fade.action = fp->action;
+			self->fade.final_volume = fp->final_volume;
+			self->fade.ticks_per_step = fp->ticks_per_step;
+			self->fade.step_size = fp->step_size;
+			break;
+		}
+
 		default:
 			return NULL;
 		}
@@ -688,10 +701,10 @@ _sci1_song_init(sci1_song_iterator_t *self)
 	{
 		int priority = SONGDATA(1);
 
-		// FIXME: Do something with this! 
-		// sciprintf("Song has priority %d\n", priority);
+		// Code to take care of this is in src/engine/ksound.c
 		offset += 8;
 	}
+
 	while (SONGDATA(0) != 0xff
 	       && SONGDATA(0) != self->device_id) {
 		offset++;
@@ -1132,6 +1145,16 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 		case _SIMSG_BASEMSG_SET_RHYTHM:
 			/* Ignore */
 			break;
+
+		case _SIMSG_BASEMSG_SET_FADE:
+		{
+			fade_params_t *fp = (struct fade_params_t *) msg.args[0];
+			self->fade.action = fp->action;
+			self->fade.final_volume = fp->final_volume;
+			self->fade.ticks_per_step = fp->ticks_per_step;
+			self->fade.step_size = fp->step_size;
+			break;
+		}
 
 		default:
 			fprintf(stderr, SIPFX "Unsupported command %d to"
