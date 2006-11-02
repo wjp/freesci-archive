@@ -131,7 +131,7 @@ typedef enum { /* FIXME */
   op_push1,
   op_push2,
   op_pushSelf,
-  op_lag,
+  op_lag = 0x40,
   op_lal,
   op_lat,
   op_lap,

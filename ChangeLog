@@ -1,3 +1,8 @@
+2006-11-02  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/tools/scidisasm.c: Fix long-standing name clobbering bug
+	caused by LRU resource management.
+
 2006-11-01  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/iterator.c,

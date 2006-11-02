@@ -444,7 +444,7 @@ script_dump_object(disasm_state_t *d, script_state_t *s,
 	name=namepos? ((char *)data + namepos) : "<unknown>";
 
 	if (pass_no == 1)
-		script_add_area (s, seeker, seeker+objsize-1, area_object, name);
+		script_add_area (s, seeker, seeker+objsize-1, area_object, strdup(name));
 
 	if (pass_no == 2) {
 		sciprintf(".object\n");
