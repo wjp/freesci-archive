@@ -429,8 +429,8 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 		res->lock_sequence_nr = state->options->buffer_pics_nr;
 
 		gfxr_interpreter_calculate_pic(state, res->scaled_data.pic, need_unscaled? res->unscaled_data.pic : NULL,
-					       flags, default_palette, new_nr,
-					       state->misc_payload);
+					       flags | DRAWPIC01_FLAG_OVERLAID_PIC, 
+					       default_palette, new_nr, state->misc_payload);
 	}
 
 	res->mode = MODE_INVALID; /* Invalidate */

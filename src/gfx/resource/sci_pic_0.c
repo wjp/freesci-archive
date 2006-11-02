@@ -1901,11 +1901,31 @@ gfxr_remove_artifacts_pic0(gfxr_pic_t *dest, gfxr_pic_t *src)
 
 }
 
+static void
+view_transparentize(gfx_pixmap_t *view, byte *pic_index_data,
+		    int posx, int posy,
+		    int width, int height)
+{
+	int i,j;
+
+	for (i=0;i<width;i++)
+		for (j=0;j<height;j++)
+		{
+			if (view->index_data[j*width+i] == view->color_key)
+			{
+				view->index_data[j*width+i] = 
+					pic_index_data[(j+posy)*width+i+posx];
+			}
+		}
+}
+
+extern gfx_pixmap_t *
+gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t *view, int mirrored);
 extern gfx_pixmap_t *
 gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view);
 
 void
-gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int size,
+gfxr_draw_pic01(gfxr_pic_t *pic, int flags, int default_palette, int size,
 	       byte *resource, gfxr_pic0_params_t *style, int resid, int sci1)
 {
 	const int default_palette_table[GFXR_PIC0_PALETTE_SIZE] = {
@@ -2093,8 +2113,8 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 				GET_ABS_COORDS(x, y);
 				p0printf("Abs coords %d,%d\n", x, y);
 				/*fprintf(stderr,"C=(%d,%d)\n", x, y + sci_titlebar_size);*/
-				_gfxr_fill(pic, x, y + sci_titlebar_size, (fill_normally)? color : 0, priority, control, 
-					   drawenable, sci_titlebar_size);
+				_gfxr_fill(pic, x, y + sci_titlebar_size, (flags & DRAWPIC01_FLAG_FILL_NORMALLY)? 
+					   color : 0, priority, control, drawenable, sci_titlebar_size);
 
 				if (fill_count++ > SCI_PIC0_MAX_FILL) {
 					sci_sched_yield();
@@ -2342,6 +2362,11 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 
 				gfx_xlate_pixmap(view, mode, GFX_XLATE_FILTER_NONE);
 
+				if (flags & DRAWPIC01_FLAG_OVERLAID_PIC)
+					view_transparentize(view, pic->visual_map->index_data, 
+							    posx, sci_titlebar_size+posy, 
+							    view->index_xl, view->index_yl);
+
 				_gfx_crossblit_simple(pic->visual_map->index_data+(sci_titlebar_size*320)+
 						      posy*320+posx,
 						      view->index_data,
@@ -2366,7 +2391,7 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette, int siz
 					pic->internal = sci_malloc(16 * sizeof(int)); 
 				} else
 				{
-					GFXERROR("pic->internal is not NULL (%08x); possible memory corruption!\n", pic->internal); 
+					GFXERROR("pic->internal is not NULL (%08x); this only occurs with overlaid pics, otherwise it's a bug!\n", pic->internal); 
 				}	
 
 				pri_table = pic->internal;

@@ -1,5 +1,8 @@
 2006-11-02  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/gfx/resource/sci_pic_0.c: Proper support for overlaid pics
+	in SCI1.
+
 	* src/tools/scidisasm.c: Fix long-standing name clobbering bug
 	caused by LRU resource management.
 
