@@ -949,7 +949,30 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 	return not_register(s, make_reg(0, retval));
 }  /* CanBeHere */
 
+reg_t
+kIsItSkip(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	int view = SKPV(0);
+	int loop = SKPV(1);
+	int cel = SKPV(2);
+	int x = UKPV(3);
+	int y = UKPV(4);
+	gfxr_view_t *res = NULL;
+	gfx_pixmap_t *pxm = NULL;
 
+	if (!(res = gfxr_get_view(s->gfx_state->resstate, view, &loop, &cel, 0))) {
+		GFXWARN("Attempt to get cel parameters for invalid view %d\n", view);
+		return make_reg(0, -1);
+	}
+
+	pxm = res->loops[loop].cels[cel];
+	if (x > pxm->index_xl) x = pxm->index_xl-1;
+	if (y > pxm->index_yl) y = pxm->index_yl-1;
+
+	return make_reg(0,
+			pxm->index_data[y*pxm->index_xl+x] ==
+			pxm->color_key);
+}
 
 reg_t
 kCelHigh(state_t *s, int funct_nr, int argc, reg_t *argv)

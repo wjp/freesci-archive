@@ -2745,7 +2745,10 @@ c_sfx_remove(state_t *s)
 		sfx_song_set_status(&s->sound,
 				    handle, SOUND_STATUS_STOPPED);
 		sfx_remove_song(&s->sound, handle);
-		}
+		PUT_SEL32V(id, signal, -1);
+		PUT_SEL32V(id, nodePtr, 0);
+		PUT_SEL32V(id, handle, 0);
+	}
 
 	return 0;
 }

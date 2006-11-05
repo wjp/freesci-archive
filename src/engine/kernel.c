@@ -161,6 +161,7 @@ reg_t kDeleteKey(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kMemoryInfo(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kGetSaveDir(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kTextSize(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kIsItSkip(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t k_Unknown(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 /* The Unknown/Unnamed kernel function */
@@ -325,6 +326,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*(?)*/	{KF_NEW, "AvoidPath", {kAvoidPath, "ii.*"}},
 /*(?)*/	{KF_NEW, "Lock", {kLock, "iii"}},
 /*(?)*/	{KF_NEW, "Palette", {kPalette, "i*"}},
+/*(?)*/	{KF_NEW, "IsItSkip", {kPalette, "iiiii"}},
 
   /* Non-experimental Functions without a fixed ID */
 

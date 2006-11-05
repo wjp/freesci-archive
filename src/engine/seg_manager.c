@@ -1277,7 +1277,7 @@ sm_free_dynmem(seg_manager_t *self, reg_t addr)
 static void
 free_at_address_stub (seg_interface_t *self, reg_t sub_addr)
 {
-	sciprintf("  Request to free "PREG"\n", PRINT_REG(sub_addr));
+//	sciprintf("  Request to free "PREG"\n", PRINT_REG(sub_addr));
 	/* STUB */
 }
 
@@ -1423,7 +1423,7 @@ list_all_outgoing_references_clones (seg_interface_t *self, reg_t addr, void *pa
 	/* Note that this also includes the 'base' object, which is part of the script and therefore also
 	** emits the locals. */
 	(*note) (param, clone->pos);
-	sciprintf("[GC] Reporting clone-pos "PREG"\n", PRINT_REG(clone->pos));
+//	sciprintf("[GC] Reporting clone-pos "PREG"\n", PRINT_REG(clone->pos));
 }
 
 

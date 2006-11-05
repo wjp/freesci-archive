@@ -695,6 +695,7 @@ _sci1_song_init(sci1_song_iterator_t *self)
 	int offset = 0;
 	self->channels_nr = 0;
 	self->next_sample = 0;
+//	self->device_id = 0x0c;
 
 	CHECK_FOR_END_ABSOLUTE(0);
 	if (SONGDATA(0) == 0xf0)
@@ -751,6 +752,10 @@ _sci1_song_init(sci1_song_iterator_t *self)
 					= self->data[track_offset] & 0xf;
 				song_iterator_channel_t *channel =
 					&(self->channels[self->channels_nr++]);
+
+				if (self->data[track_offset] & 0xf0)
+					printf("Channel %d has mapping bits %02x\n", 
+					       channel_nr, self->data[track_offset] & 0xf0);
 
 				_base_init_channel(channel,
 						   channel_nr,
