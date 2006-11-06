@@ -230,9 +230,9 @@ gfx_pixmap_alloc_index_data(gfx_pixmap_t *pixmap)
 		size = 1;
 
 	pixmap->index_data = sci_malloc(size);
-#ifdef SATISFY_PURIFY
+
 	memset(pixmap->index_data, 0, size);
-#endif
+
 	return pixmap;
 }
 
@@ -375,13 +375,13 @@ gfx_free_color(gfx_palette_t *pal, gfx_pixmap_color_t *color)
 	}
 
 	if (color->global_index >= pal->max_colors_nr) {
-		GFXERROR("Attempt to free invalid color index 0x%d (%02x/%02x/%02x)!\n",
+		GFXERROR("Attempt to free invalid color index %d (%02x/%02x/%02x)!\n",
 			 color->global_index, color->r, color->g, color->b);
 		return GFX_ERROR;
 	}
 
 	if (!palette_color->lockers) {
-		GFXERROR("Attempt to free unused color index 0x%d (%02x/%02x/%02x)!\n",
+		GFXERROR("Attempt to free unused color index %d (%02x/%02x/%02x)!\n",
 			 color->global_index, color->r, color->g, color->b);
 		return GFX_ERROR;
 	}

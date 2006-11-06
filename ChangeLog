@@ -1,3 +1,10 @@
+2006-11-06  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/gfx_tools.c (gfx_pixmap_alloc_index_data): Initialize
+	index data properly.
+
+	* src/engine/kgraphics.c (kIsItSkip): New kernel call.
+
 2006-11-02  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/resource/sci_pic_0.c: Proper support for overlaid pics
