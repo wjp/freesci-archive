@@ -260,8 +260,6 @@ if (1) {
 			break;
 
 		case SCI_MIDI_SET_VELOCITY:
-			BREAKPOINT();
-			printf("%d is setting velocity to %d\n", self->ID, buf[2]);
 			break;
 
 		case SCI_MIDI_HOLD:

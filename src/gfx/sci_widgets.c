@@ -137,6 +137,18 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	gfx_color_t black	= {0};
 	gfxw_port_t *win;
 	gfxw_list_t *decorations;
+	int xextra = !(flags & WINDOW_FLAG_NOFRAME) ? 1 : 0;
+	int yextra = !(flags & WINDOW_FLAG_NOFRAME) ? 2 : 0;
+
+	if (area.y + area.yl > visual->bounds.y + visual->bounds.yl)
+	{
+		area.y -= (area.y + area.yl) - (visual->bounds.y + visual->bounds.yl) + yextra;
+	}
+
+	if (area.x + area.xl > visual->bounds.x + visual->bounds.xl)
+	{
+		area.x -= (area.x + area.xl) - (visual->bounds.x + visual->bounds.xl) + xextra;
+	}
 
 	if (!(flags & (WINDOW_FLAG_TITLE | WINDOW_FLAG_NOFRAME)))
 		area.yl -= 1; /* Normal windows are drawn one pixel too small. */
