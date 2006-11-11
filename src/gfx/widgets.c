@@ -2361,6 +2361,10 @@ gfxw_make_snapshot(gfxw_visual_t *visual, rect_t area)
 
 	retval->area = area;
 
+	/* Work around subset semantics in gfx_rect_subset.
+	   This fixes the help icon in LSL5. */
+	if (retval->area.xl == 320) retval->area.xl = 321;
+
 	return retval;
 }
 
