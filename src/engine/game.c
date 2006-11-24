@@ -226,7 +226,7 @@ _reset_graphics_input(state_t *s)
 	s->visual->add(GFXWC(s->visual), GFXW(s->titlebar_port));
 	/* Add ports to visual */
 
-	s->port = s->wm_port; /* Currently using the window manager port */
+	s->port = s->picture_port; /* Currently using the picture port */
 
 #if 0
 	s->titlebar_port->bgcolor.mask |= GFX_MASK_PRIORITY;

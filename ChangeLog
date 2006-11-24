@@ -1,3 +1,7 @@
+2006-11-24  Lars Skovlund  <lskovlun@image.dk>
+
+	* engine/game.c: Make the picture port selected on startup.
+
 2006-11-11  Lars Skovlund  <lskovlun@image.dk>
 
 	* sfx/gfx/widgets.c (gfxw_make_snapshot): Make sure we include
