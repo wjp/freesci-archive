@@ -458,7 +458,8 @@ kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return NULL_REG;
 	}
 
-	if (!is_print_str(dest)) /* SQ4 array handling detected */
+	if ((strlen(dest) < 2) ||
+	    (!is_print_str(dest))) /* SQ4 array handling detected */
 	{
 #ifndef WORDS_BIGENDIAN
 		int odd = KP_UINT(argv[1]) & 1;
