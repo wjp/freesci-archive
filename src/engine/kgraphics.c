@@ -2597,6 +2597,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	unsigned int goner_nr = SKPV(0);
 	gfxw_port_t *goner;
 	gfxw_port_t *pred;
+	int id = s->visual->port_refs_nr;
 
 	gfxw_widget_kill_chrono(s->visual, goner_nr);
 	goner = gfxw_find_port(s->visual, goner_nr);
@@ -2617,7 +2618,11 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (goner == s->port) /* Did we kill the active port? */
 		s->port = pred;
 
-	s->port = s->wm_port;
+	while (!s->visual->port_refs[id] && id >= 0)
+		id--;
+
+	sciprintf("Activating port %d after disposing window %d\n", id, goner_nr);
+	s->port = s->visual->port_refs[id];
 
 	if (!s->port)
 		s->port = gfxw_find_default_port(s->visual);

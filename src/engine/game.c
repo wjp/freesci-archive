@@ -196,9 +196,6 @@ _reset_graphics_input(state_t *s)
 	/* FIXME: Not how it's supposed to be; good enough for release */
 	s->wm_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
 
-	/* but this is correct */
-	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
-
 	if (s->resmgr->sci_version >= SCI_VERSION_01_VGA)
 	{
 		gfx_color_t fgcolor;
@@ -219,11 +216,14 @@ _reset_graphics_input(state_t *s)
 	s->titlebar_port->bgcolor.mask |= GFX_MASK_PRIORITY;
 	s->titlebar_port->bgcolor.priority = 11;
 
+	/* but this is correct */
+	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
+
 	s->pics_drawn_nr = 0;
 
-	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->titlebar_port));
+	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
 	/* Add ports to visual */
 
 	s->port = s->picture_port; /* Currently using the picture port */
