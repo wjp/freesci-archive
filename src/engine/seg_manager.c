@@ -1254,6 +1254,24 @@ sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr)
 	return (unsigned char *) (mobj->data.dynmem.buf);
 }
 
+char *
+sm_get_description(seg_manager_t *self, reg_t addr)
+{ 
+	mem_obj_t *mobj = self->heap[addr.segment];
+	script_t *scr;
+
+	if (addr.segment >= self->heap_size)
+	  return "";
+
+	switch (mobj->type)
+	{
+	case MEM_OBJ_DYNMEM:
+		return mobj->data.dynmem.description;
+	default:
+		return "";
+	}
+}
+
 int
 sm_free_dynmem(seg_manager_t *self, reg_t addr)
 {

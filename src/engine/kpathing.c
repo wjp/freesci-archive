@@ -1477,7 +1477,7 @@ output_path(pf_state_t *p, state_t *s)
 	if (unreachable) {
 		/* If pathfinding failed we only return the path up to vertex_start */
 		oref = sm_alloc_dynmem(&s->seg_manager, POLY_POINT_SIZE * 3,
-				"AvoidPath polyline", &output);
+				AVOIDPATH_DYNMEM_STRING, &output);
 
 		if (p->keep_start)
 			POLY_SET_POINT(oref, 0, p->start.x, p->start.y);

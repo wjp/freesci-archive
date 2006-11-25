@@ -54,6 +54,8 @@ extern int stop_on_event;
 extern DLLEXTERN int _debug_seeking;
 extern DLLEXTERN int _debug_step_running;
 
+#define AVOIDPATH_DYNMEM_STRING "AvoidPath polyline"
+
 
 typedef struct {
 	int x, y, xend, yend;

@@ -458,8 +458,11 @@ kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return NULL_REG;
 	}
 
-	if ((strlen(dest) < 2) ||
-	    (!is_print_str(dest))) /* SQ4 array handling detected */
+/* Our pathfinder already works around the issue we're trying to fix */
+	if ((strcmp(sm_get_description(&(s->seg_manager), argv[0]),
+		    AVOIDPATH_DYNMEM_STRING) != 0)  &&
+	    ((strlen(dest) < 2) || (!is_print_str(dest))))
+	  /* SQ4 array handling detected */
 	{
 #ifndef WORDS_BIGENDIAN
 		int odd = KP_UINT(argv[1]) & 1;

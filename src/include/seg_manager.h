@@ -505,7 +505,13 @@ sm_free_dynmem(struct _seg_manager_t *self, reg_t addr);
 ** Parameters: (reg_t) addr: Offset of the dynmem chunk to free
 */
 
-
+char *
+sm_get_description(struct _seg_manager_t *self, reg_t addr);
+/* Gets the description of a dynmem segment
+** Parameters: (reg_t) addr: Segment to describe
+** Returns   : (char *): Pointer to the descriptive string set in
+** sm_alloc_dynmem 
+*/
 
 /*==============================================================*/
 /* Generic Operations on Segments and Addresses			*/
