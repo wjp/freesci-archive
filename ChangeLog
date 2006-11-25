@@ -1,3 +1,11 @@
+2006-11-25  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm_types.h: Standardize on a single reg_t
+	representation on all platforms.
+
+	* src/engine/kstring.c (kStrAt): Implement support for SQ4 using
+	this call to handle arrays.
+
 2006-11-24  Lars Skovlund  <lskovlun@image.dk>
 
 	* engine/game.c: Make the picture port selected on startup.

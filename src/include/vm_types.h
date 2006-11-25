@@ -36,18 +36,10 @@ typedef int seg_id_t; /* Segment ID type */
 
 struct _state; /* engine.h */
 
-#if defined(S_SPLINT_S) || defined(_MSC_VER) || defined(__DECC)
-/* Can't deal with packed notation for these types */
 typedef struct {
 	guint16 segment;
 	guint16 offset;
 } reg_t;
-#else
-typedef struct {
-	seg_id_t segment	: SCI_SEG_SIZE;
-	unsigned int offset	: SCI_REG_SIZE;
-} reg_t;
-#endif
 
 #define PREG "%04x:%04x"
 #define PRINT_REG(r) (0xffff) & (unsigned) (r).segment, (unsigned) (r).offset

@@ -425,10 +425,32 @@ kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
+int save_str_offset; /* Referenced externally from vm.c */
+
+/* Simple heuristic to work around array handling peculiarity in SQ4:
+It uses StrAt() to read the individual elements, so we must determine
+whether a string is really a string or an array. */
+int is_print_str(char *str)
+{
+	int printable = 0;
+	int len = strlen(str);
+	
+	if (len == 0) return 1;
+
+	while (*str)
+	{
+		if (isprint(*str)) printable++;
+		str++;
+	}
+
+	return ((float) printable / (float) len >= 0.5);
+}
+
 reg_t
 kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	unsigned char *dest = (unsigned char *) kernel_dereference_bulk_pointer(s, argv[0], 0);
+	reg_t *dest2;
 
 	if (!dest) {
 		SCIkdebug(SCIkWARNING, "Attempt to StrAt at invalid pointer "PREG"!\n",
@@ -436,7 +458,16 @@ kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return NULL_REG;
 	}
 
-	dest += KP_UINT(argv[1]);
+	if (!is_print_str(dest)) /* SQ4 array handling detected */
+	{
+#ifndef WORDS_BIGENDIAN
+		int odd = KP_UINT(argv[1]) & 1;
+#else
+		int odd = !(KP_UINT(argv[1]) & 1);
+#endif
+		dest2 = ((reg_t *) dest)+(KP_UINT(argv[1])/2);
+		dest = ((char *) (&dest2->offset))+odd;
+	} else dest += KP_UINT(argv[1]);
 
 	s->r_acc = make_reg(0, *dest);
 
