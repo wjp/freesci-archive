@@ -38,6 +38,8 @@
 /* Our strategy for dirty rectangle management */
 #define GFXW_DIRTY_STRATEGY GFXOP_DIRTY_FRAMES_CLUSTERS
 
+/* Properly belongs in sci_widgets.h, but we need it here */
+#define WINDOW_FLAG_AUTO_RESTORE 0x2000000
 
 /* Indicates that a Chrono-Port should not be created even if it doesn't exist. */
 #define GFXW_CHRONO_NO_CREATE 1
@@ -447,6 +449,15 @@ gfxw_find_default_port(gfxw_visual_t *visual);
 ** Returns   : (gfxw_port_t *) The default port, or NULL if no port is present
 ** The 'default port' is the last port to be instantiated; usually the topmost
 ** or highest-ranking port.
+*/
+
+void
+gfxw_port_set_auto_restore(gfxw_visual_t *visual, gfxw_port_t *window, rect_t auto_rect);
+/* Sets rectangle to be restored upon port removal
+** Parameters: (state_t *) s: The state to operate on
+               (gfxw_port_t *) window: The affected window
+**             (rect_t) auto_rect: The area to restore
+** Returns   : (void)
 */
 
 gfxw_port_t *

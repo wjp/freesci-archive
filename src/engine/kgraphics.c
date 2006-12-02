@@ -2641,7 +2641,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	gfx_color_t black;
 	gfx_color_t white;
 	int priority;
-	int argextra = argc == 13 ? 4 : 0;
+	int argextra = argc == 13 ? 4 : 0; /* Triggers in PQ3 */
 
 	y = SKPV(0);
 	x = SKPV(1);
@@ -2679,8 +2679,15 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 				 fgcolor, bgcolor, s->titlebar_port->font_nr,
 				 white,
 				 black,
-				 argv[4+argextra].segment ? kernel_dereference_bulk_pointer(s, argv[4], 0) : NULL, 
+				 argv[4+argextra].segment ? kernel_dereference_bulk_pointer(s, argv[4+argextra], 0) : NULL, 
 				 flags);
+
+	/* PQ3 has the interpreter store underBits implicitly.
+	   The feature was promptly removed after its release, never to be seen again. */
+	if (argextra)
+		gfxw_port_auto_restore_background(s->visual, window, 
+						  gfx_rect(SKPV(5), SKPV(4), 
+							   SKPV(7)-SKPV(5), SKPV(6)-SKPV(4)));
 
 	ADD_TO_CURRENT_PORT(window);
 	FULL_REDRAW();

@@ -1496,7 +1496,7 @@ output_path(pf_state_t *p, state_t *s)
 	}
 
 	oref = sm_alloc_dynmem(&s->seg_manager, POLY_POINT_SIZE * (path_len + 1 + p->keep_start + p->keep_end),
-			"AvoidPath polyline", &output);
+			AVOIDPATH_DYNMEM_STRING, &output);
 
 	/* Sentinel */
 	POLY_SET_POINT(oref, path_len + p->keep_start + p->keep_end, POLY_LAST_POINT, POLY_LAST_POINT);
@@ -1599,7 +1599,7 @@ kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 			print_input(s, poly_list, start, end, opt);
 			sciprintf("[avoidpath] Returning direct path from start point to end point\n");
 			oref = sm_alloc_dynmem(&s->seg_manager, POLY_POINT_SIZE*3,
-						     "AvoidPath polyline", &output);
+						     AVOIDPATH_DYNMEM_STRING, &output);
 
 			POLY_SET_POINT(oref, 0, start.x, start.y);
 			POLY_SET_POINT(oref, 1, end.x, end.y);
