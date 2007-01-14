@@ -373,6 +373,7 @@ typedef struct {
 	int script_debug_flag;
 	int scale_x, scale_y, color_depth;
 	int mouse;
+	int master_sound;	/* on or off */
 	int show_rooms;
 	sci_version_t version;
 	int res_version;
@@ -402,6 +403,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		{"run", no_argument, NULL, 0 },
 		{"debug", no_argument, NULL, 1 },
 		{"gamedir", required_argument, 0, 'd'},
+		{"no-sound", required_argument, 0, 'q'},
 		{"sci-version", required_argument, 0, 'V'},
 		{"graphics", required_argument, 0, 'g'},
 		{"midiout", required_argument, 0, 'O'},
@@ -434,13 +436,14 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->midi_device_name = NULL;
 	cl_options->sound_server_name = NULL;
 	cl_options->mouse = ON;
+	cl_options->master_sound = ON;
 	cl_options->res_version = SCI_VERSION_AUTODETECT;
 	cl_options->show_rooms = 0;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:f:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "qlvhmsDr:d:V:g:x:y:c:M:O:S:P:f:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:f:")) > -1) {
+	while ((c = getopt(argc, argv, "qlvhmsDr:d:V:g:x:y:c:M:O:S:P:f:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
@@ -521,6 +524,10 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			cl_options->mouse = OFF;
 			break;
 
+		case 'q':
+			cl_options->master_sound = OFF;
+			break;
+
 		case 0: /* getopt_long already did this for us */
 			break;
 
@@ -569,6 +576,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			       EXPLAIN_OPTION("--mididevice drv", "-Mdrv", "use the 'drv' midi device (eg mt32 or adlib)")
 			       EXPLAIN_OPTION("--pcmout drv\t", "-Pdrv", "use the 'drv' pcmout driver")
 			       EXPLAIN_OPTION("--sound-server srv", "-Ssrv", "Specifies the asynchronous sound server to use")
+			       EXPLAIN_OPTION("--no-sound\t", "-q", "disable sound output")
 			       EXPLAIN_OPTION("--list-savegames", "-l", "Lists all savegame IDs")
 			       EXPLAIN_OPTION("--show-rooms\t", "-s","Displays room numbers on the game console")
 			       "\n"
@@ -1284,7 +1292,7 @@ main(int argc, char** argv)
 		return 1;
 	}
 
-	if (game_init_sound(gamestate)) {
+	if (game_init_sound(gamestate, (cl_options.master_sound == OFF)? SFX_STATE_FLAG_NOSOUND : 0)) {
 		fprintf(stderr,"Game initialization failed: Error in sound subsystem. Aborting...\n");
 		return 1;
 	}

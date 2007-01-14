@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-    Christoph Reichenbach (CR) [jameson@linuxgames.com]
+    Christoph Reichenbach (CR) [creichen@gmail.com]
 
 ***************************************************************************/
 

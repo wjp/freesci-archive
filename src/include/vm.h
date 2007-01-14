@@ -684,9 +684,10 @@ game_init_graphics(struct _state *s);
 */
 
 int
-game_init_sound(struct _state *s);
+game_init_sound(struct _state *s, int sound_flags);
 /* Initializes the sound part of an SCI game
 ** Parameters: (state_t *) s: The state to initialize the sound in
+**             (int) sound_flags:  Flags to pass to the sound subsystem
 ** Returns   : (int) 0 on success, 1 if an error occured
 ** This function may only be called if game_init() did not initialize
 ** the graphics data.

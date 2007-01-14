@@ -269,14 +269,12 @@ _free_graphics_input(state_t *s)
 /*------------------------------------------------------------*/
 
 int
-game_init_sound(state_t *s)
+game_init_sound(state_t *s, int sound_flags)
 {
-	int flags = 0;
-
 	if (s->resmgr->sci_version >= SCI_VERSION_01)
-		flags |= SFX_STATE_FLAG_MULTIPLAY;
+		sound_flags |= SFX_STATE_FLAG_MULTIPLAY;
 
-	sfx_init(&s->sound, s->resmgr, flags);
+	sfx_init(&s->sound, s->resmgr, sound_flags);
 	return 0;
 }
 
@@ -654,7 +652,7 @@ game_exit(state_t *s)
 
 	sfx_exit(&s->sound);
 /* Reinit because some other code depends on having a valid state */
-	game_init_sound(s); 
+	game_init_sound(s, SFX_STATE_FLAG_NOSOUND); 
 
 	sm_destroy(&s->seg_manager);
 	

@@ -422,12 +422,21 @@ sfx_init(sfx_state_t *self, resource_mgr_t *resmgr, int flags)
 {
 	song_lib_init(&self->songlib);
 	self->song = NULL;
+	self->flags = flags;
+	self->debug = 0; /* Disable all debugging by default */
+
+	if (flags & SFX_STATE_FLAG_NOSOUND) {
+		mixer = NULL;
+		pcm_device = NULL;
+		player = NULL;
+		sciprintf("[SFX] Sound disabled.\n");
+		return;
+	}
+
 	mixer = sfx_pcm_find_mixer(NULL);
 	pcm_device = sfx_pcm_find_device(NULL);
 	player = sfx_find_player(NULL);
-	self->flags = flags;
 
-	self->debug = 0; /* Disable all debugging by default */
 
 #ifdef DEBUG_SONG_API
 	fprintf(stderr, "[sfx-core] Initialising: flags=%x\n", flags);

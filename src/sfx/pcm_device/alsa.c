@@ -37,7 +37,7 @@
 
 #include <alsa/asoundlib.h>
 
-static char *device = "hw:0,0"; /* FIXME */ /* Or "plughw:0,0" */
+static char *device = "hw:0,0"; /* FIXME: Try "default" first */ /* Or "plughw:0,0" */
 static snd_pcm_format_t format = SND_PCM_FORMAT_S16;
 static unsigned int rate = 44100; /* FIXME */
 static unsigned int channels = 2; /* FIXME */

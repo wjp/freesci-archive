@@ -604,6 +604,7 @@ apply_mod(gfx_res_mod_t *mod, gfx_pixmap_t *pxm)
 			UPDATE_COL(b, 2);
 #undef UPDATE_COL
 		}
+		break;
 	}
 
 	default:

@@ -391,6 +391,33 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 }
 
 
+static void
+set_pic_id(gfx_resource_t *res, int id)
+{
+	if (res->scaled_data.pic) {
+		gfxr_pic_t *pic = res->scaled_data.pic;
+		pic->control_map->ID = id;
+		pic->priority_map->ID = id;
+		pic->visual_map->ID = id;
+	}
+
+	if (res->unscaled_data.pic) {
+		gfxr_pic_t *pic = res->unscaled_data.pic;
+		pic->control_map->ID = id;
+		pic->priority_map->ID = id;
+		pic->visual_map->ID = id;
+	}
+}
+
+static int
+get_pic_id(gfx_resource_t *res)
+{
+	if (res->scaled_data.pic)
+		return res->scaled_data.pic->visual_map->ID;
+	else
+		return res->unscaled_data.pic->visual_map->ID;
+}
+
 gfxr_pic_t *
 gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int flags,
 		int old_default_palette, int default_palette, int scaled)
@@ -435,9 +462,14 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 
 	res->mode = MODE_INVALID; /* Invalidate */
 
-	pic = gfxr_pic_xlate_common(res, maps, scaled, 1, state->driver->mode,
-				    state->options->pic_xlate_filter, 1,
-				    state->options);
+	{
+		int old_ID = get_pic_id(res);
+		set_pic_id(res, GFXR_RES_ID(restype, new_nr)); /* To ensure that our graphical translation optoins work properly */
+		pic = gfxr_pic_xlate_common(res, maps, scaled, 1, state->driver->mode,
+					    state->options->pic_xlate_filter, 1,
+					    state->options);
+		set_pic_id(res, old_ID);
+	}
 
 	if (scaled || state->options->pic0_unscaled && maps & GFX_MASK_VISUAL)
 		gfxr_antialiase(pic->visual_map, state->driver->mode,
