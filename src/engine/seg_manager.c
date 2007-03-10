@@ -234,10 +234,8 @@ mem_obj_t* sm_allocate_script (seg_manager_t* self, struct _state *s, int script
 	return mem;
 	}
 
-int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr) 
+static int sm_set_locals_size(mem_obj_t *mem, struct _state *s, int script_nr) 
 {
-	/* allocate the script.buf */
-	script_t *scr;
 	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		mem->data.script.buf_size = script->size + getUInt16(script->data)*2; 
@@ -246,6 +244,14 @@ int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr)
 	else {
 		mem->data.script.buf_size = script->size;
 	}
+}
+
+int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr) 
+{
+	/* allocate the script.buf */
+	script_t *scr;
+
+	sm_set_locals_size(mem, s, script_nr);
 	mem->data.script.buf = (char*) sci_malloc (mem->data.script.buf_size);
 	dbg_print( "mem->data.script.buf ", (int) mem->data.script.buf );
 	if (!mem->data.script.buf) {
@@ -645,6 +651,23 @@ sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, id_
 	}
 };
 
+int
+sm_hash_segment_data(struct _seg_manager_t* self, int id)
+{
+	int i, len, hash_code = 0x55555555;
+	char *buf;
+
+	if (self->heap[id]->type == MEM_OBJ_LISTS) return 0;
+	if (self->heap[id]->type == MEM_OBJ_NODES) return 0;
+	if (self->heap[id]->type == MEM_OBJ_CLONES) return 0;
+	buf = sm_dereference(self, make_reg(id, 0), &len);
+
+	for (i = 0; i < len; i++)
+		hash_code = (hash_code * 19) + *(buf + i);
+
+	return hash_code;
+}
+
 void
 sm_set_export_width(struct _seg_manager_t* self, int flag)
 {
@@ -837,8 +860,8 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 	}
 }
 
-object_t *
-sm_script_obj_init(seg_manager_t *self, reg_t obj_pos)
+static object_t *
+sm_script_obj_init0(seg_manager_t *self, reg_t obj_pos)
 {
 	mem_obj_t *mobj = self->heap[obj_pos.segment];
 	script_t *scr;
@@ -910,6 +933,12 @@ sm_script_obj_init(seg_manager_t *self, reg_t obj_pos)
 	}
 
 	return obj;
+}
+
+object_t *
+sm_script_obj_init(seg_manager_t *self, reg_t obj_pos)
+{
+	return sm_script_obj_init0(self, obj_pos);
 }
 
 static local_variables_t *
