@@ -43,7 +43,7 @@ raw_open(char *filename)
 	if (!f)
 		return NULL;
 
-	handle = sci_malloc(sizeof(exe_handle_t));
+	handle = (exe_handle_t*)sci_malloc(sizeof(exe_handle_t));
 	handle->f = f;
 
 	return handle;

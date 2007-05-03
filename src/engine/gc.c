@@ -34,7 +34,7 @@ typedef struct _worklist {
 static worklist_t *
 fresh_worklist(worklist_t *old)
 {
-	worklist_t *retval = sci_malloc(sizeof(worklist_t));
+	worklist_t *retval = (worklist_t*)sci_malloc(sizeof(worklist_t));
 	retval->used = 0;
 	retval->next = old;
 	return retval;
@@ -158,7 +158,7 @@ reg_t_hash_map_ptr
 find_all_used_references(state_t *s)
 {
 	seg_manager_t *sm = &(s->seg_manager);
-	seg_interface_t **interfaces = calloc(sizeof(seg_interface_t *), sm->heap_size);
+	seg_interface_t **interfaces = (seg_interface_t**)sci_calloc(sizeof(seg_interface_t *), sm->heap_size);
 	reg_t_hash_map_ptr nonnormal_map = new_reg_t_hash_map();
 	reg_t_hash_map_ptr normal_map = NULL;
 	worklist_t *worklist = new_worklist();

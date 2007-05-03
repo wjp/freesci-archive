@@ -73,11 +73,11 @@ sfx_iterator_make_feed(byte *base_data,
 	}
 	sci_refcount_incref(base_data);
 
-	idat = sci_malloc(sizeof(pcm_data_internal_t));
+	idat = (pcm_data_internal_t*)sci_malloc(sizeof(pcm_data_internal_t));
 	idat->base_data = base_data;
 	idat->data = data;
 	idat->frames_left = size;
-	feed = sci_malloc(sizeof(sfx_pcm_feed_t));
+	feed = (sfx_pcm_feed_t*)sci_malloc(sizeof(sfx_pcm_feed_t));
 	*feed = pcm_it_prototype;
 	feed->internal = idat;
 	feed->conf = conf;

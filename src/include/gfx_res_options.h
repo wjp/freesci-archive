@@ -125,7 +125,7 @@ gfx_get_res_config(struct _gfx_options *options,
 /* Configures a graphical pixmap according to config options
 ** Parameters: (gfx_options_t *) options: The options according to which
 **                                        configuration should be performed
-**             (gfx_resource_types_t) pxm: The pixmap to configure
+**             (gfx_resource_type_t) pxm: The pixmap to configure
 ** Returns   : (int) 0 on success, non-zero otherwise
 ** Modifies pxm as considered appropriate by configuration options. Does
 ** not do anything in colour index mode.

@@ -436,12 +436,12 @@ script_dump_object(disasm_state_t *d, script_state_t *s,
 	int namepos = getInt16(data + 14 + seeker);
 	int i = 0;
 	short sel;
-	char *name;
+	const char *name;
 	char buf [256];
 	short *sels;
 
 	selectors = (selectorsize = getInt16(data + seeker + 6));
-	name=namepos? ((char *)data + namepos) : "<unknown>";
+	name=namepos? ((const char *)data + namepos) : "<unknown>";
 
 	if (pass_no == 1)
 		script_add_area (s, seeker, seeker+objsize-1, area_object, strdup(name));
@@ -508,11 +508,11 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
 	int species = getInt16(data + 8 + seeker);
 	int superclass = getInt16(data + 10 + seeker);
 	int namepos = getInt16(data + 14 + seeker);
-	char *name;
+	const char *name;
 	char buf [256];
 	int i;
 
-	name=namepos? ((char *)data + namepos) : "<unknown>";
+	name=namepos? ((const char *)data + namepos) : "<unknown>";
 	selectors = (selectorsize = getInt16(data + seeker + 6));
 
 	if (pass_no == 1) {

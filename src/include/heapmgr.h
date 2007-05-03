@@ -67,7 +67,7 @@ init_##ENTRY##_table(ENTRY##_table_t *table)					\
 	table->max_entry = 0;							\
 	table->entries_used = 0;						\
 	table->first_free = HEAPENTRY_INVALID;					\
-	table->table = sci_malloc(sizeof(ENTRY##_entry_t) * INITIAL);		\
+	table->table = (ENTRY##_entry_t*)sci_malloc(sizeof(ENTRY##_entry_t) * INITIAL);\
 }										\
 										\
 void										\
@@ -101,7 +101,7 @@ alloc_##ENTRY##_entry(ENTRY##_table_t *table)					\
 		if (table->max_entry == table->entries_nr) {			\
 			table->entries_nr += INCREMENT;				\
 										\
-			table->table = sci_realloc(table->table,		\
+			table->table = (ENTRY##_entry_t*)sci_realloc(table->table,\
 						   sizeof(ENTRY##_entry_t)	\
 						   * table->entries_nr);	\
 		}								\

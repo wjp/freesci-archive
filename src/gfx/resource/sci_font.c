@@ -70,7 +70,7 @@ calc_char(byte *dest, int total_width, int total_height, byte *src, int size)
 gfx_bitmap_font_t *
 gfxr_read_font(int id, byte *resource, int size)
 {
-	gfx_bitmap_font_t *font = sci_calloc(sizeof(gfx_bitmap_font_t), 1);
+	gfx_bitmap_font_t *font = (gfx_bitmap_font_t*)sci_calloc(sizeof(gfx_bitmap_font_t), 1);
 	int chars_nr;
 	int max_width = 0, max_height;
 	int i;
@@ -104,7 +104,7 @@ gfxr_read_font(int id, byte *resource, int size)
 	}
 
 	font->ID = id;
-	font->widths = sci_malloc(sizeof(int) * chars_nr);
+	font->widths = (int*)sci_malloc(sizeof(int) * chars_nr);
 
 	for (i = 0; i < chars_nr; i++) {
 		int offset = get_int_16(resource + (i << 1) + 6);
@@ -134,7 +134,7 @@ gfxr_read_font(int id, byte *resource, int size)
 		font->row_size = (font->row_size + 3) & ~3;
 
 	font->char_size = font->row_size * max_height;
-	font->data = sci_calloc(font->char_size, chars_nr);
+	font->data = (byte*)sci_calloc(font->char_size, chars_nr);
 
 	for (i = 0; i < chars_nr; i++) {
 		int offset = get_int_16(resource + (i << 1) + 6);

@@ -713,8 +713,8 @@ kstub(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kNOP(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *problem = s->kfunct_table[funct_nr].orig_name ?
-		"unmapped" : "NOP";
+	char *problem = (char*)(s->kfunct_table[funct_nr].orig_name ?
+		"unmapped" : "NOP");
 
 	SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: %s", funct_nr, problem);
 
@@ -742,7 +742,7 @@ kernel_compile_signature(char **s)
 	if (!src)
 		return; /* NULL signature: Nothing to do */
 
-	result = sci_malloc(strlen(*s) + 1);
+	result = (char*)sci_malloc(strlen(*s) + 1);
 
 	while (*src) {
 		char c;
@@ -842,7 +842,7 @@ script_map_kernel(state_t *s)
 		functions_nr = max_functions_nr;
 	}
 
-	s->kfunct_table = sci_malloc(sizeof(kfunct_sig_pair_t) * functions_nr);
+	s->kfunct_table = (kfunct_sig_pair_t*)sci_malloc(sizeof(kfunct_sig_pair_t) * functions_nr);
 
 
 	s->kfunct_nr = functions_nr;
@@ -1069,12 +1069,12 @@ _kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries, int al
 byte *
 kernel_dereference_bulk_pointer(struct _state *s, reg_t pointer, int entries)
 {
-	return _kernel_dereference_pointer(s, pointer, entries, 1);
+	return (byte*)_kernel_dereference_pointer(s, pointer, entries, 1);
 }
 
 
 reg_t *
 kernel_dereference_reg_pointer(struct _state *s, reg_t pointer, int entries)
 {
-	return _kernel_dereference_pointer(s, pointer, entries, sizeof(reg_t));
+	return (reg_t*)_kernel_dereference_pointer(s, pointer, entries, sizeof(reg_t));
 }

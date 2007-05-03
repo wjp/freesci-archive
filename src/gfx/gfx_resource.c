@@ -98,8 +98,12 @@ pixmap_endianness_reverse_2(byte *data, int area)
 
                 /* The next line will give warnings on 32 bit archs, but
                 ** that's OK.  */
+#if SIZEOF_LONG < 8
+                temp = 0;
+#else
                 temp = ((temp & 0xff00ff00ff00ff00l) >> 8)
                         | ((temp & 0x00ff00ff00ff00ffl) << 8);
+#endif /* SIZEOF_INT < 8 */
 
                 memcpy(data, &temp, sl);
 
@@ -154,10 +158,14 @@ pixmap_endianness_reverse_4(byte *data, int area)
 
                 /* The next lines will give warnings on 32 bit archs, but
                 ** that's OK.  */
+#if SIZEOF_LONG < 8
+		temp = 0l;
+#else
                 temp = ((temp & 0xffff0000ffff0000l) >> 16)
                         | ((temp & 0x0000ffff0000ffffl) << 16);
                 temp = ((temp & 0xff00ff00ff00ff00l) >> 8)
                         | ((temp & 0x00ff00ff00ff00ffl) << 8);
+#endif /* SIZEOF_LONG < 8 */
 
                 memcpy(data, &temp, sl);
 
@@ -373,13 +381,13 @@ gfx_xlate_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode, gfx_xlate_filter_t filter)
 
 
 	if (!pxm->data) {
-		pxm->data = sci_malloc(mode->xfact * mode->yfact * pxm->index_xl * pxm->index_yl * mode->bytespp + 1);
+		pxm->data = (byte*)sci_malloc(mode->xfact * mode->yfact * pxm->index_xl * pxm->index_yl * mode->bytespp + 1);
 		/* +1: Eases coying on BE machines in 24 bpp packed mode */
 		/* Assume that memory, if allocated already, will be sufficient */
 
 		/* Allocate alpha map */
 		if (!mode->alpha_mask && pxm->colors_nr < GFX_PIC_COLORS)
-			pxm->alpha_map = sci_malloc(mode->xfact * mode->yfact * pxm->index_xl * pxm->index_yl + 1);
+			pxm->alpha_map = (byte*)sci_malloc(mode->xfact * mode->yfact * pxm->index_xl * pxm->index_yl + 1);
 	} else
 		was_allocated = 1;
 

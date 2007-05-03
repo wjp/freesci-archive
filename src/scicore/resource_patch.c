@@ -113,7 +113,7 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 						if (!newrsc) {
 							/* Completely new resource! */
 							++(*resource_nr_p);
-							*resource_p = sci_realloc(*resource_p,
+							*resource_p = (resource_t*)sci_realloc(*resource_p,
 										  *resource_nr_p
 										  * sizeof(resource_t));
 							newrsc = (*resource_p-1) + *resource_nr_p;
@@ -221,7 +221,7 @@ sci1_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 						if (!newrsc) {
 							/* Completely new resource! */
 							++(*resource_nr_p);
-							*resource_p = sci_realloc(*resource_p,
+							*resource_p = (resource_t*)sci_realloc(*resource_p,
 										  *resource_nr_p
 										  * sizeof(resource_t));
 							newrsc = (*resource_p-1) + *resource_nr_p;

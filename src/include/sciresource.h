@@ -35,8 +35,6 @@
 /*#define _SCI_RESOURCE_DEBUG */
 /*#define _SCI_DECOMPRESS_DEBUG*/
 
-#define findResource "Error: Using findResource!"
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

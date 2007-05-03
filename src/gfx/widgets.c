@@ -138,9 +138,9 @@ _gfxwop_print_empty(gfxw_widget_t *widget, int indentation)
 
 
 gfxw_widget_t *
-_gfxw_new_widget(int size, int type)
+_gfxw_new_widget(int size, gfxw_widget_type_t type)
 {
-	gfxw_widget_t *widget = sci_malloc(size);
+	gfxw_widget_t *widget = (gfxw_widget_t*)sci_malloc(size);
 #ifdef SATISFY_PURIFY
 	memset(widget, 0, size);
 #endif
@@ -553,7 +553,8 @@ gfxw_new_box(gfx_state_t *state, rect_t area, gfx_color_t color1, gfx_color_t co
 
 
 static inline gfxw_primitive_t *
-_gfxw_new_primitive(rect_t area, gfx_color_t color, gfx_line_mode_t mode, gfx_line_style_t style, int type)
+_gfxw_new_primitive(rect_t area, gfx_color_t color, gfx_line_mode_t mode,
+		    gfx_line_style_t style, gfxw_widget_type_t type)
 {
 	gfxw_primitive_t *widget = (gfxw_primitive_t *) _gfxw_new_widget(sizeof(gfxw_primitive_t), type);
 
@@ -735,7 +736,7 @@ gfxw_new_line(point_t start, point_t end, gfx_color_t color, gfx_line_mode_t lin
 
 gfxw_view_t *
 _gfxw_new_simple_view(gfx_state_t *state, point_t pos, int view, int loop, int cel, int palette, int priority, int control,
-		      gfx_alignment_t halign, gfx_alignment_t valign, int size, int type)
+		      gfx_alignment_t halign, gfx_alignment_t valign, int size, gfxw_widget_type_t type)
 {
 	gfxw_view_t *widget;
 	int width, height;
@@ -1229,7 +1230,7 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 
 	widget->widget_priority = _gfxw_color_get_priority(color1);
 	widget->font_nr = font;
-	widget->text = sci_malloc(strlen(text) + 1);
+	widget->text = (char*)sci_malloc(strlen(text) + 1);
 	widget->halign = halign;
 	widget->valign = valign;
 	widget->color1 = color1;
@@ -1363,10 +1364,10 @@ _w_gfxwop_container_print(gfxw_widget_t *widget, int indentation)
 
 
 gfxw_container_t *
-_gfxw_new_container_widget(rect_t area, int size, int type)
+_gfxw_new_container_widget(rect_t area, int size, gfxw_widget_type_t type)
 {
 	gfxw_container_t *widget = (gfxw_container_t *)
-		_gfxw_new_widget(size, type);
+	  _gfxw_new_widget(size, type);
 
 	widget->bounds = widget->zone = area;
 	widget->contents = NULL;
@@ -1996,7 +1997,7 @@ gfxw_new_visual(gfx_state_t *state, int font)
 	visual->font_nr = font;
 	visual->gfx_state = state;
 
-	visual->port_refs = sci_calloc(sizeof(gfxw_port_t), visual->port_refs_nr = 16);
+	visual->port_refs = (struct _gfxw_port**)sci_calloc(sizeof(gfxw_port_t), visual->port_refs_nr = 16);
 
 	_gfxw_set_ops_VISUAL(GFXWC(visual));
 
@@ -2014,7 +2015,7 @@ _visual_find_free_ID(gfxw_visual_t *visual)
 		id++;
 
 	if (id == visual->port_refs_nr) {/* Out of ports? */
-		visual->port_refs = sci_realloc(visual->port_refs, visual->port_refs_nr += newports);
+		visual->port_refs = (struct _gfxw_port**)sci_realloc(visual->port_refs, visual->port_refs_nr += newports);
 		memset(visual->port_refs + id, 0, newports * sizeof(gfxw_port_t *)); /* Clear new port refs */
 	}
 
@@ -2363,7 +2364,7 @@ gfxw_show_widget(gfxw_widget_t *widget)
 gfxw_snapshot_t *
 gfxw_make_snapshot(gfxw_visual_t *visual, rect_t area)
 {
-	gfxw_snapshot_t *retval = sci_malloc(sizeof(gfxw_snapshot_t));
+	gfxw_snapshot_t *retval = (gfxw_snapshot_t*)sci_malloc(sizeof(gfxw_snapshot_t));
 
 	retval->serial = widget_serial_number_counter++;
 

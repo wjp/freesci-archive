@@ -108,7 +108,7 @@ con_init(void);
 
 
 void
-con_parse(struct _state *s, char *command);
+con_parse(struct _state *s, const char *command);
 /* Parses a command and summons appropriate facilities to handle it
 ** Parameters: (state_t *) s: The state_t to use
 **             command: The command to execute

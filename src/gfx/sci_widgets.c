@@ -389,7 +389,7 @@ sciw_new_edit_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int 
 
 		list->add(GFXWC(list), GFXW(text_handle));
 	} else {
-		char *textdup = sci_malloc(strlen(text) + 1);
+		char *textdup = (char*)sci_malloc(strlen(text) + 1);
 
 		strncpy(textdup, text, cursor);
 

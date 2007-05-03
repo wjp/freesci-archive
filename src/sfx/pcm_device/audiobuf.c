@@ -38,7 +38,7 @@ buffer_underrun_status = NO_BUFFER_UNDERRUN;
 static sfx_audio_buf_chunk_t *
 sfx_audbuf_alloc_chunk(void)
 {
-	sfx_audio_buf_chunk_t *ch = sci_malloc(sizeof(sfx_audio_buf_chunk_t));
+	sfx_audio_buf_chunk_t *ch = (sfx_audio_buf_chunk_t*)sci_malloc(sizeof(sfx_audio_buf_chunk_t));
 	ch->used = 0;
 	ch->next = NULL;
 	ch->prev = NULL;

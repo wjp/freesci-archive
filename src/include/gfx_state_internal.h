@@ -69,7 +69,7 @@ typedef enum {
 	GFXW_VISUAL,
 	GFXW_PORT
 
-} gfxw_widget_types_t;
+} gfxw_widget_type_t;
 
 
 #define GFXW_MAGIC_VALID 0xC001
@@ -91,7 +91,7 @@ typedef int gfxw_bin_op(struct _gfxw_widget *, struct _gfxw_widget *);
    int magic; /* Extra check after typecasting */ \
    int serial; /* Serial number */ \
    int flags; /* Widget flags */ \
-   gfxw_widget_types_t type; \
+   gfxw_widget_type_t type; \
    rect_t bounds; /* Boundaries */ \
    struct _gfxw_widget *next; /* Next widget in widget list */ \
    int ID; /* Unique ID or GFXW_NO_ID */ \

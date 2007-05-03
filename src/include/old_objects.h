@@ -31,8 +31,8 @@ typedef struct
   int offset;
 } instance;
 
-object **object_map, *object_root;
-int max_object;
+extern object **object_map, *object_root;
+extern int max_object;
 
 #define SCRIPT_PRINT_METHODS	1
 #define SCRIPT_PRINT_CHILDREN	2

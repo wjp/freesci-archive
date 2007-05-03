@@ -63,7 +63,14 @@
 
 #define X_COLOR_EXT(c) ((c << 8) | c)
 
-int flags;
+/* In C++ mode, we re-name ``class'' to ``class_''.  However, this screws up
+** our interface to xlib, so we're not doing it in here.
+*/
+#ifdef class
+#  undef class
+#endif
+
+static int flags;
 
 struct _xlib_state {
 	Display *display;
@@ -459,7 +466,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	foo_image = XCreateImage(S->display, DefaultVisual(S->display,
 							   DefaultScreen(S->display)),
-				 bytespp << 3, ZPixmap, 0, sci_malloc(23), 2, 2, 8, 0);
+				 bytespp << 3, ZPixmap, 0, (char*)sci_malloc(23), 2, 2, 8, 0);
 
 	bytespp_physical = foo_image->bits_per_pixel >> 3;
 #ifdef WORDS_BIGENDIAN
@@ -472,7 +479,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 #ifdef HAVE_MITSHM
 	/* set up and test the XSHM extension to make sure it's sane */
 	if (have_shmem) {
-	  void *old_handler;
+	  XErrorHandler old_handler;
 
 	  x11_error = 0;
 	  old_handler = XSetErrorHandler(xlib_error_handler);
@@ -539,7 +546,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	/* create the visual buffers */
 	for (i = 0; i < 3; i++) {
 #ifdef HAVE_MITSHM
-	  void *old_handler;
+	  XErrorHandler old_handler;
 
 	  if (have_shmem && have_shmem != 2) {
 	    ERROR("Shared memory pixmaps not supported.  Reverting\n");
@@ -550,7 +557,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  if (have_shmem) {
 	    old_handler = XSetErrorHandler(xlib_error_handler);
 
-	    if ((S->shm[i] = sci_malloc(sizeof(XShmSegmentInfo))) == 0) {
+	    if ((S->shm[i] = (XShmSegmentInfo*)sci_malloc(sizeof(XShmSegmentInfo))) == 0) {
 	      ERROR("AIEEEE!  Malloc failed!\n");
 	      return GFX_FATAL;
 	    }
@@ -680,15 +687,20 @@ xlib_xdpy_info()
 
 	for (i = 0; i < visuals_nr; i++) {
 		XVisualInfo *visual = visuals + i;
+
+		/* This works around an incompatibility between C++ and xlib: access visual->class */
+		int visual_class = *((int *) (((byte *)(visual->depth)) + sizeof(unsigned int)));
+
 		printf("%d:\t%d bpp %s(%d)\n"
 		       "\tR:%08x G:%08x B:%08x\n"
 		       "\tbits_per_rgb=%d\n"
 		       "\tcolormap_size=%d\n\n",
 		       i,
 		       visual->depth,
-		       (visual->class < 0 || visual->class >5)?
-		       "INVALID" : vis_classes[visual->class],
-		       visual->class,
+		       (visual_class < 0 || visual_class >5)?
+		       "INVALID" :
+		       vis_classes[visual_class],
+		       visual_class,
 		       visual->red_mask, visual->green_mask, visual->blue_mask,
 		       visual->bits_per_rgb, visual->colormap_size);
 
@@ -810,7 +822,6 @@ xlib_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
 		      gfx_color_t color1, gfx_color_t color2,
 		      gfx_rectangle_fill_t shade_mode)
 {
-
 	if (color1.mask & GFX_MASK_VISUAL) {
 		S->gc_values.foreground = xlib_map_color(drv, color1);
 		XChangeGC(S->display, S->gc, GCForeground, &(S->gc_values));
@@ -830,6 +841,9 @@ xlib_draw_filled_rect_RENDER(struct _gfx_driver *drv, rect_t rect,
 			     gfx_color_t color1, gfx_color_t color2,
 			     gfx_rectangle_fill_t shade_mode)
 {
+	if (S->used_bytespp == 1) /* No room for alpha! */
+		return xlib_draw_filled_rect(drv, rect, color1, color2, shade_mode);
+
 	if (color1.mask & GFX_MASK_VISUAL) {
 		XRenderColor fg;
 
@@ -837,6 +851,7 @@ xlib_draw_filled_rect_RENDER(struct _gfx_driver *drv, rect_t rect,
 		fg.green = X_COLOR_EXT(color1.visual.g);
 		fg.blue = X_COLOR_EXT(color1.visual.b);
 		fg.alpha = 0xffff - X_COLOR_EXT(color1.alpha);
+
 
 		XRenderFillRectangle(S->display,
 				     PictOpOver,
@@ -1032,7 +1047,7 @@ xlib_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
 	int lines = pointer->yl;
 	int xc, yc;
 	int xfact = drv->mode->xfact;
-	byte *data = sci_calloc(linewidth, lines);
+	byte *data = (byte*)sci_calloc(linewidth, lines);
 	byte *linebase = data, *pos;
 	byte *src = pointer->index_data;
 
@@ -1421,8 +1436,8 @@ gfx_driver_xlib = {
 	0, 0,
 	GFX_CAPABILITY_STIPPLED_LINES | GFX_CAPABILITY_MOUSE_SUPPORT
 	| GFX_CAPABILITY_MOUSE_POINTER | GFX_CAPABILITY_PIXMAP_REGISTRY
-	| GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_FINE_LINES
-	| GFX_CAPABILITY_WINDOWED | GFX_CAPABILITY_KEYTRANSLATE,
+	| GFX_CAPABILITY_FINE_LINES | GFX_CAPABILITY_WINDOWED
+	| GFX_CAPABILITY_KEYTRANSLATE,
 	0/*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC*/,
 	xlib_set_parameter,
 	xlib_init_specific,

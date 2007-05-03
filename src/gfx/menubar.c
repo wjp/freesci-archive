@@ -71,7 +71,7 @@ __my_free(void *origin, char *function, int line)
 menubar_t *
 menubar_new()
 {
-	menubar_t *tmp = sci_malloc(sizeof(menubar_t));
+	menubar_t *tmp = (menubar_t*)sci_malloc(sizeof(menubar_t));
 	tmp->menus_nr = 0;
 
 	return tmp;
@@ -173,9 +173,9 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 #ifdef MENU_FREESCI_BLATANT_PLUG
 		add_freesci = 1;
 #endif
-		menubar->menus = sci_malloc(sizeof(menu_t));
+		menubar->menus = (menu_t*)sci_malloc(sizeof(menu_t));
 		menubar->menus_nr = 1;
-	} else menubar->menus = sci_realloc(menubar->menus, ++(menubar->menus_nr) * sizeof (menu_t));
+	} else menubar->menus = (menu_t*)sci_realloc(menubar->menus, ++(menubar->menus_nr) * sizeof (menu_t));
 
 	menu = &(menubar->menus[menubar->menus_nr-1]);
 	memset(menu, 0, sizeof(menu_t));
@@ -383,7 +383,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, reg_t
 	case MENU_ATTRIBUTE_TEXT:
 		free(item->text);
 		assert(value.segment);
-		item->text = sci_strdup(kernel_dereference_bulk_pointer(s, value, 0));
+		item->text = sci_strdup(kernel_dereference_char_pointer(s, value, 0));
 		item->text_pos = value;
 		break;
 
@@ -396,7 +396,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, reg_t
 			/* FIXME: What happens here if <value> is an extended key? Potential bug. LS */
 			item->key = value.offset;
 			item->modifiers = 0;
-			item->keytext = sci_malloc(2);
+			item->keytext = (char*)sci_malloc(2);
 			item->keytext[0] = value.offset;
 			item->keytext[1] = 0;
 			item->flags |= MENU_ATTRIBUTE_FLAGS_KEY;

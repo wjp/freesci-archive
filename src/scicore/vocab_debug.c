@@ -143,7 +143,7 @@ int* vocabulary_get_classes(resource_mgr_t *resmgr, int* count)
 
   if((r = scir_find_resource(resmgr, sci_vocab, 996, 0)) == NULL) return 0;
 
-  c= sci_malloc(sizeof(int)*r->size/2);
+  c= (int*)sci_malloc(sizeof(int)*r->size/2);
   for(i=2; i<r->size; i+=4)
     {
       c[i/4]=getInt(r->data+i);
@@ -176,7 +176,7 @@ char** vocabulary_get_snames(resource_mgr_t *resmgr, int* pcount, sci_version_t 
 
   magic=((version==0) || (version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER))? 1 : 2;
 
-  t= sci_malloc(sizeof(char*)*magic*(count+1));
+  t= (char**)sci_malloc(sizeof(char*)*magic*(count+1));
 
   j=0;
 
@@ -184,13 +184,13 @@ char** vocabulary_get_snames(resource_mgr_t *resmgr, int* pcount, sci_version_t 
     {
       int offset=getInt(r->data+2+i*2);
       int len=getInt(r->data+offset);
-      t[j]= sci_malloc(len+1);
+      t[j]= (char*)sci_malloc(len+1);
       memcpy(t[j], r->data+offset+2, len);
       t[j][len]='\0';
       j++;
       if ((version!=0) && (version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER))
       {
-        t[j]= sci_malloc(len+1);
+        t[j]= (char*)sci_malloc(len+1);
         memcpy(t[j], r->data+offset+2, len);
         t[j][len]='\0';
         j++;
@@ -242,14 +242,14 @@ opcode* vocabulary_get_opcodes(resource_mgr_t *resmgr)
 
 	count=getInt(r->data);
 
-	o= sci_malloc(sizeof(opcode)*256);
+	o= (opcode*)sci_malloc(sizeof(opcode)*256);
 	for(i=0; i<count; i++)
 		{
 			int offset=getInt(r->data+2+i*2);
 			int len=getInt(r->data+offset)-2;
 			o[i].type=getInt(r->data+offset+2);
 			o[i].number=i;
-			o[i].name= sci_malloc(len+1);
+			o[i].name= (char*)sci_malloc(len+1);
 			memcpy(o[i].name, r->data+offset+4, len);
 			o[i].name[len]='\0';
 #ifdef VOCABULARY_DEBUG
@@ -260,7 +260,7 @@ opcode* vocabulary_get_opcodes(resource_mgr_t *resmgr)
 		{
 			o[i].type=0;
 			o[i].number=i;
-			o[i].name= sci_malloc(strlen("undefined")+1);
+			o[i].name= (char*)sci_malloc(strlen("undefined")+1);
 			strcpy(o[i].name, "undefined");
 		}
 	return o;
@@ -285,27 +285,27 @@ vocabulary_free_opcodes(opcode *opcodes)
 static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 {
   unsigned int mallocsize = 32;
-  char **retval = sci_malloc(sizeof (char *) * mallocsize);
+  char **retval = (char**)sci_malloc(sizeof (char *) * mallocsize);
   unsigned int i = 0, index = 0;
 
   while (index < r->size) {
 
     int slen = strlen((char *) r->data + index) + 1;
 
-    retval[i] = sci_malloc(slen);
+    retval[i] = (char*)sci_malloc(slen);
     memcpy(retval[i++], r->data + index, slen);
     /* Wouldn't normally read this, but the cleanup code wants to free() this */
 
     index += slen;
 
     if (i == mallocsize)
-      retval = sci_realloc(retval, sizeof(char *) * (mallocsize <<= 1));
+      retval = (char**)sci_realloc(retval, sizeof(char *) * (mallocsize <<= 1));
 
   }
 
   *names = i + 1;
-  retval = sci_realloc(retval, sizeof(char *) * (i+2));
-  retval[i] = sci_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) + 1);
+  retval = (char**)sci_realloc(retval, sizeof(char *) * (i+2));
+  retval[i] = (char*)sci_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) + 1);
   strcpy(retval[i], SCRIPT_UNKNOWN_FUNCTION_STRING);
   /* The mystery kernel function- one in each SCI0 package */
 
@@ -323,7 +323,7 @@ static char** vocabulary_get_knames0(resource_mgr_t *resmgr, int* names)
 
 
 	if (!r) { /* No kernel name table found? Fall back to default table */
-		t = sci_malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR + 1) * sizeof(char*));
+		t = (char**)sci_malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR + 1) * sizeof(char*));
 		*names = SCI0_KNAMES_DEFAULT_ENTRIES_NR - 1; /* index of last element */
 
 		for (i = 0; i < SCI0_KNAMES_DEFAULT_ENTRIES_NR; i++)
@@ -344,19 +344,19 @@ static char** vocabulary_get_knames0(resource_mgr_t *resmgr, int* names)
 		sciprintf("Less than %d kernel functions; adding %d\n", SCI0_KNAMES_WELL_DEFINED, empty_to_add);
 	}
 
-	t= sci_malloc(sizeof(char*)*(count+1 + empty_to_add));
+	t= (char**)sci_malloc(sizeof(char*)*(count+1 + empty_to_add));
 	for(i=0; i<count; i++) {
 		int offset=getInt(r->data+index);
 		int len=getInt(r->data+offset);
 		/*fprintf(stderr,"Getting name %d of %d...\n", i, count);*/
 		index+=2;
-		t[i]= sci_malloc(len+1);
+		t[i]= (char*)sci_malloc(len+1);
 		memcpy(t[i], r->data + offset + 2, len);
 		t[i][len]='\0';
 	}
 
 	for (i = 0; i < empty_to_add; i++) {
-		t[count + i] = sci_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
+		t[count + i] = (char*)sci_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
 		strcpy(t[count + i], SCRIPT_UNKNOWN_FUNCTION_STRING);
 	}
 
@@ -378,16 +378,16 @@ static char** vocabulary_get_knames1(resource_mgr_t *resmgr, int *count)
       if ((used==size-1)||(!t))
 	{
 	  size*=2;
-	  t= sci_realloc(t, size*sizeof(char*));
+	  t= (char**)sci_realloc(t, size*sizeof(char*));
 	}
       len=strlen((char *) r->data+pos);
-      t[used]= sci_malloc(len+1);
+      t[used]= (char*)sci_malloc(len+1);
       strcpy(t[used], (char *) r->data+pos);
       used++;
       pos+=len+1;
     }
   *count=used;
-  t= sci_realloc(t, (used+1)*sizeof(char*));
+  t= (char**)sci_realloc(t, (used+1)*sizeof(char*));
   t[used]=NULL;
   return t;
 }

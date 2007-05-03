@@ -216,10 +216,10 @@ kSetSynonyms(state_t *s, int funct_nr, int argc, reg_t *argv)
 			if (synonyms) {
 				int i;
 				if (s->synonyms_nr)
-					s->synonyms = sci_realloc(s->synonyms,
+					s->synonyms = (synonym_t*)sci_realloc(s->synonyms,
 								  sizeof(synonym_t) * (s->synonyms_nr + synonyms_nr));
 				else
-					s->synonyms = sci_malloc(sizeof(synonym_t) * synonyms_nr);
+					s->synonyms = (synonym_t*)sci_malloc(sizeof(synonym_t) * synonyms_nr);
 
 				s->synonyms_nr +=  synonyms_nr;
 
@@ -258,7 +258,7 @@ reg_t
 kParse(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	reg_t stringpos = argv[0];
-	char *string = kernel_dereference_bulk_pointer(s, stringpos, 0);
+	char *string = kernel_dereference_char_pointer(s, stringpos, 0);
 	int words_nr;
 	char *error;
 	result_word_t *words;
@@ -330,7 +330,7 @@ kParse(state_t *s, int funct_nr, int argc, reg_t *argv)
 		s->r_acc = make_reg(0, 0);
 		PUT_SEL32V(event, claimed, 1);
 		if (error) {
-			char *pbase_str = kernel_dereference_bulk_pointer(s, s->parser_base, 0);
+			char *pbase_str = kernel_dereference_char_pointer(s, s->parser_base, 0);
 			strcpy(pbase_str, error);
 			SCIkdebug(SCIkPARSER,"Word unknown: %s\n", error);
 			/* Issue warning: */
@@ -349,7 +349,7 @@ reg_t
 kStrEnd(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	reg_t address = argv[0];
-	char *seeker = kernel_dereference_bulk_pointer(s, address, 0);
+	char *seeker = kernel_dereference_char_pointer(s, address, 0);
 
 	while (*seeker++)
 		++address.offset;
@@ -360,8 +360,8 @@ kStrEnd(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kStrCat(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *s1 = kernel_dereference_bulk_pointer(s, argv[0], 0);
-	char *s2 = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *s1 = kernel_dereference_char_pointer(s, argv[0], 0);
+	char *s2 = kernel_dereference_char_pointer(s, argv[1], 0);
 
 	strcat(s1, s2);
 	return argv[0];
@@ -370,8 +370,8 @@ kStrCat(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kStrCmp(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *s1 = kernel_dereference_bulk_pointer(s, argv[0], 0);
-	char *s2 = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *s1 = kernel_dereference_char_pointer(s, argv[0], 0);
+	char *s2 = kernel_dereference_char_pointer(s, argv[1], 0);
 
 	if (argc > 2)
 		return make_reg(0, strncmp(s1, s2, UKPV(2)));
@@ -462,7 +462,7 @@ kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 /* Our pathfinder already works around the issue we're trying to fix */
 	    (strcmp(sm_get_description(&(s->seg_manager), argv[0]),
 		    AVOIDPATH_DYNMEM_STRING) != 0)  &&
-	    ((strlen(dest) < 2) || (!is_print_str(dest))))
+	    ((strlen((const char*)dest) < 2) || (!is_print_str((char*)dest))))
 	  /* SQ4 array handling detected */
 	{
 #ifndef WORDS_BIGENDIAN
@@ -471,7 +471,7 @@ kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int odd = !(KP_UINT(argv[1]) & 1);
 #endif
 		dest2 = ((reg_t *) dest)+(KP_UINT(argv[1])/2);
-		dest = ((char *) (&dest2->offset))+odd;
+		dest = ((unsigned char *) (&dest2->offset))+odd;
 	} else dest += KP_UINT(argv[1]);
 
 	s->r_acc = make_reg(0, *dest);
@@ -486,7 +486,7 @@ kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kReadNumber(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *source = kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *source = kernel_dereference_char_pointer(s, argv[0], 0);
 
 	while (isspace(*source))
 		source++; /* Skip whitespace */
@@ -539,7 +539,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 	SCIkdebug(SCIkSTRINGS, "Formatting \"%s\"\n", source);
 
 
-	arguments = sci_malloc(sizeof(int) * argc);
+	arguments = (int*)sci_malloc(sizeof(int) * argc);
 #ifdef SATISFY_PURIFY
 	memset(arguments, 0, sizeof(int) * argc);
 #endif
@@ -723,7 +723,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kStrLen(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *str = kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *str = kernel_dereference_char_pointer(s, argv[0], 0);
 
 	return make_reg(0, strlen(str));
 }
@@ -750,7 +750,7 @@ kGetFarText(state_t *s, int funct_nr, int argc, reg_t *argv)
 	** resource.
 	*/
 
-	strcpy(kernel_dereference_bulk_pointer(s, argv[2], 0), seeker); /* Copy the string and get return value */
+	strcpy(kernel_dereference_char_pointer(s, argv[2], 0), seeker); /* Copy the string and get return value */
 	return argv[2];
 }
 

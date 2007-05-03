@@ -32,6 +32,8 @@
 
 /* #define SCRIPT_DEBUG */
 
+#define END Script_None
+
 opcode_format formats[128][4]={
   /*00*/
   {Script_None}, {Script_None}, {Script_None}, {Script_None},
@@ -44,48 +46,49 @@ opcode_format formats[128][4]={
   /*10*/
   {Script_None}, {Script_None}, {Script_None}, {Script_None},
   /*14*/
-  {Script_None}, {Script_None}, {Script_None}, {Script_SRelative, 0},
+  {Script_None}, {Script_None}, {Script_None}, {Script_SRelative, END},
   /*18*/
-  {Script_SRelative, 0}, {Script_SRelative, 0}, {Script_SVariable, 0}, {Script_None},
+  {Script_SRelative, END}, {Script_SRelative, END}, {Script_SVariable, END}, {Script_None},
   /*1C*/
-  {Script_SVariable, 0}, {Script_None}, {Script_None}, {Script_Variable, 0},
+  {Script_SVariable, END}, {Script_None}, {Script_None}, {Script_Variable, END},
   /*20*/
-  {Script_SRelative, Script_Byte, 0}, {Script_SVariable, Script_Byte, 0}, {Script_SVariable, Script_Byte, 0}, {Script_Variable, Script_SVariable, Script_Byte, 0},
+  {Script_SRelative, Script_Byte, END}, {Script_SVariable, Script_Byte, END}, {Script_SVariable, Script_Byte, END}, {Script_Variable, Script_SVariable, Script_Byte, END},
   /*24 (24=ret)*/
-  {Script_End}, {Script_Byte, 0}, {Script_Invalid}, {Script_Invalid},
+  {Script_End}, {Script_Byte, END}, {Script_Invalid}, {Script_Invalid},
   /*28*/
-  {Script_Variable, 0}, {Script_Invalid}, {Script_Byte, 0}, {Script_Variable, Script_Byte, 0},
+  {Script_Variable, END}, {Script_Invalid}, {Script_Byte, END}, {Script_Variable, Script_Byte, END},
   /*2C*/
-  {Script_SVariable, 0}, {Script_SVariable, Script_Variable, 0}, {Script_None}, {Script_Invalid},
+  {Script_SVariable, END}, {Script_SVariable, Script_Variable, END}, {Script_None}, {Script_Invalid},
   /*30*/
-  {Script_None}, {Script_Property, 0}, {Script_Property, 0}, {Script_Property, 0},
+  {Script_None}, {Script_Property, END}, {Script_Property, END}, {Script_Property, END},
   /*34*/
-  {Script_Property, 0}, {Script_Property, 0}, {Script_Property, 0}, {Script_Property, 0},
+  {Script_Property, END}, {Script_Property, END}, {Script_Property, END}, {Script_Property, END},
   /*38*/
-  {Script_Property, 0}, {Script_SRelative, 0}, {Script_SRelative, 0}, {Script_None},
+  {Script_Property, END}, {Script_SRelative, END}, {Script_SRelative, END}, {Script_None},
   /*3C*/
   {Script_None}, {Script_None}, {Script_None}, {Script_Invalid},
   /*40-4F*/
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
   /*50-5F*/
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
   /*60-6F*/
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
   /*70-7F*/
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0}
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+  {Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END}
 };
+#undef END
 
 void script_adjust_opcode_formats(int res_version)
 {

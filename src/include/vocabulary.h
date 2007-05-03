@@ -208,7 +208,7 @@ char** vocabulary_get_snames(resource_mgr_t *resmgr, int *pcount, sci_version_t 
 void vocabulary_free_snames(char **snames_list);
 
 /* Look up a selector name in an array, return the index */
-int vocabulary_lookup_snames(char **snames_list, char *sname);
+int vocabulary_lookup_sname(char **snames_list, char *sname);
 
 
 /**

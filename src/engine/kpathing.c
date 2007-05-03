@@ -121,10 +121,12 @@ typedef struct vertex
 	struct vertex *path_prev;
 } vertex_t;
 
+typedef CLIST_HEAD(vertices_head, vertex) vertices_head_t;
+
 typedef struct polygon
 {
 	/* Circular list of vertices */
-	CLIST_HEAD(vertices_head, vertex) vertices;
+	vertices_head_t vertices;
 
 	/* Polygon list entry */
 	LIST_ENTRY(polygon) entries;
@@ -408,7 +410,7 @@ vertex_new(point_t p)
 ** Returns   : (vertex_t *) A newly allocated vertex
 */
 {
-	vertex_t *vertex = sci_malloc(sizeof(vertex_t));
+	vertex_t *vertex = (vertex_t*)sci_malloc(sizeof(vertex_t));
 
 	vertex->v = p;
 	vertex->dist = HUGE_DISTANCE;
@@ -424,7 +426,7 @@ polygon_new(int type)
 ** Returns   : (polygon_t *) A newly allocated polygon
 */
 {
-	polygon_t *polygon = sci_malloc(sizeof(polygon_t));
+	polygon_t *polygon = (polygon_t*)sci_malloc(sizeof(polygon_t));
 
 	CLIST_INIT(&polygon->vertices);
 	polygon->type = type;
@@ -546,7 +548,7 @@ fix_vertex_order(polygon_t *polygon)
 	*/
 	if (((area > 0) && (polygon->type == POLY_CONTAINED_ACCESS))
 	    || ((area < 0) && (polygon->type != POLY_CONTAINED_ACCESS))) {
-		struct vertices_head vertices;
+		vertices_head_t vertices;
 
 		/* Create a new circular list */
 		CLIST_INIT(&vertices);
@@ -753,7 +755,7 @@ visible(vertex_t *vertex, vertex_t *vertex_prev, int visible, aatree_t *tree)
 	/* Find leftmost node of tree */
 	while ((tree_n = aatree_walk(tree_n, AATREE_WALK_LEFT)))
 		tree = tree_n;
-	edge = aatree_get_data(tree);
+	edge = (vertex_t*)aatree_get_data(tree);
 
 	if (edge) {
 		point_t p1, p2;
@@ -781,7 +783,7 @@ visible_vertices(pf_state_t *s, vertex_t *vert)
 	polygon_t *polygon;
 	int i;
 	int is_visible;
-	vertex_t **vert_sorted = sci_malloc(sizeof(vertex_t *) * s->vertices);
+	vertex_t **vert_sorted = (vertex_t**)sci_malloc(sizeof(vertex_t *) * s->vertices);
 
 	/* Sort vertices by angle (first) and distance (second) */
 	memcpy(vert_sorted, s->vertex_index, sizeof(vertex_t *) * s->vertices);
@@ -887,14 +889,16 @@ find_free_point(pointf_t f, polygon_t *polygon, point_t *ret)
 	point_t p;
 
 	/* Try nearest point first */
-	p = gfx_point(floor(f.x + 0.5), floor(f.y + 0.5));
+	p = gfx_point((int) floor(f.x + 0.5),
+		      (int) floor(f.y + 0.5));
 
 	if (contained(p, polygon) != CONT_INSIDE) {
 		*ret = p;
 		return PF_OK;
 	}
 
-	p = gfx_point(floor(f.x), floor(f.y));
+	p = gfx_point((int) floor(f.x),
+		      (int) floor(f.y));
 
 	/* Try (x, y), (x + 1, y), (x , y + 1) and (x + 1, y + 1) */
 	if (contained(p, polygon) == CONT_INSIDE) {
@@ -1274,7 +1278,7 @@ convert_polygon_set(state_t *s, reg_t poly_list, point_t start, point_t end, int
 	polygon_t *polygon;
 	int err;
 	int count = 0;
-	pf_state_t *pf_s = sci_malloc(sizeof(pf_state_t));
+	pf_state_t *pf_s = (pf_state_t*)sci_malloc(sizeof(pf_state_t));
 
 	LIST_INIT(&pf_s->polygons);
 	pf_s->start = start;
@@ -1345,7 +1349,7 @@ convert_polygon_set(state_t *s, reg_t poly_list, point_t start, point_t end, int
 	pf_s->vertex_end = merge_point(pf_s, end);
 
 	/* Allocate and build vertex index */
-	pf_s->vertex_index = sci_malloc(sizeof(vertex_t *) * (count + 2));
+	pf_s->vertex_index = (vertex_t**)sci_malloc(sizeof(vertex_t *) * (count + 2));
 
 	count = 0;
 
@@ -1361,7 +1365,7 @@ convert_polygon_set(state_t *s, reg_t poly_list, point_t start, point_t end, int
 	pf_s->vertices = count;
 
 	/* Allocate and clear visibility matrix */
-	pf_s->vis_matrix = calloc(pf_s->vertices * VIS_MATRIX_ROW_SIZE(pf_s->vertices), 1);
+	pf_s->vis_matrix = (char*)sci_calloc(pf_s->vertices * VIS_MATRIX_ROW_SIZE(pf_s->vertices), 1);
 
 	return pf_s;
 }

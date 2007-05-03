@@ -53,7 +53,7 @@
 #endif
 
 
-inline void *
+void *
 _SCI_MALLOC(size_t size, const char *file, int line, const char *funct)
 {
 	void *res;
@@ -70,7 +70,7 @@ _SCI_MALLOC(size_t size, const char *file, int line, const char *funct)
 }
 
 
-inline void *
+void *
 _SCI_CALLOC(size_t num, size_t size, const char *file, int line, const char *funct)
 {
 	void *res;
@@ -82,7 +82,7 @@ _SCI_CALLOC(size_t num, size_t size, const char *file, int line, const char *fun
 }
 
 
-inline void *
+void *
 _SCI_REALLOC(void *ptr, size_t size, const char *file, int line, const char *funct)
 {
 	void *res;
@@ -94,7 +94,7 @@ _SCI_REALLOC(void *ptr, size_t size, const char *file, int line, const char *fun
 }
 
 
-inline void
+void
 _SCI_FREE(void *ptr, const char *file, int line, const char *funct)
 {
 #ifdef MALLOC_DEBUG
@@ -111,7 +111,7 @@ _SCI_FREE(void *ptr, const char *file, int line, const char *funct)
 }
 
 
-inline void *
+void *
 _SCI_MEMDUP(const void *ptr, size_t size, const char *file, int line, const char *funct)
 {
 	void *res;
@@ -131,7 +131,7 @@ _SCI_MEMDUP(const void *ptr, size_t size, const char *file, int line, const char
 }
 
 
-inline char *
+char *
 _SCI_STRDUP(const char *src, const char *file, int line, const char *funct)
 {
 	void *res;
@@ -146,11 +146,11 @@ _SCI_STRDUP(const char *src, const char *file, int line, const char *funct)
 		BREAKPOINT();
 	}
 	ALLOC_MEM((res = strdup(src)), strlen(src), file, line, funct)
-	return res;
+	return (char*)res;
 }
 
 
-inline char *
+char *
 _SCI_STRNDUP(const char *src, size_t length, const char *file, int line, const char *funct)
 {
 	void *res;
@@ -168,7 +168,7 @@ _SCI_STRNDUP(const char *src, size_t length, const char *file, int line, const c
 	}
 	ALLOC_MEM((res = malloc(rlen)), rlen, file, line, funct)
 
-	strres = res;
+	strres = (char*)res;
 	strncpy(strres, src, rlen);
 	strres[rlen - 1] = 0;
 
@@ -247,7 +247,7 @@ debug_win32_memory(int dbg_setting)
 extern void *
 sci_refcount_alloc(size_t length)
 {
-	guint32 *data = sci_malloc(REFCOUNT_OVERHEAD + length);
+	guint32 *data = (guint32*)sci_malloc(REFCOUNT_OVERHEAD + length);
 #ifdef TRACE_REFCOUNT
 fprintf(stderr, "[] REF: Real-alloc at %p\n", data);
 #endif
@@ -287,7 +287,7 @@ fprintf(stderr, "[] REF: Dec'ing %p (prev ref=%d) OK=%d\n", data, REFCOUNT(data)
 	if (!REFCOUNT_CHECK(data)) {
 		BREAKPOINT();
 	} else if (--REFCOUNT(data) == 0) {
-		guint32 *fdata = data;
+		guint32 *fdata = (guint32*)data;
 
 		fdata[-1] = REFCOUNT_MAGIC_DEAD_1;
 		fdata[-3] = REFCOUNT_MAGIC_DEAD_2;

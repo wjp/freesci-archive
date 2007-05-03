@@ -48,8 +48,8 @@ gfx_resstate_t *
 gfxr_new_resource_manager(int version, gfx_options_t *options,
 			  gfx_driver_t *driver, void *misc_payload)
 {
-	gfx_resstate_t *state = sci_malloc(sizeof(gfx_resstate_t));
-	int i;
+	gfx_resstate_t *state = (gfx_resstate_t*)sci_malloc(sizeof(gfx_resstate_t));
+	int ii;
 
 	state->version = version;
 	state->options = options;
@@ -57,7 +57,8 @@ gfxr_new_resource_manager(int version, gfx_options_t *options,
 	state->misc_payload = misc_payload;
 
 	state->tag_lock_counter = state->lock_counter = 0;
-	for (i = 0; i < GFX_RESOURCE_TYPES_NR; i++) {
+	for (ii = 0; ii < GFX_RESOURCE_TYPES_NR; ii++) {
+		gfx_resource_type_t i = (gfx_resource_type_t) ii;
 		sbtree_t *tree;
 		int entries_nr;
 		int *resources = gfxr_interpreter_get_resources(state, i, version,
@@ -254,9 +255,10 @@ gfxr_free_tagged_resources(gfx_driver_t *driver, gfx_resstate_t *state)
 			        gfx_xlate_pixmap(res->scaled_data.pic->entry, mode, filter); \
                 } \
 	}
+
 static gfxr_pic_t *
 gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled,
-		      int force, gfx_mode_t *mode, int filter, int endianize,
+		      int force, gfx_mode_t *mode, gfx_xlate_filter_t filter, int endianize,
 		      gfx_options_t *options)
 {
 	XLATE_AS_APPROPRIATE(GFX_MASK_VISUAL, visual_map);
@@ -276,7 +278,7 @@ gfxr_pic_t *
 gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_palette, int scaled)
 {
 	gfxr_pic_t *npic = NULL;
-	int restype = GFX_RESOURCE_TYPE_PIC;
+	gfx_resource_type_t restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version,
@@ -351,7 +353,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 			pic->priority_map = gfx_pixmap_scale_index_data(pic->priority_map, state->driver->mode);
 
 		if (!res) {
-			res = sci_malloc(sizeof(gfx_resource_t));
+			res = (gfx_resource_t*)sci_malloc(sizeof(gfx_resource_t));
 			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->options->buffer_pics_nr;
 			sbtree_set(tree, nr, (void *) res);
@@ -422,7 +424,7 @@ gfxr_pic_t *
 gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int flags,
 		int old_default_palette, int default_palette, int scaled)
 {
-	int restype = GFX_RESOURCE_TYPE_PIC;
+	gfx_resource_type_t restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfxr_pic_t *pic = NULL;
 	gfx_resource_t *res = NULL;
@@ -482,7 +484,7 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 gfxr_view_t *
 gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel, int palette)
 {
-	int restype = GFX_RESOURCE_TYPE_VIEW;
+	gfx_resource_type_t restype = GFX_RESOURCE_TYPE_VIEW;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version,
@@ -504,7 +506,7 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel, int palette)
 			return NULL;
 
 		if (!res) {
-			res = sci_malloc(sizeof(gfx_resource_t));
+			res = (gfx_resource_t*)sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.view = NULL;
 			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
@@ -553,7 +555,7 @@ extern gfx_bitmap_font_t gfxfont_6x10;
 gfx_bitmap_font_t *
 gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 {
-	int restype = GFX_RESOURCE_TYPE_FONT;
+	gfx_resource_type_t restype = GFX_RESOURCE_TYPE_FONT;
 	sbtree_t *tree = NULL;
 	gfx_resource_t *res = NULL;
 	int hash;
@@ -581,7 +583,7 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 			return NULL;
 
 		if (!res) {
-			res = sci_malloc(sizeof(gfx_resource_t));
+			res = (gfx_resource_t*)sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.font = NULL;
 			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
@@ -607,7 +609,7 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 gfx_pixmap_t *
 gfxr_get_cursor(gfx_resstate_t *state, int nr)
 {
-	int restype = GFX_RESOURCE_TYPE_CURSOR;
+	gfx_resource_type_t restype = GFX_RESOURCE_TYPE_CURSOR;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version,
@@ -626,7 +628,7 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr)
 			return NULL;
 
 		if (!res) {
-			res = sci_malloc(sizeof(gfx_resource_t));
+			res = (gfx_resource_t*)sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.pointer = NULL;
 			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->tag_lock_counter;

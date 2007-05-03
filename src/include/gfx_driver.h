@@ -44,7 +44,6 @@ typedef enum {
 #define GFX_CAPABILITY_COLOR_MOUSE_POINTER (1<<2)
 #define GFX_CAPABILITY_PIXMAP_REGISTRY (1<<3)
 #define GFX_CAPABILITY_SCALEABLE_PIXMAPS (1<<4)
-#define GFX_CAPABILITY_PIXMAP_GRABBING (1<<5)
 #define GFX_CAPABILITY_STIPPLED_LINES (1<<6)
 #define GFX_CAPABILITY_MOUSE_SUPPORT (1<<7)
 #define GFX_CAPABILITY_POINTER_PIXMAP_REGISTRY (1<<8)
@@ -112,11 +111,9 @@ typedef struct _gfx_driver { /* Graphics driver */
 	** GFX_CAPABILITY_SHADING: draw_filled_rect() supports drawing shaded
 	**    rectangles.
 	** GFX_CAPABILITY_MOUSE_POINTER: The driver has built-in support for mouse
-	**    pointers (monochrome or colored). If not set, GFX_CAPABILITY_PIXMAP_
-	**    GRABBING must be supported.
+	**    pointers (monochrome or colored).
 	** GFX_CAPABILITY_COLOR_MOUSE_POINTER: The driver has built-in support for
-	**    colored mouse pointers. If not available, GFX_CAPABILITY_PIXMAP_
-	**    GRABBING has to be supported.
+	**    colored mouse pointers.
 	** GFX_CAPABILITY_PIXMAP_REGISTRY: System provides a pixmap registry. The
 	**    invoking functions will assume that all pixmaps MUST be registered;
 	**    if this flag is not set, it assumes that pixmaps MUST NOT be
@@ -129,10 +126,6 @@ typedef struct _gfx_driver { /* Graphics driver */
 	** GFX_CAPABILITY_SCALEABLE_PIXMAPS: Pixmap scaling is fully supported.
 	**    If this capability is flag is set, all pixmaps passed to the driver
 	**    will be unscaled.
-	** GFX_CAPABILITY_PIXMAP_GRABBING: The driver supports grabbing images from
-	**    the back buffer. This option MUST be available if no colored
-	**    mouse pointer support (or no mouse pointer support at all) are
-	**    available.
 	** GFX_CAPABILITY_STIPPLED_LINES: The driver is able to draw stippled lines
 	**    horizontally and vertically (xl = 0 or yl = 0).
 	** GFX_CAPABILITY_MOUSE_SUPPORT: There is some support for mouse (or similar)
@@ -150,7 +143,7 @@ typedef struct _gfx_driver { /* Graphics driver */
 	**    provided by the underlying windowing or operating system.
 	*/
 
-	int debug_flags; /* Driver debug flags */
+	unsigned int debug_flags; /* Driver debug flags */
 
 
 	/*** Initialization ***/
@@ -299,7 +292,7 @@ typedef struct _gfx_driver { /* Graphics driver */
 	** Returns   : (int) GFX_OK, GFX_FATAL, or GFX_ERROR for invalid map values
 	** pxm may be assumed to be empty and pre-allocated with an appropriate
 	** memory size.
-	** This function is optional if GFX_CAPABILITY_PIXMAP_GRABBING is not set.
+	** This function is now mandatory.
 	*/
 
 

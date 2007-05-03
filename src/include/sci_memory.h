@@ -162,7 +162,7 @@ do {\
 
 /********** memory allocation routines **********/
 
-extern scim_inline void *
+extern void *
 _SCI_MALLOC(size_t size, const char *file, int line, const char *funct);
 /* Allocates the specified amount of memory.
 ** Parameters: (size_t) size: Number of bytes to allocate
@@ -177,7 +177,7 @@ _SCI_MALLOC(size_t size, const char *file, int line, const char *funct);
 ** If the call fails, behaviour is dependent on the definition of SCI_ALLOC.
 */
 
-extern scim_inline void *
+extern void *
 _SCI_CALLOC(size_t num, size_t size, const char *file, int line, const char *funct);
 /* Allocates num * size bytes of zeroed-out memory.
 ** Parameters: (size_t) num: Number of elements to allocate
@@ -188,7 +188,7 @@ _SCI_CALLOC(size_t num, size_t size, const char *file, int line, const char *fun
 ** See _SCI_MALLOC() for more information if call fails.
 */
 
-extern scim_inline void *
+extern void *
 _SCI_REALLOC(void *ptr, size_t size, const char *file, int line, const char *funct);
 /* Increases the size of an allocated memory chunk.
 ** Parameters: (void *) ptr: The original pointer
@@ -202,7 +202,7 @@ _SCI_REALLOC(void *ptr, size_t size, const char *file, int line, const char *fun
 ** See _SCI_MALLOC() for more information if call fails.
 */
 
-extern scim_inline void
+extern void
 _SCI_FREE(void *ptr, const char *file, int line, const char *funct);
 /* Frees previously allocated memory chunks
 ** Parameters: (void *) ptr: The pointer to free
@@ -210,7 +210,7 @@ _SCI_FREE(void *ptr, const char *file, int line, const char *funct);
 ** Returns   : (void)
 */
 
-extern scim_inline void *
+extern void *
 _SCI_MEMDUP(const void *src, size_t size, const char *file, int line, const char *funct);
 /* Duplicates a chunk of memory
 ** Parameters: (void *) src: Pointer to the data to duplicate
@@ -222,7 +222,7 @@ _SCI_MEMDUP(const void *src, size_t size, const char *file, int line, const char
 ** See _SCI_MALLOC() for more information if call fails.
 */
 
-extern scim_inline char *
+extern char *
 _SCI_STRDUP(const char *src, const char *file, int line, const char *funct);
 /* Duplicates a string.
 ** Parameters: (const char *) src: The original pointer
@@ -234,7 +234,7 @@ _SCI_STRDUP(const char *src, const char *file, int line, const char *funct);
 */
 
 
-extern scim_inline char *
+extern char *
 _SCI_STRNDUP(const char *src, size_t length, const char *file, int line, const char *funct);
 /* Copies a string into a newly allocated memory part, up to a certain length.
 ** Parameters: (char *) src: The source string

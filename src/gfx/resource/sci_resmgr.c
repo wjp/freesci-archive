@@ -33,7 +33,7 @@
 #include <gfx_sci.h>
 
 int
-gfxr_interpreter_options_hash(gfx_resource_types_t type, int version,
+gfxr_interpreter_options_hash(gfx_resource_type_t type, int version,
 			      gfx_options_t *options,
 			      void *internal, int palette)
 {
@@ -182,7 +182,7 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 		    result=gfxr_draw_view1(resid, res->data, res->size); 
 		    if (!result->colors)
 		    {
-			result->colors = malloc(sizeof(gfx_pixmap_color_t) * state->static_palette_entries);
+			result->colors = (gfx_pixmap_color_t*)sci_malloc(sizeof(gfx_pixmap_color_t) * state->static_palette_entries);
 			memset(result->colors, 0, sizeof(gfx_pixmap_color_t) * state->static_palette_entries);
 			result->colors_nr = state->static_palette_entries;
 		    }
@@ -230,7 +230,7 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr, void *internal)
 
 
 int *
-gfxr_interpreter_get_resources(gfx_resstate_t *state, gfx_resource_types_t type,
+gfxr_interpreter_get_resources(gfx_resstate_t *state, gfx_resource_type_t type,
 			       int version, int *entries_nr, void *internal)
 {
 	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
@@ -261,7 +261,7 @@ gfxr_interpreter_get_resources(gfx_resstate_t *state, gfx_resource_types_t type,
 
 	}
 
-	resources = sci_malloc(sizeof(int) * top);
+	resources = (int*)sci_malloc(sizeof(int) * top);
 
 	for (i = 0; i < top; i++)
 		if (scir_test_resource(resmgr, restype, i))

@@ -1,3 +1,42 @@
+2007-04-25  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/kgraphics.c (kNewWindow): Set bgcolor mask at the
+	right point, so that we don't wind up with transparent windows
+
+	* src/include/gfx_driver.h: Pixmap grabbing support is now
+	mandatory
+
+	* src/gfx/drivers/sdl_driver.c: Ensured that palettes are set on
+	all surfaces before blitting, thereby making the driver work on
+	8bpp
+
+	* src/gfx/operations.c (_gfxop_clip): Negative xl, yl are no
+	longer allowed now.  Fixed disjunction in return to conjunction,
+	to properly indicate whether result is empty in all cases.
+	Effectively, the former point fixed gfx_test.
+
+	* src/gfx/gfx_tools.c (gfx_copy_pixmap_box_i): Added sanity check
+	to fix segfault during gfx_test
+
+2007-04-24  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* Applied much of Jordi's other patches, and cleaned up things all
+	over the place.
+
+2007-04-23  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/Makefile.am (libsciengine_a_SOURCES): Eliminated
+	dependence on savegame.c (no longer used)
+
+	* Applied Patch #3 out of Jordi's patch set
+
+	* src/include/kernel.h (kernel_dereference_char_pointer):
+	Implemented Patch #2 out of Jordi's set of patches by using a
+	simple preprocessor macro (should keep the code more readable).
+	
+	* Applied Patch #1 out of Jordi Vilalta's set of nine FreeSCI
+	patches, plus minor cleanups of memory operation usage
+
 2007-03-11  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/seg_manager.c: A bit of refactoring work.

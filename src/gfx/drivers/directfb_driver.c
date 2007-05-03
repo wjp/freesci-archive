@@ -1009,7 +1009,6 @@ gfx_driver_t gfx_driver_dfb = {
 	NULL,
 	0, 0,
 	GFX_CAPABILITY_MOUSE_SUPPORT
-	| GFX_CAPABILITY_PIXMAP_GRABBING
 	| GFX_CAPABILITY_FINE_LINES,
 	0,
 	scidfb_set_parameter,

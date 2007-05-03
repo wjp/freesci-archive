@@ -33,8 +33,8 @@
 reg_t
 kAddMenu(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *name = kernel_dereference_bulk_pointer(s, argv[0], 0);
-	char *contents = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *name = kernel_dereference_char_pointer(s, argv[0], 0);
+	char *contents = kernel_dereference_char_pointer(s, argv[1], 0);
 
 	menubar_add_menu(s->gfx_state, s->menubar, name,
 			 contents, s->titlebar_port->font_nr, argv[1]);
@@ -74,8 +74,10 @@ kDrawStatus(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int fgcolor = SKPV_OR_ALT(1, s->status_bar_foreground);
 	int bgcolor = SKPV_OR_ALT(2, s->status_bar_background);
 
-	s->titlebar_port->color.visual=*(get_pic_color(s, fgcolor));
-	s->titlebar_port->bgcolor.visual=*(get_pic_color(s, bgcolor));
+	s->titlebar_port->color.visual = *(get_pic_color(s, fgcolor));
+	s->titlebar_port->color.mask = GFX_MASK_VISUAL;
+	s->titlebar_port->bgcolor.visual = *(get_pic_color(s, bgcolor));
+	s->titlebar_port->bgcolor.mask = GFX_MASK_VISUAL;
 
 	s->status_bar_foreground=fgcolor;
 	s->status_bar_background=bgcolor;
@@ -86,7 +88,7 @@ kDrawStatus(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 
 	if (text.segment)
-		s->status_bar_text = sci_strdup(kernel_dereference_bulk_pointer(s, text, 0));
+		s->status_bar_text = sci_strdup(kernel_dereference_char_pointer(s, text, 0));
 
 	sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text, fgcolor, bgcolor);
 
@@ -152,6 +154,8 @@ struct {
 	{"Even more FreeSCI hackers & contributors",
 	 "Johannes Manhave\nDocument format translation"
 	 "\n\n"
+	 "Jordi Vilalta\nNumerous code clean-up patches"
+	 "\n\n"
 	 "Lars Skovlund\nProject mainenance, most documentation, bugfixes, SCI1 support"
 	 "\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes"
@@ -161,10 +165,10 @@ struct {
 	 "Paul David Doherty\nGame version information"
 	 "\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements"
-	 "\n\n"
-	 "Rainer Canavan\nIRIX MIDI driver and bug fixes"
 	 ,0, 15},
 	{"Still more of them",
+	 "Rainer Canavan\nIRIX MIDI driver and bug fixes"
+	 "\n\n"
 	 "Rainer De Temple\nSCI research"
 	 "\n\n"
 	 "Ravi I.\nSCI0 sound resource specification"
@@ -176,10 +180,10 @@ struct {
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research"
 	 "\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes"
-	 "\n\n"
-	 "Robey Pointer\nBug tracking system hosting"
 	 ,0, 15},
 	{"Is there no end to these contributors?",
+	 "Robey Pointer\nBug tracking system hosting"
+	 "\n\n"
 	 "Sergey Lapin\nPort of Carl's type 2 decompression code"
 	 "\n\n"
 	 "Solomon Peachy\nSDL ports and much of the sound subsystem"

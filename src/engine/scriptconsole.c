@@ -529,7 +529,7 @@ parse_reg_t(state_t *s, char *str, reg_t *dest, int addresses_only)
 }
 
 void
-con_parse (state_t *s, char *command)
+con_parse (state_t *s, const char *command)
 {
 	int quote = 0;		/* quoting? */
 	int done = 0;			/* are we done yet? */
@@ -580,7 +580,7 @@ con_parse (state_t *s, char *command)
 				if (!onvar) {
 					onvar = 1;
 					if (cmd_paramlength == parammem)
-						cmd_params = sci_realloc(cmd_params,
+						cmd_params = (cmd_param_t*)sci_realloc(cmd_params,
 									 sizeof (cmd_param_t)
 									 * (parammem += 8));
 			    
@@ -1179,7 +1179,7 @@ c_hexgrep (state_t * s)
     return(-1);
   }
 
-  seekstr = sci_malloc (seeklen = (cmd_paramlength - 1));
+  seekstr = (unsigned char*)sci_malloc (seeklen = (cmd_paramlength - 1));
 
   if (NULL == seekstr)
   {

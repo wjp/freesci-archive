@@ -74,7 +74,7 @@ f_open_mirrored(state_t *s, char *fname)
 
 	fsize = sci_fd_size(fd);
 	if (fsize > 0) {
-		buf = sci_malloc(fsize);
+		buf = (char*)sci_malloc(fsize);
 		read(fd, buf, fsize);
 	}
 
@@ -152,7 +152,7 @@ file_open(state_t *s, char *filename, int mode)
 		retval++;
 
 	if (retval == s->file_handles_nr) /* Hit size limit => Allocate more space */
-		s->file_handles = sci_realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
+		s->file_handles = (FILE**)sci_realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
 
 	s->file_handles[retval] = file;
 
@@ -162,7 +162,7 @@ file_open(state_t *s, char *filename, int mode)
 reg_t
 kFOpen(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  char *name = kernel_dereference_bulk_pointer(s, argv[0], 0);
+  char *name = kernel_dereference_char_pointer(s, argv[0], 0);
   int mode = UKPV(1);
 
   file_open(s, name, mode);
@@ -233,7 +233,7 @@ void fwrite_wrapper(state_t *s, int handle, char *data, int length)
 reg_t kFPuts(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int handle = UKPV(0);
-	char *data = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *data = kernel_dereference_char_pointer(s, argv[1], 0);
 
 	fputs_wrapper(s, handle, strlen(data) + 1, data);
 	return s->r_acc;
@@ -302,7 +302,7 @@ static char *
 _chdir_savedir(state_t *s)
 {
 	char *cwd = sci_getcwd();
-	char *save_dir = kernel_dereference_bulk_pointer(s, 
+	char *save_dir = kernel_dereference_char_pointer(s, 
 			make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR), 0);
 
 	if (chdir(save_dir) && sci_mkpath(save_dir)) {
@@ -335,7 +335,7 @@ _chdir_restoredir(char *dir)
 reg_t
 kFGets(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  char *dest = kernel_dereference_bulk_pointer(s, argv[0], 0);
+  char *dest = kernel_dereference_char_pointer(s, argv[0], 0);
   int maxsize = UKPV(1);
   int handle = UKPV(2);
 
@@ -351,7 +351,7 @@ reg_t
 kGetCWD(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	char *wd = sci_getcwd();
-	char *targetaddr = kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *targetaddr = kernel_dereference_char_pointer(s, argv[0], 0);
 
 	strncpy(targetaddr, wd, MAX_SAVE_DIR_SIZE - 1);
 	targetaddr[MAX_SAVE_DIR_SIZE - 1] = 0; /* Terminate */
@@ -440,22 +440,22 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, reg_t *argv)
 	switch(mode) {
 
 	case K_DEVICE_INFO_GET_DEVICE: {
-		char *output_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
+		char *output_s = kernel_dereference_char_pointer(s, argv[2], 0);
 
 		strcpy(output_s, "/");
 	}
 		break;
 
 	case K_DEVICE_INFO_GET_CURRENT_DEVICE: {
-		char *output_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
+		char *output_s = kernel_dereference_char_pointer(s, argv[1], 0);
 
 		strcpy(output_s, "/");
 	}
 		break;
 
 	case K_DEVICE_INFO_PATHS_EQUAL: {
-		char *path1_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
-		char *path2_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
+		char *path1_s = kernel_dereference_char_pointer(s, argv[1], 0);
+		char *path2_s = kernel_dereference_char_pointer(s, argv[2], 0);
 
 #ifndef HAVE_FNMATCH_H
 #ifndef _DOS
@@ -495,8 +495,8 @@ kGetSaveDir(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kCheckFreeSpace(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  char *path = kernel_dereference_bulk_pointer(s, argv[0], 0);
-  char *testpath = sci_malloc(strlen(path) + 15);
+  char *path = kernel_dereference_char_pointer(s, argv[0], 0);
+  char *testpath = (char*)sci_malloc(strlen(path) + 15);
   char buf[1024];
   int i;
   int fd;
@@ -557,7 +557,7 @@ char *
 _k_get_savedir_name(int nr)
 {
 	char suffices[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-	char *savedir_name = sci_malloc(strlen(FREESCI_SAVEDIR_PREFIX) + 2);
+	char *savedir_name = (char*)sci_malloc(strlen(FREESCI_SAVEDIR_PREFIX) + 2);
 	assert(nr >= 0);
 	assert(nr < MAX_SAVEGAME_NR);
 	strcpy(savedir_name, FREESCI_SAVEDIR_PREFIX);
@@ -753,12 +753,12 @@ update_savegame_indices(char *gfname)
 reg_t
 kGetSaveFiles(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *game_id = kernel_dereference_bulk_pointer(s, argv[0], 0);
-	char *nametarget = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *game_id = kernel_dereference_char_pointer(s, argv[0], 0);
+	char *nametarget = kernel_dereference_char_pointer(s, argv[1], 0);
 	reg_t nametarget_base = argv[1];
 	reg_t *nameoffsets = kernel_dereference_reg_pointer(s, argv[2], 0);
 	int gfname_len = strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1;
-	char *gfname = sci_malloc(gfname_len);
+	char *gfname = (char*)sci_malloc(gfname_len);
 	int i;
 	char *workdir = _chdir_savedir(s);
 	TEST_DIR_OR_QUIT(workdir);
@@ -949,7 +949,7 @@ kRestoreGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kValidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *pathname = kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *pathname = kernel_dereference_char_pointer(s, argv[0], 0);
 	char cpath[PATH_MAX + 1];
 	getcwd(cpath, PATH_MAX + 1);
 
@@ -976,7 +976,7 @@ kValidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 char *
 write_filename_to_mem(state_t *s, reg_t address, char *string)
 {
-	char *mem = kernel_dereference_bulk_pointer(s, address, 0);
+	char *mem = kernel_dereference_char_pointer(s, address, 0);
 
 	if (string) {
 		memset(mem, 0, 13);
@@ -1035,7 +1035,7 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
 
     case K_FILEIO_OPEN :
     {
-	char *name = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *name = kernel_dereference_char_pointer(s, argv[1], 0);
 	int mode = UKPV(2);
 
 	file_open(s, name, mode);
@@ -1051,7 +1051,7 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     case K_FILEIO_READ_RAW :
     {
 	int handle = UKPV(1);
-	char *dest = kernel_dereference_bulk_pointer(s, argv[2], 0);
+	char *dest = kernel_dereference_char_pointer(s, argv[2], 0);
 	int size = UKPV(3);
 
 	fread_wrapper(s, dest, size, handle);
@@ -1060,7 +1060,7 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     case K_FILEIO_WRITE_RAW :
     {
 	int handle = UKPV(1);
-	char *buf = kernel_dereference_bulk_pointer(s, argv[2], 0);
+	char *buf = kernel_dereference_char_pointer(s, argv[2], 0);
 	int size = UKPV(3);
 
 	fwrite_wrapper(s, handle, buf, size);
@@ -1068,14 +1068,14 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     }
     case K_FILEIO_UNLINK :
     {
-	char *name = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *name = kernel_dereference_char_pointer(s, argv[1], 0);
 
 	unlink(name);
 	break;
     }
     case K_FILEIO_READ_STRING :
     {
-	char *dest = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *dest = kernel_dereference_char_pointer(s, argv[1], 0);
 	int size = UKPV(2);
 	int handle = UKPV(3);
 
@@ -1086,7 +1086,7 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     {
 	int handle = UKPV(1);
 	int size = UKPV(3);
-	char *buf = kernel_dereference_bulk_pointer(s, argv[2], size);
+	char *buf = kernel_dereference_char_pointer(s, argv[2], size);
 
 	if (buf)
 		fputs_wrapper(s, handle, size, buf);
@@ -1103,7 +1103,7 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     }
     case K_FILEIO_FIND_FIRST :
     {
-	char *mask = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *mask = kernel_dereference_char_pointer(s, argv[1], 0);
 	reg_t buf = argv[2];
 	/* int attr = UKPV(3); */ /* We won't use this, Win32 might, though... */
 
@@ -1121,7 +1121,7 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     }
     case K_FILEIO_STAT :
     {
-	char *name = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *name = kernel_dereference_char_pointer(s, argv[1], 0);
 	s->r_acc=make_reg(0, 1-_k_check_file(name, 0));
 	break;
     }

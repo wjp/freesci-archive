@@ -92,8 +92,8 @@ _freeze_time(sfx_state_t *self)
 	/* Freezes the top song delay time */
 	GTimeVal ctime;
 	long delta;
+	
 	song_t *song = self->song;
-
 	sci_get_current_time(&ctime);
 
 	while (song) {
@@ -683,7 +683,7 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 #endif
 	if (!it) {
 		fprintf(stderr, "[SFX] Attempt to add empty song with handle %08lx\n", handle);
-		return;
+		return -1;
 	}
 
 	it->init(it);
@@ -772,7 +772,7 @@ sfx_song_set_fade(sfx_state_t *self, song_handle_t handle,
 		stopmsg[fade->action]);
 #endif
 
-	SIMSG_SEND(song->it, SIMSG_SET_FADE(params));
+	SIMSG_SEND(song->it, SIMSG_SET_FADE((int)params));
 
 	_update(self);
 }

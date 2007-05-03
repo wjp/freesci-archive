@@ -138,7 +138,7 @@ int resourcecmp (const void *first, const void *second)
 void
 _scir_add_altsource(resource_t *res, int file, unsigned int file_offset)
 {
-	resource_source_t *rsrc = sci_malloc(sizeof(resource_source_t));
+	resource_source_t *rsrc = (resource_source_t*)sci_malloc(sizeof(resource_source_t));
 
 	rsrc->next = res->alt_sources;
 	rsrc->file = file;
@@ -166,7 +166,7 @@ static void
 _scir_init_trivial(resource_mgr_t *mgr)
 {
 	mgr->resources_nr = 0;
-	mgr->resources = sci_malloc(1);
+	mgr->resources = (resource_t*)sci_malloc(1);
 }
 
 
@@ -175,7 +175,7 @@ _scir_load_from_patch_file(int fh, resource_t *res, char *filename)
 {
 	int really_read;
 
-	res->data = sci_malloc(res->size);
+	res->data = (unsigned char*)sci_malloc(res->size);
 	really_read = read(fh, res->data, res->size);
 
 	if (really_read < res->size) {
@@ -280,6 +280,8 @@ scir_test_resource(resource_mgr_t *mgr, int type, int number)
 			sizeof(resource_t), resourcecmp);
 }
 
+int sci0_get_compression_method(int resh);
+
 int
 sci_test_view_type(resource_mgr_t *mgr)
 {
@@ -366,7 +368,7 @@ scir_new_resource_manager(char *dir, int version,
 			  char allow_patches, int max_memory)
 {
 	int resource_error = 0;
-	resource_mgr_t *mgr = sci_malloc(sizeof(resource_mgr_t));
+	resource_mgr_t *mgr = (resource_mgr_t*)sci_malloc(sizeof(resource_mgr_t));
 	char *caller_cwd = sci_getcwd();
 	int resmap_version = version;
 

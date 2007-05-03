@@ -83,7 +83,7 @@ sbtree_new(int size, int *keys)
 	if (table_size > 1)
 		--table_size;
 
-	table = sci_calloc(sizeof(sbcell_t), table_size);
+	table = (sbcell_t*)sci_calloc(sizeof(sbcell_t), table_size);
 	for (i = 0; i < table_size; i++)
 		table[i].key = NOT_A_KEY;
 
@@ -92,7 +92,7 @@ sbtree_new(int size, int *keys)
 		return NULL;
 	}
 
-	tree = sci_malloc(sizeof(sbtree_t));
+	tree = (sbtree_t*)sci_malloc(sizeof(sbtree_t));
 
 	if (!tree) {
 		fprintf(stderr,"SBTree: Could not allocate tree structure\n");

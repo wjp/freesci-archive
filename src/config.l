@@ -318,7 +318,7 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 	++cur_section; /* Start new section */
 
 	/* Create new entry... */
-	conf = sci_realloc(conf, sizeof(config_entry_t) * (cur_section + 1));
+	conf = (config_entry_t *) sci_realloc(conf, sizeof(config_entry_t) * (cur_section + 1));
 
 	/* ...and initialize it */
 	memcpy(&(conf[cur_section]), &(conf[0]), sizeof(config_entry_t));
@@ -511,7 +511,7 @@ push_file(char *name)
 	}
 
 	if (yyin) {
-		newfs = malloc(sizeof(struct _file_stack));
+		newfs = (struct _file_stack *) malloc(sizeof(struct _file_stack));
 		newfs->handle = yy_fsci_active_buffer;
 		newfs->name = yy_filename;
 
@@ -589,7 +589,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	char *conf_path;
 	int i;
 
-	conf = sci_malloc(sizeof(config_entry_t));
+	conf = (config_entry_t *) sci_malloc(sizeof(config_entry_t));
 #ifdef SATISFY_PURIFY
 	memset(conf, 0, sizeof(config_entry_t));
 #endif
@@ -684,7 +684,7 @@ config_init(config_entry_t **_conf, char *conffile)
 					return 1;
 				}
 
-			conf_path = sci_malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
+			conf_path = (char *) sci_malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
 			strcpy(conf_path, homedir);
 			strcat(conf_path, "/");
 			strcat(conf_path, FREESCI_GAMEDIR);
@@ -991,7 +991,7 @@ clone_driver_options(driver_option_t *options)
 	if (!options)
 		return NULL;
 
-	retval = sci_malloc(sizeof(driver_option_t));
+	retval = (driver_option_t *) sci_malloc(sizeof(driver_option_t));
 	retval->option = sci_strdup(options->option);
 	retval->value = sci_strdup(options->value);
 	retval->next = clone_driver_options(options->next);
@@ -1007,7 +1007,7 @@ clone_subsystem_options(subsystem_options_t *options)
 	if (!options)
 		return NULL;
 
-	retval = sci_malloc(sizeof(subsystem_options_t));
+	retval = (subsystem_options_t *) sci_malloc(sizeof(subsystem_options_t));
 	retval->name = sci_strdup(options->name);
 	retval->options = clone_driver_options(options->options);
 	retval->next = clone_subsystem_options(options->next);
@@ -1079,7 +1079,7 @@ set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_na
 		subsys_optionsp = &((*subsys_optionsp)->next);
 
 	if (!*subsys_optionsp) {
-		*subsys_optionsp = sci_malloc(sizeof(subsystem_options_t));
+		*subsys_optionsp = (subsystem_options_t *) sci_malloc(sizeof(subsystem_options_t));
 		(*subsys_optionsp)->name = sci_strdup(driver_name);
 		(*subsys_optionsp)->next = NULL;
 		(*subsys_optionsp)->options = NULL;
@@ -1093,7 +1093,7 @@ set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_na
 	if (*driver_optionsp) {
 		sci_free((*driver_optionsp)->value);
 	} else {
-		*driver_optionsp = sci_malloc(sizeof(driver_option_t));
+		*driver_optionsp = (driver_option_t *) sci_malloc(sizeof(driver_option_t));
 		(*driver_optionsp)->option = sci_strdup(option);
 		(*driver_optionsp)->next = NULL;
 	}

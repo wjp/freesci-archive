@@ -276,7 +276,7 @@ gfx_pixmap_color_t *
 get_pic_color(state_t *s, int color)
 {
 	if (s->resmgr->sci_version < SCI_VERSION_01_VGA) 
-		return &(s->ega_colors[color]);
+		return &(s->ega_colors[color].visual);
 
 	if (color < KERNEL_COLORS_NR)
 		return &(KERNEL_COLOR_PALETTE[color]); else
@@ -423,7 +423,7 @@ kShow(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int old_map = s->pic_visible_map;
 
-	s->pic_visible_map = UKPV_OR_ALT(0, 1);
+	s->pic_visible_map = (gfx_map_mask_t) UKPV_OR_ALT(0, 1);
 
 	switch (s->pic_visible_map) {
 
@@ -1057,15 +1057,16 @@ reg_t
 kOnControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int arg = 0;
-	int map, xstart, ystart;
+	gfx_map_mask_t map;
+	int xstart, ystart;
 	int xlen = 1, ylen = 1;
 
 
 	if (argc == 2 || argc == 4)
-		map = 4;
+		map = GFX_MASK_CONTROL;
 	else {
 		arg = 1;
-		map = SKPV(0);
+		map = (gfx_map_mask_t) SKPV(0);
 	}
 
 	ystart = SKPV(arg+1);
@@ -1112,14 +1113,14 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 	SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", SKPV(0));
 
 	if (!s->pics) {
-		s->pics = sci_malloc(sizeof(drawn_pic_t) * (s->pics_nr = 8));
+		s->pics = (drawn_pic_t*)sci_malloc(sizeof(drawn_pic_t) * (s->pics_nr = 8));
 		s->pics_drawn_nr = 0;
 	}
 
 	if (add_to_pic) {
 		if (s->pics_nr == s->pics_drawn_nr) {
 			s->pics_nr += 4;
-			s->pics = sci_realloc(s->pics, sizeof(drawn_pic_t) * s->pics_nr);
+			s->pics = (drawn_pic_t*)sci_realloc(s->pics, sizeof(drawn_pic_t) * s->pics_nr);
 		}
 		s->pics[s->pics_drawn_nr].palette = palette;
 		s->pics[s->pics_drawn_nr++].nr = pic_nr;
@@ -1143,7 +1144,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	s->port = s->picture_port;
 
-	s->pic_priority_table = gfxop_get_pic_metainfo(s->gfx_state);
+	s->pic_priority_table = (int*)gfxop_get_pic_metainfo(s->gfx_state);
 
 	if (sci01_priority_table_flags & 0x2) {
 		if (s->pic_priority_table) {
@@ -1655,7 +1656,7 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 	int view = GET_SEL32V(obj, view);
 	int cel = sign_extend_byte(GET_SEL32V(obj, cel));
 	int loop = sign_extend_byte(GET_SEL32V(obj, loop));
-	int mode;
+	gfx_alignment_t mode;
 
 	int type = GET_SEL32V(obj, type);
 	int state = GET_SEL32V(obj, state);
@@ -1677,7 +1678,7 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 		break;
 
 	case K_CONTROL_TEXT:
-		mode = GET_SEL32V(obj, mode);
+		mode = (gfx_alignment_t) GET_SEL32V(obj, mode);
 
 		SCIkdebug(SCIkGRAPHICS, "drawing text "PREG" to %d,%d, mode=%d\n", PRINT_REG(obj), x, y, mode);
 
@@ -1735,7 +1736,7 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 
 		if (entries_nr) { /* determine list_top, selection, and the entries_list */
 			seeker = text;
-			entries_list = sci_malloc(sizeof(char *) * entries_nr);
+			entries_list = (char**)sci_malloc(sizeof(char *) * entries_nr);
 			for (i = 0; i < entries_nr; i++) {
 				entries_list[i] = seeker;
 				seeker += entry_size	;
@@ -2655,12 +2656,14 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	flags = SKPV(5+argextra);
 
-	bgcolor.mask = 0;
 	priority = SKPV_OR_ALT(6+argextra, -1);
+	bgcolor.mask = 0;
+
 	if (SKPV_OR_ALT(8+argextra, 255) >= 0) {
 		if (s->resmgr->sci_version < SCI_VERSION_01_VGA)
-			bgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(8+argextra, 15))); else
-				bgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(8+argextra, 255)));
+			bgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(8+argextra, 15)));
+		else
+			bgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(8+argextra, 255)));
 		bgcolor.mask = GFX_MASK_VISUAL;
 	}
 
@@ -2679,7 +2682,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 				 fgcolor, bgcolor, s->titlebar_port->font_nr,
 				 white,
 				 black,
-				 argv[4+argextra].segment ? kernel_dereference_bulk_pointer(s, argv[4+argextra], 0) : NULL, 
+				 argv[4+argextra].segment ? kernel_dereference_char_pointer(s, argv[4+argextra], 0) : NULL, 
 				 flags);
 
 	/* PQ3 has the interpreter store underBits implicitly.
@@ -3344,7 +3347,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 	gfxw_port_t *port = (s->port)? s->port : s->picture_port;
 	int update_immediately = 1;
 
-	gfx_color_t *color0, *color1, *bg_color	= {0};
+	gfx_color_t color0, *color1, bg_color;
 	gfx_alignment_t halign = ALIGN_LEFT;
 	rect_t area = gfx_rect(port->draw_pos.x, port->draw_pos.y, 320, 200);
 	int gray = port->gray_text;
@@ -3353,8 +3356,8 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	transparent.mask = 0;
 
-	color0 = &(port->color);
-	bg_color = &(port->bgcolor);
+	color0 = port->color;
+	bg_color = port->bgcolor;
 
 
 	if (textp.segment) {
@@ -3383,7 +3386,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		case K_DISPLAY_SET_ALIGNMENT:
 
-			halign = KP_SINT(argv[argpt++]);
+			halign = (gfx_alignment_t)KP_SINT(argv[argpt++]);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_align(%d)\n", halign);
 			break;
 
@@ -3392,13 +3395,14 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 			temp = KP_SINT(argv[argpt++]);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_color(%d)\n", temp);
 			if ((s->resmgr->sci_version < SCI_VERSION_01_VGA) && temp >= 0 && temp <= 15)
-				color0 = &(s->ega_colors[temp]);
+				color0 = (s->ega_colors[temp]);
 			else 
-				if ((s->resmgr->sci_version >= SCI_VERSION_01_VGA) && temp >= 0 && temp < 256)
-					color0 = get_pic_color(s, temp); 
-				else
+				if ((s->resmgr->sci_version >= SCI_VERSION_01_VGA) && temp >= 0 && temp < 256) {
+					color0.visual = *(get_pic_color(s, temp));
+					color0.mask = GFX_MASK_VISUAL;
+				} else
 					if (temp == -1)
-						color0 = &transparent;
+						color0 = transparent;
 					else
 						SCIkwarn(SCIkWARNING, "Display: Attempt to set invalid fg color %d\n", temp);
 			break;
@@ -3408,13 +3412,14 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 			temp = KP_SINT(argv[argpt++]);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_bg_color(%d)\n", temp);
 			if ((s->resmgr->sci_version < SCI_VERSION_01_VGA) && temp >= 0 && temp <= 15)
-				bg_color = &(s->ega_colors[temp]);
+				bg_color = s->ega_colors[temp];
 			else 
-				if ((s->resmgr->sci_version >= SCI_VERSION_01_VGA) && temp >= 0 && temp <= 256)
-					bg_color = get_pic_color(s, temp); 
-				else
+				if ((s->resmgr->sci_version >= SCI_VERSION_01_VGA) && temp >= 0 && temp <= 256) {
+					bg_color.visual = *get_pic_color(s, temp); 
+					bg_color.mask = GFX_MASK_VISUAL;
+				} else
 					if (temp == -1)
-						bg_color = &transparent;
+						bg_color = transparent;
 					else
 						SCIkwarn(SCIkWARNING, "Display: Attempt to set invalid fg color %d\n", temp);
 			break;
@@ -3469,14 +3474,14 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 
 	if (gray)
-		color1 = bg_color;
+		color1 = &bg_color;
 	else
-		color1 = color0;
+		color1 = &color0;
 
 	assert_primary_widget_lists(s);
 
 	text_handle = gfxw_new_text(s->gfx_state, area, font_nr, text, halign,
-				    ALIGN_TOP, *color0, *color1, *bg_color, 0);
+				    ALIGN_TOP, color0, *color1, bg_color, 0);
 
 	if (!text_handle) {
 		SCIkwarn(SCIkERROR, "Display: Failed to create text widget!\n");

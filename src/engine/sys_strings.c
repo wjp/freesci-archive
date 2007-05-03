@@ -51,7 +51,7 @@ sys_string_acquire(sys_strings_t *strings, int index, char *name, int max_len)
 
 	str->name = strdup(name);
 	str->max_size = max_len;
-	str->value = sci_malloc(max_len + 1);
+	str->value = (char*)sci_malloc(max_len + 1);
 	str->value[0] = 0; /* Set to empty string */
 }
 

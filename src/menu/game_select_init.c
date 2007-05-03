@@ -59,20 +59,6 @@ game_select_gfxop_init_common(gfx_state_t *state, gfx_options_t *options, void *
 	state->visible_map = GFX_MASK_VISUAL;
 	gfxop_set_clip_zone(state, gfx_rect(0, 0, 320, 200));
 
-	if (!state->driver->capabilities & GFX_CAPABILITY_PIXMAP_GRABBING) {
-		if (!state->driver->capabilities & GFX_CAPABILITY_MOUSE_POINTER) {
-			GFXWARN("Graphics driver does not support drawing mouse pointers; disabling mouse input support.\n");
-			state->driver->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
-		}
-/* 		else if (gfxr_interpreter_needs_multicolored_pointers */
-/* 			   (state->version, misc_payload) */
-/* 			   && !state->driver->capabilities & GFX_CAPABILITY_COLOR_MOUSE_POINTER) { */
-/* 			GFXWARN("Graphics driver only supports monochrome mouse pointers, but colored pointers are needed; disabling mouse input support.\n"); */
-/* 			state->driver->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT; */
-/* 		} */
-
-	}
-
 	state->mouse_pointer = state->mouse_pointer_bg = NULL;
 	state->mouse_pointer_visible = 0;
 	state->control_map = gfx_pixmap_alloc_index_data(gfx_new_pixmap(320, 200, GFX_RESID_NONE, 0, 0));

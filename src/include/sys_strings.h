@@ -64,4 +64,10 @@ sys_string_set(sys_strings_t *strings, int index, char *value);
 ** Length clipping is performed.
 */
 
+void
+sys_string_free_all(sys_strings_t *strings);
+/* Deallocates all allocated system strings
+** Parameters: (sys_strings_t *) strings: The string table to deallocate
+*/
+
 #endif /* !_FREESCI_SYSTEM_STRINGS_H_ */

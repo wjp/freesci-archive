@@ -437,9 +437,9 @@ _sci0_check_pcm(sci0_song_iterator_t *self)
 
 	while ((tries--) && (offset < self->size) && (!found_it)) {
 		/* Search through the garbage manually */
-		unsigned char *fc = memchr(self->data + offset,
-					   SCI0_END_OF_SONG,
-					   self->size - offset);
+		unsigned char *fc = (unsigned char*)memchr(self->data + offset,
+							   SCI0_END_OF_SONG,
+							   self->size - offset);
 
 		if (!fc) {
 			fprintf(stderr, SIPFX "Warning: Playing unterminated"
@@ -512,7 +512,7 @@ _sci0_handle_message(sci0_song_iterator_t *self, song_iterator_message_t msg)
 
 		case _SIMSG_BASEMSG_CLONE: {
 			int tsize = sizeof(sci0_song_iterator_t);
-			base_song_iterator_t *mem = sci_malloc(tsize);
+			base_song_iterator_t *mem = (base_song_iterator_t*)sci_malloc(tsize);
 			memcpy(mem, self, tsize);
 			sci_refcount_incref(mem->data);
 #ifdef DEBUG_VERBOSE
@@ -551,7 +551,7 @@ fprintf(stderr, "** CLONE INCREF for new %p from %p at %p\n", mem, self, mem->da
 
 		case _SIMSG_BASEMSG_SET_FADE:
 		{
-			fade_params_t *fp = (struct fade_params_t *) msg.args[0];
+			fade_params_t *fp = (fade_params_t *) msg.args[0];
 			self->fade.action = fp->action;
 			self->fade.final_volume = fp->final_volume;
 			self->fade.ticks_per_step = fp->ticks_per_step;
@@ -656,7 +656,7 @@ _sci1_sample_init(sci1_song_iterator_t *self, int offset)
 
 	CHECK_FOR_END_ABSOLUTE(offset + 10 + length);
 
-	sample = sci_malloc(sizeof(sci1_sample_t));
+	sample = (sci1_sample_t*)sci_malloc(sizeof(sci1_sample_t));
 	sample->delta = begin;
 	sample->size = length;
 	sample->data = self->data + offset + 10;
@@ -1053,7 +1053,7 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 
 		case _SIMSG_BASEMSG_CLONE: {
 			int tsize = sizeof(sci1_song_iterator_t);
-			sci1_song_iterator_t *mem = sci_malloc(tsize);
+			sci1_song_iterator_t *mem = (sci1_song_iterator_t*)sci_malloc(tsize);
 			sci1_sample_t **samplep;
 			int delta = msg.args[0]; /* Delay until next step */
 
@@ -1067,7 +1067,7 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 			/* Clone chain of samples */
 			while (*samplep) {
 				sci1_sample_t *newsample
-					= sci_malloc(sizeof(sci1_sample_t));
+					= (sci1_sample_t*)sci_malloc(sizeof(sci1_sample_t));
 				memcpy(newsample, *samplep,
 				       sizeof(sci1_sample_t));
 				*samplep = newsample;
@@ -1151,7 +1151,7 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 
 		case _SIMSG_BASEMSG_SET_FADE:
 		{
-			fade_params_t *fp = (struct fade_params_t *) msg.args[0];
+			fade_params_t *fp = (fade_params_t *) msg.args[0];
 			self->fade.action = fp->action;
 			self->fade.final_volume = fp->final_volume;
 			self->fade.ticks_per_step = fp->ticks_per_step;
@@ -1248,7 +1248,7 @@ _cleanup_iterator_next(song_iterator_t *self, unsigned char *buf, int *result)
 song_iterator_t *
 new_cleanup_iterator(unsigned int channels)
 {
-	song_iterator_t *it = malloc(sizeof(song_iterator_t));
+	song_iterator_t *it = (song_iterator_t*)sci_malloc(sizeof(song_iterator_t));
 	it->channel_mask = channels;
 	it->ID = 17;
 	it->death_listeners_nr = 0;
@@ -1344,7 +1344,7 @@ song_iterator_t *
 new_fast_forward_iterator(song_iterator_t *capsit, int delta)
 {
 	fast_forward_song_iterator_t *it =
-		sci_malloc(sizeof(fast_forward_song_iterator_t));
+		(fast_forward_song_iterator_t*)sci_malloc(sizeof(fast_forward_song_iterator_t));
 
 	it->ID = 0;
 
@@ -1524,7 +1524,7 @@ _tee_handle_message(tee_song_iterator_t *self, song_iterator_message_t msg)
 
 		case _SIMSG_BASEMSG_CLONE: {
 			tee_song_iterator_t *newit
-				= sci_malloc(sizeof(tee_song_iterator_t));
+				= (tee_song_iterator_t*)sci_malloc(sizeof(tee_song_iterator_t));
 			memcpy(newit, self, sizeof(tee_song_iterator_t));
 
 			if (newit->children[TEE_LEFT].it)
@@ -1620,7 +1620,7 @@ songit_new_tee(song_iterator_t *left, song_iterator_t *right, int may_destroy)
 	int i;
 	int firstfree = 1; /* First free channel */
 	int incomplete_map = 0;
-	tee_song_iterator_t *it = sci_malloc(sizeof(tee_song_iterator_t));
+	tee_song_iterator_t *it = (tee_song_iterator_t*)sci_malloc(sizeof(tee_song_iterator_t));
 
 	it->ID = 0;
 
@@ -1777,7 +1777,7 @@ songit_new(unsigned char *data, unsigned int size, int type, songit_id_t id)
 
 	    case SCI_SONG_ITERATOR_TYPE_SCI0:
 		    /**-- Playing SCI0 sound resources --**/
-		    it = sci_malloc(sizeof(sci0_song_iterator_t));
+		    it = (base_song_iterator_t*)sci_malloc(sizeof(sci0_song_iterator_t));
 		    it->channel_mask = 0xffff; /* Allocate all channels by default */
 
 		    for (i = 0; i < MIDI_CHANNELS; i++)
@@ -1797,7 +1797,7 @@ songit_new(unsigned char *data, unsigned int size, int type, songit_id_t id)
 
 	    case SCI_SONG_ITERATOR_TYPE_SCI1:
 		    /**-- SCI01 or later sound resource --**/
-		    it = sci_malloc(sizeof(sci1_song_iterator_t));
+		    it = (base_song_iterator_t*)sci_malloc(sizeof(sci1_song_iterator_t));
 		    it->channel_mask = 0; /* Defer channel allocation */
 
 		    for (i = 0; i < MIDI_CHANNELS; i++)
@@ -1824,7 +1824,7 @@ songit_new(unsigned char *data, unsigned int size, int type, songit_id_t id)
 	it->delegate = NULL;
 	it->death_listeners_nr = 0;
 
-	it->data = sci_refcount_memdup(data, size);
+	it->data = (unsigned char*)sci_refcount_memdup(data, size);
 	it->size = size;
 
 	it->init((song_iterator_t *) it);

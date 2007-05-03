@@ -197,6 +197,7 @@ reg_t *
 kernel_dereference_reg_pointer(struct _state *s, reg_t pointer, int entries);
 byte *
 kernel_dereference_bulk_pointer(struct _state *s, reg_t pointer, int entries);
+#define kernel_dereference_char_pointer(state, pointer, entries) (char*)kernel_dereference_bulk_pointer(state, pointer, entries)
 /* Dereferences a heap pointer
 ** Parameters: (state_t *) s: The state to operate on
 **             (reg_t ) pointer: The pointer to dereference

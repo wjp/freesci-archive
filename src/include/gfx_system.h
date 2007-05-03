@@ -387,6 +387,7 @@ enum gfx_return_value_t {
 
 
 typedef enum {/* Map masks */
+	GFX_MASK_NONE = 0,
 	GFX_MASK_VISUAL = 1,
 	GFX_MASK_PRIORITY = 2,
 	GFX_MASK_CONTROL = 4

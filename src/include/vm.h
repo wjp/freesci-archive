@@ -179,7 +179,7 @@ typedef struct {
 
 typedef struct {
 	int nr; /* Script number */
-	char* buf; /* Static data buffer, or NULL if not used */
+	byte* buf; /* Static data buffer, or NULL if not used */
 	size_t buf_size;
 
 	byte *synonyms; /* Synonyms block  or 0 if not present*/
@@ -244,7 +244,7 @@ DECLARE_HEAPENTRY(hunk)
 typedef struct {
 	int size;
 	char *description;
-	char *buf;
+	byte *buf;
 } dynmem_t; /* Free-style memory */
 
 typedef struct _mem_obj {
@@ -426,7 +426,7 @@ extern int script_step_counter;
 /* Number of steps executed */
 
 
-extern DLLEXTERN char *(*_debug_get_input)(void);
+extern DLLEXTERN const char *(*_debug_get_input)(void);
 /* The function used to get input for debugging */
 
 extern DLLEXTERN int _debugstate_valid;
@@ -533,7 +533,7 @@ vm_handle_fatal_error(struct _state *s, int line, char *file);
 
 void
 script_debug(struct _state *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *objp,
-	     unsigned int *restadjust,
+	     int *restadjust,
 	     seg_id_t *segids, reg_t **variables, reg_t **variables_base,
 	     int *variables_nr,
 	     int bp);
@@ -543,7 +543,7 @@ script_debug(struct _state *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_
 **             (stack_ptr_t *) sp: Pointer to the stack pointer
 **             (stack_ptr_t *) pp: Pointer to the frame pointer
 **             (reg_t *) objp: Pointer to the object base pointer
-**             (unsigned int *) restadjust: Pointer to the &rest adjustment value
+**             (int *) restadjust: Pointer to the &rest adjustment value
 **	       (seg_id_t *) segids: four-element array containing segment IDs for locals etc.
 **	       (reg_t **) variables: four-element array referencing registers for globals etc.
 **	       (reg_t **) variables_base: four-element array referencing
@@ -616,11 +616,11 @@ script_get_segment(struct _state *s, int script_id, int load);
 */
 
 reg_t
-script_lookup_export(struct _state *s, int script_nr, int export);
+script_lookup_export(struct _state *s, int script_nr, int export_index);
 /* Looks up an entry of the exports table of a script
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script to look up in
-** Returns   : (int) export: index of the export entry to look up
+** Returns   : (int) export_index: index of the export entry to look up
 */
 
 int

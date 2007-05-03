@@ -219,7 +219,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 
 	resources_nr = fsize / SCI0_RESMAP_ENTRIES_SIZE;
 
-	resources = sci_calloc(resources_nr, sizeof(resource_t));
+	resources = (resource_t*)sci_calloc(resources_nr, sizeof(resource_t));
 	/* Sets valid default values for most entries */
 
 	do {
@@ -302,7 +302,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	}
 
 	if (resource_index < resources_nr)
-		resources = sci_realloc(resources, sizeof(resource_t) * resource_index);
+		resources = (resource_t*)sci_realloc(resources, sizeof(resource_t) * resource_index);
 
 	*resource_p = resources;
 	*resource_nr_p = resource_index;
@@ -356,7 +356,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	int resource_index = 0;
 	int max_resfile_nr = 0;
 	int ofs, header_size;
-	int *types = sci_malloc(sizeof(int) * (sci1_last_resource+1));
+	int *types = (int*)sci_malloc(sizeof(int) * (sci1_last_resource+1));
 	int i;
 	byte buf[SCI1_RESMAP_ENTRIES_SIZE];
 	int lastrt;
@@ -396,7 +396,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 
 	resources_nr = (fsize - header_size) / entrysize;
 
-	resources = sci_calloc(resources_nr, sizeof(resource_t));
+	resources = (resource_t*)sci_calloc(resources_nr, sizeof(resource_t));
 
 	for (i=0; i<resources_nr; i++)
 	{	

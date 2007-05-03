@@ -71,7 +71,7 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 		return NULL;
 	}
 
-	retval = sci_malloc(sizeof(gfx_pixmap_color_t) * counter);
+	retval = (gfx_pixmap_color_t*)sci_malloc(sizeof(gfx_pixmap_color_t) * counter);
 #ifdef SATISFY_PURIFY
 	memset(retval, 0, sizeof(gfx_pixmap_color_t) * counter);
 #endif

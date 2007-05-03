@@ -522,6 +522,16 @@ gfxw_picviewize_dynview(gfxw_dyn_view_t *dynview);
 ** The only changes are in function and type variables, actually.
 */
 
+void
+gfxw_port_auto_restore_background(gfxw_visual_t *visual, gfxw_port_t *window, rect_t auto_rect);
+/* Tags a window widget as automatically restoring the visual background upon removal
+** Parameters: (gfx_visual_t *) visual: The base visual
+**             (gfxw_port_t *) window: The window to tag
+**             (rect_t) auto_rect: The background to remember
+** Also records the specified background rectangle, for later recovery
+*/
+
+
 gfxw_port_t *
 gfxw_get_chrono_port(gfxw_visual_t *visual, gfxw_list_t **temp_widgets_list, int flags);
 

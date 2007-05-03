@@ -726,13 +726,7 @@ unsigned long len;
 }
 
 void
-#if NeedFunctionPrototypes
 _bdf_memmove(char *dest, char *src, unsigned long bytes)
-#else
-_bdf_memmove(dest, src, bytes)
-char *dest, *src;
-unsigned long bytes;
-#endif
 {
     long i, j;
 
@@ -1734,7 +1728,7 @@ void *call_data, *client_data;
             sw = (unsigned short) ((dw * 72000.0) / (ps * rx));
 
             if (sw != glyph->swidth) {
-                glyph->swidth = sw;
+                glyph->swidth = (unsigned short) sw;
                 if (p->glyph_enc == -1)
                   _bdf_set_glyph_modified(font->umod,
                                           font->unencoded_used - 1);
@@ -4350,7 +4344,7 @@ int bpp;
      * Make the default width about 1.5 smaller than the height.
      */
     font->bbx.height = psize;
-    font->bbx.width = ((double) psize) / 1.5;
+    font->bbx.width = (unsigned short) ((double) psize) / 1.5;
 
     /*
      * Now determine the default ascent and descent assuming a
@@ -4452,7 +4446,7 @@ bdf_font_t *font;
      * Make the default width about 1.5 smaller than the height.
      */
     font->bbx.height = psize;
-    font->bbx.width = ((double) psize) / 1.5;
+    font->bbx.width = (unsigned short) ((double) psize) / 1.5;
 
     /*
      * Now determine the default ascent and descent assuming a
@@ -5806,7 +5800,8 @@ char *foundry, *family;
     unsigned short awidth, pxsize;
     bdf_property_t *pp;
     bdf_glyph_t *gp;
-    char spacing, *name, *val, *np, nbuf[256];
+    char spacing, nbuf[256], *np, *name;
+    const char *val;
 
     if (font == 0 || bdf_has_xlfd_name(font))
       return 0;

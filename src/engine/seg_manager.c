@@ -252,7 +252,7 @@ int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr)
 	script_t *scr;
 
 	sm_set_locals_size(mem, s, script_nr);
-	mem->data.script.buf = (char*) sci_malloc (mem->data.script.buf_size);
+	mem->data.script.buf = (byte*) sci_malloc (mem->data.script.buf_size);
 	dbg_print( "mem->data.script.buf ", (int) mem->data.script.buf );
 	if (!mem->data.script.buf) {
 		sm_free_script ( mem );
@@ -660,7 +660,7 @@ sm_hash_segment_data(struct _seg_manager_t* self, int id)
 	if (self->heap[id]->type == MEM_OBJ_LISTS) return 0;
 	if (self->heap[id]->type == MEM_OBJ_NODES) return 0;
 	if (self->heap[id]->type == MEM_OBJ_CLONES) return 0;
-	buf = sm_dereference(self, make_reg(id, 0), &len);
+	buf = (char*)sm_dereference(self, make_reg(id, 0), &len);
 
 	for (i = 0; i < len; i++)
 		hash_code = (hash_code * 19) + *(buf + i);
@@ -792,7 +792,7 @@ sm_script_add_code_block(seg_manager_t *self, reg_t location)
 	if (++scr->code_blocks_nr > scr->code_blocks_allocated)
 	{
 		scr->code_blocks_allocated += DEFAULT_OBJECTS_INCREMENT;
-		scr->code = sci_realloc(scr->code, scr->code_blocks_allocated *
+		scr->code = (code_block_t*)sci_realloc(scr->code, scr->code_blocks_allocated *
 				sizeof(code_block_t));
 	}
 
@@ -879,11 +879,11 @@ sm_script_obj_init0(seg_manager_t *self, reg_t obj_pos)
 
 	if (!scr->objects) {
 		scr->objects_allocated = DEFAULT_OBJECTS;
-		scr->objects = sci_malloc(sizeof(object_t) * scr->objects_allocated);
+		scr->objects = (object_t*)sci_malloc(sizeof(object_t) * scr->objects_allocated);
 	}
 	if (scr->objects_nr == scr->objects_allocated) {
 		scr->objects_allocated += DEFAULT_OBJECTS_INCREMENT;
-		scr->objects = sci_realloc(scr->objects,
+		scr->objects = (object_t*)sci_realloc(scr->objects,
 					   sizeof(object_t)
 					   * scr->objects_allocated);
 								
@@ -921,7 +921,7 @@ sm_script_obj_init0(seg_manager_t *self, reg_t obj_pos)
 			 "Function area extends beyond end of script" );
 
 		obj->variables_nr = variables_nr;
-		obj->variables = sci_malloc(sizeof(reg_t) * variables_nr);
+		obj->variables = (reg_t*)sci_malloc(sizeof(reg_t) * variables_nr);
 
 		obj->methods_nr = functions_nr;
 		obj->base = scr->buf;
@@ -963,7 +963,7 @@ _sm_alloc_locals_segment(seg_manager_t *self, script_t *scr, int count)
 
 		locals = scr->locals_block = &(mobj->data.locals);
 		locals->script_id = scr->nr;
-		locals->locals = sci_calloc(count, sizeof(reg_t));
+		locals->locals = (reg_t*)sci_calloc(count, sizeof(reg_t));
 		locals->nr = count;
 
 		return locals;
@@ -1036,7 +1036,7 @@ sm_script_free_unused_objects(seg_manager_t *self, seg_id_t seg)
 	scr = &(mobj->data.script);
 	if (scr->objects_allocated > scr->objects_nr) {
 		if (scr->objects_nr)
-			scr->objects = sci_realloc(scr->objects, sizeof(object_t)
+			scr->objects = (object_t*)sci_realloc(scr->objects, sizeof(object_t)
 						   * scr->objects_nr);
 		else {
 			if (scr->objects_allocated)
@@ -1050,7 +1050,7 @@ sm_script_free_unused_objects(seg_manager_t *self, seg_id_t seg)
 static inline char *dynprintf(char *msg, ...)
 {
 	va_list argp;
-	char *buf = malloc(strlen(msg) + 100);
+	char *buf = (char*)sci_malloc(strlen(msg) + 100);
 
 	va_start(argp, msg);
 	vsprintf(buf, msg, argp);
@@ -1066,7 +1066,7 @@ sm_allocate_stack(seg_manager_t *self, int size, seg_id_t *segid)
 	mem_obj_t *memobj = alloc_nonscript_segment(self, MEM_OBJ_STACK, segid);
 	dstack_t *retval = &(memobj->data.stack);
 
-	retval->entries = sci_calloc(size, sizeof(reg_t));
+	retval->entries = (reg_t*)sci_calloc(size, sizeof(reg_t));
 	retval->nr = size;
 
 	return retval;
@@ -1276,7 +1276,7 @@ sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr)
 	if (size == 0)
 		mobj->data.dynmem.buf = NULL;
 	else
-		mobj->data.dynmem.buf = sci_malloc(size);
+		mobj->data.dynmem.buf = (byte*) sci_malloc(size);
 
 	mobj->data.dynmem.description = descr;
 
@@ -1741,7 +1741,7 @@ get_seg_interface(seg_manager_t *self, seg_id_t segid)
 		return NULL; /* Invalid segment */
 
 	mobj = self->heap[segid];
-	retval = sci_malloc(sizeof(seg_interface_t));
+	retval = (seg_interface_t*)sci_malloc(sizeof(seg_interface_t));
 	memcpy(retval, seg_interfaces[mobj->type - 1], sizeof (seg_interface_t));
 
 	if (mobj->type != retval->type_id) {

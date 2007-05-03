@@ -31,6 +31,7 @@
 #include <kdebug.h>
 #include <kernel_types.h>
 #include <seg_manager.h>
+#include <gc.h>
 
 #if !defined (_WIN32)
 #include <sys/resource.h>
@@ -387,7 +388,7 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 #endif /* VM_DEBUG_SEND */
 
 		if (++send_calls_nr == (send_calls_allocated - 1))
-			send_calls = sci_realloc(send_calls, sizeof(calls_struct_t)
+			send_calls = (calls_struct_t*)sci_realloc(send_calls, sizeof(calls_struct_t)
 						 * (send_calls_allocated *= 2));
 
 
@@ -535,10 +536,10 @@ add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
 
 	if (!s->execution_stack)
 		s->execution_stack =
-			sci_malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
+			(exec_stack_t*)sci_malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
 
 	if (++(s->execution_stack_pos) == s->execution_stack_size) /* Out of stack space? */
-		s->execution_stack = sci_realloc(s->execution_stack,
+		s->execution_stack = (exec_stack_t*)sci_realloc(s->execution_stack,
 				     sizeof(exec_stack_t) * (s->execution_stack_size += 8));
 
   /*  sciprintf("Exec stack: [%d/%d], origin %d, at %p\n", s->execution_stack_pos,
@@ -1737,7 +1738,7 @@ script_get_segment(state_t *s, int script_nr, int load)
 }
 
 reg_t
-script_lookup_export(state_t *s, int script_nr, int export)
+script_lookup_export(state_t *s, int script_nr, int export_index)
 {
 	seg_id_t seg = script_get_segment(s, script_nr, SCRIPT_GET_DONT_LOAD);
 	mem_obj_t *memobj;
@@ -1759,10 +1760,10 @@ script_lookup_export(state_t *s, int script_nr, int export)
 
 #ifndef DISABLE_VALIDATIONS
 	if (script
-	    && export < script->exports_nr
-	    && export >= 0)
+	    && export_index < script->exports_nr
+	    && export_index >= 0)
 #endif
-		return make_reg(seg, getUInt16((byte *)(script->export_table + export)));
+		return make_reg(seg, getUInt16((byte *)(script->export_table + export_index)));
 #ifndef DISABLE_VALIDATIONS
 	else {
 		CORE_ERROR("EXPORTS", "Export invalid or script missing ");
@@ -1770,13 +1771,16 @@ script_lookup_export(state_t *s, int script_nr, int export)
 			sciprintf("(script.%03d missing)\n", script_nr);
 		else
 			sciprintf("(script.%03d: Sought export %d/%d)\n",
-				  script_nr, export, script->exports_nr);
+				  script_nr, export_index, script->exports_nr);
 		return NULL_REG;
 	}
 #endif
 }
 
 #define INST_LOOKUP_CLASS(id) ((id == 0xffff)? NULL_REG : get_class_address(s, id, SCRIPT_GET_LOCK, reg))
+
+int sm_script_marked_deleted(seg_manager_t* self, int script_nr);
+int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr);
 
 int
 script_instantiate(state_t *s, int script_nr)
@@ -1985,6 +1989,7 @@ reg_t oldpos = obj->variables[SCRIPT_SPECIES_SELECTOR];
 	return reg.segment;		/* instantiation successful */
 }
 
+void sm_mark_script_deleted(seg_manager_t* self, int script_nr);
 
 void
 script_uninstantiate(state_t *s, int script_nr)
@@ -2108,7 +2113,7 @@ _game_run(state_t *s, int restoring)
 				s = successor;
 
 				if (!send_calls_allocated)
-					send_calls = sci_calloc(sizeof(calls_struct_t),
+					send_calls = (calls_struct_t*)sci_calloc(sizeof(calls_struct_t),
 								send_calls_allocated = 16);
 
 				if (script_abort_flag == SCRIPT_ABORT_WITH_REPLAY) {
@@ -2217,7 +2222,7 @@ obj_get_name(struct _state *s, reg_t pos)
 	if (!obj)
 		return "<no such object>";
 	return
-		obj->base + obj->variables[SCRIPT_NAME_SELECTOR].offset;
+		(char*)(obj->base + obj->variables[SCRIPT_NAME_SELECTOR].offset);
 }
 
 

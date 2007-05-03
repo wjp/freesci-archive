@@ -40,8 +40,8 @@ antialiase_simple(gfx_pixmap_t *pixmap, int mask[], int shift_const, gfx_mode_t 
 	char *lastline_p = NULL;
 	char *data_p = (char *) pixmap->data;
 
-	lastline[0] = sci_malloc(line_size);
-	lastline[1] = sci_malloc(line_size);
+	lastline[0] = (char*)sci_malloc(line_size);
+	lastline[1] = (char*)sci_malloc(line_size);
 
 	for (y = 0; y < pixmap->yl; y++) {
 		int visimode = (y > 0 && y+1 < pixmap->yl)? 1 : 0;

@@ -92,7 +92,7 @@ scale_char(byte *dest, byte *src, int width, int height, int newwidth, int xfact
 gfx_bitmap_font_t *
 gfxr_scale_font_unfiltered(gfx_bitmap_font_t *orig_font, gfx_mode_t *mode)
 {
-	gfx_bitmap_font_t *font = sci_malloc(sizeof(gfx_bitmap_font_t));
+	gfx_bitmap_font_t *font = (gfx_bitmap_font_t*)sci_malloc(sizeof(gfx_bitmap_font_t));
 	int height = orig_font->height * mode->yfact;
 	int width = 0;
 	int byte_width;
@@ -114,9 +114,9 @@ gfxr_scale_font_unfiltered(gfx_bitmap_font_t *orig_font, gfx_mode_t *mode)
 	font->height = height;
 	font->line_height = orig_font->line_height * mode->yfact;
 
-	font->widths = sci_malloc(sizeof(int) * orig_font->chars_nr);
+	font->widths = (int*)sci_malloc(sizeof(int) * orig_font->chars_nr);
 	font->char_size = byte_width * height;
-	font->data = sci_malloc(font->chars_nr * font->char_size);
+	font->data = (byte*)sci_malloc(font->chars_nr * font->char_size);
 
 	for (i = 0; i < font->chars_nr; i++) {
 		font->widths[i] = orig_font->widths[i] * mode->xfact;
@@ -174,7 +174,7 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 
 	if (max_width>1) fragments_nr = 3 + (strlen(text) * est_char_width)*3 / (max_width << 1); else fragments_nr = 1;
 
-	fragments = sci_calloc(sizeof(text_fragment_t), fragments_nr);
+	fragments = (text_fragment_t*)sci_calloc(sizeof(text_fragment_t), fragments_nr);
 
 
 	fragments[0].offset = text;
@@ -209,7 +209,7 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 				maxwidth = localmaxwidth;
 
 			if (current_fragment == fragments_nr)
-				fragments = sci_realloc(fragments, sizeof(text_fragment_t) * (fragments_nr <<= 1));
+				fragments = (text_fragment_t*)sci_realloc(fragments, sizeof(text_fragment_t) * (fragments_nr <<= 1));
 
 			localmaxwidth = 0;
 
@@ -243,7 +243,7 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 				fragments[current_fragment++].offset = text;
 
 				if (current_fragment == fragments_nr)
-					fragments = sci_realloc(fragments, sizeof(text_fragment_t *) * (fragments_nr <<= 1));
+					fragments = (text_fragment_t*)sci_realloc(fragments, sizeof(text_fragment_t *) * (fragments_nr <<= 1));
 
 				localmaxwidth = localmaxwidth - last_breakpoint;
 				if (!(flags & GFXR_FONT_FLAG_COUNT_WHITESPACE))
@@ -335,7 +335,7 @@ gfxr_draw_font(gfx_bitmap_font_t *font, char *stext, int characters,
 	pxm = gfx_pixmap_alloc_index_data(gfx_new_pixmap(width, height, GFX_RESID_NONE, 0, 0));
 
 	pxm->colors_nr = !!fg0 + !!fg1 + !!bg;
-	pxm->colors = sci_malloc(sizeof(gfx_pixmap_color_t) * pxm->colors_nr);
+	pxm->colors = (gfx_pixmap_color_t*)sci_malloc(sizeof(gfx_pixmap_color_t) * pxm->colors_nr);
 #ifdef SATISFY_PURIFY
 	memset(pxm->colors, 0, sizeof(gfx_pixmap_color_t) * pxm->colors_nr);
 #endif

@@ -87,8 +87,8 @@ int decompress11(resource_t *result, int resh, int sci_version)
 		return SCI_ERROR_EMPTY_OBJECT;
 	}
 
-	buffer = sci_malloc(compressedLength);
-	result->data = sci_malloc(result->size);
+	buffer = (guint8*)sci_malloc(compressedLength);
+	result->data = (unsigned char*)sci_malloc(result->size);
 
 	if (read(resh, buffer, compressedLength) != compressedLength) {
 		free(result->data);

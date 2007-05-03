@@ -201,4 +201,7 @@ extern DLLEXTERN opcode_format formats[128][4];
 
 void script_adjust_opcode_formats(int res_version);
 
+struct _state;
+void script_free_breakpoints(struct _state *s);
+
 #endif

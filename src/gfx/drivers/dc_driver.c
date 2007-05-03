@@ -1245,7 +1245,7 @@ gfx_driver_dc = {
 	NULL,
 	0,
 	0,
-	GFX_CAPABILITY_FINE_LINES | GFX_CAPABILITY_PIXMAP_GRABBING,
+	GFX_CAPABILITY_FINE_LINES,
 	0,
 	dc_set_parameter,
 	dc_init_specific,

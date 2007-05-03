@@ -28,7 +28,7 @@
 #include <config.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <string.h>
 
 
 #define GLYPH(n) glyphs[n]
@@ -64,7 +64,7 @@ read_single_glyph(FILE *in_file, glyph_t *dest, int index, int char_height)
 	int bytes = 0;
 	int i;
 	unsigned char *data
-		= dest->bitmap = malloc(char_height * 4); /* Let's waste memory */
+		= dest->bitmap = (unsigned char *) malloc(char_height * 4); /* Let's waste memory */
 
 	do {
 		unsigned int d = 0;
@@ -120,7 +120,7 @@ glyph_t *
 read_glyphs(FILE *in_file, int nr, int char_height)
 {
 	int i;
-	glyph_t *glyphs = calloc(sizeof(glyph_t), nr);
+	glyph_t *glyphs = (glyph_t *) calloc(sizeof(glyph_t), nr);
 
 	for (i = 0; i < nr; i++)
 		read_single_glyph(in_file, glyphs + i, i, char_height);

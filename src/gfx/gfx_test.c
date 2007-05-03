@@ -115,7 +115,7 @@ gfx_options_t graphics_options;
 gfx_options_t *options = &graphics_options;
 
 
-#define CAPABILITY_IDS_NR 8
+#define CAPABILITY_IDS_NR 11
 
 static struct {
 	int mask;
@@ -126,9 +126,12 @@ static struct {
 	{GFX_CAPABILITY_COLOR_MOUSE_POINTER, "multi-color mouse pointers"},
 	{GFX_CAPABILITY_PIXMAP_REGISTRY, "pixmaps must be registered"},
 	{GFX_CAPABILITY_SCALEABLE_PIXMAPS, "pixmap scaling"},
-	{GFX_CAPABILITY_PIXMAP_GRABBING, "pixmap grabbing"},
 	{GFX_CAPABILITY_STIPPLED_LINES, "stippled lines"},
-	{GFX_CAPABILITY_POINTER_PIXMAP_REGISTRY, "pointer pixmaps must be registered"}
+	{GFX_CAPABILITY_MOUSE_SUPPORT, "pointing device input"},
+	{GFX_CAPABILITY_POINTER_PIXMAP_REGISTRY, "pointer pixmaps must be registered"},
+	{GFX_CAPABILITY_FINE_LINES, "fine lines"},
+	{GFX_CAPABILITY_WINDOWED, "windowed mode active"},
+	{GFX_CAPABILITY_KEYTRANSLATE, "built-in keyboard translation"}
 };
 
 int
@@ -179,7 +182,7 @@ int test_fonts[TEST_FONTS_NR] = {0};
 int test_cursors[TEST_CURSORS_NR] = {0, 1};
 
 int
-gfxr_interpreter_options_hash(gfx_resource_types_t type, int version, gfx_options_t *options, void *internal, int palette)
+gfxr_interpreter_options_hash(gfx_resource_type_t type, int version, gfx_options_t *options, void *internal, int palette)
 {
 	return 0;
 }
@@ -194,7 +197,7 @@ arrdup(int *src, int count)
 }
 
 int *
-gfxr_interpreter_get_resources(gfx_resstate_t *resstate, gfx_resource_types_t type,
+gfxr_interpreter_get_resources(gfx_resstate_t *resstate, gfx_resource_type_t type,
 			       int version, int *entries_nr, void *internal)
 {
 	switch (type) {

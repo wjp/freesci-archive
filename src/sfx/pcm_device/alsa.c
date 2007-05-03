@@ -160,7 +160,7 @@ async_direct_callback(snd_async_handler_t *ahandler)
 				}
 				first = 1;
 			}
-			sfx_audbuf_read(&audio_buffer, my_areas->addr + offset*frame_size, frames);
+			sfx_audbuf_read(&audio_buffer, (unsigned char*)((int)my_areas->addr + offset*frame_size), frames);
 			commitres = snd_pcm_mmap_commit(handle, offset, frames);
 			if (commitres < 0 || commitres != frames) {
 				if ((err = xrun_recovery(handle, commitres >= 0 ? -EPIPE : commitres)) < 0) {
@@ -222,7 +222,7 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 		sciprintf("[SND:ALSA] Unable to set buffer time %i for playback: %s\n", buffer_time, snd_strerror(err));
 		return SFX_ERROR;
 	}
-	err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+	err = snd_pcm_hw_params_get_buffer_size(hwparams, (snd_pcm_uframes_t*)&buffer_size);
 	if (err < 0) {
 		sciprintf("[SND:ALSA] Unable to get buffer size for playback: %s\n", snd_strerror(err));
 		return SFX_ERROR;
@@ -232,7 +232,7 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 		sciprintf("[SND:ALSA] Unable to set period time %i for playback: %s\n", period_time, snd_strerror(err));
 		return SFX_ERROR;
 	}
-	err = snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir);
+	err = snd_pcm_hw_params_get_period_size(hwparams, (snd_pcm_uframes_t*)&period_size, &dir);
 	if (err < 0) {
 		sciprintf("[SND:ALSA] Unable to get period size for playback: %s\n", snd_strerror(err));
 		return SFX_ERROR;
@@ -301,7 +301,7 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 					return SFX_ERROR;
 				}
 			}
-			sfx_audbuf_read(&audio_buffer, my_areas->addr + offset*frame_size, frames);
+			sfx_audbuf_read(&audio_buffer, (byte *)((int)my_areas->addr + offset*frame_size), frames);
 			commitres = snd_pcm_mmap_commit(handle, offset, frames);
 			if (commitres < 0 || commitres != frames) {
 				if ((err = xrun_recovery(handle, commitres >= 0 ? -EPIPE : commitres)) < 0) {

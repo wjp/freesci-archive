@@ -28,6 +28,7 @@
 #include <sci_memory.h>
 #include <gfx_operations.h>
 
+#include <ctype.h>
 
 #define PRECISE_PRIORITY_MAP /* Duplicate all operations on the local priority map as appropriate */
 
@@ -126,6 +127,11 @@ _gfxop_free_colors(gfx_state_t *state, gfx_pixmap_color_t *colors, int colors_nr
 int _gfxop_clip(rect_t *rect, rect_t clipzone)
 /* Returns 1 if nothing is left */
 {
+#if 0
+	printf ("Clipping (%d, %d) size (%d, %d)  by (%d,%d)(%d,%d)\n", rect->x, rect->y, rect->xl, rect->yl,
+		clipzone.x, clipzone.y, clipzone.xl, clipzone.yl);
+#endif
+
 	if (rect->x < clipzone.x) {
 		rect->xl -= (clipzone.x - rect->x);
 		rect->x = clipzone.x;
@@ -142,6 +148,14 @@ int _gfxop_clip(rect_t *rect, rect_t clipzone)
 	if (rect->y + rect->yl > clipzone.y + clipzone.yl)
 		rect->yl = (clipzone.y + clipzone.yl) - rect->y;
 
+	if (rect->xl < 0)
+		rect->xl = 0;
+	if (rect->yl < 0)
+		rect->yl = 0;
+
+#if 0
+	printf (" => (%d, %d) size (%d, %d)\n", rect->x, rect->y, rect->xl, rect->yl);
+#endif
 	return (rect->xl <= 0 || rect->yl <= 0);
 }
 
@@ -155,11 +169,6 @@ _gfxop_grab_pixmap(gfx_state_t *state, gfx_pixmap_t **pxmp, int x, int y,
 	int unscaled_xl = (xl + xfact - 1) / xfact;
 	int unscaled_yl = (yl + yfact - 1) / yfact;
 	*zone = gfx_rect(x, y, xl, yl);
-
-	if (!(state->driver->capabilities & GFX_CAPABILITY_PIXMAP_GRABBING)) {
-		GFXERROR("Attempt to grab pixmap even though driver does not support pixmap grabbing!");
-		return GFX_FATAL;
-	}
 
 	if (_gfxop_clip(zone, gfx_rect(0, 0,
 				       320 * state->driver->mode->xfact,
@@ -373,7 +382,7 @@ _gfxop_get_pointer_bounds(gfx_state_t *state, rect_t *rect)
 }
 
 static int
-_gfxop_buffer_propagate_box(gfx_state_t *state, rect_t box, int buffer);
+_gfxop_buffer_propagate_box(gfx_state_t *state, rect_t box, gfx_buffer_t buffer);
 
 static int
 _gfxop_draw_pointer(gfx_state_t *state)
@@ -472,7 +481,7 @@ _rect_create(rect_t box)
 {
 	struct _dirty_rect *rect;
 
-	rect = sci_malloc(sizeof(struct _dirty_rect));
+	rect = (struct _dirty_rect*)sci_malloc(sizeof(struct _dirty_rect));
 	rect->next = NULL;
 	rect->rect = box;
 
@@ -616,19 +625,6 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options, void *misc_payloa
 	state->visible_map = GFX_MASK_VISUAL;
 	state->fullscreen_override = NULL; /* No magical override */
 	gfxop_set_clip_zone(state, gfx_rect(0, 0, 320, 200));
-
-	if (!state->driver->capabilities & GFX_CAPABILITY_PIXMAP_GRABBING) {
-		if (!state->driver->capabilities & GFX_CAPABILITY_MOUSE_POINTER) {
-			GFXWARN("Graphics driver does not support drawing mouse pointers; disabling mouse input support.\n");
-			state->driver->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
-		} else if (gfxr_interpreter_needs_multicolored_pointers
-			   (state->version, misc_payload)
-			   && !state->driver->capabilities & GFX_CAPABILITY_COLOR_MOUSE_POINTER) {
-			GFXWARN("Graphics driver only supports monochrome mouse pointers, but colored pointers are needed; disabling mouse input support.\n");
-			state->driver->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
-		}
-
-	}
 
 	state->mouse_pointer = state->mouse_pointer_bg = NULL;
 	state->mouse_pointer_visible = 0;
@@ -1251,7 +1247,7 @@ gfxop_draw_box(gfx_state_t *state, rect_t box, gfx_color_t color1, gfx_color_t c
 	gfx_driver_t *drv = state->driver;
 	int reverse = 0; /* switch color1 and color2 */
 	float mod_offset = 0.0, mod_breadth = 1.0; /* 0.0 to 1.0: Color adjustment */
-	int driver_shade_type;
+	gfx_rectangle_fill_t driver_shade_type;
 	rect_t new_box;
 	gfx_color_t draw_color1, draw_color2	= {0};
 
@@ -1283,7 +1279,6 @@ gfxop_draw_box(gfx_state_t *state, rect_t box, gfx_color_t color1, gfx_color_t c
 	}
 
 	memcpy(&new_box, &box, sizeof(rect_t));
-
 	if (_gfxop_clip(&new_box, state->clip_zone))
 		return GFX_OK;
 
@@ -1359,7 +1354,7 @@ gfxop_fill_box(gfx_state_t *state, rect_t box, gfx_color_t color)
 
 
 static int
-_gfxop_buffer_propagate_box(gfx_state_t *state, rect_t box, int buffer)
+_gfxop_buffer_propagate_box(gfx_state_t *state, rect_t box, gfx_buffer_t buffer)
 {
 	int error;
 
@@ -1710,7 +1705,7 @@ gfxop_set_pointer_position(gfx_state_t *state, point_t pos)
 
 #define SCANCODE_ROWS_NR 3
 
-struct {
+struct scancode_row {
 	int offset;
 	char *keys;
 } scancode_rows[SCANCODE_ROWS_NR] = {
@@ -1836,7 +1831,7 @@ gfxop_get_event(gfx_state_t *state, unsigned int mask)
 		{
 			do {
 				if (event.type) {
-					*seekerp = sci_malloc(sizeof(gfx_input_event_t));
+					*seekerp = (gfx_input_event_t*)sci_malloc(sizeof(gfx_input_event_t));
 					(*seekerp)->next = NULL;
 					
 					event.data = (char) (event.data);
@@ -2223,9 +2218,9 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 		return NULL;
 	}
 
-	handle = sci_malloc(sizeof(gfx_text_handle_t));
+	handle = (gfx_text_handle_t*)sci_malloc(sizeof(gfx_text_handle_t));
 
-	handle->text = sci_malloc(strlen(text) + 1);
+	handle->text = (char*)sci_malloc(strlen(text) + 1);
 	strcpy(handle->text, text);
 	handle->halign = halign;
 	handle->valign = valign;
@@ -2252,7 +2247,7 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 		handle->lines->length = strlen(text);
 	}
 
-	handle->text_pixmaps = sci_malloc(sizeof(gfx_pixmap_t *) * handle->lines_nr);
+	handle->text_pixmaps = (gfx_pixmap_t**)sci_malloc(sizeof(gfx_pixmap_t *) * handle->lines_nr);
 
 	for (i = 0; i < handle->lines_nr; i++) {
 		int chars_nr = handle->lines[i].length;

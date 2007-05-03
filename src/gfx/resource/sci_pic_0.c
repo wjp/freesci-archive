@@ -150,7 +150,7 @@ gfxr_init_static_palette()
 gfxr_pic_t *
 gfxr_init_pic(gfx_mode_t *mode, int ID, int sci1)
 {
-	gfxr_pic_t *pic = sci_malloc(sizeof(gfxr_pic_t));
+	gfxr_pic_t *pic = (gfxr_pic_t*)sci_malloc(sizeof(gfxr_pic_t));
 
 	pic->mode = mode;
 
@@ -1007,7 +1007,8 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 
 static void
 _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int control, int drawenable,
-		   int pattern_code, int pattern_size, int pattern_nr, int brush_mode, int sci_titlebar_size)
+		   int pattern_code, int pattern_size, int pattern_nr, gfx_brush_mode_t brush_mode,
+		   int sci_titlebar_size)
 {
 	int xsize = (pattern_size + 1) * pic->mode->xfact - 1;
 	int ysize = (pattern_size + 1) * pic->mode->yfact - 1;
@@ -1062,7 +1063,9 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 
 			_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 0,
 					       PLOT_AUX_PATTERN_NO_RANDOM,
-					       drawenable, 0, 0, control, 0, GFX_MASK_CONTROL);
+					       drawenable, 0, 0, control,
+					       GFX_BRUSH_MODE_SCALED,
+					       GFX_MASK_CONTROL);
 
 			if (drawenable & GFX_MASK_VISUAL)
 				gfx_draw_box_pixmap_i(pic->visual_map, boundaries, color);
@@ -1083,19 +1086,25 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 
 			_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 1,
 					       PLOT_AUX_PATTERN_NO_RANDOM,
-					       drawenable, 0, 0, control, 0, GFX_MASK_CONTROL);
+					       drawenable, 0, 0, control,
+					       GFX_BRUSH_MODE_SCALED,
+					       GFX_MASK_CONTROL);
 
 			if (pic->mode->xfact == 1 && pic->mode->yfact == 1) {
 
 				if (drawenable & GFX_MASK_VISUAL)
 					_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 1,
 							       PLOT_AUX_PATTERN_NO_RANDOM,
-							       drawenable, 0, 0, color, 0, GFX_MASK_VISUAL);
+							       drawenable, 0, 0, color,
+							       GFX_BRUSH_MODE_SCALED,
+							       GFX_MASK_VISUAL);
 
 				if (drawenable & GFX_MASK_PRIORITY)
 					_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 1,
 							       PLOT_AUX_PATTERN_NO_RANDOM,
-							       drawenable, 0, 0, priority, 0, GFX_MASK_PRIORITY);
+							       drawenable, 0, 0, priority,
+							       GFX_BRUSH_MODE_SCALED,
+							       GFX_MASK_PRIORITY);
 			} else {
 
 				if (drawenable & GFX_MASK_VISUAL)
@@ -1923,6 +1932,8 @@ extern gfx_pixmap_t *
 gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t *view, int mirrored);
 extern gfx_pixmap_t *
 gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view);
+extern void
+_gfx_crossblit_simple(byte *dest, byte *src, int dest_line_width, int src_line_width, int xl, int yl, int bpp);
 
 void
 gfxr_draw_pic01(gfxr_pic_t *pic, int flags, int default_palette, int size,
@@ -2394,7 +2405,7 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int flags, int default_palette, int size,
 					GFXERROR("pic->internal is not NULL (%08x); this only occurs with overlaid pics, otherwise it's a bug!\n", pic->internal); 
 				}	
 
-				pri_table = pic->internal;
+				pri_table = (int*)pic->internal;
 
 				pri_table[0] = 0;
 				pri_table[15] = 190;
@@ -2419,7 +2430,7 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int flags, int default_palette, int size,
 					GFXERROR("pic->internal is not NULL (%08x); possible memory corruption!\n", pic->internal); 
 				}	
 
-				pri_table = pic->internal;
+				pri_table = (int*)pic->internal;
 				
 				for (nr = 0; nr < 16; nr ++)
 					pri_table[nr] = SCI0_PRIORITY_BAND_FIRST_14_ZONES(nr);					

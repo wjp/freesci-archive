@@ -52,7 +52,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
         assert(bytespp == COPY_BYTES);
 
 	if (separate_alpha_map && !alpha_dest)
-		alpha_dest = pxm->alpha_map = sci_malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
+		alpha_dest = pxm->alpha_map = (byte*)sci_malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
 
 	/* Calculate all colors */
 	for (i = 0; i < pxm->colors_nr; i++) {
@@ -218,7 +218,7 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	shifts[3] = mode->alpha_shift;
 
 	if (separate_alpha_map && !alpha_dest)
-		alpha_dest = pxm->alpha_map = sci_malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
+		alpha_dest = pxm->alpha_map = (byte*)sci_malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
 
 	for (y = 0; y < pxm->index_yl; y++) {
 		byte *linepos = dest;
@@ -374,7 +374,7 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 		return; /* Duh. */
 
 	if (separate_alpha_map && !alpha_dest)
-		alpha_dest = pxm->alpha_map = sci_malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
+		alpha_dest = pxm->alpha_map = (byte*)sci_malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
 
 	src -= pxm->index_xl + 1;
 

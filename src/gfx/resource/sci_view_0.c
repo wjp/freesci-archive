@@ -147,7 +147,7 @@ gfxr_draw_loop0(gfxr_loop_t *dest, int id, int loop, byte *resource, int offset,
 		return 1;
 	}
 
-	dest->cels = sci_malloc(sizeof(gfx_pixmap_t *) * cels_nr);
+	dest->cels = (gfx_pixmap_t**)sci_malloc(sizeof(gfx_pixmap_t *) * cels_nr);
 
 	for (i = 0; i < cels_nr; i++) {
 		int cel_offset = get_uint_16(resource + offset + 4 + (i << 1));
@@ -192,7 +192,7 @@ gfxr_draw_view0(int id, byte *resource, int size, int palette)
 		return NULL;
 	}
 
-	view = sci_malloc(sizeof(gfxr_view_t));
+	view = (gfxr_view_t*)sci_malloc(sizeof(gfxr_view_t));
 	view->ID = id;
 
 	view->loops_nr = resource[V0_LOOPS_NR_OFFSET];
@@ -218,7 +218,7 @@ gfxr_draw_view0(int id, byte *resource, int size, int palette)
 		return NULL;
 	}
 
-	view->loops = sci_malloc(sizeof (gfxr_loop_t) * ((view->loops_nr)? view->loops_nr : 1)); /* Alloc 1 if no loop */
+	view->loops = (gfxr_loop_t*)sci_malloc(sizeof (gfxr_loop_t) * ((view->loops_nr)? view->loops_nr : 1)); /* Alloc 1 if no loop */
 
 	for (i = 0; i < view->loops_nr; i++) {
 		int error_token = 0;

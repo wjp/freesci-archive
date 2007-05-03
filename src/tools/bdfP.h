@@ -75,13 +75,13 @@ typedef struct {
  * This is the final undo structure used to store undo information with the
  * font.
  */
-typedef struct {
+typedef struct _bdf_undo_struct {
     int type;
     union {
         _bdf_undo1_t one;
         _bdf_undo2_t two;
     } field;
-} _bdf_undo_t;
+} bdf_undo_struct_t;
 
 /*
  * Tables for rotation and shearing.

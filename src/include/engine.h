@@ -89,7 +89,7 @@ typedef struct _state
 	char *work_dir; /* Directory the game metadata should be written to */
 	resource_mgr_t *resmgr; /* The resource manager */
 
-	unsigned char *game_name; /* Designation of the primary object (which inherits from Game) */
+	char *game_name; /* Designation of the primary object (which inherits from Game) */
 
 	/* Non-VM information */
 
@@ -133,7 +133,7 @@ typedef struct _state
 	gfxw_port_t *wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
 	gfxw_port_t *picture_port; /* The background picture viewport (10,0,199,319) */
 
-	int pic_visible_map; /* The number of the map to display in update commands */
+	gfx_map_mask_t pic_visible_map; /* The number of the map to display in update commands */
 	int pic_animate; /* The animation used by Animate() to display the picture */
 
 	int dyn_views_list_serial; /* Used for save/restore */
@@ -204,7 +204,7 @@ typedef struct _state
 	/* Debugger data: */
 	breakpoint_t *bp_list;   /* List of breakpoints */
 	int have_bp;  /* Bit mask specifying which types of breakpoints are used in bp_list */
-	int debug_mode; /* Contains flags for the various debug modes */
+	unsigned int debug_mode; /* Contains flags for the various debug modes */
 
 	/* System strings */
 	seg_id_t sys_strings_segment;

@@ -27,9 +27,13 @@
 
 #include <engine.h>
 
+#ifdef LOOKUP_NODE
+#  undef LOOKUP_NODE
+#  define LOOKUP_NODE(addr) inline_lookup_node(s, (addr), __FILE__, __LINE__)
+#endif
 
 inline node_t *
-lookup_node(state_t *s, reg_t addr, char *file, int line)
+inline_lookup_node(state_t *s, reg_t addr, char *file, int line)
 {
 	mem_obj_t *mobj;
 	node_table_t *nt;
@@ -55,6 +59,12 @@ lookup_node(state_t *s, reg_t addr, char *file, int line)
 	}
 
 	return &(nt->table[addr.offset].entry);
+}
+
+node_t *
+lookup_node(state_t *s, reg_t addr, char *file, int line)
+{
+	return inline_lookup_node(s, addr, file, line);
 }
 
 #define LOOKUP_NULL_LIST(addr) _lookup_list(s, addr, __FILE__, __LINE__, 1)

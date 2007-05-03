@@ -270,7 +270,7 @@ lzexe_open(char *filename)
 	if (fseek(f, fpos, SEEK_SET) == -1)
 		return NULL;
 
-	handle = sci_malloc(sizeof(exe_handle_t));
+	handle = (exe_handle_t*)sci_malloc(sizeof(exe_handle_t));
 
 	if (!lzexe_init(handle, f)) {
 		sci_free(handle);

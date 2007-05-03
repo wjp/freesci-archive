@@ -155,7 +155,7 @@ c_die(state_t *s)
 char *old_input = NULL;
 
 #ifdef HAVE_READLINE_READLINE_H
-char *
+const char *
 get_readline_input(void)
 {
 	char *input;
@@ -256,7 +256,7 @@ init_directories(char *work_dir, char *game_id)
 }
 
 
-char *
+const char *
 get_gets_input(void)
 {
 	static char input[1024] = "";
@@ -283,7 +283,7 @@ get_gets_input(void)
 	if (old_input)
 		free(old_input);
 
-	old_input = sci_malloc(1024);
+	old_input = (char *) sci_malloc(1024);
 	strcpy(old_input, input);
 	return input;
 }
@@ -782,7 +782,7 @@ init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_t *driver, r
 
 		if (color_depth > 0) {
 			if (gfxop_init(gfx_state, scale_x,
-				       scale_y, color_depth,
+				       scale_y, (gfx_color_mode_t) color_depth,
 				       gfx_options, resmgr)) {
 				fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 				return 1;
@@ -790,7 +790,7 @@ init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_t *driver, r
 		} else {
 			color_depth = 4;
 			while (gfxop_init(gfx_state, scale_x,
-					  scale_y, color_depth,
+					  scale_y, (gfx_color_mode_t) color_depth,
 					  gfx_options, resmgr) && --color_depth);
 
 			if (!color_depth) {
@@ -1083,7 +1083,7 @@ main(int argc, char** argv)
 
 	sciprintf("FreeSCI, version "VERSION"\n");
 
-	gamestate = sci_calloc(sizeof(state_t), 1);
+	gamestate = (state_t *) sci_calloc(sizeof(state_t), 1);
 
 	if (init_gamestate(gamestate, resmgr, version))
 		return 1;
@@ -1440,7 +1440,8 @@ game_select_resource_found()
 static int
 game_select_init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_t *driver, sci_version_t sci_version)
 {
-	int scale_x = 0, scale_y = 0, color_depth = 0;
+	int scale_x = 0, scale_y = 0;
+	int color_depth = 0;
 
 	if (conf) {
 		if (conf->scale)
@@ -1483,14 +1484,14 @@ game_select_init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_
 		conf->color_depth, cl_options->color_depth, color_depth);
 
 	/* Convert to bytespp */
-	color_depth = (color_depth + 7) >> 3;
+	color_depth = ((color_depth + 7) >> 3);
 	fprintf(stderr, "Checking byte depth %d\n", color_depth);
 
 	if (scale_x > 0) {
 
 		if (color_depth > 0) {
 			if (game_select_gfxop_init(gfx_state, scale_x,
-				       scale_y, color_depth,
+				       scale_y, (gfx_color_mode_t) color_depth,
 				       gfx_options, 0)) {
 				fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 				return 1;
@@ -1498,7 +1499,7 @@ game_select_init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_
 		} else {
 			color_depth = 4;
 			while (game_select_gfxop_init(gfx_state, scale_x,
-					  scale_y, color_depth,
+					  scale_y, (gfx_color_mode_t) color_depth,
 					  gfx_options, 0) && --color_depth);
 
 			if (!color_depth) {
@@ -1543,7 +1544,7 @@ static gfx_bitmap_font_t* load_font(char* font_dir, char* filename)
 
 	fsize = sci_fd_size(fh);
 
-	buffer = sci_malloc(fsize);
+	buffer = (byte *) sci_malloc(fsize);
 
 	/* skip the header information, is present by default when using sciunpack */
 	read(fh, buffer, 2);
@@ -1643,12 +1644,12 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 		return -2;
 
 	/* Sort all the games in alphabetical order, do this on a copy of the original config structure */
-	sorted_confs = malloc(sizeof(config_entry_t) * conf_entries);
+	sorted_confs = (config_entry_t *) malloc(sizeof(config_entry_t) * conf_entries);
 	memcpy(sorted_confs, confs, sizeof(config_entry_t) * conf_entries);
 	qsort(&(sorted_confs[1]), conf_entries - 1, sizeof(config_entry_t), compare_config_entry);
 
 	/* Create the array of strings to pass to game selection display routine */
-	game_list = malloc(sizeof(char*) * conf_entries);
+	game_list = (char **) malloc(sizeof(char*) * conf_entries);
 	for (current_config = 0; current_config < conf_entries; current_config++)
 	{
 		game_list[current_config] = sorted_confs[current_config].name;

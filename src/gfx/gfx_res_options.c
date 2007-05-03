@@ -31,12 +31,14 @@
 #include <gfx_options.h>
 #include <gfx_resmgr.h>
 
+#include <ctype.h>
+
 /*#define DEBUG*/
 
 static gfx_res_pattern_list_t*
 pattern_list_insert(gfx_res_pattern_list_t *list, int min, int max)
 {
-	gfx_res_pattern_list_t *retval = malloc(sizeof(gfx_res_pattern_list_t));
+	gfx_res_pattern_list_t *retval = (gfx_res_pattern_list_t*)sci_malloc(sizeof(gfx_res_pattern_list_t));
 	retval->pattern.min = min;
 	retval->pattern.max = max;
 	retval->next = list;
@@ -307,7 +309,7 @@ gfx_update_conf(gfx_options_t *options, char *str)
 		{"pic", GFX_RESOURCE_TYPE_PIC, 2},
 		{"cursor", GFX_RESOURCE_TYPE_CURSOR, 1},
 	};
-	gfx_res_conf_t *conf = malloc(sizeof(gfx_res_conf_t));
+	gfx_res_conf_t *conf = (gfx_res_conf_t*)sci_malloc(sizeof(gfx_res_conf_t));
 	gfx_res_pattern_list_t *patterns = NULL;
 	gfx_res_pattern_list_t *loops = NULL;
 	gfx_res_pattern_list_t *cels = NULL;
@@ -392,7 +394,7 @@ gfx_update_conf(gfx_options_t *options, char *str)
 	total_patterns += (conf->loops_nr = pattern_list_len(loops));
 	total_patterns += (conf->cels_nr = pattern_list_len(cels));
 
-	conf->patterns = malloc(sizeof(gfx_res_pattern_t) * total_patterns);
+	conf->patterns = (gfx_res_pattern_t*)sci_malloc(1 + (sizeof(gfx_res_pattern_t) * total_patterns));
 	pattern_list_flatten(conf->patterns, patterns);
 	pattern_list_flatten(conf->patterns + conf->patterns_nr, loops);
 	pattern_list_flatten(conf->patterns + conf->patterns_nr + conf->loops_nr, cels);
@@ -580,7 +582,7 @@ apply_mod(gfx_res_mod_t *mod, gfx_pixmap_t *pxm)
 	/* Does not have a dynamically allocated palette? Must dup current one */
 	if (pxm->flags & GFX_PIXMAP_FLAG_EXTERNAL_PALETTE) {
 		int size = sizeof(gfx_pixmap_color_t) * pal_size;
-		pxm->colors = malloc(size);
+		pxm->colors = (gfx_pixmap_color_t*)sci_malloc(size);
 		memcpy(pxm->colors, pal, size);
 		pal = pxm->colors;
 		pxm->flags &= ~GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;

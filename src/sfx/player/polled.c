@@ -30,9 +30,6 @@
 #include <sfx_softseq.h>
 #include <sfx_mixer.h>
 
-extern sfx_player_t sfx_player_polled;
-static sfx_pcm_feed_t pcmfeed;
-
 static song_iterator_t *play_it;
 static int play_paused = 0;
 static sfx_softseq_t *seq;
@@ -44,6 +41,107 @@ static int new_song = 0;
 ** For each frame played, it is decreased by 60.  */
 #define TIME_INC 60
 static int time_counter = 0;
+
+
+
+/*----------------------*/
+/* Mixer implementation */
+/*----------------------*/
+int
+ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
+{
+	int written = 0;
+	byte buf[4];
+	int buf_nr;
+
+	if (!play_it)
+		return 0;
+
+	if (play_paused)
+		return 0;
+
+	while (written < size) {
+		int can_play;
+		int do_play;
+
+		while (time_counter <= TIME_INC) {
+			int next_stat = songit_next(&play_it,
+						    &(buf[0]), &buf_nr,
+						    IT_READER_MASK_ALL
+						    | IT_READER_MAY_FREE
+						    | IT_READER_MAY_CLEAN);
+
+			switch (next_stat) {
+			case SI_PCM:
+				sfx_play_iterator_pcm(play_it, 0);
+				break;
+
+			case SI_FINISHED:
+				songit_free(play_it);
+				play_it = NULL;
+				return written; /* We're done... */
+
+			case SI_LOOP:
+			case SI_RELATIVE_CUE:
+			case SI_ABSOLUTE_CUE:
+				break; /* Boooring... .*/
+
+			case 0: /* MIDI command */
+				seq->handle_command(seq, buf[0], buf_nr - 1, buf+1);
+				break;
+
+			default:
+				time_counter += next_stat * seq->pcm_conf.rate;
+			}
+		}
+
+		can_play = time_counter / TIME_INC;
+		do_play = (can_play > (size - written))? (size - written) : can_play;
+
+		time_counter -= do_play * TIME_INC;
+
+		seq->poll(seq, dest + written * self->frame_size, do_play);
+		written += do_play;
+	}
+
+	return size; /* Apparently, we wrote all that was requested */
+}
+
+void
+ppf_destroy(sfx_pcm_feed_t *self)
+{
+	/* no-op */
+}
+
+int
+ppf_get_timestamp(sfx_pcm_feed_t *self, sfx_timestamp_t *timestamp)
+{
+	if (!new_song)
+		return PCM_FEED_IDLE;
+
+	/* Otherwise, we have a timestamp: */
+
+	*timestamp = new_timestamp;
+	new_song = 0;
+	return PCM_FEED_TIMESTAMP;
+}
+
+extern sfx_player_t sfx_player_polled;
+static
+sfx_pcm_feed_t pcmfeed = {
+	ppf_poll,
+	ppf_destroy,
+	ppf_get_timestamp,
+	NULL,
+	{0, 0, 0},
+	"polled-player-feed",
+	0,
+	0 /* filled in by the mixer */
+};
+
+/*=======================*/
+/* Player implementation */
+/*=======================*/
 
 
 /*--------------------*/
@@ -187,100 +285,6 @@ pp_exit(void)
 
 	return SFX_OK;
 }
-
-/*----------------------*/
-/* Mixer implementation */
-/*----------------------*/
-
-int
-ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
-{
-	int written = 0;
-	byte buf[4];
-	int buf_nr;
-
-	if (!play_it)
-		return 0;
-
-	if (play_paused)
-		return 0;
-
-	while (written < size) {
-		int can_play;
-		int do_play;
-
-		while (time_counter <= TIME_INC) {
-			int next_stat = songit_next(&play_it,
-						    &(buf[0]), &buf_nr,
-						    IT_READER_MASK_ALL
-						    | IT_READER_MAY_FREE
-						    | IT_READER_MAY_CLEAN);
-
-			switch (next_stat) {
-			case SI_PCM:
-				sfx_play_iterator_pcm(play_it, 0);
-				break;
-
-			case SI_FINISHED:
-				songit_free(play_it);
-				play_it = NULL;
-				return written; /* We're done... */
-
-			case SI_LOOP:
-			case SI_RELATIVE_CUE:
-			case SI_ABSOLUTE_CUE:
-				break; /* Boooring... .*/
-
-			case 0: /* MIDI command */
-				seq->handle_command(seq, buf[0], buf_nr - 1, buf+1);
-				break;
-
-			default:
-				time_counter += next_stat * seq->pcm_conf.rate;
-			}
-		}
-
-		can_play = time_counter / TIME_INC;
-		do_play = (can_play > (size - written))? (size - written) : can_play;
-
-		time_counter -= do_play * TIME_INC;
-
-		seq->poll(seq, dest + written * self->frame_size, do_play);
-		written += do_play;
-	}
-
-	return size; /* Apparently, we wrote all that was requested */
-}
-
-void
-ppf_destroy(sfx_pcm_feed_t *self)
-{
-	/* no-op */
-}
-
-int
-ppf_get_timestamp(sfx_pcm_feed_t *self, sfx_timestamp_t *timestamp)
-{
-	if (!new_song)
-		return PCM_FEED_IDLE;
-
-	/* Otherwise, we have a timestamp: */
-
-	*timestamp = new_timestamp;
-	new_song = 0;
-	return PCM_FEED_TIMESTAMP;
-}
-
-static sfx_pcm_feed_t pcmfeed = {
-	ppf_poll,
-	ppf_destroy,
-	ppf_get_timestamp,
-	NULL,
-	{0, 0, 0},
-	"polled-player-feed",
-	0,
-	0 /* filled in by the mixer */
-};
 
 sfx_player_t sfx_player_polled = {
 	"polled",

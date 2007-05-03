@@ -40,7 +40,9 @@ typedef enum {
 	/* FIXME: Add PAL resource */
 
 	GFX_RESOURCE_TYPES_NR /* Number of resource types that are to be supported */
-} gfx_resource_types_t;
+} gfx_resource_type_t;
+
+#define GFX_RESOURCE_TYPE_0 GFX_RESOURCE_TYPE_VIEW
 
 #define GFXR_RES_ID(type, index) ((type) << 16 | (index))
 #define GFXR_RES_TYPE(id) (id >> 16)
@@ -223,10 +225,10 @@ gfxr_get_palette(gfx_resstate_t *state, int nr);
 
 
 int
-gfxr_interpreter_options_hash(gfx_resource_types_t type, int version,
+gfxr_interpreter_options_hash(gfx_resource_type_t type, int version,
 			      struct _gfx_options *options, void *internal, int palette);
 /* Calculates a unique hash value for the specified options/type setup
-** Parameters: (gfx_resource_types_t) type: The type the hash is to be generated for
+** Parameters: (gfx_resource_type_t) type: The type the hash is to be generated for
 **             (int) version: The interpreter type and version
 **             (gfx_options_t *) options: The options to hashify
 **             (void *) internal: Internal information provided by the interpreter
@@ -242,11 +244,11 @@ gfxr_interpreter_options_hash(gfx_resource_types_t type, int version,
 */
 
 int *
-gfxr_interpreter_get_resources(gfx_resstate_t *state, gfx_resource_types_t type,
+gfxr_interpreter_get_resources(gfx_resstate_t *state, gfx_resource_type_t type,
 			       int version, int *entries_nr, void *internal);
 /* Retreives all resources of a specified type that are available from the interpreter
 ** Parameters: (gfx_resstate_t *) state: The relevant resource state
-**             (gfx_respirce_types_t) type: The resource type to query
+**             (gfx_respirce_type_t) type: The resource type to query
 **             (int) version: The interpreter type and version
 **             (int *) entries_nr: The variable the number of entries will eventually be stored in
 **             (void *) internal: Internal information provided by the interpreter

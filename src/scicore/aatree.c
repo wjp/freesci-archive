@@ -120,7 +120,7 @@ aatree_insert(void *x, aatree_t **t, int (*compar)(const void *, const void *))
 	int c;
 
 	if (*t == &bottom) {
-		*t = sci_malloc(sizeof(aatree_t));
+		*t = (aatree_t*)sci_malloc(sizeof(aatree_t));
 
 		if (*t == NULL)
 			return 1;

@@ -55,7 +55,7 @@ exe_open(char *filename)
 		exe_handle_t *handle = dec->open(filename);
 
 		if (handle) {
-			exe_file_t *file = sci_malloc(sizeof(exe_file_t));
+			exe_file_t *file = (exe_file_t*)sci_malloc(sizeof(exe_file_t));
 
 			sciprintf("Scanning '%s' with decompressor '%s'\n",
 				  filename, dec->name);

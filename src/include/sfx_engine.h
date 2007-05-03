@@ -168,5 +168,12 @@ sfx_song_set_hold(sfx_state_t *self, song_handle_t handle, int hold);
 **             (int) hold: Number of loops to setn
 */
 
+void
+sfx_song_set_fade(sfx_state_t *self, song_handle_t handle, fade_params_t *fade_setup);
+/* Instructs a song to be faded out
+** Parameters: (song_handle_t) handle: The song handle to reference
+**             (fade_params_t *) fade_setup: The precise fade-out configuration to use
+*/
+
 
 #endif /* !defined(_SFX_ENGINE_H_) */

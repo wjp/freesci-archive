@@ -21,6 +21,9 @@ static char** knames;
 static char** snames;
 static opcode* opcodes;
 
+object **object_map, *object_root;
+int max_object;
+
 char* globals[] = {
   /*00*/
   "ego",
@@ -66,7 +69,7 @@ char* globals[] = {
 
 static int add_object(object* obj)
 {
-	FLEXARRAY_APPEND(fobjects, obj, return 1);
+	FLEXARRAY_APPEND(object*, fobjects, obj, return 1);
 	return 0;
 }
 
@@ -210,7 +213,7 @@ void printObject(object* obj, int flags)
 
 static object* object_new()
 {
-	object* obj= sci_malloc(sizeof(object));
+	object* obj= (object*)sci_malloc(sizeof(object));
 	if(obj==0) return 0;
 
 	obj->parent=0;
@@ -226,7 +229,7 @@ static object* object_new()
 
 static int add_child(object* parent, object* child)
 {
-	FLEXARRAY_APPEND(parent->children, child, return 1);
+	FLEXARRAY_APPEND(object*, parent->children, child, return 1);
 	return 0;
 }
 
@@ -270,7 +273,7 @@ static script_method* decode_method(byte* data)
 
   count++;
 
-  if((m= sci_malloc(sizeof(script_method)))==0) return 0;
+  if((m= (script_method*)sci_malloc(sizeof(script_method)))==0) return 0;
   FLEXARRAY_INIT(script_opcode, *m);
 
   while(!done)
@@ -281,7 +284,7 @@ static script_method* decode_method(byte* data)
       int arg;
       int old_pos;
 
-      FLEXARRAY_ADD_SPACE(*m, 1, return 0);
+      FLEXARRAY_ADD_SPACE(script_opcode, *m, 1, return 0);
       old_pos=pos;
       m->data[m->used-1].pos=pos;
       m->data[m->used-1].opcode=op;
@@ -550,7 +553,7 @@ static object* read_object(resource_mgr_t *resmgr, int script, int positions[100
 	/*FIXME: decode selectors here*/
 
 	obj->method_count=get_method_count(raw);
-	obj->methods= sci_malloc(obj->method_count*sizeof(script_method));
+	obj->methods= (script_method**)sci_malloc(obj->method_count*sizeof(script_method));
 	if(obj->methods==0)
 	{
 		free(obj);

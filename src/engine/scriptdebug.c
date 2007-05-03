@@ -34,6 +34,7 @@
 #include <kernel_types.h>
 #include <gc.h>
 #include <sci_midi.h>
+#include <sci_widgets.h>
 #ifdef _MSC_VER
 #	include <sci_win32.h>
 #endif
@@ -62,7 +63,7 @@ static reg_t *p_pc;
 static stack_ptr_t *p_sp;
 static stack_ptr_t *p_pp;
 static reg_t *p_objp;
-static unsigned int *p_restadjust;
+static int *p_restadjust;
 static seg_id_t *p_var_segs;
 static reg_t **p_vars;
 static reg_t **p_var_base;
@@ -80,7 +81,7 @@ char inputbuf[256] = "";
    (species >= 1000)? species : *(s->classtable[species].scriptposp) \
                                 + s->classtable[species].class_offset)
 
-char *
+const char *
 _debug_get_input_default(void)
 {
   char newinpbuf[256];
@@ -298,7 +299,7 @@ int c_sfx_01_track(state_t *s)
 
 
 
-char *(*_debug_get_input)(void) = _debug_get_input_default;
+const char *(*_debug_get_input)(void) = _debug_get_input_default;
 
 int
 c_segtable(state_t *s)
@@ -589,6 +590,8 @@ show_node(state_t *s, reg_t addr)
 	}
 	return 0;
 }
+
+int objinfo(state_t *s, reg_t pos);
 
 static int
 c_vr(state_t *s)
@@ -1165,9 +1168,10 @@ c_save_game(state_t *s)
 		}
 	}
 
-	if (gamestate_save(s, cmd_params[0].str)) {
-		sciprintf("Saving the game state to '%s' failed\n", cmd_params[0].str);
-	}
+/* 	if (gamestate_save(s, cmd_params[0].str)) { */
+/* 		sciprintf("Saving the game state to '%s' failed\n", cmd_params[0].str); */
+/* 	} */
+	sciprintf("Savegames are not presently supported.");
 
 	return 0;
 }
@@ -1182,7 +1186,8 @@ c_restore_game(state_t *s)
 		return 1;
 	}
 
-	newstate = gamestate_restore(s, cmd_params[0].str);
+/* 	newstate = gamestate_restore(s, cmd_params[0].str); */
+	sciprintf("Savegames are not presently supported.");
 
 	if (newstate) {
 
@@ -1686,7 +1691,7 @@ static char *_codebug_colstr = "\033[31m\033[1m";
 static char *_codebug_uncolstr = "\033[0m";
 
 static void
-codebug_send_command(char *cmd)
+codebug_send_command(const char *cmd)
 {
 	if (_codebug_pid)
 		write(_codebug_commands[1], cmd, strlen(cmd));
@@ -2136,12 +2141,12 @@ c_gfx_show_map(state_t *s)
 		break;
 
 	case 1:
-		gfx_xlate_pixmap(s->gfx_state->pic->priority_map, s->gfx_state->driver->mode, 0);
+		gfx_xlate_pixmap(s->gfx_state->pic->priority_map, s->gfx_state->driver->mode, GFX_XLATE_FILTER_NONE);
 		gfxop_draw_pixmap(s->gfx_state, s->gfx_state->pic->priority_map, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
 		break;
 
 	case 2:
-		gfx_xlate_pixmap(s->gfx_state->control_map, s->gfx_state->driver->mode, 0);
+		gfx_xlate_pixmap(s->gfx_state->control_map, s->gfx_state->driver->mode, GFX_XLATE_FILTER_NONE);
 		gfxop_draw_pixmap(s->gfx_state, s->gfx_state->control_map, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
 		break;
 
@@ -2353,6 +2358,7 @@ c_gfx_flush_resources(state_t *s)
 	return 0;
 }
 
+int
 c_gfx_update_zone(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -2698,14 +2704,14 @@ const generic_config_flag_t SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 void
 set_debug_mode (struct _state *s, int mode, char *areas)
 {
-	char *param = sci_malloc(strlen(areas) + 2);
+	char *param = (char*)sci_malloc(strlen(areas) + 2);
 
 	param[0] = (mode)? '+' : '-';
 	strcpy(param + 1, areas);
 
 	handle_config_update(SCIk_Debug_Names, SCIk_DEBUG_MODES,
 			     "VM and kernel",
-			     &(s->debug_mode),
+			     (int *) &(s->debug_mode),
 			     param);
 
 	sci_free(param);
@@ -2716,7 +2722,7 @@ c_debuglog(state_t *s)
 {
 	return c_handle_config_update(SCIk_Debug_Names, SCIk_DEBUG_MODES,
 				      "VM and kernel",
-				      &(s->debug_mode));
+				      (int *) &(s->debug_mode));
 }
 
 #define SFX_DEBUG_MODES 2
@@ -2732,7 +2738,7 @@ c_sfx_debuglog(state_t *s)
 
 	return c_handle_config_update(sfx_debug_modes, SFX_DEBUG_MODES,
 				      "sound subsystem",
-				      &(s->sound.debug));
+				      (int *) &(s->sound.debug));
 }
 
 static int
@@ -2768,7 +2774,7 @@ c_gfx_debuglog(state_t *s)
 
 	return c_handle_config_update(gfx_debug_modes, GFX_DEBUG_MODES,
 				      "graphics subsystem",
-				      &(drv->debug_flags));
+				      (int *) &(drv->debug_flags));
 
 }
 
@@ -3051,7 +3057,7 @@ c_bpx(state_t *s)
   bp=bp_alloc (s);
 
   bp->type = BREAK_SELECTOR;
-  bp->data.name = sci_malloc (strlen (cmd_params [0].str)+1);
+  bp->data.name = (char*)sci_malloc (strlen (cmd_params [0].str)+1);
   strcpy (bp->data.name, cmd_params [0].str);
   s->have_bp |= BREAK_SELECTOR;
 
@@ -3331,7 +3337,7 @@ c_gc_list_reachable(state_t *s)
 
 void
 script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *objp,
-	     unsigned int *restadjust, 
+	     int *restadjust, 
 	     seg_id_t *segids, reg_t **variables,
 	     reg_t **variables_base, int *variables_nr,
 	     int bp)
@@ -3772,7 +3778,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 
 	while (_debugstate_valid) {
 		int skipfirst = 0;
-		char *commandstring;
+		const char *commandstring;
 		char *input;
 
 		/* Suspend music playing */

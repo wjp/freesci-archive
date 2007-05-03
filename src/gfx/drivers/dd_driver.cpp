@@ -998,7 +998,7 @@ gfx_driver_t gfx_driver_dd = {
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
 	0,0,
-	GFX_CAPABILITY_PIXMAP_GRABBING,
+	0,
 	GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC,
 	dd_set_param,
 	dd_init_specific,

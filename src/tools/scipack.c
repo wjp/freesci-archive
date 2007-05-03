@@ -106,7 +106,7 @@ build_file_ids(int count, char **names)
 	int i;
 	int error = 0;
 
-	resource_ids = malloc(sizeof(unsigned short) * count);
+	resource_ids = (unsigned short*) malloc(sizeof(unsigned short) * count);
 
 	for (i = 0; i < count; i++) {
 		int id = test_file(names[i]);

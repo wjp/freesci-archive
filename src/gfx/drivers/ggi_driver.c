@@ -100,7 +100,7 @@ typedef struct {
 
 } gfx_ggi_struct_t;
 
-int flags;
+static int flags;
 
 static int
 ggi_set_param(gfx_driver_t *drv, char *attribute, char *value)
@@ -163,7 +163,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	if (ggiInit() < 0)
 		return GFX_FATAL;
 
-	meta = sci_calloc(sizeof(gfx_ggi_struct_t), 1);
+	meta = (gfx_ggi_struct_t *) sci_calloc(sizeof(gfx_ggi_struct_t), 1);
 
 	if (!(meta->vis = ggiOpen(NULL))) {
 		DEBUG_BASIC("ggiOpen() failed!\n");
@@ -213,7 +213,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	}
 
 	if (frames < 2) {
-		meta->alt_back_buffer = sci_malloc(bpp * 320 * 200 * xres * yres);
+		meta->alt_back_buffer = (byte *) sci_malloc(bpp * 320 * 200 * xres * yres);
 		meta->back_vis = ggiOpen("memory:pointer", meta->alt_back_buffer, NULL);
 		if (ggiSetSimpleMode(meta->back_vis, xres * 320, yres * 200, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual failed\n");
@@ -221,7 +221,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	} else meta->alt_back_buffer = NULL;
 
 	if (frames < 3) {
-		meta->static_buffer = sci_malloc(bpp * 320 * 200 * xres * yres);
+		meta->static_buffer = (byte *) sci_malloc(bpp * 320 * 200 * xres * yres);
 		meta->static_vis = ggiOpen("memory:pointer", meta->static_buffer, NULL);
 		if (ggiSetSimpleMode(meta->static_vis, xres * 320, yres * 200, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual #2 failed\n");
@@ -253,7 +253,7 @@ ggi_init(gfx_driver_t *drv)
 	if (ggiInit() < 0)
 		return GFX_FATAL;
 
-	meta = sci_calloc(sizeof(gfx_ggi_struct_t), 1);
+	meta = (gfx_ggi_struct_t *) sci_calloc(sizeof(gfx_ggi_struct_t), 1);
 
 	if (!(meta->vis = ggiOpen(NULL))) {
 		DEBUG_BASIC("ggiOpen() failed!\n");
@@ -346,7 +346,7 @@ ggi_init(gfx_driver_t *drv)
 	}
 
 	if (meta->frames < 2) {
-		meta->alt_back_buffer = sci_malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
+		meta->alt_back_buffer = (byte *) sci_malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
 		meta->back_vis = ggiOpen("memory:pointer", meta->alt_back_buffer, NULL);
 		if (ggiSetSimpleMode(meta->back_vis, mode.visible.x, mode.visible.y, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual failed\n");
@@ -354,7 +354,7 @@ ggi_init(gfx_driver_t *drv)
 	} else meta->alt_back_buffer = NULL;
 
 	if (meta->frames < 3) {
-		meta->static_buffer = sci_malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
+		meta->static_buffer = (byte *) sci_malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
 		meta->static_vis = ggiOpen("memory:pointer", meta->static_buffer, NULL);
 		if (ggiSetSimpleMode(meta->static_vis, mode.visible.x, mode.visible.y, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual #2 failed\n");
@@ -621,7 +621,7 @@ ggi_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 		return GFX_FATAL;
 	}
 
-	gfx_crossblit_pixmap(MODE, pxm, priority, src, dest, dbuf->write,
+	gfx_crossblit_pixmap(MODE, pxm, priority, src, dest, (byte *) dbuf->write,
 			     dbuf->buffer.plb.stride,
 			     pri_map, MODE->xfact * 320, 1, 0);
 
@@ -1008,8 +1008,8 @@ gfx_driver_t gfx_driver_ggi = {
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
 	0,0,
-	GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_FINE_LINES,
-	GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC,
+	GFX_CAPABILITY_FINE_LINES, GFX_DEBUG_POINTER
+	| GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC,
 	ggi_set_param,
 	ggi_init_specific,
 	ggi_init,

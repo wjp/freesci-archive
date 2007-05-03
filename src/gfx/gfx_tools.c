@@ -59,7 +59,7 @@ gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned 
 	     unsigned int blue_mask, unsigned int alpha_mask, int red_shift, int green_shift,
 	     int blue_shift, int alpha_shift, int palette, int flags)
 {
-	gfx_mode_t *mode = sci_malloc(sizeof(gfx_mode_t));
+	gfx_mode_t *mode = (gfx_mode_t*)sci_malloc(sizeof(gfx_mode_t));
 #ifdef SATISFY_PURIFY
 	memset(mode, 0, sizeof(gfx_mode_t));
 #endif
@@ -78,12 +78,12 @@ gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned 
 	mode->flags = flags;
 
 	if (palette) {
-		mode->palette = sci_malloc(sizeof(gfx_palette_t));
+		mode->palette = (gfx_palette_t*)sci_malloc(sizeof(gfx_palette_t));
 #ifdef SATISFY_PURIFY
 		memset(mode->palette, 0, sizeof(gfx_palette_t));
 #endif
 		mode->palette->max_colors_nr = palette;
-		mode->palette->colors = sci_calloc(sizeof(gfx_palette_color_t), palette); /* Initialize with empty entries */
+		mode->palette->colors = (gfx_palette_color_t*)sci_calloc(sizeof(gfx_palette_color_t), palette); /* Initialize with empty entries */
 	} else mode->palette = NULL;
 
   return mode;
@@ -113,6 +113,9 @@ gfx_copy_pixmap_box_i(gfx_pixmap_t *dest, gfx_pixmap_t *src, rect_t box)
 
 	gfx_clip_box_basic(&box, dest->index_xl, dest->index_yl);
 
+	if (box.xl <= 0 || box.yl <= 0)
+		return;
+
 	height = box.yl;
 	width = box.xl;
 
@@ -128,7 +131,7 @@ gfx_copy_pixmap_box_i(gfx_pixmap_t *dest, gfx_pixmap_t *src, rect_t box)
 gfx_pixmap_t *
 gfx_clone_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode)
 {
-	gfx_pixmap_t *clone = malloc(sizeof(gfx_pixmap_t));
+	gfx_pixmap_t *clone = (gfx_pixmap_t*)sci_malloc(sizeof(gfx_pixmap_t));
 	*clone = *pxm;
 	clone->index_data = NULL;
 	clone->colors = NULL;
@@ -137,7 +140,7 @@ gfx_clone_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode)
 
 	memcpy(clone->data, pxm->data, clone->data_size);
 	if (clone->alpha_map) {
-		clone->alpha_map = malloc(clone->xl * clone->yl);
+		clone->alpha_map = (byte *) sci_malloc(clone->xl * clone->yl);
 		memcpy(clone->alpha_map, pxm->alpha_map, clone->xl * clone->yl);
 	}
 
@@ -147,12 +150,15 @@ gfx_clone_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode)
 gfx_pixmap_t *
 gfx_new_pixmap(int xl, int yl, int resid, int loop, int cel)
 {
-	gfx_pixmap_t *pxm = sci_malloc(sizeof(gfx_pixmap_t));
+	gfx_pixmap_t *pxm = (gfx_pixmap_t*)sci_malloc(sizeof(gfx_pixmap_t));
 #ifdef SATISFY_PURIFY
 	memset(pxm, 0, sizeof(gfx_pixmap_t));
 #endif
 
-	pxm->alpha_map = pxm->data = pxm->internal.info = pxm->colors = NULL;
+	pxm->alpha_map = NULL;
+	pxm->data = NULL;
+	pxm->internal.info = NULL;
+	pxm->colors = NULL;
 	pxm->internal.handle = 0;
 
 	pxm->index_xl = xl;
@@ -229,7 +235,7 @@ gfx_pixmap_alloc_index_data(gfx_pixmap_t *pixmap)
 	if (!size)
 		size = 1;
 
-	pixmap->index_data = sci_malloc(size);
+	pixmap->index_data = (byte*)sci_malloc(size);
 
 	memset(pixmap->index_data, 0, size);
 
@@ -273,7 +279,7 @@ gfx_pixmap_alloc_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 	if (!size)
 		size = 1;
 
-	pixmap->data = sci_malloc(pixmap->data_size = size);
+	pixmap->data = (byte*)sci_malloc(pixmap->data_size = size);
 	return pixmap;
 }
 
@@ -424,7 +430,7 @@ gfx_pixmap_scale_index_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 	xl = pixmap->index_xl;
 	yl = pixmap->index_yl;
 	linewidth = xfact * xl;
-	initial_new = new = sci_malloc(linewidth * yfact * yl);
+	initial_new = new = (byte *) sci_malloc(linewidth * yfact * yl);
 
 	for (yc = 0; yc < yl; yc++) {
 

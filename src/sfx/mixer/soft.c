@@ -96,8 +96,8 @@ mix_init(sfx_pcm_mixer_t *self, sfx_pcm_device_t *device)
 	self->private_bits /* = P */ = sci_malloc(sizeof(struct mixer_private));
 	P->outbuf = P->writebuf = NULL;
 	P->lastbuf_len = 0;
-	P->compbuf_l = sci_malloc(sizeof(gint32) * device->buf_size);
-	P->compbuf_r = sci_malloc(sizeof(gint32) * device->buf_size);
+	P->compbuf_l = (gint32*)sci_malloc(sizeof(gint32) * device->buf_size);
+	P->compbuf_r = (gint32*)sci_malloc(sizeof(gint32) * device->buf_size);
 	P->played_this_second = 0;
 	P->paused = 0;
 #ifdef DEBUG
@@ -151,11 +151,11 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	ACQUIRE_LOCK();
 	if (!self->feeds) {
 		self->feeds_allocd = 2;
-		self->feeds = sci_malloc(sizeof(sfx_pcm_feed_state_t)
+		self->feeds = (sfx_pcm_feed_state_t*)sci_malloc(sizeof(sfx_pcm_feed_state_t)
 					 * self->feeds_allocd);
 	} else if (self->feeds_allocd == self->feeds_nr) {
 		self->feeds_allocd += 2;
-		self->feeds = sci_realloc(self->feeds,
+		self->feeds = (sfx_pcm_feed_state_t*)sci_realloc(self->feeds,
 					  sizeof(sfx_pcm_feed_state_t)
 					  * self->feeds_allocd);
 	}
@@ -181,7 +181,7 @@ fprintf(stderr, " ---> %d/%d/%d/%d = %d\n",
 	feed->frame_size,
 	fs->buf_size);
 
-	fs->buf = sci_malloc(fs->buf_size * feed->frame_size);
+	fs->buf = (byte*)sci_malloc(fs->buf_size * feed->frame_size);
 fprintf(stderr, " ---> --> %d for %p at %p\n", fs->buf_size * feed->frame_size, fs, fs->buf);
 {int i; for (i = 0; i < fs->buf_size * feed->frame_size; i++)
 fs->buf[i] = 0xa5; }
@@ -234,7 +234,7 @@ _mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 				/* Limit memory waste */
 				self->feeds_allocd >>= 1;
 				self->feeds
-					= sci_realloc(self->feeds,
+					= (sfx_pcm_feed_state_t*)sci_realloc(self->feeds,
 						      sizeof(sfx_pcm_feed_state_t)
 						      * self->feeds_allocd);
 			}
@@ -312,7 +312,7 @@ mix_compute_output(sfx_pcm_mixer_t *self, int outplen)
 
 
 	if (!P->writebuf)
-		P->writebuf = sci_malloc(self->dev->buf_size * frame_size + 4);
+		P->writebuf = (byte*)sci_malloc(self->dev->buf_size * frame_size + 4);
 
 	if (conf.stereo) {
 		if (conf.stereo == SFX_PCM_STEREO_RL) {

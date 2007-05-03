@@ -171,7 +171,7 @@ _reset_graphics_input(state_t *s)
 
 
 	s->pic_is_new = 0;
-	s->pic_visible_map = 0; /* Other values only make sense for debugging */
+	s->pic_visible_map = GFX_MASK_NONE; /* Other values only make sense for debugging */
 	s->dyn_views = NULL; /* no DynViews */
 	s->drop_views = NULL; /* And, consequently, no list for dropped views */
 
@@ -354,7 +354,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	else
 		s->classtable_size = vocab996->size >> 2;
 
-	s->classtable = sci_calloc(sizeof(class_t), s->classtable_size);
+	s->classtable = (class_t*)sci_calloc(sizeof(class_t), s->classtable_size);
 
 	for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
 		int objtype = 0;
@@ -397,7 +397,7 @@ script_init_engine(state_t *s, sci_version_t version)
 							return 1;
 						}
 
-						s->classtable = sci_realloc(s->classtable, sizeof(class_t) * (classnr + 1));
+						s->classtable = (class_t*)sci_realloc(s->classtable, sizeof(class_t) * (classnr + 1));
 						memset(&(s->classtable[s->classtable_size]), 0,
 						       sizeof(class_t) * (1 + classnr - s->classtable_size)); /* Clear after resize */
 
@@ -467,7 +467,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->have_bp = 0;
 
 	s->file_handles_nr = 5;
-	s->file_handles = sci_calloc(sizeof(FILE *), s->file_handles_nr);
+	s->file_handles = (FILE**)sci_calloc(sizeof(FILE *), s->file_handles_nr);
 	/* Allocate memory for file handles */
 
 	sci_init_dir(&(s->dirseeker));
@@ -589,7 +589,7 @@ game_init(state_t *s)
 	/* Initialize send_calls buffer */
 
 	if (!send_calls_allocated)
-		send_calls = sci_calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
+		send_calls = (calls_struct_t*)sci_calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
 
 	if (s->gfx_state && _reset_graphics_input(s))
 		return 1;

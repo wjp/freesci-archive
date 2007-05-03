@@ -497,7 +497,7 @@ sci_init_queue(sci_queue_t *queue)
 sci_queue_t *
 sci_add_to_queue(sci_queue_t *queue, void *data, int type)
 {
-	sci_queue_node_t *node = sci_malloc(sizeof(sci_queue_node_t));
+	sci_queue_node_t *node = (sci_queue_node_t*)sci_malloc(sizeof(sci_queue_node_t));
 
 	node->next = NULL;
 	node->data = data;
@@ -588,7 +588,7 @@ _fcaseseek(char *fname, sci_dir_t *dir)
 	}
 
 	if (strlen(fname) > 12) /* not a DOS file? */
-		buf = sci_malloc(strlen(fname) + 1);
+		buf = (char*)sci_malloc(strlen(fname) + 1);
 	else
 		buf = _buf;
 
@@ -659,7 +659,7 @@ sci_getcwd(void)
 
 	while (size < 8192) {
 		size += 256;
-		cwd = sci_malloc(size);
+		cwd = (char*)sci_malloc(size);
 		if (getcwd(cwd, size-1))
 			return cwd;
 
