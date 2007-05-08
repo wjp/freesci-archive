@@ -567,9 +567,10 @@ script_init_engine(struct _state *s, sci_version_t version);
 */
 
 void
-script_set_gamestate_save_dir(struct _state *s);
-/* Sets the gamestate's save_dir to the CWD
+script_set_gamestate_save_dir(struct _state *s, char *path);
+/* Sets the gamestate's save_dir to the parameter path
 ** Parameters: (state_t *) s: The state to set
+**             (char *) path: Path where save_dir will point to
 ** Returns   : (void)
 */
 

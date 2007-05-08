@@ -1099,7 +1099,10 @@ main(int argc, char** argv)
 		exit(1);
 	}
 
-	script_set_gamestate_save_dir(gamestate); /* Set the CWD as the savegame dir */
+	/* Set the CWD as the savegame dir */
+	const char *cwd = sci_getcwd();
+	script_set_gamestate_save_dir(gamestate, cwd);
+	sci_free(cwd);
 
 	if (sciv_action == ACTION_LIST_SAVEGAMES) {
 		list_savegames(gamestate);
