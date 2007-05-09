@@ -41,12 +41,6 @@
  ** -- Christoph Reichenbach
  **/
 
-#ifdef __cplusplus
-#  define new new_
-#  define delete delete_
-#  define class class_
-#endif /* __cplusplus */
-
 #define SCI_INVALID_FD -1
 #define IS_VALID_FD(a) ((a) != SCI_INVALID_FD) /* Tests validity of a file descriptor */
 

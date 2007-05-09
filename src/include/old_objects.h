@@ -3,6 +3,12 @@
 
 #include <sciresource.h>
 
+#ifdef __cplusplus
+#  define new new_
+#  define delete delete_
+#  define class class_
+#endif /* __cplusplus */
+
 typedef FLEXARRAY(script_opcode,int number;) script_method;
 
 typedef struct object_
