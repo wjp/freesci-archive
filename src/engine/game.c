@@ -489,7 +489,7 @@ script_init_engine(state_t *s, sci_version_t version)
 
 
 void
-script_set_gamestate_save_dir(state_t *s, char* path)
+script_set_gamestate_save_dir(state_t *s, const char* path)
 {
 	sys_string_set(s->sys_strings, SYS_STRING_SAVEDIR, path);
 }

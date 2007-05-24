@@ -55,11 +55,11 @@ sys_string_acquire(sys_strings_t *strings, int index, char *name, int max_len);
 */
 
 int
-sys_string_set(sys_strings_t *strings, int index, char *value);
+sys_string_set(sys_strings_t *strings, int index, const char *value);
 /* Sets the value of a system string
 ** Parameters: (sys_strings_t *) strings: The string table to use
 **             (int) index: Index of the string to write to
-**             (char *) value: The value to copy
+**             (const char *) value: The value to copy
 ** Returns   : 0 on success, 1 on error
 ** Length clipping is performed.
 */

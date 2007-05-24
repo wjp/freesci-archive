@@ -1100,7 +1100,7 @@ main(int argc, char** argv)
 	}
 
 	/* Set the CWD as the savegame dir */
-	const char *cwd = sci_getcwd();
+	char *cwd = sci_getcwd();
 	script_set_gamestate_save_dir(gamestate, cwd);
 	sci_free(cwd);
 

@@ -56,7 +56,7 @@ sys_string_acquire(sys_strings_t *strings, int index, char *name, int max_len)
 }
 
 int
-sys_string_set(sys_strings_t *strings, int index, char *value)
+sys_string_set(sys_strings_t *strings, int index, const char *value)
 {
 	sys_string_t *str = strings->strings + index;
 
