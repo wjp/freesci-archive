@@ -119,7 +119,7 @@ aminit(midi_writer_t *self)
 
 	if ((err = snd_seq_drain_output(seq))) {
 		fflush(NULL);
-		sprintf("[SFX] Error while draining: %s\n",
+		fprintf(stderr, "[SFX] Error while draining: %s\n",
 			snd_strerror(err));
 		return SFX_ERROR;
 	}
