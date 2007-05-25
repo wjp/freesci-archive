@@ -128,7 +128,7 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text, int fgcolor
 gfxw_port_t *
 sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_t bgcolor,
 		int title_font, gfx_color_t title_color, gfx_color_t title_bgcolor,
-		char *title, int flags)
+		const char *title, int flags)
 {
 	gfxw_visual_t *visual = s->visual;
 	gfx_state_t *state = s->gfx_state;

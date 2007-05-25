@@ -34,23 +34,23 @@
 state_t *con_gamestate = NULL;
 
 typedef struct {
-	char *name;
-	char *description;
+	const char *name;
+	const char *description;
 } cmd_mm_entry_t; /* All later structures must "extend" this */
 
 typedef cmd_mm_entry_t cmd_page_t; /* Simple info page */
 
 typedef struct {
-	char *name;
-	char *description;
+	const char *name;
+	const char *description;
 	int (*command) (state_t *);
-	char *param;
+	const char *param;
 } cmd_command_t;
 
 typedef struct
 {
-	char *name;
-	char *description;
+	const char *name;
+	const char *description;
 	union {
 		int *intp;
 		char **charpp;
@@ -62,7 +62,7 @@ typedef struct
 typedef void printfunc_t(cmd_mm_entry_t *data, int full);
 
 typedef struct {
-	char *name;
+	const char *name;
 	void *data; /* cmd_mm_entry_t */
 	size_t size_per_entry;
 	printfunc_t *print;
@@ -77,7 +77,7 @@ typedef struct {
 #define CMD_MM_VAR 1 /* Variables */
 #define CMD_MM_DOC 2 /* Misc. documentation */
 
-static char *cmd_mm_names[CMD_MM_ENTRIES] = {
+static const char *cmd_mm_names[CMD_MM_ENTRIES] = {
 	"Commands",
 	"Variables",
 	"Documentation"
@@ -534,7 +534,7 @@ con_parse (state_t *s, const char *command)
 	int quote = 0;		/* quoting? */
 	int done = 0;			/* are we done yet? */
 	int cdone = 0;		/* Done with the current command? */
-	char *paramt;			/* parameter types */
+	const char *paramt;			/* parameter types */
 	char *cmd = (command && command[0]) ? (char *) sci_strdup (command) :
 		(char *) sci_strdup(" ");
 	char *_cmd = cmd;
@@ -748,7 +748,7 @@ con_alloc_page_entry(int ID)
 }
 
 int
-con_hook_page(char *name, char *body)
+con_hook_page(const char *name, const char *body)
 {
 	cmd_page_t *page = (cmd_page_t *) con_alloc_page_entry(CMD_MM_DOC);
 
@@ -759,8 +759,8 @@ con_hook_page(char *name, char *body)
 }
 
 int
-con_hook_command (int command (state_t *), char *name, char *param,
-		  char *description)
+con_hook_command (int command (state_t *), const char *name, const char *param,
+		  const char *description)
 {
 	cmd_command_t *cmd = NULL;
 	unsigned int i;
@@ -812,7 +812,7 @@ con_hook_command (int command (state_t *), char *name, char *param,
 
 
 int
-con_hook_int (int *pointer, char *name, char *description)
+con_hook_int (int *pointer, const char *name, const char *description)
 {
 	cmd_var_t *var;
 
@@ -929,7 +929,7 @@ c_list_suffices(state_t *s)
 static void
 _cmd_print_command(cmd_mm_entry_t *data, int full)
 {
-	char *paramseeker = ((cmd_command_t *) data)->param;
+	const char *paramseeker = ((cmd_command_t *) data)->param;
 
 	if (full) {
 		sciprintf ("SYNOPSIS\n\n  %s ", data->name, paramseeker);
@@ -1007,7 +1007,7 @@ c_list (state_t * s)
 				   "[resource] - lists all [resource]s");
 		}
 	else if (cmd_paramlength == 1) {
-		char *mm_subsects[3] = {"cmds", "vars", "docs"};
+		const char *mm_subsects[3] = {"cmds", "vars", "docs"};
 		int mm_found = -1;
 		int i;
 

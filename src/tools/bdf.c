@@ -3865,11 +3865,11 @@ char *name;
 
 bdf_property_t *
 #ifdef __STDC__
-bdf_get_font_property(bdf_font_t *font, char *name)
+bdf_get_font_property(bdf_font_t *font, const char *name)
 #else
 bdf_get_font_property(font, name)
 bdf_font_t *font;
-char *name;
+const char *name;
 #endif
 {
     hashnode hn;
@@ -3877,7 +3877,7 @@ char *name;
     if (font == 0 || font->props_size == 0 || name == 0 || *name == 0)
       return 0;
 
-    hn = hash_lookup(name, (hashtable *) font->internal);
+    hn = hash_lookup((char*)name, (hashtable *) font->internal);
     return (hn) ? (font->props + ((unsigned long) hn->data)) : 0;
 }
 

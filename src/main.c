@@ -389,7 +389,7 @@ typedef struct {
 #define OFF 0
 #define DONTCARE -1
 
-static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_entries, char* freesci_dir);
+static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_entries, const char* freesci_dir);
 static int game_select_resource_found();
 
 static char *
@@ -810,12 +810,12 @@ init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_t *driver, r
 
 typedef void *old_lookup_funct_t(char *name);
 
-typedef void *lookup_funct_t(char *path, char *name);
+typedef void *lookup_funct_t(const char *path, const char *name);
 
 
 static void *
 lookup_driver(lookup_funct_t lookup_func, void explain_func(void),
-	      char *driver_class, char *driver_name, char *path)
+	      const char *driver_class, const char *driver_name, const char *path)
 {
 	void *retval = lookup_func(path, driver_name);
 
@@ -925,7 +925,7 @@ main(int argc, char** argv)
 #if 0
 	sound_server_t *sound_server = NULL;
 #endif
-	char *module_path			= SCI_DEFAULT_MODULE_PATH;
+	const char *module_path			= SCI_DEFAULT_MODULE_PATH;
 	resource_mgr_t *resmgr;
 #ifdef _DREAMCAST
 	/* Fake command line arguments. */
@@ -1005,7 +1005,7 @@ main(int argc, char** argv)
 		int got_version = !version_detect_from_executable(&version);
 		unsigned int code;
 		sci_version_t hash_version;
-		char *game_name = version_guess_from_hashcode(&hash_version, &code);
+		const char *game_name = version_guess_from_hashcode(&hash_version, &code);
 
 		if (got_version) {
 			sciprintf("Interpreter version: %d.%03d.%03d (by executable scan)\n",
@@ -1527,7 +1527,7 @@ static int compare_config_entry(const void* arg1, const void* arg2)
 	return strcmp(config1->name, config2->name);
 }
 
-static gfx_bitmap_font_t* load_font(char* font_dir, char* filename)
+static gfx_bitmap_font_t* load_font(const char* font_dir, const char* filename)
 {
 	gfx_bitmap_font_t* font = NULL;
 	int fh;
@@ -1569,13 +1569,13 @@ static gfx_bitmap_font_t* load_font(char* font_dir, char* filename)
 #define FONT_DEFAULT		"default.fnt"
 #define FONT_SMALL			"small.fnt"
 
-static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_entries, char* freesci_dir) {
+static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_entries, const char* freesci_dir) {
 	char start_dir[PATH_MAX+1] = "";
 	char work_dir[PATH_MAX+1] = "";
 	char *gfx_driver_name			= NULL;
 	sci_version_t version			= 0;
 	gfx_driver_t *gfx_driver		= NULL;
-	char *module_path			= SCI_DEFAULT_MODULE_PATH;
+	const char *module_path			= SCI_DEFAULT_MODULE_PATH;
 	int current_config;
 	int selected_game = -1;
 	char** game_list = NULL;

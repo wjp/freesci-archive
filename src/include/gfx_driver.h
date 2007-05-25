@@ -85,11 +85,11 @@ typedef enum {
 
 typedef struct _gfx_driver { /* Graphics driver */
 
-	char *name; /* Graphics driver name. Unique identifier, should consist of
-	            ** lower-case (where applicable) alphanumerics
-	            */
+	const char *name; /* Graphics driver name. Unique identifier, should consist of
+	                   ** lower-case (where applicable) alphanumerics
+	                   */
 
-	char *version; /* Free-form version description (for informative purposes
+	const char *version; /* Free-form version description (for informative purposes
 		           ** only)
 		           */
 
@@ -405,7 +405,7 @@ gfx_find_driver(char *, char *name);
 **                              was found
 */
 
-char *
+const char *
 gfx_get_driver_name(int nr);
 /* Retreives the name of the driver with the specified number
 ** Parameters: (int) nr: Number of the driver

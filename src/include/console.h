@@ -117,7 +117,7 @@ con_parse(struct _state *s, const char *command);
 
 
 int
-con_hook_command(int command(struct _state *s), char *name, char *param, char *description);
+con_hook_command(int command(struct _state *s), const char *name, const char *param, const char *description);
 /* Adds a command to the parser's command list
 ** Parameters: command: The command to add
 **             name: The command's name
@@ -187,15 +187,15 @@ con_insert_pixmap(gfx_pixmap_t *pixmap);
 */
 
 int
-con_hook_page(char *topic, char *body);
+con_hook_page(const char *topic, const char *body);
 /* Hooks a general information page to the manual page system
-** Parameters: (char *) topic: The topic name
-**             (char *) body: The text body to assign to the topic
+** Parameters: (const char *) topic: The topic name
+**             (const char *) body: The text body to assign to the topic
 ** Returns   : (int) 0 on success
 */
 
 int
-con_hook_int(int *pointer, char *name, char *description);
+con_hook_int(int *pointer, const char *name, const char *description);
 /* Adds an int to the list of modifyable ints.
 ** Parameters: pointer: Pointer to the int to add to the list
 **             name: Name for this value

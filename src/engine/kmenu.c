@@ -117,8 +117,8 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, reg_t *argv)
 #define ABOUT_FREESCI_PAGES_NR 7
 
 struct {
-	char *title;
-	char *body;
+	const char *title;
+	const char *body;
 	int fgcolor, bgcolor;
 } _about_freesci_pages[ABOUT_FREESCI_PAGES_NR] = {
 	{"FreeSCI hackers and contributors",

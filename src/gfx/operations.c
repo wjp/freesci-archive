@@ -1707,7 +1707,7 @@ gfxop_set_pointer_position(gfx_state_t *state, point_t pos)
 
 struct scancode_row {
 	int offset;
-	char *keys;
+	const char *keys;
 } scancode_rows[SCANCODE_ROWS_NR] = {
 	{0x10, "QWERTYUIOP[]"},
 	{0x1e, "ASDFGHJKL;'\\"},
@@ -1722,7 +1722,7 @@ _gfxop_scancode(int ch)
 	int c = toupper((char)ch);
 
 	for (row = 0; row < SCANCODE_ROWS_NR; row++) {
-		char *keys = scancode_rows[row].keys;
+		const char *keys = scancode_rows[row].keys;
 		int offset = scancode_rows[row].offset;
 
 		while (*keys) {
@@ -2156,7 +2156,7 @@ gfxop_get_font_height(gfx_state_t *state, int font_nr)
 }
 
 int
-gfxop_get_text_params(gfx_state_t *state, int font_nr, char *text,
+gfxop_get_text_params(gfx_state_t *state, int font_nr, const char *text,
 		      int maxwidth, int *width, int *height, int text_flags,
 		      int *lines_nr, int *lineheight, int *lastline_width)
 {

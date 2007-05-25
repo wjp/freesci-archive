@@ -811,7 +811,7 @@ _gfxwop_static_view_draw(gfxw_widget_t *widget, point_t pos)
 }
 
 static int
-_w_gfxwop_view_print(gfxw_widget_t *widget, char *name, int indentation)
+_w_gfxwop_view_print(gfxw_widget_t *widget, const char *name, int indentation)
 {
 	gfxw_view_t *view = (gfxw_view_t *) widget;
 	_gfxw_print_widget(widget, indentation);
@@ -931,7 +931,7 @@ _gfxwop_pic_view_draw(gfxw_widget_t *widget, point_t pos)
 }
 
 static int
-_gfxwop_some_view_print(gfxw_widget_t *widget, int indentation, char *type_string)
+_gfxwop_some_view_print(gfxw_widget_t *widget, int indentation, const char *type_string)
 {
 	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) widget;
 
@@ -1221,7 +1221,7 @@ _gfxw_set_ops_TEXT(gfxw_widget_t *widget)
 }
 
 gfxw_text_t *
-gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignment_t halign,
+gfxw_new_text(gfx_state_t *state, rect_t area, int font, const char *text, gfx_alignment_t halign,
 	      gfx_alignment_t valign, gfx_color_t color1, gfx_color_t color2,
 	      gfx_color_t bgcolor, int text_flags)
 {
@@ -1315,7 +1315,7 @@ _gfxw_set_container_ops(gfxw_container_t *container, gfxw_point_op *draw, gfxw_o
 }
 
 static int
-_w_gfxwop_container_print_contents(char *name, gfxw_widget_t *widget, int indentation)
+_w_gfxwop_container_print_contents(const char *name, gfxw_widget_t *widget, int indentation)
 {
 	gfxw_widget_t *seeker = widget;
 
@@ -1689,7 +1689,7 @@ _gfxwop_sorted_list_draw(gfxw_widget_t *list, point_t pos)
 }
 
 static inline int
-_w_gfxwop_list_print(gfxw_widget_t *list, char *name, int indentation)
+_w_gfxwop_list_print(gfxw_widget_t *list, const char *name, int indentation)
 {
 	_gfxw_print_widget(list, indentation);
 	sciprintf(name);

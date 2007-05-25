@@ -96,13 +96,13 @@ typedef struct {
 
 
 reg_t
-read_selector(struct _state *s,  reg_t object, selector_t selector_id, char *fname, int line);
+read_selector(struct _state *s,  reg_t object, selector_t selector_id, const char *fname, int line);
 void
 write_selector(struct _state *s, reg_t object, selector_t selector_id, reg_t value,
-	       char *fname, int line);
+	       const char *fname, int line);
 int
 invoke_selector(struct _state *s, reg_t object, int selector_id, int noinvalid, int kfunct,
-		stack_ptr_t k_argp, int k_argc, char *fname, int line, int argc, ...);
+		stack_ptr_t k_argp, int k_argc, const char *fname, int line, int argc, ...);
 
 
 
@@ -221,12 +221,12 @@ kernel_dereference_bulk_pointer(struct _state *s, reg_t pointer, int entries);
 
 
 int
-kernel_oops(struct _state *s, char *file, int line, char *reason);
+kernel_oops(struct _state *s, const char *file, int line, const char *reason);
 /* Halts script execution and informs the user about an internal kernel error or failed assertion
 ** Paramters: (state_t *) s: The state to use
-**            (char *) file: The file the oops occured in
+**            (const char *) file: The file the oops occured in
 **            (int) line: The line the oops occured in
-**            (char *) reason: Reason for the kernel oops
+**            (const char *) reason: Reason for the kernel oops
 */
 
 
@@ -313,22 +313,22 @@ process_sound_events(struct _state *s); /* Get all sound events, apply their cha
 #define LOOKUP_LIST(addr) lookup_list(s, addr, __FILE__, __LINE__)
 
 node_t *
-lookup_node(struct _state *s, reg_t addr, char *file, int line);
+lookup_node(struct _state *s, reg_t addr, const char *file, int line);
 /* Resolves an address into a list node
 ** Parameters: (state_t *) s: The state to operate on
 **             (reg_t) addr: The address to resolve
-**             (char *) file: The file the function was called from
+**             (const char *) file: The file the function was called from
 **             (int) line: The line number the function was called from
 ** Returns   : (node_t *) The list node referenced, or NULL on error
 */
 
 
 list_t *
-lookup_list(struct _state *s, reg_t addr, char *file, int line);
+lookup_list(struct _state *s, reg_t addr, const char *file, int line);
 /* Resolves a list pointer to a list
 ** Parameters: (state_t *) s: The state to operate on
 **             (reg_t) addr: The address to resolve
-**             (char *) file: The file the function was called from
+**             (const char *) file: The file the function was called from
 **             (int) line: The line number the function was called from
 ** Returns   : (list_t *) The list referenced, or NULL on error
 */
@@ -383,8 +383,8 @@ typedef reg_t kfunct(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 typedef struct {
 	kfunct *fun; /* The actual function */
-	char *signature;  /* kfunct signature */
-	char *orig_name; /* Original name, in case we couldn't map it */
+	const char *signature;  /* kfunct signature */
+	const char *orig_name; /* Original name, in case we couldn't map it */
 } kfunct_sig_pair_t;
 
 #define KF_OLD 0
@@ -394,7 +394,7 @@ typedef struct {
 
 typedef struct {
 	int type; /* KF_* */
-	char *name;
+	const char *name;
         kfunct_sig_pair_t new;
 } sci_kernel_function_t;
 

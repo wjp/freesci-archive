@@ -226,7 +226,7 @@ typedef struct _gfxw_port {
 	gfxw_snapshot_t *restore_snap; /* Snapshot to be restored automagically,
 					  experimental feature used in the PQ3 interpreter */
 	int port_flags; /* interpreter-dependant flags */
-	char *title_text;
+	const char *title_text;
 	byte gray_text; /* Whether text is 'grayed out' (dithered) */
 } gfxw_port_t;
 

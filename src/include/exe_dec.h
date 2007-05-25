@@ -33,13 +33,13 @@
 typedef struct _exe_handle exe_handle_t;
 
 typedef struct _exe_decompressor {
-	char *name; /* Decompressor name. Unique identifier, should consist
+	const char *name; /* Decompressor name. Unique identifier, should consist
 	            ** of lower-case (where applicable) alphanumerics
 	            */
 
-	exe_handle_t * (*open) (char *filename);
+	exe_handle_t * (*open) (const char *filename);
 	/* Opens an executable file
-	** Parameters: (char *) filename: Filename of executable to open.
+	** Parameters: (const char *) filename: Filename of executable to open.
 	** Returns   : (exe_handle_t *) Decompressor file handle, or NULL on
 	**                              error.
 	** This function will verify that the file can be handled by the

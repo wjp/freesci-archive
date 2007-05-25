@@ -344,13 +344,13 @@ sci_kernel_function_t kfunct_mappers[] = {
 	{KF_TERMINATOR, NULL} /* Terminator */
 };
 
-static char *argtype_description[] = {"Undetermined (WTF?)", "List","Node","Object","Reference","Arithmetic"};
+static const char *argtype_description[] = {"Undetermined (WTF?)", "List","Node","Object","Reference","Arithmetic"};
 
 
 /******************** Kernel Oops ********************/
 
 int
-kernel_oops(state_t *s, char *file, int line, char *reason)
+kernel_oops(state_t *s, const char *file, int line, const char *reason)
 {
 	sciprintf("Kernel Oops in file %s, line %d: %s\n", file, line, reason);
 	fprintf(stderr,"Kernel Oops in file %s, line %d: %s\n", file, line, reason);
@@ -361,7 +361,7 @@ kernel_oops(state_t *s, char *file, int line, char *reason)
 
 /* Allocates a set amount of memory for a specified use and returns a handle to it. */
 reg_t
-kalloc(state_t *s, char *type, int space)
+kalloc(state_t *s, const char *type, int space)
 {
 	reg_t reg;
 
@@ -372,7 +372,7 @@ kalloc(state_t *s, char *type, int space)
 }
 
 int
-has_kernel_function(state_t *s, char *kname)
+has_kernel_function(state_t *s, const char *kname)
 {
 	int i = 0;
 
@@ -731,9 +731,9 @@ kNOP(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 
 void
-kernel_compile_signature(char **s)
+kernel_compile_signature(const char **s)
 {
-	char *src = *s;
+	const char *src = *s;
 	char *result;
 	int ellipsis = 0;
 	char v;
@@ -909,10 +909,6 @@ free_kfunct_tables(state_t *s)
 {
 	int i;
 
-	for (i = 0; i < s->kernel_names_nr; i++)
-		if (s->kfunct_table[i].signature)
-			free(s->kfunct_table[i].signature);
-
 	sci_free(s->kfunct_table);
 	s->kfunct_table = NULL;
 
@@ -997,7 +993,7 @@ determine_reg_type(state_t *s, reg_t reg, int allow_invalid)
 	}
 }
 
-char *
+const char *
 kernel_argtype_description(int type)
 {
     type &= ~KSIG_INVALID;
@@ -1006,7 +1002,7 @@ kernel_argtype_description(int type)
 }
 
 int
-kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv)
+kernel_matches_signature(state_t *s, const char *sig, int argc, reg_t *argv)
 {
 	if (!sig)
 		return 1;

@@ -33,7 +33,7 @@
 #endif
 
 inline node_t *
-inline_lookup_node(state_t *s, reg_t addr, char *file, int line)
+inline_lookup_node(state_t *s, reg_t addr, const char *file, int line)
 {
 	mem_obj_t *mobj;
 	node_table_t *nt;
@@ -62,7 +62,7 @@ inline_lookup_node(state_t *s, reg_t addr, char *file, int line)
 }
 
 node_t *
-lookup_node(state_t *s, reg_t addr, char *file, int line)
+lookup_node(state_t *s, reg_t addr, const char *file, int line)
 {
 	return inline_lookup_node(s, addr, file, line);
 }
@@ -71,7 +71,7 @@ lookup_node(state_t *s, reg_t addr, char *file, int line)
 
 
 inline list_t *
-_lookup_list(state_t *s, reg_t addr, char *file, int line, int may_be_null)
+_lookup_list(state_t *s, reg_t addr, const char *file, int line, int may_be_null)
 {
 	mem_obj_t *mobj;
 	list_table_t *lt;
@@ -101,7 +101,7 @@ _lookup_list(state_t *s, reg_t addr, char *file, int line, int may_be_null)
 }
 
 list_t *
-lookup_list(state_t *s, reg_t addr, char *file, int line)
+lookup_list(state_t *s, reg_t addr, const char *file, int line)
 {
 	return _lookup_list(s, addr, file, line, 0);
 }

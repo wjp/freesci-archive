@@ -512,7 +512,7 @@ extern void bdf_add_font_property __((bdf_font_t *font,
                                       bdf_property_t *property));
 extern void bdf_delete_font_property __((bdf_font_t *font, char *name));
 extern bdf_property_t *bdf_get_font_property __((bdf_font_t *font,
-                                                 char *name));
+                                                 const char *name));
 extern unsigned long bdf_font_property_list __((bdf_font_t *font,
                                                 bdf_property_t **props));
 

@@ -62,7 +62,7 @@ int sci_debug_flags = 0; /* Special flags */
 #define MEMTEST_HARDNESS 31
 
 int
-memtest(char *file, int line)
+memtest(const char *file, int line)
 {
 	/* va_list argp; -- unused */
 	int i;
@@ -161,7 +161,7 @@ _SCIkprintf(FILE *file, const char *format, ...)
 
 
 void
-_SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...)
+_SCIkwarn(state_t *s, const char *file, int line, int area, const char *format, ...)
 {
 	va_list args;
 
@@ -179,7 +179,7 @@ _SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...)
 }
 
 void
-_SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...)
+_SCIkdebug(state_t *s, const char *file, int line, int area, const char *format, ...)
 {
 	va_list args;
 
@@ -193,7 +193,7 @@ _SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...)
 }
 
 void
-_SCIGNUkdebug(const char *funcname, state_t *s, const char *file, int line, int area, char *format, ...)
+_SCIGNUkdebug(const char *funcname, state_t *s, const char *file, int line, int area, const char *format, ...)
 {
 	va_list xargs;
 	int error = ((area == SCIkWARNING_NR) || (area == SCIkERROR_NR));
@@ -279,7 +279,7 @@ sci_init_dir(sci_dir_t *dir)
 }
 
 char *
-sci_find_first(sci_dir_t *dir, char *mask)
+sci_find_first(sci_dir_t *dir, const char *mask)
 {
 	dir->search = _findfirst(mask, &(dir->fileinfo));
 
@@ -374,7 +374,7 @@ sci_init_dir(sci_dir_t *dir)
 }
 
 char *
-sci_find_first(sci_dir_t *dir, char *mask)
+sci_find_first(sci_dir_t *dir, const char *mask)
 {
 	if (dir->dir)
 		closedir(dir->dir);
@@ -423,9 +423,10 @@ sci_finish_find(sci_dir_t *dir)
 
 
 int
-sci_mkpath(char *path)
+sci_mkpath(const char *path)
 {
-        char *nextsep = NULL, *path_pos = path;
+	const char *path_pos = path;
+        char *nextsep = NULL;
 
         if (chdir(G_DIR_SEPARATOR_S)) { /* Go to root */
                 sciprintf("Error: Could not change to root directory '%s'!\n",
@@ -574,7 +575,7 @@ sci_sched_yield()
 
 
 static char *
-_fcaseseek(char *fname, sci_dir_t *dir)
+_fcaseseek(const char *fname, sci_dir_t *dir)
 		 /* Expects *dir to be uninitialized and the caller to
 		 ** free it afterwards  */
 {
@@ -620,7 +621,7 @@ _fcaseseek(char *fname, sci_dir_t *dir)
 
 
 FILE *
-sci_fopen(char *fname, char *mode)
+sci_fopen(const char *fname, const char *mode)
 {
 	sci_dir_t dir;
 	char *name = _fcaseseek(fname, &dir);
@@ -637,7 +638,7 @@ sci_fopen(char *fname, char *mode)
 }
 
 int
-sci_open(char *fname, int flags)
+sci_open(const char *fname, int flags)
 {
 	sci_dir_t dir;
 	char *name = _fcaseseek(fname, &dir);
@@ -679,7 +680,7 @@ sci_fd_size(int fd)
 }
 
 int
-sci_file_size(char *fname)
+sci_file_size(const char *fname)
 {
 	int fd = fs_open(fname, O_RDONLY);
 	int retval = -1;
@@ -703,7 +704,7 @@ sci_fd_size(int fd)
 }
 
 int
-sci_file_size(char *fname)
+sci_file_size(const char *fname)
 {
 	struct stat fn_stat;
 	if (stat(fname, &fn_stat)) return -1;

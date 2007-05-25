@@ -110,7 +110,7 @@ void script_adjust_opcode_formats(int res_version)
 }
 	
 int
-script_find_selector(state_t *s, char *selectorname)
+script_find_selector(state_t *s, const char *selectorname)
 {
   int i;
   for (i = 0; i < s->selector_names_nr; i++)

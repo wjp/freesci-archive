@@ -666,7 +666,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 			case 'u': unsigned_var = 1;
 			case 'd': { /* Copy decimal */
 				/* int templen; -- unused atm */
-				char *format_string = "%d";
+				const char *format_string = "%d";
 
 				if (xfer == 'x')
 					format_string = "%x";

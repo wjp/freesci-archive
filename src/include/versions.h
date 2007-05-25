@@ -150,10 +150,10 @@ version_detect_from_executable(sci_version_t *result);
 **             (sci_version_t) *result: The version number detected on success
 */
 
-char *
+const char *
 version_guess_from_hashcode(sci_version_t *result, guint32 *code);
 /* Try to detect version from Sierra resource file(s) in cwd
-** Returns   : (char *) NULL on failure, the name of the associated game otherwise
+** Returns   : (const char *) NULL on failure, the name of the associated game otherwise
 **             (sci_version_t) *result: The version number detected on success
 **             (guint32) *code: The resource hash  code
 */

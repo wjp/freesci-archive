@@ -49,7 +49,7 @@ mem_obj_t* mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, me
 					
 #define INVALID_SCRIPT_ID -1
 	
-void dbg_print( char* msg, int i ) {
+void dbg_print( const char* msg, int i ) {
 #ifdef DEBUG_SEG_MANAGER
 	char buf[1000];
 	sprintf( buf, "%s = [0x%x], dec:[%d]", msg, i, i);
@@ -1114,7 +1114,7 @@ sm_free_hunk_entry(seg_manager_t *self, reg_t addr)
 
 
 hunk_t *
-sm_alloc_hunk_entry(seg_manager_t *self, char *hunk_type, int size, reg_t *reg)
+sm_alloc_hunk_entry(seg_manager_t *self, const char *hunk_type, int size, reg_t *reg)
 {
 	hunk_t *h = sm_alloc_hunk(self, reg);
 
@@ -1265,7 +1265,7 @@ sm_dereference(seg_manager_t *self, reg_t pointer, int *size)
 
 
 unsigned char *
-sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr)
+sm_alloc_dynmem(seg_manager_t *self, int size, const char *descr, reg_t *addr)
 {
 	seg_id_t seg;
 	mem_obj_t *mobj = alloc_nonscript_segment(self, MEM_OBJ_DYNMEM, &seg);
@@ -1283,7 +1283,7 @@ sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr)
 	return (unsigned char *) (mobj->data.dynmem.buf);
 }
 
-char *
+const char *
 sm_get_description(seg_manager_t *self, reg_t addr)
 { 
 	mem_obj_t *mobj = self->heap[addr.segment];

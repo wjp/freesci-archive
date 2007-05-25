@@ -52,13 +52,13 @@ char *exported_conf_path; /* Path which the config file was found in */
 int dospath; /* Use dos-style paths? */
 
 typedef struct {
-	char *name;
+	const char *name;
 	int value;
 } name_value_pair;
 
 
 struct {
-	char *name;
+	const char *name;
 	void *(*check_driver)(char *name);
 } freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
 	{"gfx", NULL},
@@ -96,7 +96,7 @@ set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_na
 
 
 static int
-parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses a string with a name value pair */
+parse_name(char *name, name_value_pair* nvps, const char *what, int oldval); /* Parses a string with a name value pair */
 
 static void
 copy_subsystem_options(config_entry_t *dest, config_entry_t *src);
@@ -214,7 +214,7 @@ static name_value_pair line_mode[] = {
 
 typedef struct {
 	int type;
-	char *name;
+	const char *name;
 	int min;
 	int max;
 	name_value_pair *nvp;
@@ -776,7 +776,7 @@ config_free(config_entry_t **conf, int entries)
 
 
 static int
-parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
+parse_name(char *name, name_value_pair *nvps, const char *what, int oldval)
 {
 	int i = 0;
 
@@ -959,7 +959,7 @@ parse_option(char *option, int optlen, char *value)
 
 
 driver_option_t *
-get_driver_options(config_entry_t *config, int subsystem, char *name)
+get_driver_options(config_entry_t *config, int subsystem, const char *name)
 {
 	subsystem_options_t *options;
 

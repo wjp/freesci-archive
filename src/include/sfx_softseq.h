@@ -38,8 +38,8 @@
 
 /* Software sequencer */
 typedef struct sfx_softseq {
-	char *name;
-	char *version;
+	const char *name;
+	const char *version;
 
 	int
 	(*set_option)(struct sfx_softseq *self, char *name, char *value);

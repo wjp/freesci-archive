@@ -44,7 +44,7 @@ typedef enum {
 	SEG_ID
 } id_flag;
 
-void dbg_print( char* msg, int i );		/* for debug only */
+void dbg_print( const char* msg, int i );	/* for debug only */
 
 /* verify the the given condition is true, output the message if condition is false, and exit
 ** Parameters:
@@ -468,10 +468,10 @@ sm_free_node(struct _seg_manager_t *self, reg_t addr);
 /*==============================================================*/
 
 hunk_t*
-sm_alloc_hunk_entry(struct _seg_manager_t *self, char *hunk_type, int size, reg_t *addr);
+sm_alloc_hunk_entry(struct _seg_manager_t *self, const char *hunk_type, int size, reg_t *addr);
 /* Allocate a fresh chunk of the hunk
 ** Parameters: (int) size: Number of bytes to allocate for the hunk entry
-**             (char *) hunk_type: A descriptive string for the hunk entry,
+**             (const char *) hunk_type: A descriptive string for the hunk entry,
 **				for debugging purposes
 ** Returns   : (hunk_t*): Reference to the memory allocated for the hunk piece
 **             (reg_t) *addr: The offset of the freshly allocated hunk entry
@@ -490,10 +490,10 @@ sm_free_hunk_entry(struct _seg_manager_t *self, reg_t addr);
 /*==============================================================*/
 
 unsigned char *
-sm_alloc_dynmem(struct _seg_manager_t *self, int size, char *description, reg_t *addr);
+sm_alloc_dynmem(struct _seg_manager_t *self, int size, const char *description, reg_t *addr);
 /* Allocate some dynamic memory
 ** Parameters: (int) size: Number of bytes to allocate
-**             (char_ *) description: A descriptive string,
+**             (const char_ *) description: A descriptive string,
 **				for debugging purposes
 ** Returns   : (unsigned char*): Raw pointer into the allocated dynamic memory
 **             (reg_t) *addr: The offset of the freshly allocated X
@@ -505,11 +505,11 @@ sm_free_dynmem(struct _seg_manager_t *self, reg_t addr);
 ** Parameters: (reg_t) addr: Offset of the dynmem chunk to free
 */
 
-char *
+const char *
 sm_get_description(struct _seg_manager_t *self, reg_t addr);
 /* Gets the description of a dynmem segment
 ** Parameters: (reg_t) addr: Segment to describe
-** Returns   : (char *): Pointer to the descriptive string set in
+** Returns   : (const char *): Pointer to the descriptive string set in
 ** sm_alloc_dynmem 
 */
 
@@ -535,7 +535,7 @@ typedef struct _seg_interface {
 	mem_obj_t *mobj;
 	seg_id_t seg_id;
 	mem_obj_enum type_id;	/* Segment type */
-	char *type;		/* String description of the segment type */
+	const char *type;	/* String description of the segment type */
 
 	reg_t
 	(*find_canonic_address)(struct _seg_interface *self, reg_t sub_addr);

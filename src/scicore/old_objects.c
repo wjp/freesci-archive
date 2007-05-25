@@ -24,7 +24,7 @@ static opcode* opcodes;
 object **object_map, *object_root;
 int max_object;
 
-char* globals[] = {
+const char* globals[] = {
   /*00*/
   "ego",
   "GAMEID",
@@ -233,7 +233,7 @@ static int add_child(object* parent, object* child)
 	return 0;
 }
 
-static object* fake_object(char* reason)
+static object* fake_object(const char* reason)
 {
 	object* obj=object_new();
 	if(obj==0)

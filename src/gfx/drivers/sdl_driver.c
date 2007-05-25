@@ -97,7 +97,7 @@ struct _sdl_state {
 static int debugline = 0;
 
 static void
-sdlprintf(char *fmt, ...)
+sdlprintf(const char *fmt, ...)
 {
 	va_list argp;
 	fprintf(stderr,"GFX-SDL %d:", debugline);

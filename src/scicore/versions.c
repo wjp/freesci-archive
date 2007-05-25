@@ -160,7 +160,7 @@ version_detect_from_executable(sci_version_t *result)
 {
 	sci_dir_t dir;
 	char *filename;
-	char *masks[] = {"*.exe", "*.EXE", NULL};
+	const char *masks[] = {"*.exe", "*.EXE", NULL};
 	int masknr = 0;
 
 	while (masks[masknr] != NULL) {
@@ -187,7 +187,7 @@ version_detect_from_executable(sci_version_t *result)
 #define HASHCODE_MAGIC_RESOURCE_000 0x55555555
 #define HASHCODE_MAGIC_RESOURCE_001 0x00000001
 
-char *  /* Original version by Solomon Peachy */
+const char *  /* Original version by Solomon Peachy */
 version_guess_from_hashcode(sci_version_t *result, guint32 *code)
 {
 	int i, len = 0;

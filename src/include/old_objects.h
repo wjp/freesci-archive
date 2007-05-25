@@ -17,7 +17,7 @@ typedef struct object_
 	 *the selectors had at load time. If the selectors are changed in
 	 *instances, inconsistency will follow*/
 	struct object_* parent;
-	char* name;
+	const char* name;
 
 	FLEXARRAY_NOEXTRA(struct object_*) children;
 
@@ -48,6 +48,6 @@ void printObject(object* obj, int flags);
 int loadObjects(resource_mgr_t *resmgr);
 void freeObject(object*);
 
-extern char* globals[];
+extern const char* globals[];
 
 #endif

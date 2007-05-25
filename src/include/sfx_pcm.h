@@ -91,8 +91,8 @@ typedef struct _sfx_pcm_device {
 	** endianness/signedness/bit size/mono-vs-stereo conversions.
 	*/
 
-	char *name;
-	char *version;
+	const char *name;
+	const char *version;
 
 	int (*init)(struct _sfx_pcm_device *self);
 	/* Initializes the device
@@ -210,7 +210,7 @@ typedef struct _sfx_pcm_feed_t {
 
 	sfx_pcm_config_t conf; /* The channel's setup */
 
-	char *debug_name; /* The channel name, for debugging */
+	const char *debug_name; /* The channel name, for debugging */
 	int debug_nr; /* A channel number relative to the channel name, for debugging
 		      ** (print in hex)  */
 	int frame_size; /* Frame size, computed by the mixer for the feed */

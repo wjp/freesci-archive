@@ -30,7 +30,7 @@
 #include <kernel_types.h>
 
 reg_t
-read_selector(state_t *s, reg_t object, selector_t selector_id, char *file, int line)
+read_selector(state_t *s, reg_t object, selector_t selector_id, const char *file, int line)
 {
 	reg_t *address;
 
@@ -43,7 +43,7 @@ read_selector(state_t *s, reg_t object, selector_t selector_id, char *file, int 
 
 void
 write_selector(state_t *s, reg_t object, selector_t selector_id, reg_t value,
-	       char *fname, int line)
+	       const char *fname, int line)
 {
 	reg_t *address;
 
@@ -66,7 +66,7 @@ write_selector(state_t *s, reg_t object, selector_t selector_id, reg_t value,
 int
 invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kfunct,
 		stack_ptr_t k_argp, int k_argc, /* Kernel function argp/argc */
-		char *fname, int line, int argc, ...)
+		const char *fname, int line, int argc, ...)
 {
 	va_list argp;
 	int i;

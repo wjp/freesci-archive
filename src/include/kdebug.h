@@ -97,11 +97,11 @@ struct _state;
 
 /* Internal functions */
 void
-_SCIkwarn(struct _state *s, char *file, int line, int area, char *format, ...);
+_SCIkwarn(struct _state *s, const char *file, int line, int area, const char *format, ...);
 void
-_SCIkdebug(struct _state *s, char *file, int line, int area, char *format, ...);
+_SCIkdebug(struct _state *s, const char *file, int line, int area, const char *format, ...);
 void
-_SCIGNUkdebug(const char *funcname, struct _state *s, const char *file, int line, int area, char *format, ...);
+_SCIGNUkdebug(const char *funcname, struct _state *s, const char *file, int line, int area, const char *format, ...);
 
 /* If mode=1, enables debugging for specified areas. If mode=0, disables
 ** debugging for specified areas.
@@ -109,7 +109,7 @@ _SCIGNUkdebug(const char *funcname, struct _state *s, const char *file, int line
 */
 
 void
-set_debug_mode (struct _state *s, int mode, char *areas);
+set_debug_mode (struct _state *s, int mode, const char *areas);
 
 extern int sci_debug_flags;
 

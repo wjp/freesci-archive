@@ -823,7 +823,7 @@ int
 c_sim_parse(state_t *s)
 {
   unsigned int i;
-  char *operators = ",&/()[]#<>";
+  const char *operators = ",&/()[]#<>";
 
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -1291,7 +1291,7 @@ c_scriptinfo(state_t *s)
 }
 #endif
 
-char *selector_name(state_t *s, int selector)
+const char *selector_name(state_t *s, int selector)
 {
 	if (selector >= 0 && selector < s->selector_names_nr)
 		return s->selector_names[selector];
@@ -1535,7 +1535,7 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 
 			while (stackframe > 0) {
 				int argc = sb[- stackframe + 1].offset;
-				char *name = NULL;
+				const char *name = NULL;
 				reg_t called_obj_addr;
 
 				if (opcode == op_send)
@@ -1615,8 +1615,8 @@ c_dumpnodes(state_t *s)
   return 0;
 }
 
-static char *varnames[] = {"global", "local", "temp", "param"};
-static char *varabbrev = "gltp";
+static const char *varnames[] = {"global", "local", "temp", "param"};
+static const char *varabbrev = "gltp";
 
 int
 c_vmvarlist(state_t *s)
@@ -1687,8 +1687,8 @@ static int _codebug_commands[2]; /* sends commands to intermediate process */
 */
 
 #define CODEBUG_BUFSIZE 512
-static char *_codebug_colstr = "\033[31m\033[1m";
-static char *_codebug_uncolstr = "\033[0m";
+static const char *_codebug_colstr = "\033[31m\033[1m";
+static const char *_codebug_uncolstr = "\033[0m";
 
 static void
 codebug_send_command(const char *cmd)
@@ -1841,7 +1841,7 @@ c_backtrace(state_t *s)
 	sciprintf("Call stack (current base: 0x%x):\n", s->execution_stack_base);
 	for (i = 0; i <= s->execution_stack_pos; i++) {
 		exec_stack_t *call = &(s->execution_stack[i]);
-		char *objname = obj_get_name(s, call->sendp);
+		const char *objname = obj_get_name(s, call->sendp);
 		int paramc, totalparamc;
 
 		switch (call->type) {
@@ -2587,15 +2587,15 @@ c_listclones(state_t *s)
 
 
 typedef struct {
-	char *name;
-	char option;
+	const char *name;
+	const char option;
 	unsigned int flag;
 } generic_config_flag_t;
 
 
 static void
 handle_config_update(const generic_config_flag_t *flags_list, int flags_nr,
-		     char *subsystem,
+		     const char *subsystem,
 		     int *active_options_p,
 		     char *changestring /* or NULL to display*/)
 {
@@ -2658,7 +2658,7 @@ handle_config_update(const generic_config_flag_t *flags_list, int flags_nr,
 
 static int
 c_handle_config_update(const generic_config_flag_t *flags, int flags_nr,
-		       char *subsystem, int *active_options_p)
+		       const char *subsystem, int *active_options_p)
 {
 	int i;
 
@@ -2702,7 +2702,7 @@ const generic_config_flag_t SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 
 
 void
-set_debug_mode (struct _state *s, int mode, char *areas)
+set_debug_mode (struct _state *s, int mode, const char *areas)
 {
 	char *param = (char*)sci_malloc(strlen(areas) + 2);
 

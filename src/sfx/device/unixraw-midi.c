@@ -39,7 +39,7 @@
 #endif
 
 static int fd;
-static char *devicename = "/dev/midi";
+static const char *devicename = "/dev/midi";
 
 static int
 unixraw_init(midi_writer_t *self)

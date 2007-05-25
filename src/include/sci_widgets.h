@@ -70,7 +70,7 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text, int fgcolor
 gfxw_port_t *
 sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_t bgcolor,
 		int title_font, gfx_color_t title_color, gfx_color_t title_bg_color,
-		char *title, int flags);
+		const char *title, int flags);
 /* Creates a new SCI style window
 ** Parameters: (state_t *) s: The affected game state
 **             (rect_t) area: The screen area to frame (not including a potential window title)
@@ -80,7 +80,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 **             (int) title_font: The font to use for the title bar (if any)
 **             (gfx_color_t) title_color: Color to use for the title bar text
 **             (gfx_color_t) title_bg_color: Color to use for the title bar background
-**             (char *) title: The text to write into the title bar
+**             (const char *) title: The text to write into the title bar
 **             (int) flags: Any ORred combination of window flags
 ** Returns   : (gfxw_port_t *) A newly allocated port with the requested characteristics
 */

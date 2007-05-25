@@ -31,9 +31,9 @@
 typedef struct _exe_file exe_file_t;
 
 exe_file_t *
-exe_open(char *filename);
+exe_open(const char *filename);
 /* Opens an executable file
-** Parameters: (char *) filename: Filename of executable to open
+** Parameters: (const char *) filename: Filename of executable to open
 ** Returns   : (exe_file_t *) File handle, or NULL on error
 ** This function will try to find a decompressor that can handle this type
 ** of executable

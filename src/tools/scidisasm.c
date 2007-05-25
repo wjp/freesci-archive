@@ -409,7 +409,7 @@ get_selector_name (disasm_state_t *d, int selector)
 	}
 }
 
-char *
+const char *
 get_class_name (disasm_state_t *d, int class_no)
 {
 	static char class_name [256];

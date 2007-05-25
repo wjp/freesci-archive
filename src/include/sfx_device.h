@@ -35,7 +35,7 @@
 #define SFX_DEVICE_OPL2 2 /* OPL/2 sequencer */ 
 
 struct _midi_device {
-	char *name;
+	const char *name;
 
 	int (*init)(struct _midi_device *self);
 	/* Initializes the device
@@ -53,7 +53,7 @@ struct _midi_device {
 };
 
 typedef struct _midi_writer {
-	char *name; /* Name description of the device */
+	const char *name; /* Name description of the device */
 
 	int (*init)(struct _midi_writer *self);
 	/* Initializes the writer

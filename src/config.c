@@ -1,5 +1,5 @@
 
-#line 3 "lex.yy.c"
+#line 3 "config.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -8,7 +8,7 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 31
+#define YY_FLEX_SUBMINOR_VERSION 33
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
@@ -1107,13 +1107,13 @@ char *exported_conf_path; /* Path which the config file was found in */
 int dospath; /* Use dos-style paths? */
 
 typedef struct {
-	char *name;
+	const char *name;
 	int value;
 } name_value_pair;
 
 
 struct {
-	char *name;
+	const char *name;
 	void *(*check_driver)(char *name);
 } freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
 	{"gfx", NULL},
@@ -1151,7 +1151,7 @@ set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_na
 
 
 static int
-parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses a string with a name value pair */
+parse_name(char *name, name_value_pair* nvps, const char *what, int oldval); /* Parses a string with a name value pair */
 
 static void
 copy_subsystem_options(config_entry_t *dest, config_entry_t *src);
@@ -1269,7 +1269,7 @@ static name_value_pair line_mode[] = {
 
 typedef struct {
 	int type;
-	char *name;
+	const char *name;
 	int min;
 	int max;
 	name_value_pair *nvp;
@@ -2027,7 +2027,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), (size_t) num_to_read );
+			(yy_n_chars), num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -2338,9 +2338,19 @@ static void yy_load_buffer_state  (void)
 	yyfree((void *) b  );
 }
 
-#ifndef __cplusplus
+#ifndef _UNISTD_H /* assume unistd.h has isatty() for us */
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ifdef __THROW /* this is a gnuism */
+extern int isatty (int ) __THROW;
+#else
 extern int isatty (int );
-#endif /* __cplusplus */
+#endif
+#ifdef __cplusplus
+}
+#endif
+#endif
     
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
@@ -2528,7 +2538,7 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 
 /** Setup the input buffer state to scan a string. The next call to yylex() will
  * scan from a @e copy of @a str.
- * @param yystr a NUL-terminated string to scan
+ * @param str a NUL-terminated string to scan
  * 
  * @return the newly allocated buffer state object.
  * @note If you want to scan bytes that may contain NUL values, then use
@@ -3086,7 +3096,7 @@ config_free(config_entry_t **conf, int entries)
 
 
 static int
-parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
+parse_name(char *name, name_value_pair *nvps, const char *what, int oldval)
 {
 	int i = 0;
 
@@ -3269,7 +3279,7 @@ parse_option(char *option, int optlen, char *value)
 
 
 driver_option_t *
-get_driver_options(config_entry_t *config, int subsystem, char *name)
+get_driver_options(config_entry_t *config, int subsystem, const char *name)
 {
 	subsystem_options_t *options;
 

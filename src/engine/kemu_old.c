@@ -292,7 +292,7 @@ kFsciEmu(state_t *s, int _funct_nr, int argc, reg_t *argv)
 
 
 int
-read_selector16(state_t *s, heap_ptr object, selector_t selector_id, char *file, int line)
+read_selector16(state_t *s, heap_ptr object, selector_t selector_id, const char *file, int line)
 {
 	int slc_count = GET_HEAP(object + SCRIPT_SELECTORCTR_OFFSET);
 	int i;
@@ -310,7 +310,7 @@ read_selector16(state_t *s, heap_ptr object, selector_t selector_id, char *file,
 
 void
 write_selector16(state_t *s, heap_ptr object, selector_t selector_id,
-		 int value, char *fname, int line)
+		 int value, const char *fname, int line)
 {
 	int slc_count = GET_HEAP(object + SCRIPT_SELECTORCTR_OFFSET);
 	int i;

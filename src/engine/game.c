@@ -612,7 +612,7 @@ game_init(state_t *s)
 	game_obj = script_lookup_export(s, 0, 0);
 	/* The first entry in the export table of script 0 points to the game object */
 
-	s->game_name = obj_get_name(s, game_obj);
+	s->game_name = sci_strdup(obj_get_name(s, game_obj));
 
 	if (!s->game_name) {
 		sciprintf("Error: script.000, export 0 ("PREG") does not\n"
@@ -676,6 +676,8 @@ game_exit(state_t *s)
 	menubar_free(s->menubar);
 
 	_free_graphics_input(s);
+
+	sci_free(s->game_name);
 
 	return 0;
 }

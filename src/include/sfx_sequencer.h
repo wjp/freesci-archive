@@ -33,8 +33,8 @@
 #define SFX_SEQ_PATCHFILE_NONE -1
 
 typedef struct _sfx_sequencer {
-	char *name;    /* Sequencer name */
-	char *version; /* Sequencer version */
+	const char *name;    /* Sequencer name */
+	const char *version; /* Sequencer version */
 
 	int device;  /* Type of device the sequencer depends on, may be SFX_DEVICE_NONE. */
 

@@ -235,7 +235,7 @@ typedef struct _list_struct {
 typedef struct {
 	void *mem;
 	unsigned int size;
-	char *type;
+	const char *type;
 } hunk_t;
 
 /* clone_table_t */
@@ -249,7 +249,7 @@ DECLARE_HEAPENTRY(hunk)
 
 typedef struct {
 	int size;
-	char *description;
+	const char *description;
 	byte *buf;
 } dynmem_t; /* Free-style memory */
 
@@ -529,11 +529,11 @@ run_vm(struct _state *s, int restoring);
 */
 
 void
-vm_handle_fatal_error(struct _state *s, int line, char *file);
+vm_handle_fatal_error(struct _state *s, int line, const char *file);
 /* Handles a fatal error condition
 ** Parameters: (state_t *) s: The state to recover from
 **             (int) line: Source code line number the error occured in
-**             (char *) file: File the error occured in
+**             (const char *) file: File the error occured in
 */
 
 
@@ -762,19 +762,19 @@ script_detect_early_versions(struct _state *s);
 */
 
 reg_t
-kalloc(struct _state *s, char *type, int space);
+kalloc(struct _state *s, const char *type, int space);
 /* Allocates "kernel" memory and returns a handle suitable to be passed on to SCI scripts
 ** Parameters: (state_t *) s: Pointer to the state_t to operate on
-**             (char *) type: A free-form type description string (static)
+**             (const char *) type: A free-form type description string (static)
 **             (int) space: The space to allocate
 ** Returns   : (reg_t) The handle
 */
 
 int
-has_kernel_function(struct _state *s, char *kname);
+has_kernel_function(struct _state *s, const char *kname);
 /* Detects whether a particular kernel function is required in the game
 ** Parameters: (state_t *) s: Pointer to the state_t to operate on
-**             (char *) kname: The name of the desired kernel function
+**             (const char *) kname: The name of the desired kernel function
 ** Returns   : (int) 1 if the kernel function is listed in the kernel table,
 **                   0 otherwise
 */
@@ -796,14 +796,14 @@ kfree(struct _state *s, reg_t handle);
 ** Returns   : (int) 0 on success, 1 otherwise
 */
 
-char *
+const char *
 obj_get_name(struct _state *s, reg_t pos);
 /* Determines the name of an object
 ** Parameters: (state_t *) s: Pointer to the state_t to operate on
 **             (reg_t) pos: Location of the object whose name we want to
 **                          inspect
-** Returns   : (char *) A name for that object, or a string describing
-**                      an error that occured while looking it up
+** Returns   : (const char *) A name for that object, or a string describing
+**                            an error that occured while looking it up
 ** The string is stored in a static buffer and need not be freed (neither
 ** may it be modified).
 */

@@ -123,7 +123,7 @@ typedef enum {
 
 
 typedef struct {
-	char *offset;
+	const char *offset;
 	int length;
 } text_fragment_t;
 
@@ -206,14 +206,14 @@ gfxr_scale_font(gfx_bitmap_font_t *font, gfx_mode_t *mode, gfxr_font_scale_filte
 */
 
 text_fragment_t *
-gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
+gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, const char *text,
 			 int *width, int *height,
 			 int *lines, int *line_height, int *last_offset,
 			 int flags);
 /* Calculates the size that would be occupied by drawing a specified text
 ** Parameters: (gfx_bitmap_font_t *) font: The font to calculate with
 **             (int) max_width: Maximum pixel width allowed for the output
-**             (char *) text: The text to calculate for
+**             (const char *) text: The text to calculate for
 **             (int) flags: Any text formatting flags
 ** Returns   : (text_fragment *) a newly allocated array of text_fragments,
 **                               containing the start and size of each string
@@ -227,7 +227,7 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 */
 
 gfx_pixmap_t *
-gfxr_draw_font(gfx_bitmap_font_t *font, char *text, int characters,
+gfxr_draw_font(gfx_bitmap_font_t *font, const char *text, int characters,
 	       gfx_pixmap_color_t *fg0, gfx_pixmap_color_t *fg1, gfx_pixmap_color_t *bg);
 /* Draws text in a specific font to a pixmap
 ** Parameters: (gfx_bitmap_font_t *) font: The font to use for drawing

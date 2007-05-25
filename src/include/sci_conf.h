@@ -158,11 +158,11 @@ parse_sound_server(char *driver_name);
 */
 
 driver_option_t *
-get_driver_options(config_entry_t *config, int subsystem, char *name);
+get_driver_options(config_entry_t *config, int subsystem, const char *name);
 /* Retreives the driver options for one specific driver in a subsystem
 ** Parameters: (config_entry_t *) config: The config entry to search in
 **             (int) subsystem: Any of the FREESCI_DRIVER_SUBSYSTEMs
-**             (char *) name: Name of the driver to look for
+**             (const char *) name: Name of the driver to look for
 ** Returns   : (driver_option_t *) A pointer to the first option in
 **             a singly-linked list of options, or NULL if none was
 **             found

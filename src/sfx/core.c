@@ -760,7 +760,7 @@ void
 sfx_song_set_fade(sfx_state_t *self, song_handle_t handle, 
 		  fade_params_t *params)
 {
-	static char *stopmsg[] = {"??? Should not happen", "Do not stop afterwards","Stop afterwards"};
+	static const char *stopmsg[] = {"??? Should not happen", "Do not stop afterwards","Stop afterwards"};
 	song_t *song = song_lib_find(self->songlib, handle);
 
 	ASSERT_SONG(song);

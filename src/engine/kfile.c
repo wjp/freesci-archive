@@ -997,7 +997,7 @@ next_file(state_t *s)
 }
 
 void
-first_file(state_t *s, char *dir, char *mask, reg_t buffer)
+first_file(state_t *s, const char *dir, char *mask, reg_t buffer)
 {
 	if (!buffer.segment) {
 		sciprintf("Warning: first_file(state,\"%s\",\"%s\", 0) invoked!\n",

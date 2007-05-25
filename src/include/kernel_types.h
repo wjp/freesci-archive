@@ -66,7 +66,7 @@
 
 
 int
-kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv);
+kernel_matches_signature(state_t *s, const char *sig, int argc, reg_t *argv);
 /* Determines whether a list of registers matches a given signature
 ** Parameters: (state_t *) s: The state to operate on
 **             (char *) sig: The signature to test against
@@ -86,11 +86,11 @@ determine_reg_type(state_t *s, reg_t reg, int allow_invalid);
 **	       0 on error.
 */
 
-char *
+const char *
 kernel_argtype_description(int type);
 /* Returns a textual description of the type of an object
 ** Parameters: (int) type: The type value to describe
-** Returns: (char *) Pointer to a (static) descriptive string
+** Returns: (const char *) Pointer to a (static) descriptive string
 */
 
 #endif /* ! _FREESCI_KERNEL_TYPES_H_ */

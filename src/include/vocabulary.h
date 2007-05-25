@@ -72,7 +72,7 @@ typedef struct opcode_
 #define VOCAB_CLASS_IMPERATIVE_VERB 0x80
 #define VOCAB_CLASS_NUMBER 0x001
 
-extern DLLEXTERN char *class_names[]; /* Vocabulary class names */
+extern DLLEXTERN const char *class_names[]; /* Vocabulary class names */
 
 #define VOCAB_CLASS_ANYWORD 0xff
 /* Anywords are ignored by the parser */
@@ -364,9 +364,9 @@ vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words
 */
 
 void
-vocab_dump_parse_tree(char *tree_name, parse_tree_node_t *nodes);
+vocab_dump_parse_tree(const char *tree_name, parse_tree_node_t *nodes);
 /* Prints a parse tree
-** Parameters: (char *) tree_name: Name of the tree to dump (free-form)
+** Parameters: (const char *) tree_name: Name of the tree to dump (free-form)
 **             (parse_tree_node_t *) nodes: The nodes containing the parse tree
 ** Returns   : (void)
 */
@@ -385,7 +385,7 @@ said(struct _state *s, byte *spec, int verbose);
 ** Returns   : (int) 1 on a match, 0 otherwise
 */
 
-char *
+const char *
 vocab_get_any_group_word(int group, word_t **words, int words_nr);
 /* Gets any word from the specified group.
 ** Parameters: (int) group: Group number.

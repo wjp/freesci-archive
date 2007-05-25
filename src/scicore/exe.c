@@ -46,7 +46,7 @@ struct _exe_file
 };
 
 exe_file_t *
-exe_open(char *filename)
+exe_open(const char *filename)
 {
 	int i = 0;
 	exe_decompressor_t *dec;

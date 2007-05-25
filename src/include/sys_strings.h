@@ -46,11 +46,11 @@ typedef struct {
 } sys_strings_t;
 
 void
-sys_string_acquire(sys_strings_t *strings, int index, char *name, int max_len);
+sys_string_acquire(sys_strings_t *strings, int index, const char *name, int max_len);
 /* Reserves a new system string
 ** Parameters: (sys_strings_t *) strings: The string table to reserve in
 **             (int) index: Index number to reserve
-**             (char *) name: Name the entry should be tagged with
+**             (const char *) name: Name the entry should be tagged with
 **             (int) max_len: Maximum string length in bytes
 */
 

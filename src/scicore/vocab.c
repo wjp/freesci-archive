@@ -43,7 +43,7 @@ int vocab_version;
 				    VOCAB_RESOURCE_SCI1_SUFFIX_VOCAB : \
 				    VOCAB_RESOURCE_SCI0_SUFFIX_VOCAB
 
-char *class_names[] =
+const char *class_names[] =
   {"",               /* These strange names were taken from an SCI01 interpreter */
    "",
    "conj",		/* conjunction */
@@ -175,7 +175,7 @@ vocab_free_words(word_t **words, int words_nr)
 }
 
 
-char *
+const char *
 vocab_get_any_group_word(int group, word_t **words, int words_nr)
 {
   int i;
@@ -670,7 +670,7 @@ _vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr, int bl
 }
 
 void
-vocab_dump_parse_tree(char *tree_name, parse_tree_node_t *nodes)
+vocab_dump_parse_tree(const char *tree_name, parse_tree_node_t *nodes)
 {
   /*  _vocab_recursive_ptree_dump_treelike(nodes, 0, 0); */
   sciprintf("(setq %s \n'(", tree_name);

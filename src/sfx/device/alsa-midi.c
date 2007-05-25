@@ -41,7 +41,7 @@ static int port_out = -1;
 static int port_nr = 128;
 static int subport_nr = 0;
 
-static char *seq_name = "default";
+static const char *seq_name = "default";
 
 static void
 _set_tempo(void)

@@ -148,7 +148,7 @@ static int x_have_render(Display *display)
 static int debugline = 0;
 
 static void
-xldprintf(char *fmt, ...)
+xldprintf(const char *fmt, ...)
 {
 	va_list argp;
 	fprintf(stderr,"GFX-XLIB %d:", debugline);
@@ -675,7 +675,7 @@ xlib_xdpy_info()
 	XVisualInfo *visuals;
 	int visuals_nr;
 	Display *display = XOpenDisplay(NULL);
-	char *vis_classes[6] = {"StaticGray", "GrayScale", "StaticColor",
+	const char *vis_classes[6] = {"StaticGray", "GrayScale", "StaticColor",
 			    "PseudoColor", "TrueColor", "DirectColor"};
 
 	printf("Visuals provided by X11 server:\n");

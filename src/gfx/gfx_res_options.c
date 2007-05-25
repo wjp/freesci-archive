@@ -256,7 +256,7 @@ extract_assign_rule(char *src, gfx_res_assign_t *rule)
 {
 	char *orig_src = src;
 	struct {
-		char *name;
+		const char *name;
 		int colors_nr;
 		gfx_pixmap_color_t *colors;
 	} predefined_palettes[PREDEFINED_PALETTES_NR] = {
@@ -301,7 +301,7 @@ gfx_update_conf(gfx_options_t *options, char *str)
 	int fields_nr; /* Number of fields a restriction is possible by.
 		       ** cursors:1, pics:2, views:3. */
 	struct {
-		char *class_name;
+		const char *class_name;
 		int class_id;
 		int fields_nr;
 	} classes[CLASSES_NR] = {
@@ -318,7 +318,7 @@ gfx_update_conf(gfx_options_t *options, char *str)
 	};
 	int i;
 	int fieldcnt;
-	char *pat_name_str;
+	const char *pat_name_str;
 
 	/* Extract pattern(s) */
 	while (*str && isblank(*str))

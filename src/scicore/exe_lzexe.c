@@ -222,7 +222,7 @@ lzexe_decompress(exe_handle_t *handle)
 }
 
 static exe_handle_t *
-lzexe_open(char *filename)
+lzexe_open(const char *filename)
 {
 	exe_handle_t *handle;
 	guint8 head[0x20];

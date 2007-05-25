@@ -30,7 +30,7 @@
 #include <sci_memory.h>
 
 void
-sys_string_acquire(sys_strings_t *strings, int index, char *name, int max_len)
+sys_string_acquire(sys_strings_t *strings, int index, const char *name, int max_len)
 {
 	sys_string_t *str = strings->strings + index;
 

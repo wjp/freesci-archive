@@ -283,9 +283,9 @@ sci_get_from_queue(sci_queue_t *queue, int *type);
 /* --- */
 
 int
-memtest(char *file, int line);
+memtest(const char *file, int line);
 /* Allocates, manipulates, and frees some memory
-** Parameters: (char *) file: The file name to print when starting the
+** Parameters: (const char *) file: The file name to print when starting the
 **				tests
 **             (int) line: The line number to claim it was executed on
 ** Returns   : (int) 0
@@ -325,10 +325,10 @@ sci_init_dir(sci_dir_t *dirent);
 */
 
 char *
-sci_find_first(sci_dir_t *dirent, char *mask);
+sci_find_first(sci_dir_t *dirent, const char *mask);
 /* Finds the first file matching the specified file mask
 ** Parameters: (sci_dir_t *) dirent: Pointer to an unused dirent structure
-**             (char *) mask: File mask to apply
+**             (const char *) mask: File mask to apply
 ** Returns   : (char *) Name of the first matching file found, or NULL
 */
 
@@ -352,18 +352,18 @@ sci_finish_find(sci_dir_t *dirent);
 */
 
 FILE *
-sci_fopen(char *fname, char *mode);
+sci_fopen(const char *fname, const char *mode);
 /* Opens a FILE* case-insensitively
-** Parameters: (char *) fname: Name of the file to open
-**             (char *) mode: Mode to open it with
+** Parameters: (const char *) fname: Name of the file to open
+**             (const char *) mode: Mode to open it with
 ** Returns   : (FILE *) A valid file handle, or NULL on failure
 ** Always refers to the cwd, cannot address subdirectories
 */
 
 int
-sci_open(char *fname, int flags);
+sci_open(const char *fname, int flags);
 /* Opens a file descriptor case-insensitively
-** Parameters: (char *) fname: Name of the file to open
+** Parameters: (const char *) fname: Name of the file to open
 **             (int) flags: open(2) flags for the file
 ** Returns   : (int) a file descriptor of the open file,
 **             or SCI_INVALID_FD on failure
@@ -398,9 +398,9 @@ sci_get_homedir(void);
 */
 
 int
-sci_mkpath(char *path);
+sci_mkpath(const char *path);
 /* Asserts that the specified path is available
-** Parameters: (char *) path: Path to verify/create
+** Parameters: (const char *) path: Path to verify/create
 ** Returns   : (int) 0 on success, <0 on error
 ** This function will create any directories that couldn't be found
 */
@@ -413,9 +413,9 @@ sci_fd_size(int fd);
 */ 
 
 int
-sci_file_size(char *fname);
+sci_file_size(const char *fname);
 /* Returns the filesize of a file
-** Parameters: (char *) fname: Name of file to get filesize of
+** Parameters: (const char *) fname: Name of file to get filesize of
 ** Returns   : (int) filesize of the file, -1 on error
 */
 

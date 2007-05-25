@@ -150,7 +150,7 @@ gfxr_scale_font(gfx_bitmap_font_t *orig_font, gfx_mode_t *mode, gfxr_font_scale_
 
 
 text_fragment_t *
-gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
+gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, const char *text,
 			 int *width, int *height,
 			 int *lines, int *line_height_p, int *last_offset_p,
 			 int flags)
@@ -166,7 +166,7 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 	int max_allowed_width = max_width;
 	int maxwidth = 0, localmaxwidth = 0;
 	int current_fragment = 1;
-	char *breakpoint_ptr = NULL;
+	const char *breakpoint_ptr = NULL;
 	unsigned char foo;
 
 	if (line_height_p)
@@ -309,7 +309,7 @@ render_char(byte *dest, byte *src, int width, int line_width, int lines, int byt
 }
 
 gfx_pixmap_t *
-gfxr_draw_font(gfx_bitmap_font_t *font, char *stext, int characters,
+gfxr_draw_font(gfx_bitmap_font_t *font, const char *stext, int characters,
 	       gfx_pixmap_color_t *fg0, gfx_pixmap_color_t *fg1, gfx_pixmap_color_t *bg)
 {
 	unsigned char *text = (unsigned char *) stext;

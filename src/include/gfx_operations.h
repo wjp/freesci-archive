@@ -616,13 +616,13 @@ gfxop_get_font_height(gfx_state_t *state, int font_nr);
 */
 
 int
-gfxop_get_text_params(gfx_state_t *state, int font_nr, char *text,
+gfxop_get_text_params(gfx_state_t *state, int font_nr, const char *text,
 		      int maxwidth, int *width, int *height, int flags,
 		      int *lines_nr, int *lineheight, int *lastline_width);
 /* Calculates the width and height of a specified text in a specified font
 ** Parameters: (gfx_state_t *) state: The state to use
 **             (int) font_nr: Font number to use for the calculation
-**             (char *) text: The text to examine
+**             (const char *) text: The text to examine
 **             (int) flags: ORred GFXR_FONT_FLAGs
 **             (int) maxwidth: The maximum pixel width to allow for the text
 ** Returns   : (int) GFX_OK or GFX_ERROR if the font didn't exist

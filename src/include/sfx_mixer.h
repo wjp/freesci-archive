@@ -60,8 +60,8 @@ typedef struct _sfx_pcm_mixer {
 	** mix it (hence the name) and ask the pcm device they are attached to to play the
 	** result.  */
 
-	char *name;
-	char *version;
+	const char *name;
+	const char *version;
 
 	int (*init)(struct _sfx_pcm_mixer *self, sfx_pcm_device_t *device);
 	/* Initialises the mixer

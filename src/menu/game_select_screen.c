@@ -171,7 +171,7 @@ gfx_box_line(gfx_driver_t *gfx_driver, rect_t box, gfx_color_t color)
 }
 
 static void
-gfx_box_text(gfx_driver_t *gfx_driver, rect_t box, gfx_bitmap_font_t* font, gfx_pixmap_color_t fgc, gfx_pixmap_color_t bgc, char* text, int center)
+gfx_box_text(gfx_driver_t *gfx_driver, rect_t box, gfx_bitmap_font_t* font, gfx_pixmap_color_t fgc, gfx_pixmap_color_t bgc, const char* text, int center)
 {
 	int width;
 	int height;
@@ -225,7 +225,7 @@ gfx_box_text(gfx_driver_t *gfx_driver, rect_t box, gfx_bitmap_font_t* font, gfx_
 }
 
 static void
-game_select_display_button(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, rect_t box, char* button_text, int focus)
+game_select_display_button(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, rect_t box, const char* button_text, int focus)
 {
 	gfx_color_t black;
 	gfx_color_t white;
@@ -287,7 +287,7 @@ game_select_display_listbox(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, r
 }
 
 static void
-game_select_display_window(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, rect_t box, char* title)
+game_select_display_window(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, rect_t box, const char* title)
 {
 	gfx_color_t black;
 	gfx_color_t white;
@@ -314,7 +314,7 @@ game_select_display_window(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, re
 }
 
 static void
-game_select_display_game_list(gfx_driver_t *gfx_driver, char* freesci_version, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small, char** game_list, int game_count, int first_game, int selected_game, int focus_button)
+game_select_display_game_list(gfx_driver_t *gfx_driver, const char* freesci_version, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small, char** game_list, int game_count, int first_game, int selected_game, int focus_button)
 {
 	int pos = 0;
 	gfx_color_t black;
@@ -358,7 +358,7 @@ game_select_display_game_list(gfx_driver_t *gfx_driver, char* freesci_version, g
 }
 
 int
-game_select_display(gfx_driver_t *gfx_driver, char* freesci_version, char** game_list, int game_count, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small)
+game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char** game_list, int game_count, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small)
 {
 	int error;
 	int cont;

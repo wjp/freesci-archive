@@ -175,7 +175,7 @@ static int
 yylex(void);
 
 static int
-yyerror(char *s)
+yyerror(const char *s)
 {
 	said_parse_error = sci_strdup(s);
 	return 1; /* Abort */

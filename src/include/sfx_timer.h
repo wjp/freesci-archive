@@ -31,8 +31,8 @@
 #include <sfx_core.h>
 
 typedef struct {
-	char *name;
-	char *version;
+	const char *name;
+	const char *version;
 
 	int delay_ms; /* Approximate delay (in milliseconds) between calls */
 	int flags;

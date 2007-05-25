@@ -127,7 +127,7 @@ validate_arithmetic(reg_t reg)
 static inline int
 validate_variable(reg_t *r, int type, int max, int index, int line)
 {
-	char *names[4] = {"global", "local", "temp", "param"};
+	const char *names[4] = {"global", "local", "temp", "param"};
 
 	if (index < 0 || index >= max) {
 		sciprintf("[VM] Attempt to use invalid %s variable %04x ", names[type], index);
@@ -189,7 +189,7 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 /*==--------------------------==*/
 
 int
-script_error(state_t *s, char *file, int line, char *reason)
+script_error(state_t *s, const char *file, int line, const char *reason)
 {
 	sciprintf("Script error in file %s, line %d: %s\n", file, line, reason);
 	script_debug_flag = script_error_flag = 1;
@@ -578,7 +578,7 @@ add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
 
 
 void
-vm_handle_fatal_error(state_t *s, int line, char *file)
+vm_handle_fatal_error(state_t *s, int line, const char *file)
 {
 	fprintf(stderr, "Fatal VM error in %s, L%d; aborting...\n", file, line);
 #ifdef HAVE_SETJMP_H
@@ -2214,7 +2214,7 @@ obj_get(state_t *s, reg_t offset)
 	return obj;
 }
 
-char *
+const char *
 obj_get_name(struct _state *s, reg_t pos)
 {
 	object_t *obj = obj_get(s, pos);
@@ -2222,7 +2222,7 @@ obj_get_name(struct _state *s, reg_t pos)
 	if (!obj)
 		return "<no such object>";
 	return
-		(char*)(obj->base + obj->variables[SCRIPT_NAME_SELECTOR].offset);
+		(const char*)(obj->base + obj->variables[SCRIPT_NAME_SELECTOR].offset);
 }
 
 

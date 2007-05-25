@@ -34,8 +34,8 @@
 #define _SFX_PLAYER_H
 
 typedef struct {
-	char *name;
-	char *version;
+	const char *name;
+	const char *version;
 
 	int
 	(*set_option)(char *name, char *value);

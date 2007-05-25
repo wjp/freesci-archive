@@ -37,7 +37,7 @@
 typedef struct _sci_game {
   int id; /* currently CRC of resource.001 */
   sci_version_t version;
-  char *name;
+  const char *name;
 } sci_game_t;
 
 sci_game_t sci_games[] = {
