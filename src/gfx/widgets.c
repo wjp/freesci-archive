@@ -36,6 +36,8 @@
 #  define DDIRTY if (0) fprintf
 #endif
 
+point_t gfxw_point_zero = {0, 0};
+
 #define MAX_SERIAL_NUMBER 0x7fffffff
 static int widget_serial_number_counter = 0x10000; /* Avoid confusion with IDs */
 
@@ -2537,9 +2539,6 @@ static gfxw_widget_t *
 gfxw_widget_intersects_chrono(gfxw_list_t *tw, gfxw_widget_t *widget)
 {
 	gfxw_widget_t *seeker;
-	gfxw_widget_t *itsport;
-	gfx_dirty_rect_t *rects;
-	int result = 0;
 
 	assert(tw->type == GFXW_SORTED_LIST);
 
@@ -2573,7 +2572,8 @@ gfxw_widget_reparent_chrono(gfxw_visual_t *visual, gfxw_widget_t *view, gfxw_lis
 	chrono = gfxw_get_chrono_port(visual, &tw, GFXW_CHRONO_NO_CREATE);
 	if (chrono == NULL) return;
 
-	if (intersector = gfxw_widget_intersects_chrono(tw, view))
+	intersector = gfxw_widget_intersects_chrono(tw, view);
+	if (intersector)
 	{
 		point_t origin = gfx_point(intersector->parent->zone.x, 
 					   intersector->parent->zone.y);

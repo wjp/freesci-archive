@@ -100,12 +100,12 @@
 #define PANIC_MEMORY(size, filename, linenum, funcname, more_info)\
 	PANIC((stderr, "Memory allocation of %lu bytes failed\n"\
 		" [%s (%s) : %u]\n " #more_info "\n %s\n",\
-		size, filename, funcname, linenum, dmalloc_strerror(dmalloc_errno)))
+		(unsigned long)size, filename, funcname, linenum, dmalloc_strerror(dmalloc_errno)))
 #else
 #define PANIC_MEMORY(size, filename, linenum, funcname, more_info)\
 	PANIC((stderr, "Memory allocation of %lu bytes\n"\
 		" [%s (%s) : %u]\n " #more_info "\n %s\n",\
-		size, filename, funcname, linenum, strerror(errno)))
+		(unsigned long)size, filename, funcname, linenum, strerror(errno)))
 #endif
 
 
@@ -114,7 +114,7 @@
 #define INFO_MEMORY(alloc_statement, size, filename, linenum, funcname)\
 	fprintf(stderr, "ALLOC_MEM(%lu bytes) [%s (%s) : %u] "\
 		#alloc_statement "\n",\
-		(unsigned long) size, filename, funcname, linenum);
+		(unsigned long)size, filename, funcname, linenum);
 
 
 #ifdef UNCHECKED_MALLOCS

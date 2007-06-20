@@ -3779,7 +3779,9 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 	while (_debugstate_valid) {
 		int skipfirst = 0;
 		const char *commandstring;
+#ifdef WANT_CONSOLE
 		char *input;
+#endif
 
 		/* Suspend music playing */
 		sfx_suspend(&s->sound, 1);

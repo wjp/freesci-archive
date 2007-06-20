@@ -79,7 +79,8 @@
 #define GFXWC(foo) ((gfxw_container_t *) foo)
 /* Typecasts a container widget to gfxw_container_widget_t *. */
 
-static point_t gfxw_point_zero = {0, 0};
+/* gfxw_point_zero is declared in gfx/widgets.c */
+extern point_t gfxw_point_zero;
 
 /*********************/
 /* Widget operations */

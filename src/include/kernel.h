@@ -395,7 +395,7 @@ typedef struct {
 typedef struct {
 	int type; /* KF_* */
 	const char *name;
-        kfunct_sig_pair_t new;
+	kfunct_sig_pair_t new;
 } sci_kernel_function_t;
 
 extern sci_kernel_function_t kfunct_mappers[];

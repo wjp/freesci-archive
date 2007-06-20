@@ -314,7 +314,6 @@ gfxr_draw_font(gfx_bitmap_font_t *font, const char *stext, int characters,
 {
 	unsigned char *text = (unsigned char *) stext;
 	int height = font->height;
-	int line_height = font->line_height;
 	int width = 0;
 	gfx_pixmap_t *pxm;
 	int fore_0, fore_1, back;
@@ -363,7 +362,7 @@ gfxr_draw_font(gfx_bitmap_font_t *font, const char *stext, int characters,
 	memset(pxm->index_data, back, pxm->index_xl * pxm->index_yl);
 	for (i = 0; i < characters; i++) {
 		unsigned char ch = text[i];
-		int width = font->widths[ch];
+		width = font->widths[ch];
 
 		render_char(offset, font->data + (ch * font->char_size), width,
 			    pxm->index_xl, pxm->index_yl, font->row_size,

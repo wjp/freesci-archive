@@ -217,7 +217,7 @@ gfxr_draw_loop1(gfxr_loop_t *dest, int id, int loop, int mirrored, byte *resourc
 
 #define V1_FIRST_MAGIC 1
 #define V1_MAGICS_NR 5
-static byte view_magics[V1_MAGICS_NR] = {0x80, 0x00, 0x00, 0x00, 0x00};
+/*static byte view_magics[V1_MAGICS_NR] = {0x80, 0x00, 0x00, 0x00, 0x00};*/
 
 gfxr_view_t *
 gfxr_draw_view1(int id, byte *resource, int size)

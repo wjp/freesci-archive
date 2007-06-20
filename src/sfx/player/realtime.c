@@ -75,7 +75,6 @@ static GTimeVal play_pause_counter; /* Last point in time to mark a
 				    ** play position augmentation  */
 static int play_paused = 0;
 static int play_it_done = 0;
-static int play_writeahead_initial = 0;
 static int play_writeahead = 0;
 static int play_moredelay = 0;
 
@@ -163,7 +162,6 @@ static int
 rt_init(resource_mgr_t *resmgr, int expected_latency)
 {
 	resource_t *res = NULL;
-	void *seq_res = NULL;
 	void *seq_dev = NULL;
 
 	seq = sfx_find_sequencer(NULL);

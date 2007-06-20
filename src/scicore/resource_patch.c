@@ -159,7 +159,6 @@ sci1_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 		int restype = sci_invalid_resource;
 		int resnumber = -1;
 		int i;
-		unsigned int resname_len;
 		char *endptr;
 		char *dot = strchr(entry, '.');
 

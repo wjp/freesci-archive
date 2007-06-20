@@ -65,7 +65,7 @@ static void							\
 print_##TYPE##_nodes(TYPE##_hash_map_node_t *node)		\
 {								\
 	while (node) {						\
-		fprintf(stderr,"%p  ", node);			\
+		fprintf(stderr,"%p  ", (void *)node);		\
 		node = node->next;				\
 	}							\
 }								\
@@ -74,7 +74,7 @@ void								\
 print_##TYPE##_hash_map(TYPE##_hash_map_t *map)			\
 {								\
 	int bucket;						\
-	fprintf(stderr, #TYPE " map %p: base value=%d\n", map,  \
+	fprintf(stderr, #TYPE " map %p: base value=%d\n", (void *)map,  \
 		map->base_value);		                \
 	for (bucket = 0; bucket <= HASH_MAX; bucket++) {        \
 		fprintf(stderr,"bucket %d: ", bucket);		\

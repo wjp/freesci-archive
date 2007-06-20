@@ -259,7 +259,7 @@ song_lib_dump(songlib_t songlib, int line)
 
 	fprintf(debug_stream,"L%d:", line);
 	do {
-		fprintf(debug_stream,"    %p", seeker);
+		fprintf(debug_stream,"    %p", (void *)seeker);
 
 		if (seeker) {
 			fprintf(debug_stream,"[%04lx,p=%d]->", seeker->handle, seeker->priority);

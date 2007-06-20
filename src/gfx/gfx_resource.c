@@ -159,7 +159,7 @@ pixmap_endianness_reverse_4(byte *data, int area)
                 /* The next lines will give warnings on 32 bit archs, but
                 ** that's OK.  */
 #if SIZEOF_LONG < 8
-		temp = 0l;
+                temp = 0l;
 #else
                 temp = ((temp & 0xffff0000ffff0000l) >> 16)
                         | ((temp & 0x0000ffff0000ffffl) << 16);

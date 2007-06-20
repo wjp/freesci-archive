@@ -254,7 +254,7 @@ extern gfx_pixmap_color_t gfx_sci0_image_colors[][GFX_SCI0_IMAGE_COLORS_NR];
 static int
 extract_assign_rule(char *src, gfx_res_assign_t *rule)
 {
-	char *orig_src = src;
+	/*char *orig_src = src;*/
 	struct {
 		const char *name;
 		int colors_nr;
@@ -295,7 +295,6 @@ gfx_update_conf(gfx_options_t *options, char *str)
 	int total_patterns;
 	int mod = 0; /* Modifier or assignment rule? */
 	char *orig_str = str;
-	char *paren_open;
 	char *sem_end;
 
 	int fields_nr; /* Number of fields a restriction is possible by.

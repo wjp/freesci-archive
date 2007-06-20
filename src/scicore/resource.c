@@ -693,7 +693,7 @@ _scir_free_old_resources(resource_mgr_t *mgr, int last_invulnerable)
 		if (!goner) {
 			fprintf(stderr,"Internal error: mgr->lru_last is NULL!\n");
 			fprintf(stderr,"LRU-mem= %d\n", mgr->memory_lru);
-			fprintf(stderr,"lru_first = %p\n", mgr->lru_first);
+			fprintf(stderr,"lru_first = %p\n", (void *)mgr->lru_first);
 			_scir_print_lru_list(mgr);
 		}
 

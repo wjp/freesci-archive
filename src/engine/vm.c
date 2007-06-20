@@ -41,6 +41,7 @@
 #include <setjmp.h>
 #endif
 
+reg_t NULL_REG = NULL_REG_INITIALIZER;
 
 /*#define VM_DEBUG_SEND*/
 #undef STRICT_SEND /* Disallows variable sends with more than one parameter */

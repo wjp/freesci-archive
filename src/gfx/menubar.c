@@ -141,7 +141,6 @@ _menubar_add_menu_item(gfx_state_t *state, menu_t *menu, int type, char *left, c
 	}
 
 	if (right) {
-		int width, height;
 		gfxop_get_text_params(state, font, right, SIZE_INF, &width, &height, 0,
 				      NULL, NULL, NULL);
 		total_left_size = MENU_BOX_CENTER_PADDING + (item->keytext_size = width);

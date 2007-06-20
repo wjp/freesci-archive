@@ -116,7 +116,7 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 #define ABOUT_FREESCI_PAGES_NR 7
 
-struct {
+static struct {
 	const char *title;
 	const char *body;
 	int fgcolor, bgcolor;
@@ -312,7 +312,7 @@ reg_t
 kMenuSelect(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	reg_t event = argv[0];
-	int pause_sound = UKPV_OR_ALT(1, 1); /* FIXME: Do this eventually */
+	/*int pause_sound = UKPV_OR_ALT(1, 1);*/ /* FIXME: Do this eventually */
 	int claimed = 0;
 	int type = GET_SEL32V(event, type);
 	int message = GET_SEL32V(event, message);

@@ -36,6 +36,7 @@
 #	endif
 #endif
 
+rect_t gfx_rect_fullscreen = {0, 0, 320, 200};
 
 void
 gfx_clip_box_basic(rect_t *box, int maxx, int maxy)

@@ -182,7 +182,7 @@ fprintf(stderr, " ---> %d/%d/%d/%d = %d\n",
 	fs->buf_size);
 
 	fs->buf = (byte*)sci_malloc(fs->buf_size * feed->frame_size);
-fprintf(stderr, " ---> --> %d for %p at %p\n", fs->buf_size * feed->frame_size, fs, fs->buf);
+fprintf(stderr, " ---> --> %d for %p at %p\n", fs->buf_size * feed->frame_size, (void *)fs, (void *)fs->buf);
 {int i; for (i = 0; i < fs->buf_size * feed->frame_size; i++)
 fs->buf[i] = 0xa5; }
 	fs->scount = urat(0, 1);
@@ -249,7 +249,7 @@ _mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	}
 
 	fprintf(stderr, "[sfx-mixer] Assertion failed: Deleting invalid feed %p out of %d\n", 
-		feed, self->feeds_nr);
+		(void *)feed, self->feeds_nr);
 
 	BREAKPOINT();
 }

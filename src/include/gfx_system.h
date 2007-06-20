@@ -238,7 +238,8 @@ gfx_rect_equals(rect_t a, rect_t b)
 }
 
 
-static rect_t gfx_rect_fullscreen = {0, 0, 320, 200};
+/* gfx_rect_fullscreen is declared in gfx/gfx_tools.c */
+extern rect_t gfx_rect_fullscreen;
 
 /*** points ***/
 

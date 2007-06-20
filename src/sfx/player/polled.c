@@ -243,7 +243,7 @@ pp_stop(void)
 	song_iterator_t *it = play_it;
 
 	play_it = NULL;
-fprintf(stderr, "[play] Now stopping it %p\n", it);
+fprintf(stderr, "[play] Now stopping it %p\n", (void *)it);
 	if (it)
 		songit_free(it);
 
