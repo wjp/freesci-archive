@@ -1,3 +1,7 @@
+2007-06-18  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/mixer/soft.c: Made the mixer lock volatile
+
 2007-04-25  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/kgraphics.c (kNewWindow): Set bgcolor mask at the

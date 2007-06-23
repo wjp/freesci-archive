@@ -48,7 +48,7 @@ static int diagnosed_too_slow = 0;
 static int additional_frames = 2048; /* Additional frames to write ahead, into the queue */
 
 
-static int mixer_lock = 0;
+static volatile int mixer_lock = 0;
 
 /*#define DEBUG_LOCKS*/
 #ifdef DEBUG_LOCKS

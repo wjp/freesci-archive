@@ -160,7 +160,7 @@ async_direct_callback(snd_async_handler_t *ahandler)
 				}
 				first = 1;
 			}
-			sfx_audbuf_read(&audio_buffer, (unsigned char*)((int)my_areas->addr + offset*frame_size), frames);
+			sfx_audbuf_read(&audio_buffer, ((byte *)my_areas->addr) + offset*frame_size, frames);
 			commitres = snd_pcm_mmap_commit(handle, offset, frames);
 			if (commitres < 0 || commitres != frames) {
 				if ((err = xrun_recovery(handle, commitres >= 0 ? -EPIPE : commitres)) < 0) {
@@ -301,7 +301,7 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 					return SFX_ERROR;
 				}
 			}
-			sfx_audbuf_read(&audio_buffer, (byte *)((int)my_areas->addr + offset*frame_size), frames);
+			sfx_audbuf_read(&audio_buffer, ((byte *)my_areas->addr) + offset*frame_size, frames);
 			commitres = snd_pcm_mmap_commit(handle, offset, frames);
 			if (commitres < 0 || commitres != frames) {
 				if ((err = xrun_recovery(handle, commitres >= 0 ? -EPIPE : commitres)) < 0) {
