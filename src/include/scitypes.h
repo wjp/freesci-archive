@@ -103,5 +103,29 @@ typedef struct {
 #endif
 } sci_dir_t; /* used by sci_find_first and friends */
 
-#endif /* !SCI_TYPES */
+/*
+ * Fixed point type, borrowed from ScummVM.
+ * The precision of the fractional (fixed point) type we define below.
+ * Normally you should never have to modify this value.
+ */
+enum {
+	FRAC_BITS = 16,
+	FRAC_LO_MASK = ((1L << FRAC_BITS) - 1),
+	FRAC_HI_MASK = ((1L << FRAC_BITS) - 1) << FRAC_BITS,
+ 
+	FRAC_ONE = (1L << FRAC_BITS),		// 1.0
+	FRAC_HALF = (1L << (FRAC_BITS-1))	// 0.5
+};
 
+/*
+ * Fixed-point fractions, used by the sound rate converter and other code.
+ */
+typedef gint32 frac_t;
+
+static inline frac_t double_to_frac(double value) { return (frac_t)(value * FRAC_ONE); }
+static inline double frac_to_double(frac_t value) { return ((double)value) / FRAC_ONE; }
+
+static inline frac_t int_to_frac(gint16 value) { return value << FRAC_BITS; }
+static inline gint16 frac_to_int(frac_t value) { return value >> FRAC_BITS; }
+
+#endif /* !SCI_TYPES */

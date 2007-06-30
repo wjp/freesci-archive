@@ -1206,12 +1206,6 @@ main(int argc, char** argv)
 		return 1;
 	}
 
-	if (chdir(gamestate->work_dir)) {
-		fprintf(stderr,"Error entering working directory '%s'\n",
-			gamestate->work_dir);
-		exit(1);
-	}
-
 	if (!gamestate->version_lock_flag)
 		if (active_conf->version)
 			gamestate->version = active_conf->version;
@@ -1285,6 +1279,12 @@ main(int argc, char** argv)
 	}
 #endif
 
+	/* Allows drivers to access files in the resource directory. */
+	if (chdir(gamestate->resource_dir)) {
+		fprintf(stderr,"Error entering resource directory '%s'\n",
+			gamestate->resource_dir);
+		exit(1);
+	}
 
 	if (init_gfx(active_conf, &cl_options, gfx_driver, resmgr))
 		return 1;
@@ -1298,6 +1298,12 @@ main(int argc, char** argv)
 	if (game_init_sound(gamestate, (cl_options.master_sound == OFF)? SFX_STATE_FLAG_NOSOUND : 0)) {
 		fprintf(stderr,"Game initialization failed: Error in sound subsystem. Aborting...\n");
 		return 1;
+	}
+
+	if (chdir(gamestate->work_dir)) {
+		fprintf(stderr,"Error entering working directory '%s'\n",
+			gamestate->work_dir);
+		exit(1);
 	}
 
 #ifdef __GNUC__

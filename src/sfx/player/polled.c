@@ -164,11 +164,20 @@ static int
 pp_init(resource_mgr_t *resmgr, int expected_latency)
 {
 	resource_t *res = NULL;
+	int fd;
 
 	if (!mixer)
 		return SFX_ERROR;
 
-	seq = sfx_find_softseq(NULL);
+	/* Temporary hack to detect Amiga games. */
+	fd = sci_open("bank.001", O_RDONLY);
+
+	if (fd == SCI_INVALID_FD)
+		seq = sfx_find_softseq(NULL);
+	else {
+		close(fd);
+		seq = sfx_find_softseq("amiga");
+	}
 
 	if (!seq) {
 		sciprintf("[sfx:seq:polled] Initialisation failed: Could not find software sequencer\n");

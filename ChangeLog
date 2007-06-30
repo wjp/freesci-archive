@@ -1,5 +1,15 @@
 2007-06-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/sfx/softseq/amiga.c, src/sfx/softseq/Makefile.am,
+	src/sfx/softseq/softsequencers.c: Added work-in-progress Amiga
+	softseq.
+	* src/main.c (main): Init drivers while in resource dir.
+	* src/sfx/player/polled.c (pp_init): Use Amiga softseq when bank
+	file exists.
+	* src/include/scitypes.h: Added a fixed-point type.
+
+2007-06-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/sfx/pcm_device/alsa.c: Fixed two bugs that could cause a
 	segfault.
 
