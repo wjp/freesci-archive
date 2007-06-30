@@ -1,3 +1,8 @@
+2007-06-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/pcm_device/alsa.c: Fixed two bugs that could cause a
+	segfault.
+
 2007-06-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/seq/dc-amiga.c: Added Dreamcast sequencer for Amiga music.

@@ -59,9 +59,6 @@ static snd_pcm_t *handle;
 
 static snd_async_handler_t *ahandler;
 
-static snd_pcm_hw_params_t *hwparams;
-static snd_pcm_sw_params_t *swparams;
-
 static int
 xrun_recovery(snd_pcm_t *handle, int err)
 {
@@ -178,6 +175,9 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 {
 	unsigned int rrate;
 	int err, count, dir;
+	snd_pcm_hw_params_t *hwparams;
+	snd_pcm_sw_params_t *swparams;
+
 
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
@@ -185,7 +185,7 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 	err = snd_pcm_open(&handle, device, SND_PCM_STREAM_PLAYBACK, 0);
 	if (err < 0) {
 		sciprintf("[SND:ALSA] Playback open error: %s\n", snd_strerror(err));
-		return 0;
+		return SFX_ERROR;
 	}
 	err = snd_pcm_hw_params_any(handle, hwparams);
 	if (err < 0) {
@@ -349,8 +349,6 @@ pcmout_alsa_exit(sfx_pcm_device_t *self)
 	if ((err = snd_pcm_close(handle)) < 0) {
 		sciprintf("[SND:ALSA] Can't close PCM device: %s\n", snd_strerror(err));
 	}
-	snd_pcm_hw_params_free(hwparams);
-	snd_pcm_sw_params_free(swparams);
 }
 
 static int
