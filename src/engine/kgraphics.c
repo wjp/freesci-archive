@@ -535,7 +535,7 @@ kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_GRAPH_GET_COLORS_NR:
 
-		return make_reg(0, (s->resmgr->sci_version < SCI_VERSION_1) ? 0x10 : 0x100);
+		return make_reg(0, (s->resmgr->sci_version < SCI_VERSION_01_VGA) ? 0x10 : 0x100);
 		break;
 
 	case K_GRAPH_DRAW_LINE: {
