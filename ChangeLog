@@ -1,3 +1,7 @@
+2007-07-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/softseq/amiga.c: Changed sound output to 44100 Hz stereo.
+
 2007-06-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/softseq/amiga.c, src/sfx/softseq/Makefile.am,

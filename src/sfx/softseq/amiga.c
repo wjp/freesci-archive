@@ -33,11 +33,15 @@
 #include "sci_midi.h"
 #include "list.h"
 
-#define FREQUENCY 20000
+#define FREQUENCY 44100
 #define CHANNELS_NR 4
 
+#define BASE_FREQ 20000
 #define MODE_SUSTAIN 1 << 0
 #define MODE_MODULATE 1 << 1
+
+#define PAN_LEFT 91
+#define PAN_RIGHT 164
 
 #define DEBUG
 
@@ -66,6 +70,7 @@ typedef struct channel_state {
 	int note;
 	int velocity;
 	int looping;
+	int pan;
 	frac_t offset;
 	frac_t rate;
 } channel_state_t;
@@ -107,7 +112,7 @@ play_sample(gint16 *dest, channel_state_t *channel, int count)
 	while (1) {
 		/* Available source samples until looping/end point */
 		frac_t lin_avail;
-		int rem = count - index;
+		int rem = count - index / 2;
 		int i;
 
 		/* Amount of destination samples that we will compute this iteration */
@@ -131,11 +136,12 @@ play_sample(gint16 *dest, channel_state_t *channel, int count)
 
 		for (i = 0; i < amount; i++) {
 			int new_sample = sample->data[frac_to_int(channel->offset)] * channel->velocity / 127;
-			dest[index++] += new_sample;
+			dest[index++] += new_sample * (255 - channel->pan) >> 8;
+			dest[index++] += new_sample * channel->pan >> 8;
 			channel->offset += channel->rate;
 		}
 
-		if (index == count)
+		if (index / 2 == count)
 			break;
 
 		if (sample->mode & MODE_SUSTAIN) {
@@ -191,13 +197,18 @@ start_note(int channel, int note, int velocity)
 		ch_state[channel].rate = double_to_frac(freq_table[fnote] / (double) FREQUENCY);
 	}
 	else
-		ch_state[channel].rate = FRAC_ONE;
+		ch_state[channel].rate = double_to_frac(BASE_FREQ / (double) FREQUENCY);
 
 	ch_state[channel].instrument = ch_settings[channel].instrument;
 	ch_state[channel].note = note;
 	ch_state[channel].velocity = velocity;
 	ch_state[channel].offset = 0;
 	ch_state[channel].looping = 0;
+
+	if (channel == 0 || channel == 3)
+		ch_state[channel].pan = PAN_LEFT;
+	else
+		ch_state[channel].pan = PAN_RIGHT;
 }
 
 static void
@@ -372,13 +383,13 @@ ami_poll(sfx_softseq_t *self, byte *dest, int len)
 	int i;
 	guint16 *buf = (guint16 *) dest;
 
-	memset(dest, 0, len * 2);
+	memset(dest, 0, len * 4);
 
 	for (i = 0; i < CHANNELS_NR; i++)
 		if (ch_state[i].note >= 0)
 			play_sample(buf, &ch_state[i], len);
 
-	for (i = 0; i < len; i++)
+	for (i = 0; i < len * 2; i++)
 		buf[i] <<= 7;
 }
 
@@ -407,5 +418,5 @@ sfx_softseq_t sfx_softseq_amiga = {
 	0x40,
 	0, /* No rhythm channel */
 	CHANNELS_NR, /* # of voices */
-	{FREQUENCY, SFX_PCM_MONO, SFX_PCM_FORMAT_S16_NATIVE}
+	{FREQUENCY, SFX_PCM_STEREO_LR, SFX_PCM_FORMAT_S16_NATIVE}
 };
