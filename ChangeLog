@@ -1,3 +1,8 @@
+2007-07-03  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/softseq/amiga.c: Improved sound quality.
+	* doc/sci.tex: Added information on Amiga sound.
+
 2007-07-01  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kGraph): Report 256 colors in all

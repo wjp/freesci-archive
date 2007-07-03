@@ -100,7 +100,7 @@
 %\newtheorem*{notation}{Notation}
 %\newcommand{\ntt}{\normalfont\ttfamily}
 %\newcommand{\thmref}[1]{Theorem~\ref{#1}}
-%\newcommand{\secref}[1]{§\ref{#1}}
+%\newcommand{\secref}[1]{\P\ref{#1}}
 %\newcommand{\lemref}[1]{Lemma~\ref{#1}}
  \newcommand{\bysame}{\mbox{\rule{3em}{.4pt}}\,}
  \newcommand{\A}{\mathcal{A}}
@@ -217,7 +217,7 @@
  \floatstyle{ruled}
  \newfloat{dbequation}{ht}{loe}[section]
  \makeatletter\def\toclevel@dbequation{0}\makeatother
- \floatname{dbequation}{Équation}
+ \floatname{dbequation}{Equation}
  \floatstyle{boxed}
  \newfloat{algorithm}{ht}{loa}[section]
  \floatname{algorithm}{Algorithm}
@@ -1286,7 +1286,7 @@ M is a constant array defined as M[0] = 7, M[n+1] = M[n]+ 2\textasciicircum{}n. 
 \subsubsection{Huffman Tree \#1}
 \label{id2493027}\hypertarget{id2493027}{}%
 
-The first huffman tree (\hyperlink{decomp-huffman}{Section {\ref{decomp-huffman}}}) contains the length values. It is described by the following table: 
+The first huffman tree (\hyperlink{decomp-huffman}{Section~{\ref{decomp-huffman}}}) contains the length values. It is described by the following table: 
 % tabular ------------------------------------------------------
 \begin{center}
 \label{id2493042}\hypertarget{id2493042}{}%
@@ -2142,8 +2142,8 @@ Only two kernel calls deal directly with ports:
 
 \begin{tabular}{l}
 
-KGetPort (see \hyperlink{KGetPort}{Section {\ref{KGetPort}}})  \\
-KSetPort (see \hyperlink{KSetPort}{Section {\ref{KSetPort}}})  \\
+KGetPort (see \hyperlink{KGetPort}{Section~{\ref{KGetPort}}})  \\
+KSetPort (see \hyperlink{KSetPort}{Section~{\ref{KSetPort}}})  \\
 \end{tabular}
 
 
@@ -2938,7 +2938,7 @@ I have not been able to investigate the priority property yet, so the fol- lowin
 
 There is a class called SysWindow which is just a simple wrapper around the following two kernel calls. Try breaking on SysWindow::open, then type c to inspect the current object. You can change all the parameters to KNewWin- dow (the Rect is split in its fields, to nsTop, nsLeft etc.)
 
-To create a window structure, use KNewWindow (see \hyperlink{KNewWindow}{Section {\ref{KNewWindow}}}); to remove it again, apply KDisposeWindow (see \hyperlink{KDisposeWindow}{Section {\ref{KDisposeWindow}}}) on it.
+To create a window structure, use KNewWindow (see \hyperlink{KNewWindow}{Section~{\ref{KNewWindow}}}); to remove it again, apply KDisposeWindow (see \hyperlink{KDisposeWindow}{Section~{\ref{KDisposeWindow}}}) on it.
 
 So how do we put stuff inside these windows? That question is a little com- plicated to answer, because it is really a shared effort between the inter- preter and the object hierarchy, and this is one case where the interpreter actually interacts with the objects itself. I will start by explaining the classes involved.
 
@@ -2966,7 +2966,7 @@ bit 2 & disabled. When this bit is set, a button is grayed out. No other control
 bit 3 & selected. When this bit is set, a frame is drawn around the control.  \\
 \end{tabular}
 
- Note that state 3 is by far the most common. With that explained, I'll move on to the kernel functions. There are three functions associated with controls - KDrawControl (see \hyperlink{KDrawControl}{Section {\ref{KDrawControl}}}), KHiliteControl (see \hyperlink{KHiliteControl}{Section {\ref{KHiliteControl}}}) and KEditControl (see \hyperlink{KEditControl}{Section {\ref{KEditControl}}}). Note that there is a KOnControl kernel call which is entirely unrelated to window management.
+ Note that state 3 is by far the most common. With that explained, I'll move on to the kernel functions. There are three functions associated with controls - KDrawControl (see \hyperlink{KDrawControl}{Section~{\ref{KDrawControl}}}), KHiliteControl (see \hyperlink{KHiliteControl}{Section~{\ref{KHiliteControl}}}) and KEditControl (see \hyperlink{KEditControl}{Section~{\ref{KEditControl}}}). Note that there is a KOnControl kernel call which is entirely unrelated to window management.
 
 The dialogs are implemented using not one, but two classes - Dialog and Window. While the Window class maintains the window (It is derived from SysWindow), the Dialog class is just a list of controls. It is derived from the List class, but has extended functionality to tell its members to redraw etc. There is a special function, located in script 255, which allows scripts to push information about the dialog on the stack instead of creating the Dialog object manually.
 
@@ -3003,7 +3003,7 @@ As the control map is not consulted by the interpreter itself (except in a few c
 
 This bit mask system is also used in another place, namely the illegalBits selector of the Act (actor) class. The illegalBits selector determines in which areas the actor may not walk.
 
-The OnControl() system call is explained in \hyperlink{KONCONTROL}{Section {\ref{KONCONTROL}}}.
+The OnControl() system call is explained in \hyperlink{KONCONTROL}{Section~{\ref{KONCONTROL}}}.
 
 % -------------------------------------------------------------
 % Chapter The Sound subsystem 
@@ -3051,7 +3051,7 @@ Generally not as good as MIDI synths, but also less expensive. The OPLx family o
 Beepers produce very poor music and don't support instrument definitions, but all PC users have one so supporting them covers people without special sound hardware. The most common device is the PC speaker, which is monophonic. Another is the Tandy speaker with 3 channels. Drivers must interpret MIDI events, but need only concern themselves with basic functionality. Interpreting the MIDI events is also made easier because each channel is monophonic. To play a chord on the Tandy, for example, each voice must be put in a separate MIDI channel.
 % \null and \mbox are tricks to induce different typesetting decisions
 \item[{Wave Devices}]\null{}
-Wave devices play digital sound data. Sierra's versions of SCI never used them to play music, but they could be used in conjunction with one of the above devices to add special sound effects to a game.
+Wave devices play digital sound data. They could be used in conjunction with one of the above devices to add special sound effects to a game. The Amiga port of SCI uses a wave device to play music.
 \end{description}
 \noindent 
 
@@ -3089,6 +3089,8 @@ Listed here are devices supported by the SCI0 interpreter with a little informat
 {{Casio CSM-1}} & {{}} & {{007}} & {{}} & {{}} \tabularnewline
  \hline 
 {{Roland D110,D10,D20}} & {{}} & {{000}} & {{}} & {{}} \tabularnewline
+\hline 
+{{Amiga Sound}} & {{amigasnd}} & {{}} & {{4}} & {{40h}} \tabularnewline
 \hline 
 \end{tabular}
 \end{center}
@@ -3231,12 +3233,48 @@ End SysEx: Ends a system exclusive data block. Normal sound data resumes at this
 Stop Sequence: This is a system real-time message which tells the sound driver to stop the current sound. The sound object's signal property gets set to FFFFh and the position moves to the loop point, which defaults to the beginning. Drivers allow this message to occur without a delta time, but I haven't seen any examples.
 \end{description}
 \noindent 
-\subsection{Digial Samples}
+\subsection{Digital Samples}
 \label{id2499053}\hypertarget{id2499053}{}%
 
 The digital sample header is 44 bytes long. Offset 14 in the header contains the frequency as a short integer. Offset 32 contains the sample length, also as a short integer. Other fields in the header are unknown (to me) at the time of writing, but aren't critical to playback.
 
 The wave data comes immediately after the header, stored in unsigned 8 bit PCM format.
+\subsection{Amiga Sound}
+\label{amigasound}\hypertarget{amigasound}{}%
+
+The Amiga Sound driver does not use a patch resource, instead it loads an external instrument bank called 'bank.001'. This file has the following structure (all numbers are big-endian):
+
+\begin{tabular}{l}
+{\texttt{{[00]..[07]}}}: String "X0iUo123"  \\
+{\texttt{{[08]..[25]}}}: Bank name  \\
+{\texttt{{[26][27]}}}: Number of instruments (= \#i)  \\
+{\texttt{{[28]..}}}: \#i instruments  \\
+\\
+An instrument has the following format: \\
+\\
+{\texttt{{[00][01]}}}: Instrument number  \\
+{\texttt{{[02]..[1e]}}}: Instrument name  \\
+{\texttt{{[1f][20]}}}: Unknown  \\
+{\texttt{{[21]}}}: Bit 0 = looping on/off, Bit 1 = pitch changes on/off  \\
+{\texttt{{[22]}}}: Transpose value in semitones  \\
+{\texttt{{[23][24]}}}: Segment 1 size in words (= \#s1)  \\
+{\texttt{{[25][26]}}}: Unknown  \\
+{\texttt{{[27][28]}}}: Segment 2 offset in bytes  \\
+{\texttt{{[29][2a]}}}: Segment 2 size in words (= \#s2)  \\
+{\texttt{{[2b][2c]}}}: Unknown  \\
+{\texttt{{[2d][2e]}}}: Segment 3 offset in bytes  \\
+{\texttt{{[2f][30]}}}: Segment 3 size in words (= \#s3)  \\
+{\texttt{{[31]..[3b]}}}: Unknown  \\
+{\texttt{{[3c]..}}}: \#s1+\#s2+\#s3 signed 8-bit samples  \\
+\\
+\end{tabular}
+
+With looping off, all samples are played (even if a note off is received in the meantime). With looping on, Segment 1 is played first, followed by a looping of Segment 2 until a note off is received. It appears that Segments 1 and 2 may overlap and that Segment 3 is never played. Because of the possibility of overlap, there are instruments where \#s1 + \#s2 exceeds the number of samples; in that case \#s3 will be negative.
+
+All instruments have a samplerate of 20000Hz. With pitch changes off, the instrument is always played at this frequency, regardless of the note. With pitch changes on, the transpose value is first added to the note. The instrument is then played at the corresponding frequency (where note 101 equals 20000Hz).
+
+The Amiga has four audio channels. Channels 0 and 3 are panned 100\% left. Channels 1 and 2 are panned 100\% right.
+
 \subsection{Revision history}
 \label{id2499070}\hypertarget{id2499070}{}%
 
@@ -3652,11 +3690,11 @@ Code segments contain free-form SCI bytecode. Pointers into this code are held b
 \subsubsection{Synonym word list segments}
 \label{id2499910}\hypertarget{id2499910}{}%
 
-Inside these, synonyms for certain words may be found. A synonym is a tuple (a, b), where both a and b are word groups, and b is the replacement for a if this synonym is in use. They are stored as 16 bit LE values in sequence (first a, then b). Synonyms must be set explicitly by the kernel function SetSynonyms() (as described \hyperlink{kfunct-set-synonyms}{Section {\ref{kfunct-set-synonyms}}}). It is not possible to select synonyms selectively.
+Inside these, synonyms for certain words may be found. A synonym is a tuple (a, b), where both a and b are word groups, and b is the replacement for a if this synonym is in use. They are stored as 16 bit LE values in sequence (first a, then b). Synonyms must be set explicitly by the kernel function SetSynonyms() (as described \hyperlink{kfunct-set-synonyms}{Section~{\ref{kfunct-set-synonyms}}}). It is not possible to select synonyms selectively.
 \subsubsection{Said spec segments}
 \label{id2499933}\hypertarget{id2499933}{}%
 
-This section contains said specs (explained in \hyperlink{CRSaidSpec}{Section {\ref{CRSaidSpec}}}), tightly grouped.
+This section contains said specs (explained in \hyperlink{CRSaidSpec}{Section~{\ref{CRSaidSpec}}}), tightly grouped.
 \subsubsection{String segments}
 \label{id2499949}\hypertarget{id2499949}{}%
 
@@ -4521,7 +4559,7 @@ op 0x42: callk W kfunct, B kparams (4 bytes)  \\
 op 0x43: callk B kfunct, B kparams (3 bytes)  \\
 \end{tabular}
 
- Call kernel function (see \hyperlink{Kfunctions}{Section {\ref{Kfunctions}}}) 
+ Call kernel function (see \hyperlink{Kfunctions}{Section~{\ref{Kfunctions}}}) 
 \begin{Verbatim}[]
 sp -= (kparams + 2 + &rest_modifier);
 &rest_modifier = 0;
@@ -5258,7 +5296,7 @@ This function checks whether the supplied heap pointer is valid and returns 0 if
 17: close random checkboard, reopen  \\
 \end{tabular}
 
- The animation is executed when kAnimate() (see \hyperlink{KAnimate}{Section {\ref{KAnimate}}}) is invoked. If not specified, it is assumed to be the same animation as last time.  \\
+ The animation is executed when kAnimate() (see \hyperlink{KAnimate}{Section~{\ref{KAnimate}}}) is invoked. If not specified, it is assumed to be the same animation as last time.  \\
 (word) {\ttfamily\itshape{{Flags}}}:
 
 \begin{tabular}{l}
@@ -5314,7 +5352,7 @@ This sets the PicNotValid flag that determines whether or not the current backgr
 
 Returns: (void)
 
-This function draws a background picture plus some views to the foreground. If the background picture had not been drawn previously, it is animated with the animation style set during kDrawPic (see \hyperlink{KDrawPic}{Section {\ref{KDrawPic}}}). Drawing the views is a rather complex issue. Refer to \hyperlink{LarsAnim}{Section {\ref{LarsAnim}}} for its description.
+This function draws a background picture plus some views to the foreground. If the background picture had not been drawn previously, it is animated with the animation style set during kDrawPic (see \hyperlink{KDrawPic}{Section~{\ref{KDrawPic}}}). Drawing the views is a rather complex issue. Refer to \hyperlink{LarsAnim}{Section~{\ref{LarsAnim}}} for its description.
 \subsubsection{Kernel function 0x0c: SetNowSeen(DblList)}
 \label{id2505164}\hypertarget{id2505164}{}%
 \label{id2505171}?? kfunct 0x0c: SetNowSeen();
@@ -5426,7 +5464,7 @@ Explicitly draws a cel, specified by the complete tuple (view, loop, cel), to a 
 
 Returns: (void)
 
-This function stores the list of PicViews for later use by the Animate() syscall. See \hyperlink{KAnimate}{Section {\ref{KAnimate}}} for more details.
+This function stores the list of PicViews for later use by the Animate() syscall. See \hyperlink{KAnimate}{Section~{\ref{KAnimate}}} for more details.
 \subsubsection{Kernel function 0x13: NewWindow(Rect, HeapPtr, word, word, word, word)}
 \label{KNewWindow}\hypertarget{KNewWindow}{}%
 \label{id2505531}kfunct NewWindow();
@@ -5454,7 +5492,7 @@ bit 7 - don't draw anything  \\
 
 Returns: (HeapPtr): The position of the window structure on the heap
 
-This function creates a window (see also \hyperlink{LarsWindows}{Section {\ref{LarsWindows}}}), sets this window as the active port, draws the window (if neccessary), and returns with the window's heap address.
+This function creates a window (see also \hyperlink{LarsWindows}{Section~{\ref{LarsWindows}}}), sets this window as the active port, draws the window (if neccessary), and returns with the window's heap address.
 \subsubsection{Kernel function 0x14: GetPort()}
 \label{KGetPort}\hypertarget{KGetPort}{}%
 \label{id2505676}kfunct 0x14: GetPort();
@@ -5506,7 +5544,7 @@ Destroys a window and frees the associated heap structure.
 
 Returns: (void)
 
-This function draws a Control (see \hyperlink{LarsWindows}{Section {\ref{LarsWindows}}} for details). Please note that the correct port must be selected beforehand.
+This function draws a Control (see \hyperlink{LarsWindows}{Section~{\ref{LarsWindows}}} for details). Please note that the correct port must be selected beforehand.
 \subsubsection{Kernel function 0x18: HiliteControl(HeapPtr)}
 \label{KHiliteControl}\hypertarget{KHiliteControl}{}%
 \label{id2505853}kfunct 0x18: HiliteControl();
@@ -5520,7 +5558,7 @@ This function draws a Control (see \hyperlink{LarsWindows}{Section {\ref{LarsWin
 
 Returns: (void)
 
-This function is used to highlight a control by drawing it with an inverted color scheme. It requires the correct port to be set beforehand. See \hyperlink{LarsWindows}{Section {\ref{LarsWindows}}} for details on the windowing Control system.
+This function is used to highlight a control by drawing it with an inverted color scheme. It requires the correct port to be set beforehand. See \hyperlink{LarsWindows}{Section~{\ref{LarsWindows}}} for details on the windowing Control system.
 \subsubsection{Kernel function 0x19: EditControl(HeapPtr)}
 \label{KEditControl}\hypertarget{KEditControl}{}%
 \label{id2505905}kfunct 0x19: EditControl();
@@ -5535,7 +5573,7 @@ This function is used to highlight a control by drawing it with an inverted colo
 
 Returns: (void)
 
-This function will apply the event provided to edit a type 3 (Edit window) Control (see \hyperlink{LarsWindows}{Section {\ref{LarsWindows}}} for a description of the control system). Normal keypresses are added to the area pointed to by Control::text, unless the total string length would be greater than Control::max. Cursor keys, backspace and a few other keys may be used to manipulate the control. In FreeSCI, some of the libreadline control keys can be used to edit and move the cursor as well. If it is called to edit a Control which is not of type 3, it returns without error. Please note that the correct port (usually the window which the Control was drawn in) must be selected beforehand.
+This function will apply the event provided to edit a type 3 (Edit window) Control (see \hyperlink{LarsWindows}{Section~{\ref{LarsWindows}}} for a description of the control system). Normal keypresses are added to the area pointed to by Control::text, unless the total string length would be greater than Control::max. Cursor keys, backspace and a few other keys may be used to manipulate the control. In FreeSCI, some of the libreadline control keys can be used to edit and move the cursor as well. If it is called to edit a Control which is not of type 3, it returns without error. Please note that the correct port (usually the window which the Control was drawn in) must be selected beforehand.
 \subsubsection{Kernel function 0x1a: TextSize(HeapPtr, HeapPtr, word[, word])}
 \label{id2505970}\hypertarget{id2505970}{}%
 
@@ -5605,7 +5643,7 @@ bit 15: Disable joystick polling  \\
 
 Returns: (word): 0 if a null event was created, 1 otherwise.
 
-This function fills an Event object with data from the event queue. The results are written to the "type", "message" and "modifiers" selectors. See \hyperlink{LarsEvents}{Section {\ref{LarsEvents}}} for details.
+This function fills an Event object with data from the event queue. The results are written to the "type", "message" and "modifiers" selectors. See \hyperlink{LarsEvents}{Section~{\ref{LarsEvents}}} for details.
 \subsubsection{Kernel function 0x1d: GlobalToLocal(HeapPtr Event)}
 \label{KGlobalToLocal}\hypertarget{KGlobalToLocal}{}%
 \label{id2506259}kfunct 0x1d: GlobalToLocal();
@@ -5647,7 +5685,7 @@ This function converts a port-relative event to a screen-relative one, using the
 
 Returns: (HeapPtr): A pointer to the converted object
 
-This function converts a keyboard event to a movement event, if possible. Otherwise, the function returns without error. See \hyperlink{LarsEvents}{Section {\ref{LarsEvents}}} for details.
+This function converts a keyboard event to a movement event, if possible. Otherwise, the function returns without error. See \hyperlink{LarsEvents}{Section~{\ref{LarsEvents}}} for details.
 \subsubsection{Kernel function 0x20: DrawMenuBar(word)}
 \label{id2506403}\hypertarget{id2506403}{}%
 
@@ -5735,7 +5773,7 @@ Draws the specified text to the title bar
 
 Returns: (word) 1 on success, 0 otherwise
 
-This function parses the input line and generates a parse event (type 0x80). See \hyperlink{LarsDMParser}{Section {\ref{LarsDMParser}}} and \hyperlink{LarsEvents}{Section {\ref{LarsEvents}}} for details.
+This function parses the input line and generates a parse event (type 0x80). See \hyperlink{LarsDMParser}{Section~{\ref{LarsDMParser}}} and \hyperlink{LarsEvents}{Section~{\ref{LarsEvents}}} for details.
 \subsubsection{Kernel function 0x25: Said(HeapPtr)}
 \label{id2506705}\hypertarget{id2506705}{}%
 
@@ -5751,7 +5789,7 @@ This function parses the input line and generates a parse event (type 0x80). See
 
 Returns: (word) 1 if the line last parsed meets the criteria of the supplied said\_block, 0 otherwise.
 
-This function is only invoked after Parse() was called, and works on output generated by this function. See \hyperlink{LarsDMParser}{Section {\ref{LarsDMParser}}} and \hyperlink{LarsEvents}{Section {\ref{LarsEvents}}} for details.
+This function is only invoked after Parse() was called, and works on output generated by this function. See \hyperlink{LarsDMParser}{Section~{\ref{LarsDMParser}}} and \hyperlink{LarsEvents}{Section~{\ref{LarsEvents}}} for details.
 \subsubsection{Kernel function 0x26: SetSynonyms(DblList)}
 \label{kfunct-set-synonyms}\hypertarget{kfunct-set-synonyms}{}%
 \label{id2506772}kfunct 0x26: SetSynonyms();
@@ -5913,7 +5951,7 @@ All scripts are removed from the script table  \\
 The heap status is reset, but the heap is not cleared  \\
 \end{tabular}
 
- After this is done, the engine restarts at a certain point (see \hyperlink{LSExecLoop}{Section {\ref{LSExecLoop}}}), re-initializes the stack, and executes the replay method of the game object.
+ After this is done, the engine restarts at a certain point (see \hyperlink{LSExecLoop}{Section~{\ref{LSExecLoop}}}), re-initializes the stack, and executes the replay method of the game object.
 \subsubsection{Kernel function 0x30: GameIsRestarting()}
 \label{id2507314}\hypertarget{id2507314}{}%
 
@@ -6721,7 +6759,7 @@ $\nexists \textrm{pic} \in \textrm{clip\_list}. (\textrm{pic::signal} \& (\textr
 
 Returns: (word) The resulting bitfield
 
-This function scans the indicated point or area on the specified {\ttfamily\itshape{{map}}}, and sets the bit corresponding to each color value found correspondingly. For example, if scanning map 4 (special) would touch two areas, one with color value 1 and one with color value 10, the resulting return value would be 0x0402 (binary 0000010000000010). See also \hyperlink{LARSPICSANDMOVEMENT}{Section {\ref{LARSPICSANDMOVEMENT}}}.
+This function scans the indicated point or area on the specified {\ttfamily\itshape{{map}}}, and sets the bit corresponding to each color value found correspondingly. For example, if scanning map 4 (special) would touch two areas, one with color value 1 and one with color value 10, the resulting return value would be 0x0402 (binary 0000010000000010). See also \hyperlink{LARSPICSANDMOVEMENT}{Section~{\ref{LARSPICSANDMOVEMENT}}}.
 \subsubsection{Kernel function 0x53: InitBresen(HeapPtr [, word])}
 \label{id2509933}\hypertarget{id2509933}{}%
 \label{id2509939}kfunct 0x53: InitBresen();
@@ -7389,7 +7427,7 @@ If the syntax of the sentence is invalid, the interpreter calls Game::syntaxFail
 
 As mentioned in the beginning of this text, this function generates an event. This event, apart from its type id, does not contain any data. Rather, all pertinent data is kept in the interpreter.
 
-The Said kernel function is called for each command which the game might respond to at any given time. Its only parameter is a pointer to a said information block which resides in script space. This block is described below (see \hyperlink{CRSaidSpec}{Section {\ref{CRSaidSpec}}}).
+The Said kernel function is called for each command which the game might respond to at any given time. Its only parameter is a pointer to a said information block which resides in script space. This block is described below (see \hyperlink{CRSaidSpec}{Section~{\ref{CRSaidSpec}}}).
 
 The Said function first does some sanity checking on the event pointer which Parse stored earlier. It must be a said event (type property), and it must not have been handled by an earlier call to Said (claimed property).
 
@@ -7759,7 +7797,7 @@ First, we need to describe a set of functions for traversing the nodes of $T_\Si
 
  With these functions, we can now define an algorithm for augmenting $T_{\Pi}$ and $T_{\Sigma}$:
 
-Algorithm SCI-AUGMENT matched := $\Btt \textrm{claim\_on\_match} := \Btt \texttt{ FOREACH } n \in \textrm{root}(T_{\Sigma}) \texttt{ IF } ((\textrm{first}(n) = 14b) \land (\textrm{second}(n) = f900)) \texttt{ THEN } \textrm{claim\_on\_match} := \Bff \texttt{ ELSE IF } ¬ \textrm{verify\_sentence\_part\_brackets}(n, \textrm{root}(T_{\Pi})) \texttt{ THEN } \textrm{matched} := \Bff \texttt{ END-FOREACH}$
+Algorithm SCI-AUGMENT matched := $\Btt \textrm{claim\_on\_match} := \Btt \texttt{ FOREACH } n \in \textrm{root}(T_{\Sigma}) \texttt{ IF } ((\textrm{first}(n) = 14b) \land (\textrm{second}(n) = f900)) \texttt{ THEN } \textrm{claim\_on\_match} := \Bff \texttt{ ELSE IF } \neg \textrm{verify\_sentence\_part\_brackets}(n, \textrm{root}(T_{\Pi})) \texttt{ THEN } \textrm{matched} := \Bff \texttt{ END-FOREACH}$
 
 
 
@@ -7839,7 +7877,7 @@ This flag is used internally in FreeSCI; it can't be found in the view objects, 
 The bit names I have written come from some debug information I got from QfG2 - type "suck blue frog" then Ctrl-W to save the cast list!
 }\endgroup\docbooktolatexmakefootnoteref{id2520000}
 
-Animate (see \hyperlink{KAnimate}{Section {\ref{KAnimate}}}) can be called in two ways: 
+Animate (see \hyperlink{KAnimate}{Section~{\ref{KAnimate}}}) can be called in two ways: 
 
 \begin{tabular}{l}
 Animate(DblList cast, bool cycle)  \\
@@ -8106,7 +8144,7 @@ Draws a single rectangle to the screen. The {\texttt{{color}}} parameter describ
 \subsubsection{gfx\_drawpic (pic) [palette] [flags]}
 \label{id2521999}\hypertarget{id2521999}{}%
 
-Renders a pic resource. The {\em{palette}} value specifies the pic's palette to use; if not specified, 0 will be assumed. {\em{flags}} set any of the pic drawing flags used in the operational layer (see \hyperlink{fsci-gfx-op}{Section {\ref{fsci-gfx-op}}}).
+Renders a pic resource. The {\em{palette}} value specifies the pic's palette to use; if not specified, 0 will be assumed. {\em{flags}} set any of the pic drawing flags used in the operational layer (see \hyperlink{fsci-gfx-op}{Section~{\ref{fsci-gfx-op}}}).
 \subsubsection{gfx\_fill\_screen (color)}
 \label{id2522025}\hypertarget{id2522025}{}%
 
@@ -8118,21 +8156,21 @@ This will free the main visual widget and all widgets it contains. Since it esse
 \subsubsection{gfx\_print\_dynviews}
 \label{id2522049}\hypertarget{id2522049}{}%
 
-Prints the current dynview list. This list is generated by the Animate() kernel call and represents the visual state of all dynamical images on the screen. Documentation regarding the meaning of the widget descriptions can be found in \hyperlink{fsci-gfx-widgets-string}{Section {\ref{fsci-gfx-widgets-string}}}.
+Prints the current dynview list. This list is generated by the Animate() kernel call and represents the visual state of all dynamical images on the screen. Documentation regarding the meaning of the widget descriptions can be found in \hyperlink{fsci-gfx-widgets-string}{Section~{\ref{fsci-gfx-widgets-string}}}.
 \subsubsection{gfx\_print\_port [port]}
 \label{id2522070}\hypertarget{id2522070}{}%
 
-Dumps the contents of the port specified (or, if omitted, the current port) to the output stream. Documentation regarding the meaning of the widget descriptions can be found in \hyperlink{fsci-gfx-widgets-string}{Section {\ref{fsci-gfx-widgets-string}}}.
+Dumps the contents of the port specified (or, if omitted, the current port) to the output stream. Documentation regarding the meaning of the widget descriptions can be found in \hyperlink{fsci-gfx-widgets-string}{Section~{\ref{fsci-gfx-widgets-string}}}.
 \subsubsection{gfx\_print\_visual}
 \label{id2522088}\hypertarget{id2522088}{}%
 
-Prints the visual widget, and, recursively, its contents; this widget is the root widget, therefore, the structured representation of all graphical information will be print. Documentation regarding the meaning of the widget descriptions can be found in \hyperlink{fsci-gfx-widgets-string}{Section {\ref{fsci-gfx-widgets-string}}}.
+Prints the visual widget, and, recursively, its contents; this widget is the root widget, therefore, the structured representation of all graphical information will be print. Documentation regarding the meaning of the widget descriptions can be found in \hyperlink{fsci-gfx-widgets-string}{Section~{\ref{fsci-gfx-widgets-string}}}.
 \subsubsection{gfx\_widget [widget]}
 \label{id2522108}\hypertarget{id2522108}{}%
 
 (This function is only available if the interpreter was compiled with widget debugging enabled)
 
-If the parameter is not specified, this will print a list of all used widget debug slots (each widget goes into exactly one slot); if the parameter is specified, it is used as an index in the widget debug slot list, causing the corresponding widget to be print. Documentation regarding the meaning of the widget descriptions can be found in \hyperlink{fsci-gfx-widgets-string}{Section {\ref{fsci-gfx-widgets-string}}}.
+If the parameter is not specified, this will print a list of all used widget debug slots (each widget goes into exactly one slot); if the parameter is specified, it is used as an index in the widget debug slot list, causing the corresponding widget to be print. Documentation regarding the meaning of the widget descriptions can be found in \hyperlink{fsci-gfx-widgets-string}{Section~{\ref{fsci-gfx-widgets-string}}}.
 \subsubsection{gfx\_priority [priority]}
 \label{id2522134}\hypertarget{id2522134}{}%
 
@@ -8256,7 +8294,7 @@ Forces a restart of the current game. The string parameter is meaningless now.
 \subsubsection{restore\_game (name)}
 \label{id2522500}\hypertarget{id2522500}{}%
 
-Tries to restore a game state from the specified directory. See \hyperlink{freesci-savegames}{Section {\ref{freesci-savegames}}} for details about this.
+Tries to restore a game state from the specified directory. See \hyperlink{freesci-savegames}{Section~{\ref{freesci-savegames}}} for details about this.
 \subsubsection{s [number]}
 \label{id2522518}\hypertarget{id2522518}{}%
 
@@ -8264,7 +8302,7 @@ This function will execute {\ttfamily\itshape{{number}}} steps, or one if number
 \subsubsection{save\_game (name)}
 \label{id2522535}\hypertarget{id2522535}{}%
 
-Saves the current game state to a directory with the specified {\ttfamily\itshape{{name}}}. The directory is created automatically; everything inside is deleted, and the game data is stored. See \hyperlink{freesci-savegames}{Section {\ref{freesci-savegames}}} for details about this.
+Saves the current game state to a directory with the specified {\ttfamily\itshape{{name}}}. The directory is created automatically; everything inside is deleted, and the game data is stored. See \hyperlink{freesci-savegames}{Section~{\ref{freesci-savegames}}} for details about this.
 \subsubsection{sci\_version}
 \label{id2522560}\hypertarget{id2522560}{}%
 
@@ -8544,7 +8582,7 @@ Provides the SELECTOR\_STATE and MAX\_TEXT\_WIDTH definitions for a number of gr
 \subsection{Graphics subsystem headers}
 \label{id2523384}\hypertarget{id2523384}{}%
 
-The gfx subsystem's functionality is described in \hyperlink{freesci-gfx-subsystem}{Section {\ref{freesci-gfx-subsystem}}}. Most of the header files it uses are prefixed with "gfx\_".
+The gfx subsystem's functionality is described in \hyperlink{freesci-gfx-subsystem}{Section~{\ref{freesci-gfx-subsystem}}}. Most of the header files it uses are prefixed with "gfx\_".
 \subsubsection{gfx\_system.h}
 \label{id2523402}\hypertarget{id2523402}{}%
 
@@ -8864,7 +8902,7 @@ The function may set a higher resolution, provided that no matching resolution i
 
 This operation initializes the driver's default graphics mode. Determining this mode is up to the graphics driver; if its target platform has no means for determining an appropriate mode, it may choose to invoke init\_specific() repeatedly with educated guesses. It must return one of {\texttt{{GFX\_\dbz{}OK}}} or {\texttt{{GFX\_\dbz{}FATAL}}}.
 
-See \hyperlink{gfx-driver-init-specific}{Section {\ref{gfx-driver-init-specific}}} for details.
+See \hyperlink{gfx-driver-init-specific}{Section~{\ref{gfx-driver-init-specific}}} for details.
 \subparagraph*{exit()}
 \label{id2525164}\hypertarget{id2525164}{}%
 

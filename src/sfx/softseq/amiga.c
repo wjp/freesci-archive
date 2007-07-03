@@ -30,60 +30,65 @@
 #include "resource.h"
 #include "sci_memory.h"
 #include "sfx_softseq.h"
-#include "sci_midi.h"
-#include "list.h"
 
 #define FREQUENCY 44100
-#define CHANNELS_NR 4
+#define CHANNELS_NR 10
+#define HW_CHANNELS_NR 4
 
+/* Samplerate of the instrument bank */
 #define BASE_FREQ 20000
-#define MODE_SUSTAIN 1 << 0
-#define MODE_MODULATE 1 << 1
+
+/* Instrument looping flag */
+#define MODE_LOOP 1 << 0
+/* Instrument pitch changes flag */
+#define MODE_PITCH 1 << 1
 
 #define PAN_LEFT 91
 #define PAN_RIGHT 164
 
-#define DEBUG
+/* #define DEBUG */
 
-static int db;
-
-typedef struct sample {
-	int type;
+typedef struct instrument {
 	char name[30];
 	int mode;
 	int size;
-	int attack_size;
-	int sustain_pos;
-	int sustain_size;
-	int pitch;
-	signed char *data; /* Sample data */
-} sample_t;
+	int loop_pos;
+	int transpose;
+	sbyte *samples;
+} instrument_t;
 
 typedef struct bank {
 	char name[31];
 	int size;
-	sample_t *samples[256];
+	instrument_t *instruments[256];
 } bank_t;
 
-typedef struct channel_state {
+typedef struct channel {
 	int instrument;
 	int note;
 	int velocity;
-	int looping;
-	int pan;
+	int decay;
+	int hw_channel;
 	frac_t offset;
 	frac_t rate;
-} channel_state_t;
+} channel_t;
 
-typedef struct channel_settings {
+typedef struct hw_channel {
 	int instrument;
 	int volume;
-} channel_settings_t;
+	int pan;
+} hw_channel_t;
 
+/* Instrument bank */
 static bank_t bank;
-static channel_state_t ch_state[CHANNELS_NR];
-static channel_settings_t ch_settings[CHANNELS_NR];
+/* Internal channels */
+static channel_t channels[CHANNELS_NR];
+/* External channels */
+static hw_channel_t hw_channels[HW_CHANNELS_NR];
+/* Overall volume */
+static int volume = 127;
 
+/* Frequencies for every note */
 static int freq_table[] = {
 	58, 62, 65, 69, 73, 78, 82, 87,
 	92, 98, 104, 110, 117, 124, 131, 139,
@@ -103,30 +108,30 @@ static int freq_table[] = {
 	59932, 63496, 67271, 71271, 75509, 80000, 84757, 89796
 };
 
+static inline int
+interpolate(char *samples, frac_t offset)
+{
+	int x = frac_to_int(offset);
+	int diff = (samples[x + 1] - samples[x]) << 8;
+
+	return (samples[x] << 8) + frac_to_int(diff * (offset & FRAC_LO_MASK));
+}
+
 static void
-play_sample(gint16 *dest, channel_state_t *channel, int count)
+play_instrument(gint16 *dest, channel_t *channel, int count)
 {
 	int index = 0;
-	sample_t *sample = bank.samples[channel->instrument];
+	int vol = hw_channels[channel->hw_channel].volume;
+	instrument_t *instrument = bank.instruments[channel->instrument];
 
 	while (1) {
-		/* Available source samples until looping/end point */
-		frac_t lin_avail;
-		int rem = count - index / 2;
+		/* Available source samples until wrapping/end point */
+		frac_t lin_avail = int_to_frac(instrument->size) - channel->offset;
+		int rem = count - index;
 		int i;
 
 		/* Amount of destination samples that we will compute this iteration */
-		int amount;
-
-		if (sample->mode & MODE_SUSTAIN) {
-			if (channel->looping)
-				lin_avail = int_to_frac(sample->sustain_pos + sample->sustain_size) - channel->offset;
-			else
-				lin_avail = int_to_frac(sample->attack_size) - channel->offset;
-		} else
-			lin_avail = int_to_frac(sample->size) - channel->offset;
-
-		amount = lin_avail / channel->rate;
+		int amount = lin_avail / channel->rate;
 
 		if (lin_avail % channel->rate)
 			amount++;
@@ -135,25 +140,31 @@ play_sample(gint16 *dest, channel_state_t *channel, int count)
 			amount = rem;
 
 		for (i = 0; i < amount; i++) {
-			int new_sample = sample->data[frac_to_int(channel->offset)] * channel->velocity / 127;
-			dest[index++] += new_sample * (255 - channel->pan) >> 8;
-			dest[index++] += new_sample * channel->pan >> 8;
+			dest[index++] = interpolate(instrument->samples, channel->offset) * channel->velocity * vol / (127 * 127);
 			channel->offset += channel->rate;
+
+			/* Decay quickly */
+			if (channel->decay && channel->velocity > 0)
+				channel->velocity--;
 		}
 
-		if (index / 2 == count)
+		if (index == count) {
+			/* Stop note after velocity has dropped to 0 */
+			if (channel->decay && channel->velocity == 0)
+				channel->note = -1;
 			break;
+		}
 
-		if (sample->mode & MODE_SUSTAIN) {
-			if (channel->looping && frac_to_int(channel->offset) >= sample->sustain_pos + sample->sustain_size)
-				channel->offset -= int_to_frac(sample->sustain_size);
-			else if (!channel->looping && frac_to_int(channel->offset) >= sample->attack_size) {
-				channel->looping = 1;
-				channel->offset -= int_to_frac(sample->attack_size);
-				channel->offset += int_to_frac(sample->sustain_pos);
+		if (frac_to_int(channel->offset) >= instrument->size) {
+			if (instrument->mode & MODE_LOOP)
+				/* Loop the samples */
+				channel->offset -= int_to_frac(instrument->size - instrument->loop_pos);
+			else {
+				/* All samples have been played */
+				channel->note = -1;
+				break;
 			}
-		} else if (frac_to_int(channel->offset) >= sample->size)
-			break;
+		}
 	}
 }
 
@@ -161,73 +172,102 @@ static void
 change_instrument(int channel, int instrument)
 {
 #ifdef DEBUG
-	if (bank.samples[instrument])
-		sciprintf("[sfx:seq:amiga] Setting channel %i to \"%s\" (%i)\n", channel, bank.samples[instrument]->name, instrument);
+	if (bank.instruments[instrument])
+		sciprintf("[sfx:seq:amiga] Setting channel %i to \"%s\" (%i)\n", channel, bank.instruments[instrument]->name, instrument);
 	else
 		sciprintf("[sfx:seq:amiga] Warning: instrument %i does not exist (channel %i)\n", instrument, channel);
 #endif
-	ch_settings[channel].instrument = instrument;
+	hw_channels[channel].instrument = instrument;
 }
 
 static void
-start_note(int channel, int note, int velocity)
+stop_channel(int ch)
 {
-	sample_t *sample;
+	int i;
 
-	if (ch_settings[channel].instrument < 0 || ch_settings[channel].instrument > 255) {
-		sciprintf("[sfx:seq:amiga] Error: invalid instrument %i\n", ch_settings[channel].instrument);
+	/* Start decay phase for note on this hw channel, if any */
+	for (i = 0; i < CHANNELS_NR; i++)
+		if (channels[i].note != -1 && channels[i].hw_channel == ch && !channels[i].decay) {
+			channels[i].decay = 1;
+			break;
+		}
+}
+
+static void
+stop_note(int ch, int note)
+{
+	int channel;
+
+	for (channel = 0; channel < CHANNELS_NR; channel++)
+		if (channels[channel].note == note && channels[channel].hw_channel == ch && !channels[channel].decay)
+			break;
+
+	if (channel == CHANNELS_NR) {
+#ifdef DEBUG
+		sciprintf("[sfx:seq:amiga] Warning: cannot stop note %i on channel %i\n", note, ch);
+#endif
 		return;
 	}
 
-	sample = bank.samples[ch_settings[channel].instrument];
+	
+	if (bank.instruments[channels[channel].instrument]->mode & MODE_LOOP)
+		channels[channel].decay = 1;
 
-	if (!sample) {
-		sciprintf("[sfx:seq:amiga] Error: instrument %i does not exist\n", ch_settings[channel].instrument);
+	/* Non-looping instruments are not stopped by a note-off */
+}
+
+static void
+start_note(int ch, int note, int velocity)
+{
+	instrument_t *instrument;
+	int channel, i;
+
+	if (hw_channels[ch].instrument < 0 || hw_channels[ch].instrument > 255) {
+		sciprintf("[sfx:seq:amiga] Error: invalid instrument %i\n", hw_channels[ch].instrument);
 		return;
 	}
 
-	if (sample->mode & MODE_MODULATE) {
-		int fnote = note + sample->pitch;
+	instrument = bank.instruments[hw_channels[ch].instrument];
+
+	if (!instrument) {
+		sciprintf("[sfx:seq:amiga] Error: instrument %i does not exist\n", hw_channels[ch].instrument);
+		return;
+	}
+
+	for (channel = 0; channel < CHANNELS_NR; channel++)
+		if (channels[channel].note == -1)
+			break;
+
+	if (channel == CHANNELS_NR) {
+		sciprintf("[sfx:seq:amiga] Warning: could not find a free channel\n");
+		return;
+	}
+
+	stop_channel(ch);
+
+	if (instrument->mode & MODE_PITCH) {
+		int fnote = note + instrument->transpose;
 
 		if (fnote < 0 || fnote > 127) {
 			sciprintf("[sfx:seq:amiga] Error: illegal note %i\n", fnote);
 			return;
 		}
 
-		ch_state[channel].rate = double_to_frac(freq_table[fnote] / (double) FREQUENCY);
+		/* Compute rate for note */
+		channels[channel].rate = double_to_frac(freq_table[fnote] / (double) FREQUENCY);
 	}
 	else
-		ch_state[channel].rate = double_to_frac(BASE_FREQ / (double) FREQUENCY);
+		channels[channel].rate = double_to_frac(BASE_FREQ / (double) FREQUENCY);
 
-	ch_state[channel].instrument = ch_settings[channel].instrument;
-	ch_state[channel].note = note;
-	ch_state[channel].velocity = velocity;
-	ch_state[channel].offset = 0;
-	ch_state[channel].looping = 0;
-
-	if (channel == 0 || channel == 3)
-		ch_state[channel].pan = PAN_LEFT;
-	else
-		ch_state[channel].pan = PAN_RIGHT;
+	channels[channel].instrument = hw_channels[ch].instrument;
+	channels[channel].note = note;
+	channels[channel].velocity = velocity;
+	channels[channel].offset = 0;
+	channels[channel].hw_channel = ch;
+	channels[channel].decay = 0;
 }
 
-static void
-stop_note(int channel, int note)
-{
-	if (ch_state[channel].note != note) {
-#ifdef DEBUG
-		sciprintf("[sfx:seq:amiga] Warning: cannot stop note %i on channel %i\n", note, channel);
-#endif
-		return;
-	}
-
-	if (!(bank.samples[ch_state[channel].instrument]->mode & MODE_SUSTAIN))
-		return;
-
-	ch_state[channel].note = -1;
-}
-
-static int read_int16(unsigned char *data)
+static int read_int16(byte *data)
 {
 	int val = data[0] * 256 + data[1];
 
@@ -237,48 +277,75 @@ static int read_int16(unsigned char *data)
 	return val;
 }
 
-static sample_t *read_sample(int file, int *id)
+static instrument_t *read_instrument(int file, int *id)
 {
-	sample_t *sample;
-	unsigned char header[61];
+	instrument_t *instrument;
+	byte header[61];
 	int size_rem;
+	int size;
+	sbyte *samples;
+	int seg_size[3];
 
 	if (read(file, header, 61) < 61) {
-		sciprintf("[sfx:seq:amiga] Error: failed to read sample header\n");
+		sciprintf("[sfx:seq:amiga] Error: failed to read instrument header\n");
 		return NULL;
 	}
 
-	sample = sci_malloc(sizeof(sample_t));
+	instrument = (instrument_t *) sci_malloc(sizeof(instrument_t));
 
-	sample->attack_size = read_int16(header + 35) * 2;
-	sample->sustain_size = read_int16(header + 41) * 2;
-	size_rem = read_int16(header + 47) * 2;
+	seg_size[0] = read_int16(header + 35) * 2;
+	seg_size[1] = read_int16(header + 41) * 2;
+	seg_size[2] = read_int16(header + 47) * 2;
 
-	sample->mode = header[33];
-	sample->pitch = header[34];
-	sample->sustain_pos = read_int16(header + 39);
-	sample->size = sample->attack_size + sample->sustain_size + size_rem;
+	instrument->mode = header[33];
+	instrument->transpose = header[34];
+	instrument->loop_pos = read_int16(header + 39);
+	size = seg_size[0] + seg_size[1] + seg_size[2];
 
 	*id = read_int16(header);
 
-	strncpy(sample->name, (char *) header + 2, 29);
-	sample->name[29] = 0;
-	sciprintf("[sfx:seq:amiga] Reading sample %i: \"%s\" (%i bytes)\n",
-		*id, sample->name, sample->size);
-
-	sample->data = sci_malloc(sample->size);
-	if (read(file, sample->data, sample->size) < sample->size) {
-		sciprintf("[sfx:seq:amiga] Error: failed to read sample data\n");
+	strncpy(instrument->name, (char *) header + 2, 29);
+	instrument->name[29] = 0;
+#ifdef DEBUG
+	sciprintf("[sfx:seq:amiga] Reading instrument %i: \"%s\" (%i bytes)\n",
+		*id, instrument->name, size);
+#endif
+	/* Extra byte for interpolation code. */
+	samples = (sbyte *) sci_malloc(size + 1);
+	if (read(file, samples, size) < size) {
+		sciprintf("[sfx:seq:amiga] Error: failed to read instrument samples\n");
 		return NULL;
 	}
 
-	if (sample->sustain_pos + sample->sustain_size > sample->size) {
-		sciprintf("[sfx:seq:amiga] Warning: looping data extends %i bytes past end of sample block\n",
-			*id, sample->sustain_size + sample->sustain_pos - sample->size);
-		
+	if (instrument->mode & MODE_LOOP) {
+		if (instrument->loop_pos + seg_size[1] > size) {
+#ifdef DEBUG
+			sciprintf("[sfx:seq:amiga] Warning: looping samples extends %i bytes past end of sample block\n",
+				instrument->loop_pos + seg_size[1] - size);
+#endif
+			seg_size[1] = size - instrument->loop_pos;
+		}
+
+		if (seg_size[1] < 0) {
+			sciprintf("[sfx:seq:amiga] Error: invalid looping point\n");
+			return NULL;
+		}
+
+		instrument->size = seg_size[0] + seg_size[1];
+		instrument->samples = (sbyte *) sci_malloc(instrument->size + 1);
+		memcpy(instrument->samples, samples, seg_size[0]);
+		memcpy(instrument->samples + seg_size[0], samples + instrument->loop_pos, seg_size[1]);
+		/* Copy first sample to make interpolation easier */
+		instrument->samples[instrument->size] = instrument->samples[seg_size[0]];
+
+		sci_free(samples);
+	} else {
+		instrument->size = size;
+		instrument->samples = samples;
+		instrument->samples[size] = 0;
 	}
 
-	return sample;
+	return instrument;
 }
 
 static int
@@ -291,7 +358,7 @@ static int
 ami_init(sfx_softseq_t *self, byte *patch, int patch_len)
 {
 	int file;
-	unsigned char header[40];
+	byte header[40];
 	int i;
 
 	file = sci_open("bank.001", O_RDONLY);
@@ -308,24 +375,31 @@ ami_init(sfx_softseq_t *self, byte *patch, int patch_len)
 	}
 
 	for (i = 0; i < 256; i++)
-		bank.samples[i] = NULL;
+		bank.instruments[i] = NULL;
 
 	for (i = 0; i < CHANNELS_NR; i++) {
-		ch_settings[i].instrument = -1;
-		ch_settings[i].volume = 127;
-		ch_state[i].note = -1;
+		hw_channels[i].instrument = -1;
+		hw_channels[i].volume = 127;
+		channels[i].note = -1;
 	}
+
+	hw_channels[0].pan = PAN_LEFT;
+	hw_channels[1].pan = PAN_RIGHT;
+	hw_channels[2].pan = PAN_RIGHT;
+	hw_channels[3].pan = PAN_LEFT;
 
 	bank.size = read_int16(header + 38);
 	strncpy(bank.name, (char *) header + 8, 30);
 	bank.name[30] = 0;
-	sciprintf("[sfx:seq:amiga] Reading %i samples from bank \"%s\"\n", bank.size, bank.name);
+#ifdef DEBUG
+	sciprintf("[sfx:seq:amiga] Reading %i instruments from bank \"%s\"\n", bank.size, bank.name);
+#endif
 
 	for (i = 0; i < bank.size; i++) {
 		int id;
-		sample_t *sample = read_sample(file, &id);
+		instrument_t *instrument = read_instrument(file, &id);
 
-		if (!sample) {
+		if (!instrument) {
 			sciprintf("[sfx:seq:amiga] Error: failed to read bank.001\n");
 			close(file);
 			return SFX_ERROR;
@@ -336,7 +410,7 @@ ami_init(sfx_softseq_t *self, byte *patch, int patch_len)
 			return SFX_ERROR;
 		}
 
-		bank.samples[id] = sample;
+		bank.instruments[id] = instrument;
 	}
 
 	close(file);
@@ -347,6 +421,14 @@ ami_init(sfx_softseq_t *self, byte *patch, int patch_len)
 static void
 ami_exit(sfx_softseq_t *self)
 {
+	int i;
+
+	for (i = 0; i < bank.size; i++) {
+		if (bank.instruments[i]) {
+			sci_free(bank.instruments[i]->samples);
+			sci_free(bank.instruments[i]);
+		}
+	}
 }
 
 static void
@@ -358,7 +440,9 @@ ami_event(sfx_softseq_t *self, byte command, int argc, byte *argv)
 	oper = command & 0xf0;
 
 	if (channel >= CHANNELS_NR) {
+#ifdef DEBUG
 		sciprintf("[sfx:seq:amiga] Warning: received event for non-existing channel %i\n", channel);
+#endif
 		return;
 	}
 
@@ -368,6 +452,23 @@ ami_event(sfx_softseq_t *self, byte command, int argc, byte *argv)
 			start_note(channel, argv[0], argv[1]);
 		else
 			stop_note(channel, argv[0]);
+		break;
+	case 0xb0:
+		switch (argv[0]) {
+		case 0x07:
+			hw_channels[channel].volume = argv[1];
+			break;
+		case 0x0a:
+#ifdef DEBUG
+			sciprintf("[sfx:seq:amiga] Warning: ignoring pan 0x%02x event for channel %i\n", argv[1], channel);
+#endif
+			break;
+		case 0x7b:
+			stop_channel(channel);
+			break;
+		default:
+			sciprintf("[sfx:seq:amiga] Warning: unknown control event 0x%02x\n", argv[0]);
+		}
 		break;
 	case 0xc0:
 		change_instrument(channel, argv[0]);
@@ -380,27 +481,45 @@ ami_event(sfx_softseq_t *self, byte command, int argc, byte *argv)
 void
 ami_poll(sfx_softseq_t *self, byte *dest, int len)
 {
-	int i;
-	guint16 *buf = (guint16 *) dest;
+	int i, j;
+	gint16 *buf = (gint16 *) dest;
+	gint16 *buffers = malloc(len * 2 * CHANNELS_NR);
 
+	memset(buffers, 0, len * 2 * CHANNELS_NR);
 	memset(dest, 0, len * 4);
 
+	/* Generate samples for all notes */
 	for (i = 0; i < CHANNELS_NR; i++)
-		if (ch_state[i].note >= 0)
-			play_sample(buf, &ch_state[i], len);
+		if (channels[i].note >= 0)
+			play_instrument(buffers + i * len, &channels[i], len);
 
-	for (i = 0; i < len * 2; i++)
-		buf[i] <<= 7;
+	for (j = 0; j < len; j++) {
+		int mixedl = 0, mixedr = 0;
+
+		/* Mix and pan */
+		for (i = 0; i < CHANNELS_NR; i++) {
+			mixedl += buffers[i * len + j] * (256 - hw_channels[channels[i].hw_channel].pan);
+			mixedr += buffers[i * len + j] * hw_channels[channels[i].hw_channel].pan;
+		}
+
+		/* Adjust volume */
+		buf[2 * j] = mixedl * volume >> 16;
+		buf[2 * j + 1] = mixedr *volume >> 16;
+	}
 }
 
 void
 ami_volume(sfx_softseq_t *self, int new_volume)
 {
+	volume = new_volume;
 }
 
 void
 ami_allstop(sfx_softseq_t *self)
 {
+	int i;
+	for (i = 0; i < HW_CHANNELS_NR; i++)
+		stop_channel(i);
 }
 
 sfx_softseq_t sfx_softseq_amiga = {
@@ -417,6 +536,6 @@ sfx_softseq_t sfx_softseq_amiga = {
 	SFX_SEQ_PATCHFILE_NONE,
 	0x40,
 	0, /* No rhythm channel */
-	CHANNELS_NR, /* # of voices */
+	HW_CHANNELS_NR, /* # of voices */
 	{FREQUENCY, SFX_PCM_STEREO_LR, SFX_PCM_FORMAT_S16_NATIVE}
 };
