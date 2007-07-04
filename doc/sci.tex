@@ -3242,34 +3242,36 @@ The wave data comes immediately after the header, stored in unsigned 8 bit PCM f
 \subsection{Amiga Sound}
 \label{amigasound}\hypertarget{amigasound}{}%
 
-The Amiga Sound driver does not use a patch resource, instead it loads an external instrument bank called 'bank.001'. This file has the following structure (all numbers are big-endian):
+The Amiga Sound driver does not use a patch resource, instead it loads an external instrument bank called 'bank.001'. This file has the following structure (all numbers are big-endian): \\
+\\
+\begin{tabular}{ll}
+{\texttt{{[00]..[07]}}}&String "X0iUo123"  \\
+{\texttt{{[08]..[25]}}}&Bank name  \\
+{\texttt{{[26][27]}}}&Number of instruments (= \#i)  \\
+{\texttt{{[28]..}}}&\#i instruments  \\
+\end{tabular} \\
+\\
+\noindent An instrument has the following format: \\
+\\
+\begin{tabular}{ll}
+{\texttt{{[00][01]}}}&Instrument number \\
+{\texttt{{[02]..[1f]}}}&Instrument name \\
+{\texttt{{[20][21]}}}&Flags: \\
+&\begin{tabular}{ll}
+Bit 0&looping on/off \\
+Bit 1&pitch changes on/off \\
+\end{tabular} \\
+{\texttt{{[22]}}}&Transpose value in semitones \\
+{\texttt{{[23][24]}}}&Segment 1 size in words (= \#s1) \\
+{\texttt{{[25][26][27][28]}}}&Segment 2 offset in bytes \\
+{\texttt{{[29][2a]}}}&Segment 2 size in words (= \#s2) \\
+{\texttt{{[2b][2c][2d][2e]}}}&Segment 3 offset in bytes \\
+{\texttt{{[2f][30]}}}&Segment 3 size in words (= \#s3) \\
+{\texttt{{[31]..[3b]}}}&Volume envelope data \\
+{\texttt{{[3c]..}}}&\#s1+\#s2+\#s3 signed 8-bit samples \\
+\end{tabular} \\
 
-\begin{tabular}{l}
-{\texttt{{[00]..[07]}}}: String "X0iUo123"  \\
-{\texttt{{[08]..[25]}}}: Bank name  \\
-{\texttt{{[26][27]}}}: Number of instruments (= \#i)  \\
-{\texttt{{[28]..}}}: \#i instruments  \\
-\\
-An instrument has the following format: \\
-\\
-{\texttt{{[00][01]}}}: Instrument number  \\
-{\texttt{{[02]..[1e]}}}: Instrument name  \\
-{\texttt{{[1f][20]}}}: Unknown  \\
-{\texttt{{[21]}}}: Bit 0 = looping on/off, Bit 1 = pitch changes on/off  \\
-{\texttt{{[22]}}}: Transpose value in semitones  \\
-{\texttt{{[23][24]}}}: Segment 1 size in words (= \#s1)  \\
-{\texttt{{[25][26]}}}: Unknown  \\
-{\texttt{{[27][28]}}}: Segment 2 offset in bytes  \\
-{\texttt{{[29][2a]}}}: Segment 2 size in words (= \#s2)  \\
-{\texttt{{[2b][2c]}}}: Unknown  \\
-{\texttt{{[2d][2e]}}}: Segment 3 offset in bytes  \\
-{\texttt{{[2f][30]}}}: Segment 3 size in words (= \#s3)  \\
-{\texttt{{[31]..[3b]}}}: Unknown  \\
-{\texttt{{[3c]..}}}: \#s1+\#s2+\#s3 signed 8-bit samples  \\
-\\
-\end{tabular}
-
-With looping off, all samples are played (even if a note off is received in the meantime). With looping on, Segment 1 is played first, followed by a looping of Segment 2 until a note off is received. It appears that Segments 1 and 2 may overlap and that Segment 3 is never played. Because of the possibility of overlap, there are instruments where \#s1 + \#s2 exceeds the number of samples; in that case \#s3 will be negative.
+With looping off, all samples are played. With looping on, Segment 1 is played first, followed by a looping of Segment 2. It appears that Segments 1 and 2 may overlap and that Segment 3 is never played. Because of the possibility of overlap, there are instruments where \#s1 + \#s2 exceeds the number of samples; in that case \#s3 will be negative.
 
 All instruments have a samplerate of 20000Hz. With pitch changes off, the instrument is always played at this frequency, regardless of the note. With pitch changes on, the transpose value is first added to the note. The instrument is then played at the corresponding frequency (where note 101 equals 20000Hz).
 

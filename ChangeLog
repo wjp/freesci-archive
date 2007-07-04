@@ -1,3 +1,7 @@
+2007-07-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* doc/sci.tex: Updated info on Amiga sound.
+
 2007-07-03  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/softseq/amiga.c: Improved sound quality.
