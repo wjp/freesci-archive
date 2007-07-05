@@ -3,8 +3,8 @@ Name: freesci
 Version: @RPM_VERSION@
 Release: 1
 Group: Games/Adventure
-Copyright: GPL
-Source: ftp://ftp.shaftnet.org/pub/freesci/freesci-%{version}.tar.bz2
+License: GPL
+Source: http://www-plan.cs.colorado.edu/creichen/freesci/freesci-%{version}.tar.bz2
 Buildroot: /var/tmp/%{name}-%{version}-%{release}-root
 #Prereq: ggi, SDL >= 1.1.8
 #BuildPrereq:  ggi-devel, SDL-devel >= 1.1.8
@@ -13,10 +13,11 @@ Buildroot: /var/tmp/%{name}-%{version}-%{release}-root
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
 series (starting with SQ3) or Leisure Suit Larry (2 and sequels).
 
+This is the unstable/development branch of FreeSCI.  Expect breakages not present
+in the stable version.  Also note that no savegames are supported at this point.
+
 It has the following improvements over Sierra SCI:
 - SCI0 background pictures can be rendered in higher resolutions and 256 colors
-- saving and restoring the game state is possible from more places than the
-  Sierra SCI engine allowed (using the debugger functions)
 - Better debugger (we believe :-)
 - More portable
 - It's Free software :-)
@@ -37,13 +38,19 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING INSTALL NEWS 
-%doc THANKS TODO doc/sci.sgml
+%doc THANKS TODO doc/sci.tex
 %doc README*
 %{_bindir}/sciv
-%{_bindir}/sciconsole
 %{_bindir}/scidisasm
 %{_bindir}/sciunpack
-%{_libdir}/libsciengine.a
+%{_bindir}/freesci
+%{_bindir}/freesci-setup
+%{_bindir}/bdftofont
+%{_bindir}/fonttoc
+%{_bindir}/scipack
+%{_datadir}/applnk/Games/Adventure/FreeSCI.desktop
+%{_datadir}/games/freesci/config.template
+%{_datadir}/icons/hicolor/48x48/apps/freesci.png
 %{_mandir}/man6/
 
 %clean

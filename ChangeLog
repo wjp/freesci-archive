@@ -1,5 +1,10 @@
 2007-07-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* freesci.spec.in: Updated with information from freesci.spec
+	* freesci.spec: Removed from repo (file is automatically generated).
+
+2007-07-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* doc/sci.tex: Updated info on Amiga sound.
 
 2007-07-03  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
