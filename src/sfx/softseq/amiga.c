@@ -109,7 +109,7 @@ static int freq_table[] = {
 };
 
 static inline int
-interpolate(char *samples, frac_t offset)
+interpolate(sbyte *samples, frac_t offset)
 {
 	int x = frac_to_int(offset);
 	int diff = (samples[x + 1] - samples[x]) << 8;
@@ -220,7 +220,7 @@ static void
 start_note(int ch, int note, int velocity)
 {
 	instrument_t *instrument;
-	int channel, i;
+	int channel;
 
 	if (hw_channels[ch].instrument < 0 || hw_channels[ch].instrument > 255) {
 		sciprintf("[sfx:seq:amiga] Error: invalid instrument %i\n", hw_channels[ch].instrument);
@@ -281,7 +281,6 @@ static instrument_t *read_instrument(int file, int *id)
 {
 	instrument_t *instrument;
 	byte header[61];
-	int size_rem;
 	int size;
 	sbyte *samples;
 	int seg_size[3];
