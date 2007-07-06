@@ -901,6 +901,88 @@ get_file_directory(char* directory, const char* file)
 	}
 }
 
+static void
+detect_versions(sci_version_t *version, int *res_version, cl_options_t *options, config_entry_t *conf)
+{
+	sci_version_t exe_version;
+	sci_version_t hash_version;
+	int hash_res_version;
+	guint32 code;
+	int got_exe_version;
+	const char *game_name;
+
+	sciprintf("Detecting interpreter and resource versions...\n");
+
+	got_exe_version = !version_detect_from_executable(&exe_version);
+
+	if (got_exe_version)
+		sciprintf("Interpreter version: %d.%03d.%03d (by executable scan)\n",
+				  SCI_VERSION_MAJOR(exe_version),
+				  SCI_VERSION_MINOR(exe_version),
+				  SCI_VERSION_PATCHLEVEL(exe_version));
+
+	game_name = version_guess_from_hashcode(&hash_version, &hash_res_version, &code);
+
+	if (game_name) {
+		sciprintf("Interpreter version: %d.%03d.%03d (by hash code %08X)\n",
+				  SCI_VERSION_MAJOR(hash_version),
+				  SCI_VERSION_MINOR(hash_version),
+				  SCI_VERSION_PATCHLEVEL(hash_version), code);
+		if (got_exe_version && exe_version != hash_version)
+				sciprintf("UNEXPECTED INCONSISTENCY: Hash code %08X indicates interpreter version\n"
+					  "  %d.%03d.%03d, but analysis of the executable yields %d.%03d.%03d (for game\n"
+					  "  '%s'). Please report this!\n",
+					  code,
+					  SCI_VERSION_MAJOR(hash_version),
+					  SCI_VERSION_MINOR(hash_version),
+					  SCI_VERSION_PATCHLEVEL(hash_version),
+					  SCI_VERSION_MAJOR(exe_version),
+					  SCI_VERSION_MINOR(exe_version),
+					  SCI_VERSION_PATCHLEVEL(exe_version), game_name);
+
+		if (hash_res_version != SCI_VERSION_AUTODETECT)
+			sciprintf("Resource version: %d (by hash code)\n", hash_res_version);
+
+		sciprintf("Game identified as '%s'\n", game_name);
+	} else {
+		sciprintf("Could not identify game by hash code: %08X\n", code);
+
+		if (got_exe_version)
+			  sciprintf("Please report the preceding two lines and the name of the game you were trying\n"
+			  	    "to run to the FreeSCI development team to help other users!\n",
+			  code);
+	}
+
+	if (options->version)
+		*version = options->version;
+	else if (conf && conf->version)
+		*version = conf->version;
+	else if (game_name)
+		*version = hash_version;
+	else if (got_exe_version)
+		*version = exe_version;
+	else
+		*version = 0;
+
+	if (options->res_version != SCI_VERSION_AUTODETECT)
+		*res_version = options->res_version;
+	else if (conf && conf->res_version != SCI_VERSION_AUTODETECT)
+		*res_version = conf->res_version;
+	else if (game_name)
+		*res_version = hash_res_version;
+	else
+		*res_version = SCI_VERSION_AUTODETECT;
+
+	if (*version)
+		sciprintf("Using interpreter version %d.%03d.%03d\n",
+				  SCI_VERSION_MAJOR(*version),
+				  SCI_VERSION_MINOR(*version),
+				  SCI_VERSION_PATCHLEVEL(*version));
+
+	if (*res_version != SCI_VERSION_AUTODETECT)
+		sciprintf("Using resource version %d\n", *res_version);
+}
+
 int
 main(int argc, char** argv)
 {
@@ -920,7 +1002,8 @@ main(int argc, char** argv)
 	char *pcm_driver_name = NULL;
 	char *game_name	= NULL;
 	char *savegame_name = NULL;
-	sci_version_t version = 0;
+	sci_version_t version;
+	int res_version;
 	gfx_driver_t *gfx_driver = NULL;
 #if 0
 	sound_server_t *sound_server = NULL;
@@ -998,67 +1081,13 @@ main(int argc, char** argv)
 		active_conf = confs + conf_nr;
 	}
 
-	if (cl_options.version || (active_conf && active_conf->version))
-		version = cl_options.version ? cl_options.version
-		  : active_conf ? active_conf->version : 0;
-	else {
-		int got_version = !version_detect_from_executable(&version);
-		unsigned int code;
-		sci_version_t hash_version;
-		const char *game_name = version_guess_from_hashcode(&hash_version, &code);
-
-		if (got_version) {
-			sciprintf("Interpreter version: %d.%03d.%03d (by executable scan)\n",
-				  SCI_VERSION_MAJOR(version),
-				  SCI_VERSION_MINOR(version),
-				  SCI_VERSION_PATCHLEVEL(version));
-
-			if (!game_name)
-				sciprintf("Could not identify game by hash code: %08X\n"
-					  "Please report the preceding two lines and the name of the game you were trying\n"
-					  "to run to the FreeSCI development team to help other users!\n",
-					  code);
-			else if (hash_version != version)
-				sciprintf("UNEXPECTED INCONSISTENCY: Hash code %08X indicates game version %d.%03d.%03d,\n"
-					  "  but analysis of the executable yields %d.%03d.%03d (for game '%s').\n"
-					  "  Please report this!\n"
-					  "Proceeding with result of the executable analysis.\n",
-					  code,
-					  SCI_VERSION_MAJOR(hash_version),
-					  SCI_VERSION_MINOR(hash_version),
-					  SCI_VERSION_PATCHLEVEL(hash_version),
-					  SCI_VERSION_MAJOR(version),
-					  SCI_VERSION_MINOR(version),
-					  SCI_VERSION_PATCHLEVEL(version));
-		} else {
-			if (game_name) {
-				version = hash_version;
-				sciprintf("Interpreter version: %d.%03d.%03d (by hash)\n",
-					  SCI_VERSION_MAJOR(version),
-					  SCI_VERSION_MINOR(version),
-					  SCI_VERSION_PATCHLEVEL(version));
-			} else
-				sciprintf("Could not determine interpreter version; hash code %08X.\n",
-					  code);
-
-		}
-
-		if (game_name)
-			sciprintf("Game identified as '%s'\n", game_name);
-	}
+	detect_versions(&version, &res_version, &cl_options, active_conf);
 
 	getcwd(resource_dir, PATH_MAX); /* Store resource directory */
 
 	sciprintf("Loading resources...\n");
 
-	if (active_conf != NULL)
-		resmgr = scir_new_resource_manager(resource_dir,
-						   cl_options.res_version ? cl_options.res_version :
-						   			    active_conf->res_version,
-						   1, 256*1024); else
-		resmgr = scir_new_resource_manager(resource_dir,
-						   cl_options.res_version,
-						   1, 256*1024);
+	resmgr = scir_new_resource_manager(resource_dir, res_version, 1, 256*1024);
 
 	if (!resmgr) {
 		printf("No resources found in '%s'.\nAborting...\n",
@@ -1579,7 +1608,6 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 	char start_dir[PATH_MAX+1] = "";
 	char work_dir[PATH_MAX+1] = "";
 	char *gfx_driver_name			= NULL;
-	sci_version_t version			= 0;
 	gfx_driver_t *gfx_driver		= NULL;
 	const char *module_path			= SCI_DEFAULT_MODULE_PATH;
 	int current_config;

@@ -1,3 +1,10 @@
+2007-07-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/main.c, src/scicore/versions.c, src/include/versions.h,
+	src/include/games.h: Added resource version field to games.h.
+	Interpreter version data in games.h is now given priority over
+	executable scanning. Added several games to the game list.
+
 2007-07-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* freesci.spec.in: Updated with information from freesci.spec

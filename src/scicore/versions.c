@@ -188,7 +188,7 @@ version_detect_from_executable(sci_version_t *result)
 #define HASHCODE_MAGIC_RESOURCE_001 0x00000001
 
 const char *  /* Original version by Solomon Peachy */
-version_guess_from_hashcode(sci_version_t *result, guint32 *code)
+version_guess_from_hashcode(sci_version_t *result, int *res_version, guint32 *code)
 {
 	int i, len = 0;
 	int fd = -1;
@@ -227,6 +227,7 @@ version_guess_from_hashcode(sci_version_t *result, guint32 *code)
 	for (i = 0 ; sci_games[i].name ; i++) {
 		if (sci_games[i].id == hash_code) {
 			*result = sci_games[i].version;
+			*res_version = sci_games[i].res_version;
 			return sci_games[i].name;
 		}
 	}
