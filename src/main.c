@@ -915,11 +915,18 @@ detect_versions(sci_version_t *version, int *res_version, cl_options_t *options,
 
 	got_exe_version = !version_detect_from_executable(&exe_version);
 
-	if (got_exe_version)
+	if (got_exe_version) {
 		sciprintf("Interpreter version: %d.%03d.%03d (by executable scan)\n",
 				  SCI_VERSION_MAJOR(exe_version),
 				  SCI_VERSION_MINOR(exe_version),
 				  SCI_VERSION_PATCHLEVEL(exe_version));
+
+		if (SCI_VERSION_MAJOR(exe_version) >= 1) {
+			sciprintf("FIXME: Implement version mapping (results of executable scan ignored)\n");
+			got_exe_version = 0;
+		}
+
+	}
 
 	game_name = version_guess_from_hashcode(&hash_version, &hash_res_version, &code);
 

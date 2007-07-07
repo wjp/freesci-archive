@@ -94,6 +94,114 @@ scan_file(char *filename, sci_version_t *version)
 	return 1; /* failure */
 }
 
+static guint32
+read_uint32(byte *data)
+{
+	return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+}
+
+static guint16
+read_uint16(byte *data)
+{
+	return (data[0] << 8) | data[1];
+}
+
+static int
+is_mac_exe(char *filename)
+{
+	FILE *file;
+	byte buf[4];
+	guint32 val;
+	int i;
+
+	/* Mac executables have no extension */
+	if (strchr(filename, '.'))
+		return 0;
+
+	file = fopen(filename, "rb");
+	if (!file)
+		return 0;
+
+	if (fseek(file, 4, SEEK_SET) == -1) {
+		fclose(file);
+		return 0;
+	}
+
+	/* Read resource map offset */
+	if (fread(buf, 1, 4, file) < 4) {
+		fclose(file);
+		return 0;
+	}
+
+	val = read_uint32(buf);
+
+	if (fseek(file, val + 28, SEEK_SET) == -1) {
+		fclose(file);
+		return 0;
+	}
+
+	/* Read number of types in map */
+	if (fread(buf, 1, 2, file) < 2) {
+		fclose(file);
+		return 0;
+	}
+
+	val = read_uint16(buf) + 1;
+
+	for (i = 0; i < val; i++) {
+		if (fread(buf, 1, 4, file) < 4) {
+			fclose(file);
+			return 0;
+		}
+
+		/* Look for executable code */
+		if (!memcmp(buf, "CODE", 4)) {
+			fclose(file);
+			return 1;
+		}
+
+		/* Skip to next list entry */
+		if (fseek(file, 4, SEEK_CUR) == -1) {
+			fclose(file);
+			return 0;
+		}
+	}
+
+	fclose(file);
+	return 0;
+}
+
+static int
+is_exe(char *filename)
+{
+	FILE *file;
+	char buf[4];
+	char header[] = {0x00, 0x00, 0x03, 0xf3};
+
+	/* PC and Atari ST executable extensions */
+	if (strstr(filename, ".exe") || strstr(filename, ".EXE")
+	    || strstr(filename, ".prg") || strstr(filename, ".PRG"))
+		return 1;
+
+	/* Check for Amiga executable */
+	if (strchr(filename, '.'))
+		return 0;
+
+	file = fopen(filename, "rb");
+	if (!file)
+		return 0;
+
+	if (fread(buf, 1, 4, file) < 4) {
+		fclose(file);
+		return 0;
+	}
+
+	fclose(file);
+
+	/* Check header bytes */
+	return memcmp(buf, header, 4) == 0;
+}
+
 void
 version_require_earlier_than(state_t *s, sci_version_t version)
 {
@@ -114,7 +222,6 @@ version_require_earlier_than(state_t *s, sci_version_t version)
 			s->version = s->max_version;
 	}
 }
-
 
 void
 version_require_later_than(state_t *s, sci_version_t version)
@@ -160,26 +267,31 @@ version_detect_from_executable(sci_version_t *result)
 {
 	sci_dir_t dir;
 	char *filename;
-	const char *masks[] = {"*.exe", "*.EXE", NULL};
-	int masknr = 0;
+	int mac = 0;
 
-	while (masks[masknr] != NULL) {
-		sci_init_dir(&dir);
+	/* For Mac versions we need to search the resource fork */
+	mac = !chdir(".rsrc");
 
-		filename = sci_find_first(&dir, masks[masknr]);
+	sci_init_dir(&dir);
 
-		while (filename) {
+	filename = sci_find_first(&dir, "*");
+
+	while (filename) {
+		if (mac ? is_mac_exe(filename) : is_exe(filename))
 			if (!scan_file(filename, result)) {
 				sci_finish_find(&dir);
+
+				if (mac)
+					chdir("..");
+
 				return 0;
 			}
 
-			filename = sci_find_next(&dir);
-		}
-
-		masknr++;
-		sci_finish_find(&dir);
+		filename = sci_find_next(&dir);
 	}
+
+	if (mac)
+		chdir("..");
 
 	return 1;
 }
