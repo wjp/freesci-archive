@@ -70,6 +70,7 @@ _common_init(base_song_iterator_t *self)
 	self->fade.action = FADE_ACTION_NONE;
 	self->resetflag = 0;
 	self->loops = 0;
+	self->priority = 0;
 }
 
 
@@ -254,12 +255,34 @@ if (1) {
 
 		case SCI_MIDI_SET_POLYPHONY:
 			self->polyphony[midi_channel] = buf[2];
+
+#if 0
+			{
+			  int i;
+			  int voices = 0;
+			  for (i = 0; i < ((sci1_song_iterator_t *) self)->channels_nr; i++)
+			    {
+			      voices += self->polyphony[i];
+			    }
+
+			  sciprintf("SET_POLYPHONY(%d, %d) for a total of %d voices\n", midi_channel, buf[2], voices);
+			  sciprintf("[iterator-1] DEBUG: Polyphony = [ ");
+			  for (i = 0; i < ((sci1_song_iterator_t *) self)->channels_nr; i++)
+			    sciprintf("%d ", self->polyphony[i]);
+			  sciprintf("]\n");
+			  sciprintf("[iterator-1] DEBUG: Importance = [ ");
+			  for (i = 0; i < ((sci1_song_iterator_t *) self)->channels_nr; i++)
+			    sciprintf("%d ", self->importance[i]);
+			  sciprintf("]\n");
+			}
+#endif
 			break;
 
 		case SCI_MIDI_SET_REVERB:
 			break;
 
-		case SCI_MIDI_SET_VELOCITY:
+		case SCI_MIDI_CHANNEL_MUTE:
+			sciprintf("CHANNEL_MUTE(%d, %d)\n", midi_channel, buf[2]);
 			break;
 
 		case SCI_MIDI_HOLD:
@@ -698,9 +721,8 @@ _sci1_song_init(sci1_song_iterator_t *self)
 	CHECK_FOR_END_ABSOLUTE(0);
 	if (SONGDATA(0) == 0xf0)
 	{
-		int priority = SONGDATA(1);
+		self->priority = SONGDATA(1);
 
-		// Code to take care of this is in src/engine/ksound.c
 		offset += 8;
 	}
 
@@ -763,7 +785,10 @@ _sci1_song_init(sci1_song_iterator_t *self)
 
 				self->polyphony[self->channels_nr - 1]
 					= SCI1_CHANDATA(-1);
-
+				self->importance[self->channels_nr - 1] 
+					= self->polyphony[self->channels_nr - 1] >> 4;
+				self->polyphony[self->channels_nr - 1] &= 15;
+					
 				channel->playmask = ~0; /* Enable all */
 				self->channel_mask |= (1 << channel_nr);
 
@@ -773,18 +798,6 @@ _sci1_song_init(sci1_song_iterator_t *self)
 		offset += 4;
 		CHECK_FOR_END_ABSOLUTE(offset);
 	}
-
-#if 0
-	sciprintf("[iterator-1] (%p) DEBUG: detected %d channels\n",
-		  self, self->channels_nr);
-	{
-		int i;
-		sciprintf("[iterator-1] DEBUG: Polyphony = [ ");
-		for (i = 0; i < self->channels_nr; i++)
-			sciprintf("%d ", self->polyphony[i]);
-		sciprintf("]\n");
-	}
-#endif
 
 	/* Now ensure that sapmle deltas are relative to the previous sample */
 	seeker = self->next_sample;
@@ -1190,6 +1203,8 @@ _sci1_init(sci1_song_iterator_t *self)
 	self->delay_remaining = 0;
 	self->loops = 0;
 	self->hold = 0;
+	memset(self->polyphony, 0, sizeof(self->polyphony));
+	memset(self->importance, 0, sizeof(self->importance));
 }
 
 static void

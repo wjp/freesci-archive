@@ -99,6 +99,7 @@ typedef struct {
 	songit_id_t ID;										  \
 	guint16 channel_mask;									  \
         fade_params_t fade;                                                                       \
+	int priority;                                                                             \
 	int (*next) (song_iterator_t *self, unsigned char *buf, int *buf_size);			  \
 	sfx_pcm_feed_t * (*get_pcm_feed) (song_iterator_t *s);					  \
 	song_iterator_t * (* handle_message)(song_iterator_t *self, song_iterator_message_t msg); \
@@ -115,6 +116,7 @@ typedef struct _song_iterator {
 	songit_id_t ID;
 	guint16 channel_mask; /* Bitmask of all channels this iterator will use */
         fade_params_t fade;                                                                       
+	int priority;
 
 	int (*next) (struct _song_iterator *self,
 		     unsigned char *buf, int *result);

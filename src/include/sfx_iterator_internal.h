@@ -78,6 +78,7 @@ typedef struct {
 	INHERITS_SONG_ITERATOR; /* aka "extends song iterator" */				\
 												\
 	int polyphony[MIDI_CHANNELS]; /* # of simultaneous notes on each */			\
+	int importance[MIDI_CHANNELS]; /* priority rating for each channel */			\
 												\
 												\
 	int ccc; /* Cumulative cue counter, for those who need it */				\
