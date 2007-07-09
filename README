@@ -51,8 +51,7 @@ instructions on how to do this, or download a binary version.
 After you have a binary copy of FreeSCI (whether compiled yourself or
 downloaded), you should have a number of tools (depending on your operating
 system), and the main program (src/freesci). Usually, you will want to
-run the main program; there are three ways to run a game with FreeSCI
-now:
+run the main program; there are five ways to run a game with FreeSCI now:
 
 a) You can enter the directory your game is contained in, and just start
 'freesci'. If no parameters are given, it will look for data files in the
@@ -66,6 +65,12 @@ c) First build a configuration file, then run 'freesci' followed by one of
 the game names described in the config file. The process of creating a
 config file is outlined in section 2.
 
+d) First build a configuration file, then run 'freesci'. A menu will be
+presented containing all games that are listed in the config file.
+
+e) FreeSCI can search a directory tree for SCI games and present them in a
+menu. The directory to be searched can be specified with the -G command line
+option, or the menu_dir config file option.
 
 Please note that the default options are rather spartanic; if your machine
 is sufficiently powerful, you might want to spice up your graphics. How
@@ -123,6 +128,13 @@ configuration file may contain:
   the game with the specified game ID. (The game ID is printed during
   sciv startup, and is also used to create the save game directory).
   You can use this to provide game-specific configuration options.
+
+- menu_dir: Specifies the directory that is recursively searched for SCI
+  games when the game selection screen is invoked. Should only be used in the
+  generic part of the config file.
+  Default is the '.freesci/games/' directory, where '.freesci' is in a
+  platform-specific location (see the appropriate README file for further
+  details).
 
 - console_log: Specifies a console log file which keeps track of all output
   print with the function sciprintf().

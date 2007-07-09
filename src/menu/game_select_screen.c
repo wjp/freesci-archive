@@ -37,6 +37,11 @@
 #define GS_WINDOW_WIDTH		260
 #define GS_WINDOW_HEIGHT	156
 
+#define GS_SCAN_WINDOW_LEFT	30
+#define GS_SCAN_WINDOW_TOP	73
+#define GS_SCAN_WINDOW_WIDTH	260
+#define GS_SCAN_WINDOW_HEIGHT	62
+
 #define GS_LISTBOX_WIDTH	(GS_WINDOW_WIDTH - 78)
 #define GS_LISTBOX_HEIGHT	(GS_WINDOW_HEIGHT - 43)
 #define GS_LISTBOX_CONTENTS_HEIGHT	GS_LISTBOX_HEIGHT - 21
@@ -241,7 +246,7 @@ game_select_display_button(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, re
 }
 
 static void
-game_select_display_listbox(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, rect_t box, char** game_list, int game_count, int first_game, int selected_game)
+game_select_display_listbox(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, rect_t box, game_t *game_list, int game_count, int first_game, int selected_game)
 {
 	int max_game;
 	int pos = 0;
@@ -282,7 +287,7 @@ game_select_display_listbox(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, r
 		if (selected_game == cur)
 			gfx_box_fill(gfx_driver, gfx_rect(box.x + 1, box.y + 11 + (pos * font->line_height), box.xl - 1, font->line_height), black);
 
-		gfx_box_text(gfx_driver, gfx_rect(box.x + 1, box.y + 11 + (pos * font->line_height), box.xl - 1, font->line_height), font, create_pixmap_color_t((selected_game == cur) ? white : black), create_pixmap_color_t((selected_game == cur) ? black : white), game_list[cur], 0);
+		gfx_box_text(gfx_driver, gfx_rect(box.x + 1, box.y + 11 + (pos * font->line_height), box.xl - 1, font->line_height), font, create_pixmap_color_t((selected_game == cur) ? white : black), create_pixmap_color_t((selected_game == cur) ? black : white), game_list[cur].name, 0);
 	}
 }
 
@@ -314,31 +319,40 @@ game_select_display_window(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font, re
 }
 
 static void
-game_select_display_game_list(gfx_driver_t *gfx_driver, const char* freesci_version, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small, char** game_list, int game_count, int first_game, int selected_game, int focus_button)
+game_select_draw_bg(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font)
 {
-	int pos = 0;
+	char title[255];
 	gfx_color_t black;
 	gfx_color_t white;
-	gfx_color_t grey;
 	gfx_color_t blue;
-	char title[255];
 
 	black = create_color_t(0, 0, 0);
 	white = create_color_t(255, 255, 255);
-	grey = create_color_t(85, 85, 85);
 	blue = create_color_t(0, 0, 170);
 
 	strcpy(title, "FreeSCI");
-	/* strcat(title, "  "); */
-	/* strcat(title, freesci_version); */
+	strcat(title, " ");
+	strcat(title, VERSION);
 
 	/* menu bar */
-	gfx_box_fill(gfx_driver, gfx_rect(0, 0, 320, font_default->height), white);
-	gfx_box_line(gfx_driver, gfx_rect(0, font_default->height, 320, 0), black);
-	gfx_box_text(gfx_driver, gfx_rect(0, 1, 320, font_default->height - 1), font_default, create_pixmap_color_t(black), create_pixmap_color_t(white), title, 1);
+	gfx_box_fill(gfx_driver, gfx_rect(0, 0, 320, font->height), white);
+	gfx_box_line(gfx_driver, gfx_rect(0, font->height, 320, 0), black);
+	gfx_box_text(gfx_driver, gfx_rect(0, 1, 320, font->height - 1), font, create_pixmap_color_t(black), create_pixmap_color_t(white), title, 1);
 
 	/* background */
 	gfx_box_fill(gfx_driver, gfx_rect(0, 10, 320, 190), blue);
+}
+
+static void
+game_select_display_game_list(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small, game_t *game_list, int game_count, int first_game, int selected_game, int focus_button)
+{
+	gfx_color_t black;
+	gfx_color_t white;
+
+	black = create_color_t(0, 0, 0);
+	white = create_color_t(255, 255, 255);
+
+	game_select_draw_bg(gfx_driver, font_default);
 
 	/* window */
 	game_select_display_window(gfx_driver, font_default, gfx_rect(GS_WINDOW_LEFT, GS_WINDOW_TOP, GS_WINDOW_WIDTH, GS_WINDOW_HEIGHT), "Play a Game");
@@ -357,15 +371,57 @@ game_select_display_game_list(gfx_driver_t *gfx_driver, const char* freesci_vers
 	game_select_display_button(gfx_driver, font_default, gfx_rect(GS_WINDOW_LEFT + GS_WINDOW_WIDTH - 69, GS_WINDOW_TOP + 39 + font_default->height + 5, 64, font_default->height + 1), "Quit", focus_button == GS_BUTTON_QUIT);
 }
 
+void
+game_select_scan_info(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small, char *name, int total)
+{
+	gfx_color_t black;
+	gfx_color_t white;
+	gfx_color_t grey;
+	gfx_color_t blue;
+	rect_t box;
+	int error;
+	char text[256];
+
+	black = create_color_t(0, 0, 0);
+	white = create_color_t(255, 255, 255);
+	grey = create_color_t(85, 85, 85);
+	blue = create_color_t(0, 0, 170);
+
+	game_select_draw_bg(gfx_driver, font_default);
+
+	/* window */
+	game_select_display_window(gfx_driver, font_default, gfx_rect(GS_SCAN_WINDOW_LEFT, GS_SCAN_WINDOW_TOP, GS_SCAN_WINDOW_WIDTH, GS_SCAN_WINDOW_HEIGHT), "Scanning for Games");
+
+	/* window text */
+	gfx_box_text(gfx_driver, gfx_rect(GS_SCAN_WINDOW_LEFT + 6, GS_SCAN_WINDOW_TOP + 16, GS_SCAN_WINDOW_WIDTH - 11, 8), font_default, create_pixmap_color_t(black), create_pixmap_color_t(white), "Please wait, scanning for games...", 0);
+
+	if (name) {
+		snprintf(text, 256, "Adding: %s", name);
+	
+		gfx_box_text(gfx_driver, gfx_rect(GS_SCAN_WINDOW_LEFT + 6, GS_SCAN_WINDOW_TOP + 32, GS_SCAN_WINDOW_WIDTH - 11, 8), font_default, create_pixmap_color_t(black), create_pixmap_color_t(white), text, 0);
+	}
+	
+	snprintf(text, 256, "Games found: %i", total);
+
+	gfx_box_text(gfx_driver, gfx_rect(GS_SCAN_WINDOW_LEFT + 6, GS_SCAN_WINDOW_TOP + 48, GS_SCAN_WINDOW_WIDTH - 11, 8), font_default, create_pixmap_color_t(black), create_pixmap_color_t(white), text, 0);
+
+	box = gfx_rect(0, 0, 320 * gfx_driver->mode->xfact, 200 * gfx_driver->mode->yfact);
+
+	if ((error = gfx_driver->update(gfx_driver, box, gfx_point(box.x, box.y), GFX_BUFFER_FRONT)))
+	{
+		GFXERROR("Error occured while updating region (%d,%d,%d,%d) in buffer %d\n", box.x, box.y, box.xl, box.yl, GFX_BUFFER_BACK);
+	}
+}
+
 int
-game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char** game_list, int game_count, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small)
+game_select_display(gfx_driver_t *gfx_driver, game_t *game_list, int game_count, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small)
 {
 	int error;
 	int cont;
 	sci_event_t event;
 	int focus_button = GS_BUTTON_PLAY;
-	int selected_game = 1;
-	int first_game = 1;
+	int selected_game = 0;
+	int first_game = 0;
 	int max_game;
 	rect_t box;
 
@@ -373,7 +429,7 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 
 	max_game = (int)(((double)GS_LISTBOX_CONTENTS_HEIGHT) / font_small->line_height);
 
-	game_select_display_game_list(gfx_driver, freesci_version, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
+	game_select_display_game_list(gfx_driver, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
 	if ((error = gfx_driver->update(gfx_driver, box, gfx_point(box.x, box.y), GFX_BUFFER_FRONT)))
 	{
 		GFXERROR("Error occured while updating region (%d,%d,%d,%d) in buffer %d\n", box.x, box.y, box.xl, box.yl, GFX_BUFFER_BACK);
@@ -396,7 +452,7 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 						break;
 					case GS_BUTTON_QUIT:
 						cont = 0;
-						selected_game = 0;
+						selected_game = -1;
 						break;
 				}
 			}
@@ -407,7 +463,7 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 				if (focus_button < GS_BUTTON_FIRST)
 					focus_button = GS_BUTTON_LAST;
 
-				game_select_display_game_list(gfx_driver, freesci_version, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
+				game_select_display_game_list(gfx_driver, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
 				if ((error = gfx_driver->update(gfx_driver, box, gfx_point(box.x, box.y), GFX_BUFFER_FRONT)))
 				{
 					GFXERROR("Error occured while updating region (%d,%d,%d,%d) in buffer %d\n", box.x, box.y, box.xl, box.yl, GFX_BUFFER_BACK);
@@ -420,7 +476,7 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 				if (focus_button > GS_BUTTON_LAST)
 					focus_button = GS_BUTTON_FIRST;
 
-				game_select_display_game_list(gfx_driver, freesci_version, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
+				game_select_display_game_list(gfx_driver, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
 				if ((error = gfx_driver->update(gfx_driver, box, gfx_point(box.x, box.y), GFX_BUFFER_FRONT)))
 				{
 					GFXERROR("Error occured while updating region (%d,%d,%d,%d) in buffer %d\n", box.x, box.y, box.xl, box.yl, GFX_BUFFER_BACK);
@@ -429,11 +485,11 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 			else if (event.data == SCI_K_ESC)
 			{
 				cont = 0;
-				selected_game = 0;
+				selected_game = -1;
 			}
 			else if (event.data == SCI_K_UP)
 			{
-				if (selected_game > 1)
+				if (selected_game > 0)
 				{
 					selected_game--;
 
@@ -444,7 +500,7 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 						first_game = selected_game;
 					}
 
-					game_select_display_game_list(gfx_driver, freesci_version, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
+					game_select_display_game_list(gfx_driver, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
 					if ((error = gfx_driver->update(gfx_driver, box, gfx_point(box.x, box.y), GFX_BUFFER_FRONT)))
 					{
 						GFXERROR("Error occured while updating region (%d,%d,%d,%d) in buffer %d\n", box.x, box.y, box.xl, box.yl, GFX_BUFFER_BACK);
@@ -464,7 +520,7 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 						first_game = selected_game - max_game + 1;
 					}
 
-					game_select_display_game_list(gfx_driver, freesci_version, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
+					game_select_display_game_list(gfx_driver, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
 					if ((error = gfx_driver->update(gfx_driver, box, gfx_point(box.x, box.y), GFX_BUFFER_FRONT)))
 					{
 						GFXERROR("Error occured while updating region (%d,%d,%d,%d) in buffer %d\n", box.x, box.y, box.xl, box.yl, GFX_BUFFER_BACK);
@@ -474,9 +530,9 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 			else if (event.data == SCI_K_PGUP)
 			{
 				selected_game -= (max_game - 1);
-				if (selected_game < 1)
+				if (selected_game < 0)
 				{
-					selected_game = 1;
+					selected_game = 0;
 				}
 
 				focus_button = GS_BUTTON_PLAY;
@@ -486,7 +542,7 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 					first_game = selected_game;
 				}
 
-				game_select_display_game_list(gfx_driver, freesci_version, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
+				game_select_display_game_list(gfx_driver, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
 				if ((error = gfx_driver->update(gfx_driver, box, gfx_point(box.x, box.y), GFX_BUFFER_FRONT)))
 				{
 					GFXERROR("Error occured while updating region (%d,%d,%d,%d) in buffer %d\n", box.x, box.y, box.xl, box.yl, GFX_BUFFER_BACK);
@@ -507,7 +563,7 @@ game_select_display(gfx_driver_t *gfx_driver, const char* freesci_version, char*
 					first_game = selected_game - max_game + 1;
 				}
 
-				game_select_display_game_list(gfx_driver, freesci_version, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
+				game_select_display_game_list(gfx_driver, font_default, font_small, game_list, game_count, first_game, selected_game, focus_button);
 				if ((error = gfx_driver->update(gfx_driver, box, gfx_point(box.x, box.y), GFX_BUFFER_FRONT)))
 				{
 					GFXERROR("Error occured while updating region (%d,%d,%d,%d) in buffer %d\n", box.x, box.y, box.xl, box.yl, GFX_BUFFER_BACK);

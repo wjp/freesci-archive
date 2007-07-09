@@ -79,6 +79,7 @@ typedef struct {
 	char *resource_dir; /* Resource directory */
 	char *gfx_driver_name; /* The graphics driver to use */
 	char *console_log; /* The file to which console output should be echoed */
+	char *menu_dir; /* Directory where the game menu searches for games */
 	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
 	int mouse; /* Whether the mouse should be active */
 	int reverse_stereo;

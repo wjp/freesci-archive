@@ -1332,6 +1332,7 @@ standard_option standard_options[] = {
 #endif
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
+	OPT_STRING("menu_dir", menu_dir),
 	OPT_STRING("gfx_driver", gfx_driver_name),
 	OPT_INT("scale_x", x_scale, 1, 256),
 	OPT_INT("scale_y", y_scale, 1, 256),
@@ -1351,7 +1352,7 @@ crop_value(char *yytext);
 char *
 purge_comments(char *comments);
 
-#line 1355 "config.c"
+#line 1356 "config.c"
 
 #define INITIAL 0
 
@@ -1504,10 +1505,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 312 "config.l"
+#line 313 "config.l"
 
 
-#line 1511 "config.c"
+#line 1512 "config.c"
 
 	if ( !(yy_init) )
 		{
@@ -1592,7 +1593,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 314 "config.l"
+#line 315 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1627,7 +1628,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 347 "config.l"
+#line 348 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1640,7 +1641,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 357 "config.l"
+#line 358 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1653,7 +1654,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 367 "config.l"
+#line 368 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1665,7 +1666,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 376 "config.l"
+#line 377 "config.l"
 {
 /* driver parameters */
 	char *subsys_name = yytext;
@@ -1697,11 +1698,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 406 "config.l"
+#line 407 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
-	char *foo;
 	int option_str_len;
 
 	while (isalnum(*value_str) || *value_str == '_')
@@ -1709,7 +1709,7 @@ YY_RULE_SETUP
 
 	option_str_len = value_str - option_str;
 
-	while (!(isalnum(*value_str) || *value_str == '_' || *value_str == '"'))
+	while (!(isalnum(*value_str) || *value_str == '_' || *value_str == '"' || *value_str == '/' || *value_str == '\\'))
 		++value_str;
 
 	value_str = crop_value(value_str);
@@ -1724,7 +1724,6 @@ YY_RULE_SETUP
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
-	char *foo;
 	int option_str_len;
 
 	while (isalnum(*value_str) || *value_str == '_')
@@ -1743,14 +1742,14 @@ YY_RULE_SETUP
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 445 "config.l"
+#line 444 "config.l"
 {
 	gfx_update_conf(&(conf[cur_section].gfx_options), purge_comments(yytext));
 }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 449 "config.l"
+#line 448 "config.l"
 {
 	char *filename = strchr(yytext, '<');
 	char *end = strchr(filename, '>');
@@ -1772,17 +1771,17 @@ case 10:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 466 "config.l"
+#line 465 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 468 "config.l"
+#line 467 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 470 "config.l"
+#line 469 "config.l"
 {
 	yy_delete_buffer(YY_CURRENT_BUFFER );
 	yyterminate();
@@ -1790,15 +1789,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 475 "config.l"
+#line 474 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 477 "config.l"
+#line 476 "config.l"
 ECHO;
 	YY_BREAK
-#line 1802 "config.c"
+#line 1801 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2027,7 +2026,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), num_to_read );
+			(yy_n_chars), (size_t) num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -2338,19 +2337,9 @@ static void yy_load_buffer_state  (void)
 	yyfree((void *) b  );
 }
 
-#ifndef _UNISTD_H /* assume unistd.h has isatty() for us */
-#ifdef __cplusplus
-extern "C" {
-#endif
-#ifdef __THROW /* this is a gnuism */
-extern int isatty (int ) __THROW;
-#else
+#ifndef __cplusplus
 extern int isatty (int );
-#endif
-#ifdef __cplusplus
-}
-#endif
-#endif
+#endif /* __cplusplus */
     
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
@@ -2538,7 +2527,7 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 
 /** Setup the input buffer state to scan a string. The next call to yylex() will
  * scan from a @e copy of @a str.
- * @param str a NUL-terminated string to scan
+ * @param yystr a NUL-terminated string to scan
  * 
  * @return the newly allocated buffer state object.
  * @note If you want to scan bytes that may contain NUL values, then use
@@ -2792,7 +2781,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 477 "config.l"
+#line 476 "config.l"
 
 
 
@@ -2969,6 +2958,18 @@ config_init(config_entry_t **_conf, char *conffile)
         conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
 	conf->res_version = SCI_VERSION_AUTODETECT;
 
+	if (homedir) {
+		conf->menu_dir = sci_malloc(strlen(homedir) + strlen(FREESCI_GAMEDIR)
+			+ strlen(FREESCI_GAMES_DIR) + 2 * strlen(G_DIR_SEPARATOR_S) + 1);
+		strcpy(conf->menu_dir, homedir);
+		strcat(conf->menu_dir, G_DIR_SEPARATOR_S);
+		strcat(conf->menu_dir, FREESCI_GAMEDIR);
+		strcat(conf->menu_dir, G_DIR_SEPARATOR_S);
+		strcat(conf->menu_dir, FREESCI_GAMES_DIR);
+	}
+	else
+		conf->menu_dir = NULL;
+
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
 		conf->driver_options[i] = NULL;
 /**** Default config ends */
@@ -2994,6 +2995,7 @@ config_init(config_entry_t **_conf, char *conffile)
 			/* So we've got a home directory */
 			if (chdir(homedir)) {
 				fprintf(stderr,"Warning: Could not enter home directory: %s\n", homedir);
+				*_conf = conf; /* Set the result variable */
 				return 1;
 			}
 
@@ -3001,6 +3003,7 @@ config_init(config_entry_t **_conf, char *conffile)
 				if (scimkdir(FREESCI_GAMEDIR, 0700)) {
 
 					fprintf(stderr,"Warning: Could not enter/create ~/"FREESCI_GAMEDIR"\n");
+					*_conf = conf; /* Set the result variable */
 					return 1;
 				}
 
@@ -3255,7 +3258,7 @@ parse_option(char *option, int optlen, char *value)
 				while (((*seeker == ',') || (*seeker == ' ')) &&
 				       (*seeker != 0))
 					seeker++;
-				if ((*seeker == 0) || (*seeker < '0') && (*seeker > '9'))
+				if ((*seeker < '0') || (*seeker > '9'))
 				{
 					fprintf(stderr, "Option '%s' expects a rectangle\n", opt->name);
 					return;

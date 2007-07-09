@@ -1,3 +1,22 @@
+2007-07-09  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/main.c, src/include/game_select.h,
+	src/menu/game_select_screen.c: Added -G command line option to
+	recursively search a directory tree for SCI games, and display them
+	in the game selection menu.
+	* src/include/sci_conf.h, src/include/engine.h, src/config.l: Added
+	menu_dir config option (as above).
+	* README, doc/man/freesci.6: Updated documentation.
+
+2007-07-07  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/scicore/versions.c: Added executable version scanning for
+	Amiga, Atari ST and Mac games.
+	* src/main.c (detect_versions): Ignore >=1.000.000 version numbers
+	resulting from executable scans (until we have some way to map
+	them properly).
+	* src/include/games.h: A few updates.
+
 2007-07-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/main.c, src/scicore/versions.c, src/include/versions.h,

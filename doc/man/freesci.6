@@ -45,10 +45,12 @@ below for a complete listing.
 .TP
 .BR \fIgame\fR
 An identifier describing the game to start. This identifier (GAME_ID) must be
-declared in the configuration file. If omitted, the interpreter will test whether
-a configuration file is present; if so, it will present a graphical game selection
-screen and otherwise attempt to read resource files from the current working
-directory (or the directory specified by the \fB\-\-gamedir\fR option).
+declared in the configuration file. If omitted, the interpreter will attempt
+to read resource files from the current working directory (or the directory
+specified by the \fB\-\-gamedir\fR option). If that fails, it will present a
+graphical game selection screen for the games listed in the config file and
+the games located under ~/.freesci/games (or the directory specified by the
+\fB\-\-menudir\fR option).
 
 .TP
 .BR \fIsavegame\fR
@@ -90,6 +92,12 @@ The usual in\-game savegames are labelled \*(lqsave_0\*(rq through
 With this option, games resources will be read from the directory
 \fIdir\fR. Default is the current directory, unless a directory has
 been specified in the config file (see below).
+
+.TP
+.BR "\-\-menudir \fIdir\fR, \-\fBG\fR\fIdir\fR"
+This option sets the directory that the graphical game selection menu
+recurses to look for SCI games. Default is \fI~/.freesci/games\fR, unless the
+\fBmenu_dir\fR option is set in the config file (see below).
 
 .TP
 .BR "\-\-sci\-version \fIversion\fR, \-\fBV\fR\fIversion\fR"
@@ -193,8 +201,14 @@ Read the game's resource data from the specified
 location. Must not be used in the generic part of the config file.
 
 .TP
+.BR "menu_dir = dir"
+Specifies the directory that is recursively searched for SCI games when the
+game selection screen is invoked. Should only be used in the generic part of
+the config file. Defaults to \fI~/.freesci/games\fR.
+
+.TP
 .BR "version = \fIx.yyy.zzz\fR"
-emulate SCI version \fIx.yyy.zzz\fR. The version 
+Emulate SCI version \fIx.yyy.zzz\fR. The version 
 number is sometimes printed on game discs, or can be found out by
 grepping your main executable for "0.000." (for SCI0 games). It is
 also displayed if the built\-in debugger is activated in the Sierra SCI

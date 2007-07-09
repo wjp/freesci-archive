@@ -277,6 +277,7 @@ standard_option standard_options[] = {
 #endif
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
+	OPT_STRING("menu_dir", menu_dir),
 	OPT_STRING("gfx_driver", gfx_driver_name),
 	OPT_INT("scale_x", x_scale, 1, 256),
 	OPT_INT("scale_y", y_scale, 1, 256),
@@ -406,7 +407,6 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 {PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*({NUMPATHPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]]* { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
-	char *foo;
 	int option_str_len;
 
 	while (isalnum(*value_str) || *value_str == '_')
@@ -414,7 +414,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
 	option_str_len = value_str - option_str;
 
-	while (!(isalnum(*value_str) || *value_str == '_' || *value_str == '"'))
+	while (!(isalnum(*value_str) || *value_str == '_' || *value_str == '"' || *value_str == '/' || *value_str == '\\'))
 		++value_str;
 
 	value_str = crop_value(value_str);
@@ -425,7 +425,6 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 {PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*\"{RECTTOKEN}\" { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
-	char *foo;
 	int option_str_len;
 
 	while (isalnum(*value_str) || *value_str == '_')
@@ -649,6 +648,18 @@ config_init(config_entry_t **_conf, char *conffile)
         conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
 	conf->res_version = SCI_VERSION_AUTODETECT;
 
+	if (homedir) {
+		conf->menu_dir = sci_malloc(strlen(homedir) + strlen(FREESCI_GAMEDIR)
+			+ strlen(FREESCI_GAMES_DIR) + 2 * strlen(G_DIR_SEPARATOR_S) + 1);
+		strcpy(conf->menu_dir, homedir);
+		strcat(conf->menu_dir, G_DIR_SEPARATOR_S);
+		strcat(conf->menu_dir, FREESCI_GAMEDIR);
+		strcat(conf->menu_dir, G_DIR_SEPARATOR_S);
+		strcat(conf->menu_dir, FREESCI_GAMES_DIR);
+	}
+	else
+		conf->menu_dir = NULL;
+
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
 		conf->driver_options[i] = NULL;
 /**** Default config ends */
@@ -674,6 +685,7 @@ config_init(config_entry_t **_conf, char *conffile)
 			/* So we've got a home directory */
 			if (chdir(homedir)) {
 				fprintf(stderr,"Warning: Could not enter home directory: %s\n", homedir);
+				*_conf = conf; /* Set the result variable */
 				return 1;
 			}
 
@@ -681,6 +693,7 @@ config_init(config_entry_t **_conf, char *conffile)
 				if (scimkdir(FREESCI_GAMEDIR, 0700)) {
 
 					fprintf(stderr,"Warning: Could not enter/create ~/"FREESCI_GAMEDIR"\n");
+					*_conf = conf; /* Set the result variable */
 					return 1;
 				}
 
@@ -935,7 +948,7 @@ parse_option(char *option, int optlen, char *value)
 				while (((*seeker == ',') || (*seeker == ' ')) &&
 				       (*seeker != 0))
 					seeker++;
-				if ((*seeker == 0) || (*seeker < '0') && (*seeker > '9'))
+				if ((*seeker < '0') || (*seeker > '9'))
 				{
 					fprintf(stderr, "Option '%s' expects a rectangle\n", opt->name);
 					return;

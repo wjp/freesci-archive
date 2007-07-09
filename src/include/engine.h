@@ -56,6 +56,7 @@
 #define FREESCI_FILE_PRIORITY_MAP "priority_map.png"
 #define FREESCI_FILE_CONTROL_MAP "control_map.png"
 #define FREESCI_FILE_AUXILIARY_MAP "auxiliary_map.png"
+#define FREESCI_GAMES_DIR "games"
 
 #define FREESCI_FILE_STATE "state"
 #define FREESCI_FILE_HEAP "heap"

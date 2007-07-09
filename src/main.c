@@ -34,6 +34,7 @@
 #include <kdebug.h>
 #include <sys/types.h>
 #include <game_select.h>
+#include "list.h"
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -231,6 +232,7 @@ init_directories(char *work_dir, char *game_id)
 			fprintf(stderr, "Warning: Could not enter ~/"FREESCI_GAMEDIR"; save files"
 				" will be written to ~/\n");
 
+			getcwd(work_dir, PATH_MAX);
 			return 0;
 
 		}
@@ -244,6 +246,7 @@ init_directories(char *work_dir, char *game_id)
 			fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"/%s; "
 				"save files will be written to ~/"FREESCI_GAMEDIR"\n", game_id);
 
+			getcwd(work_dir, PATH_MAX);
 			return 0;
 		}
 		else /* mkdir() succeeded */
@@ -379,6 +382,7 @@ typedef struct {
 	int res_version;
 	char *gfx_driver_name;
 	char *gamedir;
+	char *gamemenu;
 	char *midiout_driver_name;
 	char *midi_device_name;
 	char *sound_server_name;
@@ -389,7 +393,7 @@ typedef struct {
 #define OFF 0
 #define DONTCARE -1
 
-static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_entries, const char* freesci_dir);
+static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_entries, const char* freesci_dir, const char *games_dir);
 static int game_select_resource_found();
 
 static char *
@@ -403,6 +407,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		{"run", no_argument, NULL, 0 },
 		{"debug", no_argument, NULL, 1 },
 		{"gamedir", required_argument, 0, 'd'},
+		{"gamemenu", required_argument, 0, 'G'},
 		{"no-sound", required_argument, 0, 'q'},
 		{"sci-version", required_argument, 0, 'V'},
 		{"graphics", required_argument, 0, 'g'},
@@ -431,6 +436,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->script_debug_flag = 0;
 	cl_options->gfx_driver_name = NULL;
 	cl_options->gamedir = NULL;
+	cl_options->gamemenu = NULL;
 	cl_options->midiout_driver_name = NULL;
 	cl_options->pcmout_driver_name = NULL;
 	cl_options->midi_device_name = NULL;
@@ -441,9 +447,9 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->show_rooms = 0;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "qlvhmsDr:d:V:g:x:y:c:M:O:S:P:f:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "qlvhmsDr:d:G:V:g:x:y:c:M:O:S:P:f:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "qlvhmsDr:d:V:g:x:y:c:M:O:S:P:f:")) > -1) {
+	while ((c = getopt(argc, argv, "qlvhmsDr:d:G:V:g:x:y:c:M:O:S:P:f:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
@@ -464,6 +470,13 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 				free(cl_options->gamedir);
 
 			cl_options->gamedir = sci_strdup(optarg);
+			break;
+
+		case 'G':
+			if (cl_options->gamemenu)
+				free(cl_options->gamemenu);
+
+			cl_options->gamemenu = sci_strdup(optarg);
 			break;
 
 		case 'f':
@@ -562,6 +575,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			       "Runs a Sierra SCI game.\n"
 			       "\n"
 			       EXPLAIN_OPTION("--gamedir dir\t", "-ddir", "read game resources from dir")
+			       EXPLAIN_OPTION("--menudir dir\t", "-Gdir", "display menu for all games under dir") 
 			       EXPLAIN_OPTION("--run\t\t", "-r", "do not start the debugger")
 			       EXPLAIN_OPTION("--sci-version\t", "-Vver", "set the version for freesci to emulate")
 			       EXPLAIN_OPTION("--version\t", "-v", "display version number and exit")
@@ -609,24 +623,6 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 
 	return
 		argv[optind];
-}
-
-
-static int
-read_config(char *game_name, config_entry_t **conf, int *conf_entries,
-	    sci_version_t *version)
-{
-	int i, conf_nr = 0;
-
-	*conf_entries = config_init(conf, commandline_config_file);
-
-	for (i = 1; i < *conf_entries; i++)
-		if (!strcasecmp((*conf)[i].name, game_name)) {
-			conf_nr = i;
-			*version = (*conf)[i].version;
-		}
-
-	return conf_nr;
 }
 
 static int
@@ -836,7 +832,7 @@ lookup_driver(lookup_funct_t lookup_func, void explain_func(void),
 }
 
 
-static void *
+/*static void *
 old_lookup_driver(old_lookup_funct_t lookup_func, void explain_func(void),
 	      char *driver_class, char *driver_name)
 {
@@ -851,7 +847,7 @@ old_lookup_driver(old_lookup_funct_t lookup_func, void explain_func(void),
 	}
 
 	return retval;
-}
+}*/
 
 #define NAMEBUF_LEN 30
 static void
@@ -998,15 +994,15 @@ main(int argc, char** argv)
 	cl_options_t cl_options;		/* Command line options */
 	int conf_entries	= -1;		/* Number of config entries */
 	int conf_nr			= -1;		/* Element of conf to use */
-	FILE *console_logfile			= NULL;
+/*	FILE *console_logfile			= NULL; */
 	char freesci_dir[PATH_MAX+1] = "";
 	char startdir[PATH_MAX+1] = "";
 	char resource_dir[PATH_MAX+1] = "";
 	char work_dir[PATH_MAX+1] = "";
 	char *gfx_driver_name = NULL;
-	char *midiout_driver_name = NULL;
+/*	char *midiout_driver_name = NULL;
 	char *midi_device_name = NULL;
-	char *pcm_driver_name = NULL;
+	char *pcm_driver_name = NULL; */
 	char *game_name	= NULL;
 	char *savegame_name = NULL;
 	sci_version_t version;
@@ -1035,7 +1031,7 @@ main(int argc, char** argv)
 	getcwd(startdir, PATH_MAX);
 	script_debug_flag = cl_options.script_debug_flag;
 
-	printf("FreeSCI %s Copyright (C) 1999-2006\n", VERSION);
+	printf("FreeSCI %s Copyright (C) 1999-2007\n", VERSION);
 	printf(" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,\n"
 		   " Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel, Lars Skovlund,\n"
 		   " Rink Springer, Petr Vyhnak, Solomon Peachy, Matt Hargett, Alex Angas\n"
@@ -1083,9 +1079,20 @@ main(int argc, char** argv)
 	/* so if no resource are found in the working dir, invoke the game selection screen */
 	if (!game_name && !game_select_resource_found())
 	{
-		conf_nr = game_select(cl_options, confs, conf_entries, freesci_dir);
-		if (conf_nr < 0) return 1;
-		active_conf = confs + conf_nr;
+		char *menu_dir;
+
+		if (cl_options.gamemenu)
+			menu_dir = cl_options.gamemenu;
+		else
+			menu_dir = confs->menu_dir;
+
+		chdir(startdir);
+		conf_nr = game_select(cl_options, confs, conf_entries, freesci_dir, menu_dir);
+		if (conf_nr < 0)
+			return 1;
+		if (conf_nr > 0)
+			/* A game from the config file was chosen */
+			active_conf = confs + conf_nr;
 	}
 
 	detect_versions(&version, &res_version, &cl_options, active_conf);
@@ -1525,8 +1532,8 @@ game_select_init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_
 	if (color_depth > 0 && scale_x == 0)
 		scale_x = scale_y = 2; /* Some default setting */
 
-	fprintf(stderr, "cd-conf=%d, cd-cl=%d, cd=%d\n",
-		conf->color_depth, cl_options->color_depth, color_depth);
+/*	fprintf(stderr, "cd-conf=%d, cd-cl=%d, cd=%d\n",
+		conf->color_depth, cl_options->color_depth, color_depth); */
 
 	/* Convert to bytespp */
 	color_depth = ((color_depth + 7) >> 3);
@@ -1561,12 +1568,12 @@ game_select_init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_
 	return 0;
 }
 
-static int compare_config_entry(const void* arg1, const void* arg2)
+static int compare_games(const void* arg1, const void* arg2)
 {
-	config_entry_t* config1 = (config_entry_t*)arg1;
-	config_entry_t* config2 = (config_entry_t*)arg2;
+	game_t* game1 = (game_t *)arg1;
+	game_t* game2 = (game_t *)arg2;
 
-	return strcmp(config1->name, config2->name);
+	return strcmp(game1->name, game2->name);
 }
 
 static gfx_bitmap_font_t* load_font(const char* font_dir, const char* filename)
@@ -1611,27 +1618,103 @@ static gfx_bitmap_font_t* load_font(const char* font_dir, const char* filename)
 #define FONT_DEFAULT		"default.fnt"
 #define FONT_SMALL			"small.fnt"
 
-static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_entries, const char* freesci_dir) {
+static void
+add_games(const char *dir_name, games_list_head_t *head, int *games, gfx_driver_t *driver,
+	  gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small)
+{
+	sci_dir_t dir;
+	char *filename;
+	int fd;
+
+	if (chdir(dir_name))
+		return;
+
+	fd = sci_open("resource.map", O_RDONLY);
+
+	if (IS_VALID_FD(fd)) {
+		games_list_t *list;
+		sci_version_t result;
+		int res_version;
+		const char *game_name;
+		guint32 code;
+
+		close(fd);
+
+		list = sci_malloc(sizeof(games_list_t));
+		getcwd(list->game.dir, PATH_MAX);
+		game_name = version_guess_from_hashcode(&result, &res_version, &code);
+
+		if (game_name)
+			list->game.name = sci_strdup(game_name);
+		else
+			list->game.name = sci_strdup(dir_name);
+
+		list->game.conf_nr = 0;
+		LIST_INSERT_HEAD(head, list, entries);
+		(*games)++;
+
+		game_select_scan_info(driver, font_default, font_small, list->game.name, *games);
+	}
+
+	sci_init_dir(&dir);
+
+	filename = sci_find_first(&dir, "*");
+
+	while (filename) {
+		add_games(filename, head, games, driver, font_default, font_small);
+		filename = sci_find_next(&dir);
+	}
+
+	sci_finish_find(&dir);
+	chdir("..");
+
+	return;
+}
+
+static int
+find_games(const char* dir, game_t **games, gfx_driver_t *driver, gfx_bitmap_font_t* font_default, gfx_bitmap_font_t* font_small)
+{
+	games_list_head_t head;
+	int games_nr = 0;
+	games_list_t *list;
+	int i;
+
+	game_select_scan_info(driver, font_default, font_small, NULL, 0);
+
+	LIST_INIT(&head);
+	add_games(dir, &head, &games_nr, driver, font_default, font_small);
+
+	if (!games_nr)
+		return 0;
+
+	*games = sci_malloc(sizeof(game_t) * games_nr);
+
+	i = 0;
+	while ((list = LIST_FIRST(&head))) {
+		(*games)[i++] = list->game;
+		LIST_REMOVE(list, entries);
+		sci_free(list);
+	}
+
+	return games_nr;
+}
+
+static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_entries, const char* freesci_dir, const char *games_dir) {
 	char start_dir[PATH_MAX+1] = "";
-	char work_dir[PATH_MAX+1] = "";
 	char *gfx_driver_name			= NULL;
 	gfx_driver_t *gfx_driver		= NULL;
 	const char *module_path			= SCI_DEFAULT_MODULE_PATH;
-	int current_config;
 	int selected_game = -1;
-	char** game_list = NULL;
-	char* game_name = NULL;
-	config_entry_t* sorted_confs;
 	gfx_bitmap_font_t* font_default;
 	gfx_bitmap_font_t* font_small;
 	int font_default_allocated = 0;
 	int font_small_allocated = 0;
-
+	game_t *games = NULL;
+	int games_nr;
+	int i;
 
 	getcwd(start_dir, PATH_MAX);
 	script_debug_flag = cl_options.script_debug_flag;
-
-	chdir(start_dir);
 
 	/* gcc doesn't warn about (void *)s being typecast. If your compiler doesn't like these
 	** implicit casts, don't hesitate to typecast appropriately.  */
@@ -1687,31 +1770,6 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 	if (game_select_init_gfx(confs, &cl_options, gfx_driver, 0))
 		return -2;
 
-	/* Sort all the games in alphabetical order, do this on a copy of the original config structure */
-	sorted_confs = (config_entry_t *) malloc(sizeof(config_entry_t) * conf_entries);
-	memcpy(sorted_confs, confs, sizeof(config_entry_t) * conf_entries);
-	qsort(&(sorted_confs[1]), conf_entries - 1, sizeof(config_entry_t), compare_config_entry);
-
-	/* Create the array of strings to pass to game selection display routine */
-	game_list = (char **) malloc(sizeof(char*) * conf_entries);
-	for (current_config = 0; current_config < conf_entries; current_config++)
-	{
-		game_list[current_config] = sorted_confs[current_config].name;
-
-		/* Replace all '_'with ' ' */
-		game_name = game_list[current_config];
-		if (game_name != NULL)
-		{
-			while (*game_name != 0)
-			{
-				if (*game_name == '_')
-					*game_name = ' ';
-
-				game_name++;
-			}
-		}
-	}
-
 	/* load user supplied font from disk, if not found then use built-in font */
 	font_default = load_font(freesci_dir, FONT_DEFAULT);
 	if (!font_default)
@@ -1726,11 +1784,43 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 	else
 		font_small_allocated = 1;
 
-	/* Index of game selected is returned - 0 means no selection (quit) */
-	selected_game = game_select_display(gfx_driver, VERSION, game_list, conf_entries, font_default, font_small);
-	if (selected_game > 0)
+	chdir(start_dir);
+
+	if (games_dir)
+		games_nr = find_games(games_dir, &games, gfx_driver, font_default, font_small);
+	else
+		games_nr = 0;
+
+	games = sci_realloc(games, sizeof(game_t) * (games_nr + conf_entries));
+
+	for (i = 0; i < conf_entries; i++) {
+		if (confs[i].name) {
+			char *c;
+
+			games[games_nr].name = sci_strdup(confs[i].name);
+			games[games_nr].conf_nr = i;
+			/* Replace all '_'with ' ' */
+
+			c = games[games_nr].name;
+			while (*c != 0)
+			{
+				if (*c == '_')
+					*c = ' ';
+				c++;
+			}
+			strncpy(games[games_nr].dir, confs[i].resource_dir, PATH_MAX - 1);
+			games[games_nr++].dir[PATH_MAX - 1] = 0;
+		}
+	}
+
+	/* Sort game list */
+	qsort(games, games_nr, sizeof(game_t), compare_games);
+
+	/* Index of game selected is returned - -1 means no selection (quit) */
+	selected_game = game_select_display(gfx_driver, games, games_nr, font_default, font_small);
+	if (selected_game >= 0)
 	{
-		chdir(sorted_confs[selected_game].resource_dir);
+		chdir(games[selected_game].dir);
 	}
 
 	if (font_default_allocated == 1)
@@ -1739,13 +1829,12 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 	if (font_small_allocated == 1)
 		gfxr_free_font(font_small);
 
-	if (selected_game > 0)
-		selected_game = find_config(sorted_confs[selected_game].name, confs, 
-					    conf_entries, NULL); else
-  	        selected_game = -1;				    
+	if (selected_game >= 0)
+		selected_game = games[selected_game].conf_nr;
 
-	free(sorted_confs);
-	free(game_list);
+	for (i = 0; i < games_nr; i++)
+		sci_free(games[i].name);
+	sci_free(games);
 
 	gfx_driver->exit(gfx_driver);
 
