@@ -26,6 +26,9 @@
 #include <games.h>
 #include <exe.h>
 
+/* Maxmimum number of bytes to hash from start of file */
+#define VERSION_DETECT_HASH_SIZE 1000000
+
 #define VERSION_DETECT_BUF_SIZE 4096
 
 static int
@@ -302,9 +305,10 @@ version_detect_from_executable(sci_version_t *result)
 const char *  /* Original version by Solomon Peachy */
 version_guess_from_hashcode(sci_version_t *result, int *res_version, guint32 *code)
 {
-	int i, len = 0;
+	int i;
 	int fd = -1;
-	int hash_code;
+	int left = VERSION_DETECT_HASH_SIZE;
+	guint32 hash_code;
 	guint8 buf[VERSION_DETECT_BUF_SIZE];
 
 	if (IS_VALID_FD(fd = sci_open("resource.001", O_RDONLY|O_BINARY))) {
@@ -318,8 +322,19 @@ version_guess_from_hashcode(sci_version_t *result, int *res_version, guint32 *co
 		return NULL;
 	}
 
-	for (len = 1; len > 0; ) {
-		len = read(fd, buf, VERSION_DETECT_BUF_SIZE);
+	while (left > 0) {
+		int len = read(fd, buf, left < VERSION_DETECT_BUF_SIZE ? left : VERSION_DETECT_BUF_SIZE);
+
+		if (len == -1) {
+			sciprintf("Warning: read error while computing hash code for resource file\n");
+			*code = 0;
+			return NULL;
+		}
+
+		if (len == 0)
+			/* EOF */
+			break;
+
 		for (i = 0; i < len; i++)
 			hash_code = (hash_code * 19) + *(buf + i);
 
@@ -330,6 +345,8 @@ version_guess_from_hashcode(sci_version_t *result, int *res_version, guint32 *co
 		** SCI resource files, this should both perform well and yield a good distribution,
 		** or at least that's what standard library designers have been assuming for quite a
 		** while. */
+
+		left -= len;
 	}
 
 	close(fd);

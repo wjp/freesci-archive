@@ -1,3 +1,10 @@
+2007-07-10  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/include/games.h: Updated.
+	* src/scicore/versions.c: Hash at most 1MB. Later games have very
+	large resource files that take too long to hash completely when
+	loading from CD.
+
 2007-07-09  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/main.c, src/include/game_select.h,

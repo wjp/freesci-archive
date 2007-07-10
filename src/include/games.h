@@ -43,6 +43,10 @@ typedef struct _sci_game {
 
 /* Interpreter versions for Amiga and Atari ST ports are tentative */
 sci_game_t sci_games[] = {
+	{ 0x5D451535, SCI_VERSION_AUTODETECT, SCI_VERSION(1,000,510), "Leisure Suit Larry 1 v1.0-mac"}, /* x.yyy.zzz */ /* Launcher says v2.0, game crashes on DoAvoider */
+	{ 0x6C176EE0, SCI_VERSION_AUTODETECT, SCI_VERSION(1,000,577), "Leisure Suit Larry 1 v2.1"},
+	{ 0x1C36E076, SCI_VERSION_AUTODETECT, SCI_VERSION(1,000,510), "Leisure Suit Larry 1 v1.000-es"}, /* 1.SQ4.057 */ /* Crashes on function 0x7b */
+
 	{ 0xFEAB629D, SCI_VERSION_AUTODETECT, SCI_VERSION(0,000,343), "Leisure Suit Larry 2 v1.000.011-3.5"},
 	{ 0x13DD3CD2, SCI_VERSION_AUTODETECT, SCI_VERSION(0,000,343), "Leisure Suit Larry 2 v1.000.011-5.25" },
 	{ 0x1D0F3B31, SCI_VERSION_AUTODETECT, SCI_VERSION(0,000,572), "Leisure Suit Larry 2 v1.001.006-st"}, /* 1.000.159 */
@@ -56,8 +60,6 @@ sci_game_t sci_games[] = {
 	{ 0x484587DD, SCI_VERSION_AUTODETECT, SCI_VERSION(0,000,572), "Leisure Suit Larry 3 v1.021-5.25"},
 /*	{ 0x????????, SCI_VERSION_AUTODETECT, SCI_VERSION(0,000,572), "Leisure Suit Larry 3 v1.021-st"},*/ /* 1.002.026 */
 	{ 0x6348030A, SCI_VERSION_AUTODETECT, SCI_VERSION(0,000,572), "Leisure Suit Larry 3 v1.039-ami"}, /* 1.002.032 */
-
-	{ 0xCF116CDF, SCI_VERSION_AUTODETECT, SCI_VERSION(1,000,577), "Leisure Suit Larry 1 v2.1"},
 
 	{ 0x94EA377B, SCI_VERSION_AUTODETECT, SCI_VERSION(0,000,685), "CB1" },
 	{ 0xFD9EE7BD, SCI_VERSION_AUTODETECT, SCI_VERSION(0,000,685), "Camelot" },
