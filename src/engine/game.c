@@ -302,52 +302,84 @@ test_cursor_style(state_t *s)
 
 	do {
 		ok |= scir_test_resource(s->resmgr, sci_cursor, resource_nr++) != NULL;
-	} while (resource_nr < 1000);
+	} while (resource_nr < 1000 && !ok);
 
 	return ok;
 }
-	
 
-/* Architectural stuff: Init/Unintialize engine */
 int
-script_init_engine(state_t *s, sci_version_t version)
+create_class_table_sci11(state_t *s)
 {
+	int scriptnr;
+	unsigned int seeker_offset;
+	char *seeker_ptr;
+	int classnr;
+	int size;
+
 	resource_t *vocab996 = scir_find_resource(s->resmgr, sci_vocab, 996, 1);
+
+	if (!vocab996)
+		s->classtable_size = 20;
+	else
+		s->classtable_size = vocab996->size >> 2;
+
+	s->classtable = (class_t*)sci_calloc(sizeof(class_t), s->classtable_size);
+
+	for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
+		int objtype = 0;
+		resource_t *heap = scir_find_resource(s->resmgr, sci_heap,
+						      scriptnr, 0);
+
+		if (heap) {
+			int global_vars = getUInt16(heap->data + 2);
+
+			sciprintf("Got script %d, analysing.\n", scriptnr);
+			seeker_ptr = heap->data + 4 + global_vars*2;
+			seeker_offset = 4 + global_vars*2;
+
+			while (getUInt16(seeker_ptr) == SCRIPT_OBJECT_MAGIC_NUMBER)
+			{
+				if (getUInt16(seeker_ptr + 14) & SCRIPT_INFO_CLASS)
+				{
+					classnr = getUInt16(seeker_ptr + 10);
+					if (classnr >= s->classtable_size) {
+
+						if (classnr >= SCRIPT_MAX_CLASSTABLE_SIZE) {
+							fprintf(stderr,"Invalid class number 0x%x in script.%d(0x%x), offset %04x\n",
+								classnr, scriptnr, scriptnr, seeker_offset);
+							return 1;
+						}
+
+						s->classtable = (class_t*)sci_realloc(s->classtable, sizeof(class_t) * (classnr + 1));
+						memset(&(s->classtable[s->classtable_size]), 0,
+						       sizeof(class_t) * (1 + classnr - s->classtable_size)); /* Clear after resize */
+
+						s->classtable_size = classnr + 1; /* Adjust maximum number of entries */
+					}
+					
+					s->classtable[classnr].reg.offset = seeker_offset;
+					s->classtable[classnr].reg.segment = 0;
+					s->classtable[classnr].script = scriptnr;
+				}
+
+				seeker_ptr += getUInt16(seeker_ptr + 2) * 2;
+				seeker_offset += getUInt16(seeker_ptr + 2) * 2;
+			}
+		}
+	}
+
+	return 0;
+}
+static int
+create_class_table_sci0(state_t *s)
+{
 	int scriptnr;
 	unsigned int seeker;
 	int classnr;
 	int size;
 	int magic_offset; /* For strange scripts in older SCI versions */
 
-	if (scir_find_resource(s->resmgr, sci_heap, 0, 0))
-	    {
-		sciprintf("SCI1.1 games are not supported yet, sorry!\n");
-		return 1;
-	    }
-
-	if (!test_cursor_style(s))
-	    {
-		sciprintf("The game seems to use SCI1.1-style cursors!\n");
-		return 1;
-	    }
-
-	s->max_version = SCI_VERSION(9,999,999); /* :-) */
-	s->min_version = 0; /* Set no real limits */
-	s->version = SCI_VERSION_DEFAULT_SCI0;
-	s->kernel_opt_flags = 0;
-	
-	sm_init(&s->seg_manager);
-	s->gc_countdown = GC_DELAY - 1;
-
-
-	if (!version) {
-		s->version_lock_flag = 0;
-	} else {
-		s->version = version;
-		s->version_lock_flag = 1; /* Lock version */
-	}
-
-	script_detect_early_versions(s);
+	resource_t *vocab996 = scir_find_resource(s->resmgr, sci_vocab, 996, 1);
 
 	if (!vocab996)
 		s->classtable_size = 20;
@@ -426,11 +458,47 @@ script_init_engine(state_t *s, sci_version_t version)
 	}
 	scir_unlock_resource(s->resmgr, vocab996, sci_vocab, 996);
 	vocab996 = NULL;
+	return 0;
+}
+
+/* Architectural stuff: Init/Unintialize engine */
+int
+script_init_engine(state_t *s, sci_version_t version)
+{
+	int result;
+
+	s->max_version = SCI_VERSION(9,999,999); /* :-) */
+	s->min_version = 0; /* Set no real limits */
+	s->version = SCI_VERSION_DEFAULT_SCI0;
+	s->kernel_opt_flags = 0;
+	
+	sm_init(&s->seg_manager);
+	s->gc_countdown = GC_DELAY - 1;
+
+	if (!version) {
+		s->version_lock_flag = 0;
+	} else {
+		s->version = version;
+		s->version_lock_flag = 1; /* Lock version */
+	}
+
+	script_detect_versions(s);
+
+        if (s->version >= SCI_VERSION(1,001,000))
+		result = create_class_table_sci11(s); 
+	else
+		result = create_class_table_sci0(s);
+	
+	if (result)
+	{
+		sciprintf("Failed to initialize class table\n");
+		return 1;
+	}
 
 	s->script_000_segment = script_get_segment(s, 0, SCRIPT_GET_LOCK);
 
 	if (s->script_000_segment <= 0) {
-		sciprintf("Failed to instantiate script.000");
+		sciprintf("Failed to instantiate script.000\n");
 		return 1;
 	}
 

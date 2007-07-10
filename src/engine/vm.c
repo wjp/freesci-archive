@@ -1698,11 +1698,18 @@ lookup_selector(state_t *s, reg_t obj_location, selector_t selector_id, reg_t **
 }
 
 
-/* Detects early SCI versions by their different script header */
-void script_detect_early_versions(state_t *s)
+/* Detects SCI versions by their different script header */
+void script_detect_versions(state_t *s)
 {
 	int c;
 	resource_t *script = {0};
+
+	
+	if (scir_find_resource(s->resmgr, sci_heap, 0, 0))
+	{
+		version_require_later_than(s, SCI_VERSION(1,001,000));
+		return;
+	}
 
 	for (c = 0; c < 1000; c++) {
 		if ((script = scir_find_resource(s->resmgr, sci_script, c, 0))) {
