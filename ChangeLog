@@ -5,6 +5,9 @@
 
 2007-07-10  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/scicore/resource_map.c (sci1_read_resource_map): Skip over
+	padding after resource type index.
+
 	* src/scicore/decompress1.c (decrypt4_hdyn): Fix handling of
 	overlapping (length, distance) pairs.
 

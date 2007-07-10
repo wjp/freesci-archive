@@ -369,7 +369,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 
 	memset(types, 0, sizeof(int) * sci1_last_resource);
 
-	if (!(ofs = header_size = sci1_parse_header(fd, types, &lastrt)))
+	if (!(sci1_parse_header(fd, types, &lastrt)))
 	{
 		close(fd);
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
@@ -394,9 +394,12 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 	}
 
-	resources_nr = (fsize - header_size) / entrysize;
+	resources_nr = (fsize - types[0]) / entrysize;
 
 	resources = (resource_t*)sci_calloc(resources_nr, sizeof(resource_t));
+
+	header_size = ofs = types[0];
+	lseek(fd, ofs, SEEK_SET);
 
 	for (i=0; i<resources_nr; i++)
 	{	
