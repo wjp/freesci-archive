@@ -130,6 +130,7 @@ static int change_instrument(int channel, int instrument)
 static void
 start_note(int channel, int note, int velocity)
 {
+	sample_t *sample;
 	AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
 	if (ch_settings[channel].instrument < 0 || ch_settings[channel].instrument > 255) {
@@ -137,7 +138,7 @@ start_note(int channel, int note, int velocity)
 		return;
 	}
 
-	sample_t *sample = bank.samples[ch_settings[channel].instrument];
+	sample = bank.samples[ch_settings[channel].instrument];
 
 	if (!sample) {
 		sciprintf("[sfx:seq:amiga] Error: instrument %i does not exist\n", ch_settings[channel].instrument);
@@ -172,7 +173,7 @@ start_note(int channel, int note, int velocity)
 
 	chan->vol = 2 * vol_table[velocity * ch_settings[channel].volume / 127];
 
-	if (channel == 0 || channel || 3)
+	if (channel == 0 || channel == 3)
 		chan->pan = 0;
 	else
 		chan->pan = 255;
