@@ -183,8 +183,6 @@ decrypt4_hdyn(byte *dest, int length, struct bit_read_struct *reader)
 		CALLC(value = getbits(reader, 1));
 
 		if (value) { /* (length,distance) pair */
-			int val_length_backup;
-
 			CALLC(value = huffman_lookup(reader, length_tree));
 
 			if (value < 8)
@@ -228,8 +226,6 @@ decrypt4_hdyn(byte *dest, int length, struct bit_read_struct *reader)
 				return -SCI_ERROR_DECOMPRESSION_INSANE;
 			}
 
-			val_length_backup = val_length;
-
 			while (val_length) {
 				int copy_length = (val_length > val_distance)? val_distance : val_length;
 
@@ -243,9 +239,9 @@ decrypt4_hdyn(byte *dest, int length, struct bit_read_struct *reader)
 				}
 
 				val_length -= copy_length;
+				val_distance += copy_length;
+				write_pos += copy_length;
 			}
-
-			write_pos += val_length_backup;
 
 		} else { /* Copy byte verbatim */
 			if (mode == DCL_ASCII_MODE) {

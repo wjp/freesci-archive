@@ -1,3 +1,8 @@
+2007-07-10  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/decompress1.c (decrypt4_hdyn): Fix handling of
+	overlapping (length, distance) pairs.
+
 2007-07-10  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/games.h: Updated.
