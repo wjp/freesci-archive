@@ -1,8 +1,3 @@
-2007-07-10  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
-
-	* src/sfx/softseq/amiga.c: Now works better with SQ3.
-	* src/sfx/seq/dc-amiga.c: Fixed panning.
-
 2007-07-10  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/resource_map.c (sci1_read_resource_map): Skip over

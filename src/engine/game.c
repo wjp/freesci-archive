@@ -184,7 +184,7 @@ _reset_graphics_input(state_t *s)
 	font_nr = -1;
 	do {
 		resource = scir_test_resource(s->resmgr, sci_font, ++font_nr);
-	} while ((!resource) && (font_nr < 999));
+	} while ((!resource) && (font_nr < sci_max_resource_nr[s->resmgr->sci_version]));
 
 	if (!resource) {
 		sciprintf("No text font was found.\n");
