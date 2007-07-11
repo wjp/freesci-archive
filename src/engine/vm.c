@@ -1344,8 +1344,12 @@ run_vm(state_t *s, int restoring)
 		case 0x39: /* lofsa */
 			s->r_acc.segment = xs->addr.pc.segment;
 
+			if (s->version >= SCI_VERSION(1,001,000))
+				s->r_acc.offset = opparams[0]+local_script->script_size;
+			else
 			if (s->version >= SCI_VERSION_FTU_LOFS_ABSOLUTE)
-				s->r_acc.offset = opparams[0]; else
+				s->r_acc.offset = opparams[0]; 
+			else
 				s->r_acc.offset = xs->addr.pc.offset + opparams[0];
 #ifndef DISABLE_VALIDATIONS
 			if (s->r_acc.offset >= code_buf_size) {
@@ -1595,25 +1599,40 @@ run_vm(state_t *s, int restoring)
 
 
 static inline int
-_obj_locate_varselector(object_t *obj, selector_t slc)
+_obj_locate_varselector(state_t *s, object_t *obj, selector_t slc)
 {	/* Determines if obj explicitly defines slc as a varselector */
 	/* Returns -1 if not found */
 	
-	int varnum = obj->variable_names_nr;
-	int selector_name_offset = varnum * 2 + SCRIPT_SELECTOR_OFFSET;
-	int i;
-	byte *buf = obj->base_obj + selector_name_offset;
+	if (s->version < SCI_VERSION(1,001,000))
+	{
+		int varnum = obj->variable_names_nr;
+		int selector_name_offset = varnum * 2 + SCRIPT_SELECTOR_OFFSET;
+		int i;
+		byte *buf = obj->base_obj + selector_name_offset;
+		
+		for (i = 0; i < varnum; i++)
+			if (getUInt16(buf + (i << 1)) == slc) /* Found it? */
+				return i; /* report success */
+		
+		return -1; /* Failed */
+	}
+	else
+	{
+		byte *buf = (byte *) obj->base_vars;
+		int i;
+		int varnum = obj->variables[1].offset;
 
-	for (i = 0; i < varnum; i++)
-		if (getUInt16(buf + (i << 1)) == slc) /* Found it? */
-			return i; /* report success */
-
-	return -1; /* Failed */
+		for (i = 0; i < varnum; i++)
+			if (getUInt16(buf + (i << 1)) == slc) /* Found it? */
+				return i; /* report success */
+		
+		return -1; /* Failed */
+	}		
 }
 
 
 static inline int
-_class_locate_funcselector(object_t *obj, selector_t slc)
+_class_locate_funcselector(state_t *s, object_t *obj, selector_t slc)
 {	/* Determines if obj is a class and explicitly defines slc as a funcselector */
 	/* Does NOT say anything about obj's superclasses, i.e. failure may be
 	** returned even if one of the superclasses defines the funcselector. */
@@ -1636,14 +1655,22 @@ _lookup_selector_function(state_t *s, int seg_id, object_t *obj, selector_t sele
 	/* "recursive" lookup */
 
 	while (obj) {
-		index = _class_locate_funcselector(obj, selector_id);
+		index = _class_locate_funcselector(s, obj, selector_id);
 
 		if (index >= 0) {
 			if (fptr)
-				*fptr = make_reg(obj->pos.segment,
-						 getUInt16((byte *)
-							   (obj->base_method + index
-							    + obj->methods_nr + 1)));
+			{
+				if (s->version < SCI_VERSION(1,001,000))
+					*fptr = make_reg(obj->pos.segment,
+							 getUInt16((byte *)
+								   (obj->base_method + index
+								    + obj->methods_nr + 1)));
+				else
+					*fptr = make_reg(obj->pos.segment,
+							 getUInt16((byte *)
+								   (obj->base_method + index * 2 + 2)));
+			}
+
 			return SELECTOR_METHOD;
 		} else {
 			seg_id = obj->variables[SCRIPT_SUPERCLASS_SELECTOR].segment;
@@ -1685,7 +1712,7 @@ lookup_selector(state_t *s, reg_t obj_location, selector_t selector_id, reg_t **
 		return SELECTOR_NONE;
 	}
 
-	index = _obj_locate_varselector(obj, selector_id);
+	index = _obj_locate_varselector(s, obj, selector_id);
 
 	if (index >= 0) {
 		/* Found it as a variable */
@@ -1790,22 +1817,30 @@ int sm_script_marked_deleted(seg_manager_t* self, int script_nr);
 int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr);
 
 int
-script_instantiate(state_t *s, int script_nr)
+script_instantiate_common(state_t *s, int script_nr, resource_t **script, resource_t **heap, int *was_new)
 {
-	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
-	int objtype;
-	unsigned int objlength;
-	reg_t reg, reg_tmp;
-	int seg_id;
-	int relocation = -1;
-	int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
-	mem_obj_t *mem;
-	int marked_for_deletion; 
 	int seg;
+	int seg_id;
+	int marked_for_deletion; 
+	mem_obj_t *mem;
+	reg_t reg;
 
-	if (!script) {
+	*was_new = 1;
+
+	*script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
+	if (s->version >= SCI_VERSION(1,001,000))
+		*heap = scir_find_resource(s->resmgr, sci_heap, script_nr, 0);
+
+	if (!*script || (s->version >= SCI_VERSION(1,001,000) && !heap)) {
 		sciprintf("Script 0x%x requested but not found\n", script_nr);
 		/*    script_debug_flag = script_error_flag = 1; */
+		if (s->version >= SCI_VERSION(1,001,000))
+		{
+			if (*heap)
+				sciprintf("Inconsistency: heap resource WAS found\n");
+			else if (*script)
+				sciprintf("Inconsistency: script resource WAS found\n");
+		}
 		return 0;
 	}
 
@@ -1832,7 +1867,7 @@ script_instantiate(state_t *s, int script_nr)
 	else if (!(mem = sm_allocate_script( &s->seg_manager, s, script_nr, &seg_id ))) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
 		sciprintf("Not enough heap space for script size 0x%x of script 0x%x,"
 			  " should this happen?`\n",
-			  script->size, script_nr);
+			  (*script)->size, script_nr);
 		script_debug_flag = script_error_flag = 1;
 		return 0;
 	}
@@ -1847,6 +1882,31 @@ script_instantiate(state_t *s, int script_nr)
 	sm_set_export_table_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	sm_set_synonyms_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	sm_set_synonyms_nr( &s->seg_manager, 0, reg.segment, SEG_ID );
+
+	*was_new = 0;
+
+	return seg_id;
+}
+
+int
+script_instantiate_sci0(state_t *s, int script_nr)
+{
+	int objtype;
+	unsigned int objlength;
+	reg_t reg, reg_tmp;
+	int seg_id;
+	int relocation = -1;
+	int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
+	int seg;
+	resource_t *script;
+	int was_new;
+
+	seg_id = script_instantiate_common(s, script_nr, &script, NULL, &was_new);
+
+	if (was_new) return seg_id;
+
+	reg.segment = seg_id;
+	reg.offset = 0;
 
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		/*
@@ -1958,10 +2018,10 @@ script_instantiate(state_t *s, int script_nr)
 		case sci_obj_object:
 		case sci_obj_class:
 		{ /* object or class? */
-			object_t *obj = sm_script_obj_init(&s->seg_manager, addr);
+			object_t *obj = sm_script_obj_init(&s->seg_manager, s, addr);
 			object_t *base_obj;
 
-reg_t oldpos = obj->variables[SCRIPT_SPECIES_SELECTOR];
+			reg_t oldpos = obj->variables[SCRIPT_SPECIES_SELECTOR];
 			/* Instantiate the superclass, if neccessary */
 			obj->variables[SCRIPT_SPECIES_SELECTOR] =
 				INST_LOOKUP_CLASS(obj->variables[SCRIPT_SPECIES_SELECTOR].offset);
@@ -1994,6 +2054,53 @@ reg_t oldpos = obj->variables[SCRIPT_SPECIES_SELECTOR];
 	sm_script_free_unused_objects(&s->seg_manager, reg.segment);
 
 	return reg.segment;		/* instantiation successful */
+}
+
+int
+script_instantiate_sci11(state_t *s, int script_nr)
+{
+	resource_t *script, *heap;
+	int seg_id;
+	int heap_start;
+	reg_t reg;
+	int i;
+	int was_new;
+
+	seg_id = script_instantiate_common(s, script_nr, &script, &heap, &was_new);
+
+	if (was_new) return seg_id;
+
+	heap_start = script->size;
+	if (script->size & 2)
+		heap_start ++;
+
+	sm_mcpy_in_out( &s->seg_manager, 0, script->data, script->size, seg_id, SEG_ID);
+	sm_mcpy_in_out( &s->seg_manager, heap_start, heap->data, heap->size, seg_id, SEG_ID);
+
+	if (getUInt16(script->data+6) > 0)
+		sm_set_export_table_offset(&s->seg_manager, 6,
+					   seg_id, SEG_ID);
+
+	reg.segment = seg_id;
+	reg.offset = heap_start+4;
+	sm_script_initialise_locals(&s->seg_manager, reg);
+
+	sm_script_relocate_exports_sci11(&s->seg_manager, seg_id);
+	sm_script_initialise_objects_sci11(&s->seg_manager, s, seg_id);
+
+	reg.offset = getUInt16(heap->data);
+	sm_heap_relocate(&s->seg_manager, s, reg); 
+
+	return seg_id;
+}
+
+int
+script_instantiate(state_t *s, int script_nr)
+{
+	if (s->version >= SCI_VERSION(1,001,000))
+		return script_instantiate_sci11(s, script_nr);
+	else
+		return script_instantiate_sci0(s, script_nr);
 }
 
 void sm_mark_script_deleted(seg_manager_t* self, int script_nr);
@@ -2202,6 +2309,7 @@ obj_get(state_t *s, reg_t offset)
 {
 	mem_obj_t *memobj = GET_OBJECT_SEGMENT(s->seg_manager, offset.segment);
 	object_t *obj = NULL;
+	int idx;
 
 	if (memobj != NULL) {
 		if (memobj->type == MEM_OBJ_CLONES
@@ -2211,7 +2319,7 @@ obj_get(state_t *s, reg_t offset)
 			if (offset.offset <= memobj->data.script.buf_size
 			    && offset.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
 			    && RAW_IS_OBJECT(memobj->data.script.buf + offset.offset)) {
-				int idx = RAW_GET_CLASS_INDEX(memobj->data.script.buf + offset.offset);
+				idx = RAW_GET_CLASS_INDEX(memobj->data.script.buf + offset.offset);
 				if (idx >= 0 && idx < memobj->data.script.objects_nr)
 					obj = memobj->data.script.objects + idx;
 			}
@@ -2228,6 +2336,7 @@ obj_get_name(struct _state *s, reg_t pos)
 
 	if (!obj)
 		return "<no such object>";
+
 	return
 		(const char*)(obj->base + obj->variables[SCRIPT_NAME_SELECTOR].offset);
 }

@@ -3275,7 +3275,7 @@ c_gc_show_reachable(state_t *s)
 	GET_SEG_INTERFACE(addr.segment);
 
 	sciprintf("Reachable from "PREG":\n", PRINT_REG(addr));
-	seg_interface->list_all_outgoing_references(seg_interface, addr, NULL, _print_address);
+	seg_interface->list_all_outgoing_references(seg_interface, s, addr, NULL, _print_address);
 
 	seg_interface->deallocate_self(seg_interface);
 	return 0;

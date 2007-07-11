@@ -98,6 +98,7 @@ typedef struct _seg_manager_t {
 	int heap_size;		/* size of the heap */
 	int reserved_id;
 	int exports_wide;
+	int sci1_1;
 
 	int gc_mark_bits; /* For standard Mark&Sweep:
 			  ** 1 or 0, depending on what unreachable/freshly allocated
@@ -116,7 +117,7 @@ typedef struct _seg_manager_t {
 /* Toplevel functionality					*/
 /*==============================================================*/
 void
-sm_init (seg_manager_t* self);
+sm_init (seg_manager_t* self, int sci1_1);
 /* Initialize the segment manager
 */
 
@@ -276,7 +277,7 @@ sm_script_initialise_locals(struct _seg_manager_t *self, reg_t location);
 */
 
 object_t *
-sm_script_obj_init(struct _seg_manager_t* self, reg_t obj_pos);
+sm_script_obj_init(seg_manager_t *self, struct _state *s, reg_t obj_pos);
 /* Initializes an object within the segment manager
 ** Parameters: (reg_t) obj_pos: Location (segment, offset) of the object
 ** Returns   : (object_t *) A newly created object_t describing the object
@@ -560,7 +561,7 @@ typedef struct _seg_interface {
 	*/
 
 	void
-	(*list_all_outgoing_references)(struct _seg_interface *self, reg_t object, void *param, void (*note)(void *param, reg_t addr));
+	(*list_all_outgoing_references)(struct _seg_interface *self, struct _state *s, reg_t object, void *param, void (*note)(void *param, reg_t addr));
 	/* Iterates over all references reachable from the specified object
 	** Parameters: (reg_t) object: The object (within the current segment) to analyse
 	**             (void *) param: Parameter passed to 'note'

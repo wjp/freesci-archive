@@ -161,7 +161,7 @@ alloc_nonscript_segment(seg_manager_t *self, mem_obj_enum type, seg_id_t *segid)
 }
 
 
-void sm_init(seg_manager_t* self) {
+void sm_init(seg_manager_t* self, int sci1_1) {
 	int i;
 
 	self->mem_allocated = 0; /* Initialise memory count */
@@ -180,6 +180,7 @@ void sm_init(seg_manager_t* self) {
 	self->hunks_seg_id = 0;
 
 	self->exports_wide = 0;
+	self->sci1_1 = sci1_1;
 
 	/*  initialize the heap pointers*/
 	for (i = 0; i < self->heap_size; i++) {
@@ -234,15 +235,47 @@ mem_obj_t* sm_allocate_script (seg_manager_t* self, struct _state *s, int script
 	return mem;
 	}
 
-static int sm_set_locals_size(mem_obj_t *mem, struct _state *s, int script_nr) 
+static void sm_set_script_size(mem_obj_t *mem, struct _state *s, int script_nr) 
 {
 	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
+	resource_t *heap = scir_find_resource(s->resmgr, sci_heap, script_nr, 0);
+
+	mem->data.script.script_size = script->size;
+	mem->data.script.heap_size = 0; /* Set later */
+
+	if (!script || (s->version >= SCI_VERSION(1,001,000) && !heap))
+	{
+		sciprintf("%s: failed to load %s\n", __FUNCTION__, 
+			  !script ? "script" : "heap");
+		return;
+	}
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		mem->data.script.buf_size = script->size + getUInt16(script->data)*2; 
 		/* locals_size = getUInt16(script->data)*2; */
 	}
-	else {
+	else if (s->version < SCI_VERSION(1,001,000)) {
 		mem->data.script.buf_size = script->size;
+	}
+	else 
+	{
+		mem->data.script.buf_size = script->size + heap->size;
+		mem->data.script.heap_size = heap->size;
+	
+		/* Ensure that the start of the heap resource can be word-aligned. */
+		if (script->size & 2)
+		{
+			mem->data.script.buf_size++;
+			mem->data.script.script_size++;
+		}
+
+		if (mem->data.script.buf_size > 65535)
+		{
+			sciprintf("Script and heap sizes combined exceed 64K.\n"
+				  "This means a fundamental design bug was made in FreeSCI\n"
+				  "regarding SCI1.1 games.\nPlease report this so it can be"
+				  "fixed in the next major version!\n");
+			return;
+		}
 	}
 }
 
@@ -251,8 +284,9 @@ int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr)
 	/* allocate the script.buf */
 	script_t *scr;
 
-	sm_set_locals_size(mem, s, script_nr);
+	sm_set_script_size(mem, s, script_nr);
 	mem->data.script.buf = (byte*) sci_malloc (mem->data.script.buf_size);
+	
 	dbg_print( "mem->data.script.buf ", (int) mem->data.script.buf );
 	if (!mem->data.script.buf) {
 		sm_free_script ( mem );
@@ -276,6 +310,12 @@ int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr)
 
 	scr->nr = script_nr;
 	scr->marked_as_deleted = 0;
+	scr->relocated = 0;
+
+	if (s->version >= SCI_VERSION(1,001,000))
+		scr->heap_start = scr->buf + scr->script_size; 
+	else
+		scr->heap_start = scr->buf;
 
 	return 1;
 };
@@ -736,7 +776,7 @@ sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t v
 
 
 static inline int
-_relocate_block(reg_t *block, int block_location, int block_items, seg_id_t segment, int location)
+_relocate_block(seg_manager_t *self, reg_t *block, int block_location, int block_items, seg_id_t segment, int location)
 {
 	int rel = location - block_location;
 	int index;
@@ -755,15 +795,18 @@ _relocate_block(reg_t *block, int block_location, int block_items, seg_id_t segm
 		return 0;
 	}
 	block[index].segment = segment; /* Perform relocation */
+	if (self->sci1_1)
+		block[index].offset += self->heap[segment]->data.script.script_size;
 
 	return 1;
 }
 
 static inline int
-_relocate_local(script_t *scr, seg_id_t segment, int location)
+_relocate_local(seg_manager_t *self, script_t *scr, seg_id_t segment, int location)
 {
 	if (scr->locals_block)
-		return _relocate_block(scr->locals_block->locals, scr->locals_offset,
+		return _relocate_block(self,
+				       scr->locals_block->locals, scr->locals_offset,
 				       scr->locals_block->nr,
 				       segment, location);
 	else
@@ -771,9 +814,10 @@ _relocate_local(script_t *scr, seg_id_t segment, int location)
 }
 
 static inline int
-_relocate_object(object_t *obj, seg_id_t segment, int location)
+_relocate_object(seg_manager_t *self, object_t *obj, seg_id_t segment, int location)
 {
-	return _relocate_block(obj->variables, obj->pos.offset, obj->variables_nr,
+	return _relocate_block(self, 
+			       obj->variables, obj->pos.offset, obj->variables_nr,
 			       segment, location);
 }
 
@@ -824,11 +868,11 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 		int pos = getUInt16(scr->buf + block.offset + 2 + (i*2));
 		if (!pos) continue; /* FIXME: A hack pending investigation */
 
-		if (!_relocate_local(scr, block.segment, pos)) {
+		if (!_relocate_local(self, scr, block.segment, pos)) {
 			int k, done = 0;
 
 			for (k = 0; !done && k < scr->objects_nr; k++) {
-				if (_relocate_object(scr->objects + k, block.segment, pos))
+				if (_relocate_object(self, scr->objects + k, block.segment, pos))
 					done = 1;
 			}
 
@@ -860,8 +904,69 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 	}
 }
 
+void
+sm_heap_relocate(seg_manager_t *self, state_t *s, reg_t block)
+{
+	mem_obj_t *mobj = self->heap[block.segment];
+	script_t *scr;
+	int count;
+	int i;
+	
+	VERIFY( !(block.segment >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt relocate non-script\n" );
+
+	scr = &(mobj->data.script);
+
+	VERIFY( block.offset < scr->heap_size
+		&& getUInt16(scr->heap_start + block.offset)*2 + block.offset < scr->buf_size,
+		"Relocation block outside of script\n" );
+
+	if (scr->relocated) return;		
+	scr->relocated = 1;
+	count = getUInt16(scr->heap_start + block.offset);
+
+	for (i = 0; i < count; i++) {
+		int pos = getUInt16(scr->heap_start + block.offset + 2 + (i*2)) + scr->script_size;
+		int pos_absolute = 
+		  getUInt16(scr->heap_start + block.offset + 2 + (i*2));
+
+		if (!_relocate_local(self, scr, block.segment, pos)) {
+			int k, done = 0;
+
+			for (k = 0; !done && k < scr->objects_nr; k++) {
+				if (_relocate_object(self, scr->objects + k, block.segment, pos))
+					done = 1;
+			}
+
+			if (!done) {
+				sciprintf("While processing relocation block "PREG":\n",
+					  PRINT_REG(block));
+				sciprintf("Relocation failed for index %04x (%d/%d)\n", pos, i+1, count);
+				if (scr->locals_block)
+					sciprintf("- locals: %d at %04x\n",
+						  scr->locals_block->nr,
+						  scr->locals_offset);
+				else
+					sciprintf("- No locals\n");
+				for (k = 0; k < scr->objects_nr; k++)
+					sciprintf("- obj#%d at %04x w/ %d vars\n",
+						  k,
+						  scr->objects[k].pos.offset,
+						  scr->objects[k].variables_nr);
+				sciprintf("Triggering breakpoint...\n");
+				BREAKPOINT();
+			}
+		}
+	}
+}
+
+#define INST_LOOKUP_CLASS(id) ((id == 0xffff)? NULL_REG : get_class_address(s, id, SCRIPT_GET_LOCK, NULL_REG))
+
+reg_t
+get_class_address(state_t *s, int classnr, int lock, reg_t caller);
+
 static object_t *
-sm_script_obj_init0(seg_manager_t *self, reg_t obj_pos)
+sm_script_obj_init0(seg_manager_t *self, state_t *s, reg_t obj_pos)
 {
 	mem_obj_t *mobj = self->heap[obj_pos.segment];
 	script_t *scr;
@@ -936,9 +1041,96 @@ sm_script_obj_init0(seg_manager_t *self, reg_t obj_pos)
 }
 
 object_t *
-sm_script_obj_init(seg_manager_t *self, reg_t obj_pos)
+sm_script_obj_init11(seg_manager_t *self, state_t *s, reg_t obj_pos)
 {
-	return sm_script_obj_init0(self, obj_pos);
+	mem_obj_t *mobj = self->heap[obj_pos.segment];
+	script_t *scr;
+	object_t *obj;
+	int id;
+	int base = obj_pos.offset;
+
+	VERIFY( !(obj_pos.segment >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt to initialize object in non-script\n" );
+
+	scr = &(mobj->data.script);
+
+	VERIFY( base < scr->buf_size,
+		"Attempt to initialize object beyond end of script\n" );
+
+	if (!scr->objects) {
+		scr->objects_allocated = DEFAULT_OBJECTS;
+		scr->objects = (object_t*)sci_malloc(sizeof(object_t) * scr->objects_allocated);
+	}
+	if (scr->objects_nr == scr->objects_allocated) {
+		scr->objects_allocated += DEFAULT_OBJECTS_INCREMENT;
+		scr->objects = (object_t*)sci_realloc(scr->objects,
+					   sizeof(object_t)
+					   * scr->objects_allocated);
+								
+	}
+	obj = scr->objects + (id = scr->objects_nr++);
+
+	VERIFY( base + SCRIPT_FUNCTAREAPTR_OFFSET  < scr->buf_size,
+		"Function area pointer stored beyond end of script\n" );
+		
+	{
+		byte *data = (byte *) (scr->buf + base);
+		guint16 *funct_area = (guint16 *) (scr->buf + getUInt16( data + 6 ));
+		guint16 *prop_area = (guint16 *) (scr->buf + getUInt16( data + 4 ));
+		int variables_nr;
+		int functions_nr;
+		int is_class;
+		int i;
+		
+		obj->flags = 0;
+		obj->pos = obj_pos;
+
+		VERIFY ( (byte *) funct_area < scr->buf + scr->buf_size,
+			 "Function area pointer references beyond end of script" );
+
+		variables_nr = getUInt16(data + 2);
+		functions_nr = *funct_area;
+		is_class = getUInt16( data + 14 ) & SCRIPT_INFO_CLASS;
+
+		if (!is_class)
+		{
+			reg_t base = INST_LOOKUP_CLASS(getUInt16(data + 12));
+			object_t *base_obj = obj_get(s, base);
+
+			variables_nr = base_obj->variables_nr;
+			functions_nr = base_obj->methods_nr;
+		}			
+
+		/* Store object ID within script */
+		data[6] = id & 0xff;
+		data[7] = (id >> 8) & 0xff;
+
+		VERIFY ( ((byte *) funct_area + functions_nr) < scr->buf + scr->buf_size,
+			 "Function area extends beyond end of script" );
+
+		obj->variables_nr = variables_nr;
+		obj->variables = (reg_t*)sci_malloc(sizeof(reg_t) * variables_nr);
+
+		obj->methods_nr = functions_nr;
+		obj->base = scr->buf;
+		obj->base_obj = data;
+		obj->base_method = funct_area;
+		obj->base_vars = prop_area;
+
+		for (i = 0; i < variables_nr; i++)
+			obj->variables[i] = make_reg(0, getUInt16(data + (i*2)));
+	}
+
+	return obj;
+}
+
+object_t *
+sm_script_obj_init(seg_manager_t *self, state_t *s, reg_t obj_pos)
+{
+	if (!self->sci1_1) 
+		return sm_script_obj_init0(self, s, obj_pos);
+	else
+		return sm_script_obj_init11(self, s, obj_pos);
 }
 
 static local_variables_t *
@@ -1002,7 +1194,10 @@ sm_script_initialise_locals(seg_manager_t *self, reg_t location)
 	VERIFY( location.offset + 1 < scr->buf_size,
 		"Locals beyond end of script\n" );
 
-	count = (getUInt16(scr->buf + location.offset - 2) - 4) >> 1;
+	if (self->sci1_1)
+		count = getUInt16(scr->buf + location.offset - 2);
+	else
+		count = (getUInt16(scr->buf + location.offset - 2) - 4) >> 1;
 	/* half block size */
 
 	scr->locals_offset = location.offset;
@@ -1023,6 +1218,106 @@ sm_script_initialise_locals(seg_manager_t *self, reg_t location)
 	}
 }
 
+void
+sm_script_relocate_exports_sci11(seg_manager_t *self, int seg)
+{
+	mem_obj_t *mobj = self->heap[seg];
+	script_t *scr;
+	int i;
+	int location;
+
+	VERIFY( !(seg >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt to relocate exports in non-script\n" );
+
+	scr = &(mobj->data.script);
+	for (i = 0; i < scr->exports_nr; i++)
+	{
+		/* We are forced to use an ugly heuristic here to distinguish function
+		   exports from object/class exports. The former kind points into the
+		   script resource, the latter into the heap resource.  */
+		location = getUInt16((byte *)(scr->export_table + i));
+		if (getUInt16(scr->heap_start + location) == SCRIPT_OBJECT_MAGIC_NUMBER)
+		{
+			putInt16((byte *)(scr->export_table + i), location+scr->heap_start-scr->buf);
+		} else
+		{
+			/* Otherwise it's probably a function export,
+			   and we don't need to do anything. */
+		}
+	}
+
+}
+
+void
+sm_script_initialise_objects_sci11(seg_manager_t *self, state_t *s, int seg)
+{
+	mem_obj_t *mobj = self->heap[seg];
+	script_t *scr;
+	int i;
+	byte *seeker;
+
+	VERIFY( !(seg >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt to relocate exports in non-script\n" );
+
+	scr = &(mobj->data.script);
+	seeker = scr->heap_start + 4 + getUInt16(scr->heap_start + 2) * 2;
+
+	while (getUInt16(seeker) == SCRIPT_OBJECT_MAGIC_NUMBER)
+	{
+
+		if (getUInt16(seeker + 14) & SCRIPT_INFO_CLASS)
+		{
+			int classpos = seeker-scr->buf;
+			int species = getUInt16(seeker + 10);
+
+			if (species < 0 || species >= s->classtable_size) {
+				sciprintf("Invalid species %d(0x%x) not in interval "
+					  "[0,%d) while instantiating script %d\n",
+					  species, species, s->classtable_size,
+					  scr->nr);
+				script_debug_flag = script_error_flag = 1;
+				return;
+			}
+
+			s->classtable[species].script = scr->nr;
+			s->classtable[species].reg.segment = seg;
+			s->classtable[species].reg.offset = classpos;
+		}
+		seeker += getUInt16(seeker + 2) * 2;
+	}
+
+	seeker = scr->heap_start + 4 + getUInt16(scr->heap_start + 2) * 2;
+	while (getUInt16(seeker) == SCRIPT_OBJECT_MAGIC_NUMBER)
+	{
+		reg_t reg;
+		object_t *obj;
+		object_t *base_obj;
+
+		reg.segment = seg;
+		reg.offset = seeker-scr->buf;
+		obj = sm_script_obj_init(&s->seg_manager, s, reg);
+
+#if 0
+		if (obj->variables[5].offset != 0xffff)
+		{
+			obj->variables[5] =
+				INST_LOOKUP_CLASS(obj->variables[5].offset);
+
+
+			base_obj = obj_get(s, obj->variables[5]);
+			obj->variable_names_nr = base_obj->variables_nr;
+			obj->base_obj = base_obj->base_obj;
+		};
+#endif
+
+		/* Copy base from species class, as we need its selector IDs */ 
+		obj->variables[6] =
+			INST_LOOKUP_CLASS(obj->variables[6].offset);
+		
+		seeker += getUInt16(seeker + 2) * 2;
+	}
+
+}
 void
 sm_script_free_unused_objects(seg_manager_t *self, seg_id_t seg)
 {
@@ -1360,7 +1655,7 @@ list_all_deallocatable_base (seg_interface_t *self, void *param, void (*note) (v
 }
 
 static void
-list_all_outgoing_references_nop (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+list_all_outgoing_references_nop (seg_interface_t *self, state_t *s, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
 {
 }
 
@@ -1388,7 +1683,7 @@ free_at_address_script (seg_interface_t *self, reg_t addr)
 }
 
 static void
-list_all_outgoing_references_script (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+list_all_outgoing_references_script (seg_interface_t *self, state_t *s, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
 {
 	script_t *script = &(self->mobj->data.script);
 
@@ -1446,7 +1741,7 @@ list_all_deallocatable_clones (seg_interface_t *self, void *param, void (*note) 
 }
 
 static void
-list_all_outgoing_references_clones (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+list_all_outgoing_references_clones (seg_interface_t *self, state_t *s, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
 {
 	mem_obj_t *mobj = self->mobj;
 	clone_table_t *clone_table = &(mobj->data.clones);
@@ -1529,7 +1824,7 @@ find_canonic_address_locals (seg_interface_t *self, reg_t addr)
 }
 
 static void
-list_all_outgoing_references_locals (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+list_all_outgoing_references_locals (seg_interface_t *self, state_t *s, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
 {
 	mem_obj_t *mobj = self->mobj;
 	local_variables_t *locals = &(self->mobj->data.locals);
@@ -1557,7 +1852,7 @@ static seg_interface_t seg_interface_locals = {
 
 
 static void
-list_all_outgoing_references_stack (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+list_all_outgoing_references_stack (seg_interface_t *self, state_t *s, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
 {
 	int i;
 fprintf(stderr, "Emitting %d stack entries\n", self->mobj->data.stack.nr);
@@ -1601,7 +1896,7 @@ list_all_deallocatable_list (seg_interface_t *self, void *param, void (*note) (v
 }
 
 static void
-list_all_outgoing_references_list (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+list_all_outgoing_references_list (seg_interface_t *self, state_t *s, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
 {
 	list_table_t *table = &(self->mobj->data.lists);
 	list_t *list = &(table->table[addr.offset].entry);
@@ -1644,7 +1939,7 @@ list_all_deallocatable_nodes (seg_interface_t *self, void *param, void (*note) (
 }
 
 static void
-list_all_outgoing_references_nodes (seg_interface_t *self, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
+list_all_outgoing_references_nodes (seg_interface_t *self, state_t *s, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
 {
 	node_table_t *table = &(self->mobj->data.nodes);
 	node_t *node = &(table->table[addr.offset].entry);

@@ -233,6 +233,7 @@ find_all_used_references(state_t *s)
 			if (reg.segment < sm->heap_size
 			    && interfaces[reg.segment])
 				interfaces[reg.segment]->list_all_outgoing_references(interfaces[reg.segment],
+										      s,
 										      reg,
 										      &worklist_manager,
 										      add_outgoing_refs);

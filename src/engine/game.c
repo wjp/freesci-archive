@@ -472,9 +472,6 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->version = SCI_VERSION_DEFAULT_SCI0;
 	s->kernel_opt_flags = 0;
 	
-	sm_init(&s->seg_manager);
-	s->gc_countdown = GC_DELAY - 1;
-
 	if (!version) {
 		s->version_lock_flag = 0;
 	} else {
@@ -489,6 +486,9 @@ script_init_engine(state_t *s, sci_version_t version)
 	else
 		result = create_class_table_sci0(s);
 	
+	sm_init(&s->seg_manager, s->version >= SCI_VERSION(1,001,000));
+	s->gc_countdown = GC_DELAY - 1;
+
 	if (result)
 	{
 		sciprintf("Failed to initialize class table\n");

@@ -64,7 +64,7 @@
 #define SCRIPT_LOCALVARPTR_OFFSET 2 -8
 /* Object-relative offset of the pointer to the underlying script's local variables */
 
-#define SCRIPT_OBJINDEX_OFFSET SCRIPT_LOCALVARPTR_OFFSET
+#define SCRIPT_OBJINDEX_OFFSET (s->version < SCI_VERSION(1,001,000) ? SCRIPT_LOCALVARPTR_OFFSET : 6)
 /* Re-use this space for the script index */
 
 #define SCRIPT_SELECTORCTR_OFFSET 6 -8
@@ -76,13 +76,13 @@
 #define SCRIPT_FUNCTAREAPTR_MAGIC 8 -8
 /* Offset that has to be added to the function area pointer */
 
-#define SCRIPT_NAME_OFFSET 14 -8
+#define SCRIPT_NAME_OFFSET (s->version < SCI_VERSION(1,001,000) ? 14 -8 : 16)
 /* Offset of the name pointer */
-#define SCRIPT_NAME_SELECTOR 3
+#define SCRIPT_NAME_SELECTOR (s->version < SCI_VERSION(1,001,000) ? 3 : 8)
 
-#define SCRIPT_INFO_OFFSET 12 -8
+#define SCRIPT_INFO_OFFSET (s->version < SCI_VERSION(1,001,000) ? 12 -8 : 14)
 /* Object-relative offset of the -info- selector */
-#define SCRIPT_INFO_SELECTOR 2
+#define SCRIPT_INFO_SELECTOR (s->version < SCI_VERSION(1,001,000) ? 2 : 7)
 
 #define SCRIPT_INFO_CLONE 0x0001
 /* Flag fo the -info- selector */
@@ -93,22 +93,19 @@
 
 #define SCRIPT_OBJECT_MAGIC_NUMBER 0x1234
 /* Magical object identifier */
-#define SCRIPT_OBJECT_MAGIC_OFFSET -8
+#define SCRIPT_OBJECT_MAGIC_OFFSET (s->version < SCI_VERSION(1,001,000) ? -8 : 0)
 /* Offset of this identifier */
 
 #define SCRIPT_SPECIES_OFFSET 8 -8
 /* Script-relative offset of the species ID */
 
-#define SCRIPT_SUPERCLASS_OFFSET 10 -8
+#define SCRIPT_SUPERCLASS_OFFSET (s->version < SCI_VERSION(1,001,000) ? 10 -8 : 12)
 
 /*---------------------------------*/
 /* Script selector index variables */
 /*---------------------------------*/
-#define SCRIPT_SPECIES_SELECTOR 0
-#define SCRIPT_SUPERCLASS_SELECTOR 1
-#define SCRIPT_INFO_SELECTOR 2
-#define SCRIPT_NAME_SELECTOR 3
-
+#define SCRIPT_SPECIES_SELECTOR (s->version < SCI_VERSION(1,001,000) ? 0 : 5)
+#define SCRIPT_SUPERCLASS_SELECTOR (s->version < SCI_VERSION(1,001,000) ? 1 : 6)
 
 #define SCRIPT_LOFS_MAGIC 3
 /* Magic adjustment value for lofsa and lofss */
@@ -162,6 +159,7 @@ typedef struct {
 	byte *base; /* Points to a buffer all relative references (code, strings) point to */
 	byte *base_obj; /* base + object offset within base */
 	guint16 *base_method; /* Pointer to the method selector area for this object */
+	guint16 *base_vars; /* Pointer to the varselector area for this object */
 	reg_t *variables;
 } object_t;
 
@@ -172,7 +170,10 @@ typedef struct {
 
 #define VM_OBJECT_GET_VARSELECTOR(obj, i)  getUInt16(obj->base_obj + obj->variables_nr * 2 + i*2)
 #define VM_OBJECT_READ_PROPERTY(obj, i) (obj->variables[i])
-#define VM_OBJECT_GET_FUNCSELECTOR(obj, i) getUInt16((byte *) (obj->base_method + i))
+#define VM_OBJECT_GET_FUNCSELECTOR(obj, i) \
+  (s->version < SCI_VERSION(1,001,000) ? \
+  getUInt16((byte *) (obj->base_method + i)) : \
+  getUInt16((byte *) (obj->base_method + i*2 + 1)))
 #define VM_OBJECT_READ_FUNCTION(obj, i) make_reg(obj->pos.segment, \
 			 getUInt16((byte *) (obj->base_method \
 						 + obj->methods_nr + 1 \
@@ -187,8 +188,11 @@ typedef struct {
 	int nr; /* Script number */
 	byte* buf; /* Static data buffer, or NULL if not used */
 	size_t buf_size;
+	size_t script_size;
+	size_t heap_size;
 
 	byte *synonyms; /* Synonyms block  or 0 if not present*/
+	byte *heap_start; /* Start of heap if SCI1.1, NULL otherwise */
 	guint16 *export_table; /* Abs. offset of the export table or 0 if not present */
 
 	int exports_nr; /* Number of entries in the exports table */
@@ -208,6 +212,7 @@ typedef struct {
 	code_block_t *code;
 	int code_blocks_nr;
 	int code_blocks_allocated;
+	int relocated;
 	int marked_as_deleted;
 } script_t;
 
