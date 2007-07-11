@@ -126,12 +126,9 @@ int decompress11(resource_t *result, int resh, int sci_version)
 		}
 		memcpy(result->data, buffer, compressedLength);
 		result->status = SCI_STATUS_ALLOCATED;
-		printf("#################### %d.%s: compression type #%d\n",
-			result->number, sci_resource_type_suffixes[result->type], compressionMethod);
 		break;
 
 	case 18:
-		fprintf(stderr,"Preparing decompression...\n");
 		if (decrypt4(result->data, buffer, result->size, compressedLength)) {
 			free(result->data);
 			result->data = 0; /* So that we know that it didn't work */
