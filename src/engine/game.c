@@ -333,7 +333,6 @@ create_class_table_sci11(state_t *s)
 		if (heap) {
 			int global_vars = getUInt16(heap->data + 2);
 
-			sciprintf("Got script %d, analysing.\n", scriptnr);
 			seeker_ptr = heap->data + 4 + global_vars*2;
 			seeker_offset = 4 + global_vars*2;
 
@@ -542,7 +541,8 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->dirseeker_outbuffer = NULL_REG;
 	/* Those two are used by FileIO for FIND_FIRST, FIND_NEXT */
 
-	if (s->version >= SCI_VERSION_FTU_LOFS_ABSOLUTE) 
+	if (s->version >= SCI_VERSION_FTU_LOFS_ABSOLUTE &&
+	    s->version < SCI_VERSION(1,001,000))
 		sm_set_export_width(&s->seg_manager, 1);
 	else
 		sm_set_export_width(&s->seg_manager, 0);

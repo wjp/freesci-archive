@@ -168,16 +168,25 @@ typedef struct {
 	int size;
 } code_block_t;
 
-#define VM_OBJECT_GET_VARSELECTOR(obj, i)  getUInt16(obj->base_obj + obj->variables_nr * 2 + i*2)
+#define VM_OBJECT_GET_VARSELECTOR(obj, i)  \
+  (s->version < SCI_VERSION(1,001,000) ? \
+  getUInt16(obj->base_obj + obj->variables_nr * 2 + i*2) : \
+  *(obj->base_vars + i))
 #define VM_OBJECT_READ_PROPERTY(obj, i) (obj->variables[i])
 #define VM_OBJECT_GET_FUNCSELECTOR(obj, i) \
   (s->version < SCI_VERSION(1,001,000) ? \
   getUInt16((byte *) (obj->base_method + i)) : \
   getUInt16((byte *) (obj->base_method + i*2 + 1)))
-#define VM_OBJECT_READ_FUNCTION(obj, i) make_reg(obj->pos.segment, \
+#define VM_OBJECT_READ_FUNCTION(obj, i) \
+  (s->version < SCI_VERSION(1,001,000) ? \
+  make_reg(obj->pos.segment, \
+                         getUInt16((byte *) (obj->base_method \
+                                                 + obj->methods_nr + 1 \
+                                                 + i))) : \
+  make_reg(obj->pos.segment, \
 			 getUInt16((byte *) (obj->base_method \
-						 + obj->methods_nr + 1 \
-						 + i)))
+					     + i * 2 + 2))))
+
 
 
 

@@ -68,7 +68,6 @@ static int jump_initialized = 0;
 static jmp_buf vm_error_address;
 #endif
 
-
 /*-- validation functionality --*/
 
 #ifndef DISABLE_VALIDATIONS
@@ -384,7 +383,7 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 
 #ifdef VM_DEBUG_SEND
 		sciprintf("Send to "PREG", selector %04x (%s):",
-			  PRINT_OBJ(send_obj), selector, s->selector_names[selector]);
+			  PRINT_REG(send_obj), selector, s->selector_names[selector]);
 #endif /* VM_DEBUG_SEND */
 
 		if (++send_calls_nr == (send_calls_allocated - 1))
@@ -1622,6 +1621,9 @@ _obj_locate_varselector(state_t *s, object_t *obj, selector_t slc)
 		int i;
 		int varnum = obj->variables[1].offset;
 
+		if (!(obj->variables[SCRIPT_INFO_SELECTOR].offset & SCRIPT_INFO_CLASS))
+			buf = ((byte *) obj_get(s, obj->variables[6])->base_vars);
+
 		for (i = 0; i < varnum; i++)
 			if (getUInt16(buf + (i << 1)) == slc) /* Found it? */
 				return i; /* report success */
@@ -2106,32 +2108,13 @@ script_instantiate(state_t *s, int script_nr)
 void sm_mark_script_deleted(seg_manager_t* self, int script_nr);
 
 void
-script_uninstantiate(state_t *s, int script_nr)
+script_uninstantiate_sci0(state_t *s, int script_nr, seg_id_t seg)
 {
-	reg_t reg = make_reg( 0, (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)? 2 : 0 );
+	reg_t reg = make_reg( seg, (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)? 2 : 0 );
 	int objtype, objlength;
-	int i;
 
-	reg.segment = sm_seg_get( &s->seg_manager, script_nr);
-
-	if (!sm_script_is_loaded (&s->seg_manager, script_nr, SCRIPT_ID) || reg.segment <= 0 ) { /* Is it already loaded? */
-		/*    sciprintf("Warning: unloading script 0x%x requested although not loaded\n", script_nr); */
-		/* This is perfectly valid SCI behaviour */
-		return;
-	}
-	
 	/* Make a pass over the object in order uninstantiate all superclasses */
 	objlength = 0;
-
-	sm_decrement_lockers( &s->seg_manager, reg.segment, SEG_ID);  /* One less locker */
-
-	if( sm_get_lockers( &s->seg_manager, reg.segment, SEG_ID) > 0 )
-		return;
-
-	/* Free all classtable references to this script */
-	for (i = 0; i < s->classtable_size; i++)
-		if (s->classtable[i].reg.segment == reg.segment)
-			s->classtable[i].reg = NULL_REG;
 
 	do {
 		reg.offset += objlength; /* Step over the last checked object */
@@ -2166,6 +2149,36 @@ script_uninstantiate(state_t *s, int script_nr)
 		reg.offset -= 4; /* Step back on header */
 
 	} while (objtype != 0);
+}
+
+void
+script_uninstantiate(state_t *s, int script_nr)
+{
+	reg_t reg = make_reg( 0, (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)? 2 : 0 );
+	int i;
+
+	reg.segment = sm_seg_get( &s->seg_manager, script_nr);
+
+	if (!sm_script_is_loaded (&s->seg_manager, script_nr, SCRIPT_ID) || reg.segment <= 0 ) { /* Is it already loaded? */
+		/*    sciprintf("Warning: unloading script 0x%x requested although not loaded\n", script_nr); */
+		/* This is perfectly valid SCI behaviour */
+		return;
+	}
+
+	sm_decrement_lockers( &s->seg_manager, reg.segment, SEG_ID);  /* One less locker */
+
+	if( sm_get_lockers( &s->seg_manager, reg.segment, SEG_ID) > 0 )
+		return;
+
+	/* Free all classtable references to this script */
+	for (i = 0; i < s->classtable_size; i++)
+		if (s->classtable[i].reg.segment == reg.segment)
+			s->classtable[i].reg = NULL_REG;
+
+	if (s->version < SCI_VERSION(1,001,000))
+		script_uninstantiate_sci0(s, script_nr, reg.segment);
+	else
+		sciprintf("FIXME: Add proper script uninstantiation for SCI 1.1\n");
 
 	if( sm_get_lockers( &s->seg_manager, reg.segment, SEG_ID) )
 		return; /* if xxx.lockers > 0 */

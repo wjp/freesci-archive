@@ -1092,14 +1092,8 @@ sm_script_obj_init11(seg_manager_t *self, state_t *s, reg_t obj_pos)
 		functions_nr = *funct_area;
 		is_class = getUInt16( data + 14 ) & SCRIPT_INFO_CLASS;
 
-		if (!is_class)
-		{
-			reg_t base = INST_LOOKUP_CLASS(getUInt16(data + 12));
-			object_t *base_obj = obj_get(s, base);
-
-			variables_nr = base_obj->variables_nr;
-			functions_nr = base_obj->methods_nr;
-		}			
+		obj->base_method = funct_area;
+		obj->base_vars = prop_area;
 
 		/* Store object ID within script */
 		data[6] = id & 0xff;
@@ -1114,8 +1108,6 @@ sm_script_obj_init11(seg_manager_t *self, state_t *s, reg_t obj_pos)
 		obj->methods_nr = functions_nr;
 		obj->base = scr->buf;
 		obj->base_obj = data;
-		obj->base_method = funct_area;
-		obj->base_vars = prop_area;
 
 		for (i = 0; i < variables_nr; i++)
 			obj->variables[i] = make_reg(0, getUInt16(data + (i*2)));

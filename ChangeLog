@@ -1,3 +1,19 @@
+2007-07-12  Lars Skovlund  <lskovlun@image.dk>
+
+	* More SCI1.1 script work.
+
+2007-07-11  Lars Skovlund  <lskovlun@image.dk>
+
+	* Beginnings of SCI1.1 support.
+
+	* src/engine/game.c (script_init_engine): Fix autodetection of
+	suitable fonts.
+
+2007-07-10  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/softseq/amiga.c: Now works better with SQ3.
+	* src/sfx/seq/dc-amiga.c: Fixed panning.
+
 2007-07-10  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/resource_map.c (sci1_read_resource_map): Skip over
