@@ -201,11 +201,12 @@ _reset_graphics_input(state_t *s)
 		gfx_color_t fgcolor;
 		gfx_color_t bgcolor;
 
+#if 0
 		fgcolor.visual = s->gfx_state->resstate->static_palette[0];
 		fgcolor.mask = GFX_MASK_VISUAL;
 		bgcolor.visual = s->gfx_state->resstate->static_palette[255];
 		bgcolor.mask = GFX_MASK_VISUAL;
-
+#endif
 		s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), 
 						 fgcolor, bgcolor);
 	} else
