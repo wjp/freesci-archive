@@ -52,7 +52,7 @@ opcode_format formats[128][4]={
   /*1C*/
   {Script_SVariable, END}, {Script_None}, {Script_None}, {Script_Variable, END},
   /*20*/
-  {Script_SRelative, Script_Byte, END}, {Script_SVariable, Script_Byte, END}, {Script_SVariable, Script_Byte, END}, {Script_Variable, Script_SVariable, Script_Byte, END},
+  {Script_SRelative, Script_Byte, END}, {Script_Variable, Script_Byte, END}, {Script_Variable, Script_Byte, END}, {Script_Variable, Script_SVariable, Script_Byte, END},
   /*24 (24=ret)*/
   {Script_End}, {Script_Byte, END}, {Script_Invalid}, {Script_Invalid},
   /*28*/
