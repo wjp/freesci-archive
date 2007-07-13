@@ -936,7 +936,7 @@ determine_reg_type(state_t *s, reg_t reg, int allow_invalid)
 		if (reg.offset <= mobj->data.script.buf_size
 		    && reg.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
 		    && RAW_IS_OBJECT(mobj->data.script.buf + reg.offset)) {
-			int idx = RAW_GET_CLASS_INDEX(mobj->data.script.buf + reg.offset);
+			int idx = RAW_GET_CLASS_INDEX(&(mobj->data.script), reg);
 			if (idx >= 0 && idx < mobj->data.script.objects_nr)
 				return KSIG_OBJECT;
 			else

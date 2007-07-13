@@ -2332,7 +2332,7 @@ obj_get(state_t *s, reg_t offset)
 			if (offset.offset <= memobj->data.script.buf_size
 			    && offset.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
 			    && RAW_IS_OBJECT(memobj->data.script.buf + offset.offset)) {
-				idx = RAW_GET_CLASS_INDEX(memobj->data.script.buf + offset.offset);
+				idx = RAW_GET_CLASS_INDEX(&(memobj->data.script), offset);
 				if (idx >= 0 && idx < memobj->data.script.objects_nr)
 					obj = memobj->data.script.objects + idx;
 			}

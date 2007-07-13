@@ -233,7 +233,7 @@ mem_obj_t* sm_allocate_script (seg_manager_t* self, struct _state *s, int script
 
 	*seg_id = seg;
 	return mem;
-	}
+}
 
 static void sm_set_script_size(mem_obj_t *mem, struct _state *s, int script_nr) 
 {
@@ -311,6 +311,8 @@ int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr)
 	scr->nr = script_nr;
 	scr->marked_as_deleted = 0;
 	scr->relocated = 0;
+
+	scr->obj_indices = new_reg_t_hash_map();
 
 	if (s->version >= SCI_VERSION(1,001,000))
 		scr->heap_start = scr->buf + scr->script_size; 
@@ -484,6 +486,7 @@ sm_free_script ( mem_obj_t* mem )
 		mem->data.script.objects_nr = 0;
 	}
 
+	free_int_hash_map(mem->data.script.obj_indices);
 	if (NULL != mem->data.script.code) {
 		sci_free(mem->data.script.code);
 	}
@@ -973,6 +976,7 @@ sm_script_obj_init0(seg_manager_t *self, state_t *s, reg_t obj_pos)
 	object_t *obj;
 	int id;
 	int base = obj_pos.offset - SCRIPT_OBJECT_MAGIC_OFFSET;
+	reg_t temp;
 
 	VERIFY( !(obj_pos.segment >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
 		"Attempt to initialize object in non-script\n" );
@@ -993,7 +997,12 @@ sm_script_obj_init0(seg_manager_t *self, state_t *s, reg_t obj_pos)
 					   * scr->objects_allocated);
 								
 	}
-	obj = scr->objects + (id = scr->objects_nr++);
+
+	temp = make_reg(obj_pos.segment, base);
+	id = int_hash_map_check_value(scr->obj_indices, base, 1, NULL);
+	scr->objects_nr++;
+
+	obj = scr->objects + id;
 
 	VERIFY( base + SCRIPT_FUNCTAREAPTR_OFFSET  < scr->buf_size,
 		"Function area pointer stored beyond end of script\n" );
@@ -1007,7 +1016,7 @@ sm_script_obj_init0(seg_manager_t *self, state_t *s, reg_t obj_pos)
 		int i;
 
 		obj->flags = 0;
-		obj->pos = make_reg(obj_pos.segment, base);
+		obj->pos = temp;
 
 		VERIFY ( base + funct_area < scr->buf_size,
 			 "Function area pointer references beyond end of script" );
@@ -1015,10 +1024,6 @@ sm_script_obj_init0(seg_manager_t *self, state_t *s, reg_t obj_pos)
 		variables_nr = getUInt16( data + SCRIPT_SELECTORCTR_OFFSET );
 		functions_nr = getUInt16( data + funct_area - 2 );
 		is_class = getUInt16( data + SCRIPT_INFO_OFFSET ) & SCRIPT_INFO_CLASS;
-
-		/* Store object ID within script */
-		data[SCRIPT_LOCALVARPTR_OFFSET] = id & 0xff;
-		data[SCRIPT_LOCALVARPTR_OFFSET + 1] = (id >> 8) & 0xff;
 
 		VERIFY ( base + funct_area + functions_nr * 2
 			 /* add again for classes, since those also store selectors */
@@ -1040,7 +1045,7 @@ sm_script_obj_init0(seg_manager_t *self, state_t *s, reg_t obj_pos)
 	return obj;
 }
 
-object_t *
+static object_t *
 sm_script_obj_init11(seg_manager_t *self, state_t *s, reg_t obj_pos)
 {
 	mem_obj_t *mobj = self->heap[obj_pos.segment];
@@ -1068,7 +1073,11 @@ sm_script_obj_init11(seg_manager_t *self, state_t *s, reg_t obj_pos)
 					   * scr->objects_allocated);
 								
 	}
-	obj = scr->objects + (id = scr->objects_nr++);
+
+	id = int_hash_map_check_value(scr->obj_indices, obj_pos.offset, 1, NULL);
+	scr->objects_nr++;
+
+	obj = scr->objects + id;
 
 	VERIFY( base + SCRIPT_FUNCTAREAPTR_OFFSET  < scr->buf_size,
 		"Function area pointer stored beyond end of script\n" );
@@ -1094,10 +1103,6 @@ sm_script_obj_init11(seg_manager_t *self, state_t *s, reg_t obj_pos)
 
 		obj->base_method = funct_area;
 		obj->base_vars = prop_area;
-
-		/* Store object ID within script */
-		data[6] = id & 0xff;
-		data[7] = (id >> 8) & 0xff;
 
 		VERIFY ( ((byte *) funct_area + functions_nr) < scr->buf + scr->buf_size,
 			 "Function area extends beyond end of script" );
@@ -1682,7 +1687,7 @@ list_all_outgoing_references_script (seg_interface_t *self, state_t *s, reg_t ad
 	if (addr.offset <= script->buf_size
 	    && addr.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
 	    && RAW_IS_OBJECT(script->buf + addr.offset)) {
-		int idx = RAW_GET_CLASS_INDEX(script->buf + addr.offset);
+		int idx = RAW_GET_CLASS_INDEX(script, addr);
 		if (idx >= 0 && idx < script->objects_nr) {
 			object_t *obj = script->objects + idx;
 			int i;

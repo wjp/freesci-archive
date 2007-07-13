@@ -1,3 +1,8 @@
+2007-07-13  Lars Skovlund  <lskovlun@image.dk>
+
+	* Replace object index resolution mechanism with a hashmap-based
+	one. 
+
 2007-07-12  Lars Skovlund  <lskovlun@image.dk>
 
 	* More SCI1.1 script work.

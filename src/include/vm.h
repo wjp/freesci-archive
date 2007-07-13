@@ -124,7 +124,7 @@ typedef struct {
 	reg_t reg; /* offset; script-relative offset, segment: 0 if not instantiated */  
 } class_t;
 
-#define RAW_GET_CLASS_INDEX(datablock) (getUInt16(((byte *) datablock) + SCRIPT_OBJINDEX_OFFSET))
+#define RAW_GET_CLASS_INDEX(scr, reg) (int_hash_map_check_value((scr)->obj_indices, reg.offset, 0, NULL))
 #define RAW_IS_OBJECT(datablock) (getUInt16(((byte *) datablock) + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER)
 
 #define IS_CLASS(obj) (obj->variables[SCRIPT_INFO_SELECTOR].offset & SCRIPT_INFO_CLASS)
@@ -190,8 +190,8 @@ typedef struct {
 
 
 
-#define VM_OBJECT_SET_INDEX(ptr, index) { ((byte *) (ptr))[0] = (index) & 0xff; ((byte *) (ptr))[1] = ((index) >> 8) & 0xff; }
-#define VM_OBJECT_GET_INDEX(ptr) (getUInt16(((byte *)(ptr)) + SCRIPT_LOCALVARPTR_OFFSET))
+//#define VM_OBJECT_SET_INDEX(ptr, index) { ((byte *) (ptr))[0] = (index) & 0xff; ((byte *) (ptr))[1] = ((index) >> 8) & 0xff; }
+#define VM_OBJECT_GET_INDEX(scr, reg) (int_hash_map_check_value(scr->obj_indices, reg.offset, 0, NULL))
 
 typedef struct {
 	int nr; /* Script number */
@@ -203,6 +203,8 @@ typedef struct {
 	byte *synonyms; /* Synonyms block  or 0 if not present*/
 	byte *heap_start; /* Start of heap if SCI1.1, NULL otherwise */
 	guint16 *export_table; /* Abs. offset of the export table or 0 if not present */
+
+	int_hash_map_t *obj_indices;
 
 	int exports_nr; /* Number of entries in the exports table */
 	int synonyms_nr; /* Number of entries in the synonyms block */
