@@ -1609,6 +1609,8 @@ _obj_locate_varselector(state_t *s, object_t *obj, selector_t slc)
 		int selector_name_offset = varnum * 2 + SCRIPT_SELECTOR_OFFSET;
 		int i;
 		byte *buf = obj->base_obj + selector_name_offset;
+
+		obj->base_vars = (guint16 *) buf;
 		
 		for (i = 0; i < varnum; i++)
 			if (getUInt16(buf + (i << 1)) == slc) /* Found it? */
@@ -2258,7 +2260,6 @@ _game_run(state_t *s, int restoring)
 
 				script_abort_flag = 0;
 
-				SCI_MEMTEST;
 			} else
 				game_is_finished = 1;
 		}

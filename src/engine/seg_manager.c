@@ -312,7 +312,7 @@ int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr)
 	scr->marked_as_deleted = 0;
 	scr->relocated = 0;
 
-	scr->obj_indices = new_reg_t_hash_map();
+	scr->obj_indices = new_int_hash_map();
 
 	if (s->version >= SCI_VERSION(1,001,000))
 		scr->heap_start = scr->buf + scr->script_size; 
@@ -1037,6 +1037,7 @@ sm_script_obj_init0(seg_manager_t *self, state_t *s, reg_t obj_pos)
 		obj->base = scr->buf;
 		obj->base_obj = data;
 		obj->base_method = (guint16 *) (data + funct_area);
+		obj->base_vars = NULL;
 
 		for (i = 0; i < variables_nr; i++)
 			obj->variables[i] = make_reg(0, getUInt16(data + (i*2)));
@@ -1371,8 +1372,7 @@ sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid)
 	sys_strings_t *retval = &(memobj->data.sys_strings);
 	int i;
 
-	for (i = 0; i < SYS_STRINGS_MAX; i++)
-		retval->strings[i].name = NULL; /* Not reserved */
+	memset(retval, 0, sizeof(sys_string_t)*SYS_STRINGS_MAX);
 
 	return retval;
 }

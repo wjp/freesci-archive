@@ -612,57 +612,16 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
 int
 test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_name_length)
 {
-	int retval = 1;
-
-#if 0
-	char *game_id = (char *) s->game_name;
-	char *game_id_file = (char *) sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
-	
-	strcpy(game_id_file, game_id);
-	strcat(game_id_file, FREESCI_ID_SUFFIX);
-
-	if (chdir(savegame_id)) {
-		retval = 0; /* Couldn't enter savedir */
-	}  else {
-
-		if (_k_check_file(FREESCI_FILE_HEAP, SCI_HEAP_SIZE))
-			retval = 0;
-		if (_k_check_file(FREESCI_FILE_STATE, 1))
-			retval = 0;
-		if (savegame_name) {
-			if (_k_check_file(game_id_file, 1)) {
-				*savegame_name = 0;
-			} else {
-				int foo = open(game_id_file, O_RDONLY);
-				int bytes_read = read(foo, savegame_name, savegame_name_length);
-				savegame_name[MIN(bytes_read, savegame_name_length)] = 0; /* terminate */
-				close(foo);
-			}
-		} else if (_k_check_file(game_id_file, 1))
-			retval = 0;
-
-		chdir ("..");
-	}
-
-	free(game_id_file);
-#endif
-	return retval;
+	return 1;
 }
 
 reg_t
 kCheckSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#if 0
 	int savedir_nr = UKPV(1);
 	char *buf = NULL;
 	char *workdir = _chdir_savedir(s);
 	TEST_DIR_OR_QUIT(workdir);
-
-	if (soundserver_dead) {
-		sciprintf("Soundserver is dead- cannot save game state!");
-		_chdir_restoredir(workdir);
-		return NULL_REG;
-	}
 
 	if (savedir_nr > MAX_SAVEGAME_NR-1) {
 		_chdir_restoredir(workdir);
@@ -675,9 +634,6 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 	free(buf);
 
 	return s->r_acc;
-#else
-	return NULL_REG;
-#endif
 }
 
 
@@ -813,7 +769,6 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#if 0
 	char *game_id = kernel_dereference_bulk_pointer(s, argv[0], 0);
 	char *savegame_dir;
 	int savedir_nr = UKPV(1);
@@ -821,15 +776,10 @@ kSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 	char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 	char *game_description = kernel_dereference_bulk_pointer(s, argv[2], 0);
 	char *workdir = _chdir_savedir(s);
+	char *version = argc > 3 ? strdup(kernel_dereference_bulk_pointer(s, argv[3], 0)) : NULL;
 	TEST_DIR_OR_QUIT(workdir);
 
-	if (soundserver_dead) {
-		sciprintf("Soundserver is dead- cannot save game state!");
-		s->acc = 0;
-		_chdir_restoredir(workdir);
-		return;
-	}
-
+	s->game_version = version;
 
 	strcpy(game_id_file_name, game_id);
 	strcat(game_id_file_name, FREESCI_ID_SUFFIX);
@@ -889,17 +839,16 @@ kSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	free(game_id_file_name);
 	_chdir_restoredir(workdir);
+
+	free(s->game_version);
+	s->game_version = NULL;
 	return s->r_acc;
-#else
-	return NULL_REG;
-#endif
 }
 
 
 reg_t
 kRestoreGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#if 0
 	char *game_id = kernel_dereference_bulk_pointer(s, argv[0], 0);
 	int savedir_nr = UKPV(1);
 	char *workdir = _chdir_savedir(s);
@@ -940,9 +889,6 @@ kRestoreGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	_chdir_restoredir(workdir);
 	return s->r_acc;
-#else
-	return make_reg(0, -1);
-#endif
 }
 
 

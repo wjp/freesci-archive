@@ -68,6 +68,7 @@ init_##ENTRY##_table(ENTRY##_table_t *table)					\
 	table->entries_used = 0;						\
 	table->first_free = HEAPENTRY_INVALID;					\
 	table->table = (ENTRY##_entry_t*)sci_malloc(sizeof(ENTRY##_entry_t) * INITIAL);\
+	memset(table->table, 0, sizeof(ENTRY##_entry_t) * INITIAL);		\
 }										\
 										\
 void										\
@@ -104,6 +105,8 @@ alloc_##ENTRY##_entry(ENTRY##_table_t *table)					\
 			table->table = (ENTRY##_entry_t*)sci_realloc(table->table,\
 						   sizeof(ENTRY##_entry_t)	\
 						   * table->entries_nr);	\
+			memset(&table->table[table->entries_nr-INCREMENT],	\
+			       0, INCREMENT*sizeof(ENTRY##_entry_t));		\
 		}								\
 		table->table[table->max_entry].next_free =			\
 			table->max_entry; /* Tag as 'valid' */			\

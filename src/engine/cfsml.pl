@@ -599,8 +599,8 @@ sub create_reader
 	write_line_pp(__LINE__, 0);
 	print "  int assignment, closed, done;\n\n";
 	print "  if (strcmp(lastval, \"{\")) {\n";
-	print "     _cfsml_error(\"Reading record; expected opening braces in line %d, got \\\"%s\\\"\\n\",";
-	print "line, lastval);\n";
+	print "     _cfsml_error(\"Reading record $type; expected opening braces in line %d, got \\\"%s\\\"\\n\",";
+	print "*line, lastval);\n";
 	print "     return CFSML_FAILURE;\n";
 	print "  };\n";
 	print "  closed = 0;\n";
@@ -757,7 +757,7 @@ sub create_reader
       }
 	write_line_pp(__LINE__, 0);
 	print "       {\n";
-	print "          _cfsml_error(\"Assignment to invalid identifier '%s' in line %d\\n\",";
+	print "          _cfsml_error(\"$type: Assignment to invalid identifier '%s' in line %d\\n\",";
 	print " token, *line);\n";
 	print "          return CFSML_FAILURE;\n";
 	print "       }\n";

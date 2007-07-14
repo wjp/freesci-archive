@@ -91,6 +91,7 @@ typedef struct _state
 	resource_mgr_t *resmgr; /* The resource manager */
 
 	char *game_name; /* Designation of the primary object (which inherits from Game) */
+	char *game_version;
 
 	/* Non-VM information */
 

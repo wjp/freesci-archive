@@ -127,7 +127,7 @@ _init_graphics_input(state_t *s)
 }
 
 
-static int
+int
 _reset_graphics_input(state_t *s)
 {
 	resource_t *resource;
