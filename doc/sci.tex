@@ -3239,10 +3239,10 @@ Stop Sequence: This is a system real-time message which tells the sound driver t
 The digital sample header is 44 bytes long. Offset 14 in the header contains the frequency as a short integer. Offset 32 contains the sample length, also as a short integer. Other fields in the header are unknown (to me) at the time of writing, but aren't critical to playback.
 
 The wave data comes immediately after the header, stored in unsigned 8 bit PCM format.
-\subsection{Amiga Sound}
+\subsection{Amiga Sound (SCI0)}
 \label{amigasound}\hypertarget{amigasound}{}%
 
-The Amiga Sound driver does not use a patch resource, instead it loads an external instrument bank called 'bank.001'. This file has the following structure (all numbers are big-endian): \\
+The SCI0 Amiga Sound driver does not use a patch resource, instead it loads an external instrument bank called 'bank.001'. This file has the following structure (all numbers are big-endian): \\
 \\
 \begin{tabular}{ll}
 {\texttt{{[00]..[07]}}}&String "X0iUo123"  \\
@@ -3261,21 +3261,54 @@ The Amiga Sound driver does not use a patch resource, instead it loads an extern
 Bit 0&looping on/off \\
 Bit 1&pitch changes on/off \\
 \end{tabular} \\
-{\texttt{{[22]}}}&Transpose value in semitones \\
+{\texttt{{[22]}}}&Transpose value in semitones (= \#t) \\
 {\texttt{{[23][24]}}}&Segment 1 size in words (= \#s1) \\
 {\texttt{{[25][26][27][28]}}}&Segment 2 offset in bytes \\
 {\texttt{{[29][2a]}}}&Segment 2 size in words (= \#s2) \\
 {\texttt{{[2b][2c][2d][2e]}}}&Segment 3 offset in bytes \\
 {\texttt{{[2f][30]}}}&Segment 3 size in words (= \#s3) \\
-{\texttt{{[31]..[3b]}}}&Volume envelope data \\
-{\texttt{{[3c]..}}}&\#s1+\#s2+\#s3 signed 8-bit samples \\
+{\texttt{{[31]..[3c]}}}&Velocity envelope \\
+{\texttt{{[3d]..}}}&\#s1+\#s2+\#s3 signed 8-bit samples \\
+\end{tabular} \\
+\\
+\noindent A velocity envelope has the following format: \\
+\\
+\begin{tabular}{ll}
+{\texttt{{[00]}}}&Phase 1 period size in ticks (= \#p1) \\
+{\texttt{{[01]}}}&Phase 2 period size in ticks (= \#p2) \\
+{\texttt{{[02]}}}&Phase 3 period size in ticks (= \#p3) \\
+{\texttt{{[03]}}}&Phase 4 period size in ticks (= \#p4) \\
+{\texttt{{[04]}}}&Phase 1 velocity delta (= \#d1), range [0-64] \\
+{\texttt{{[05]}}}&Phase 2 velocity delta (= \#d2) \\
+{\texttt{{[06]}}}&Phase 3 velocity delta (= \#d3) \\
+{\texttt{{[07]}}}&Phase 4 velocity delta (= \#d4) \\
+{\texttt{{[08]}}}&Phase 1 target velocity (= \#v1), range [0-64] \\
+{\texttt{{[09]}}}&Phase 2 target velocity (= \#v2) \\
+{\texttt{{[0a]}}}&Phase 3 target velocity (= \#v3) \\
+{\texttt{{[0b]}}}&Phase 4 target velocity (assumed to be 0) (= \#v4) \\
 \end{tabular} \\
 
-With looping off, all samples are played. With looping on, Segment 1 is played first, followed by a looping of Segment 2. It appears that Segments 1 and 2 may overlap and that Segment 3 is never played. Because of the possibility of overlap, there are instruments where \#s1 + \#s2 exceeds the number of samples; in that case \#s3 will be negative.
+With looping off, all samples are played. The segments and the envelope data are ignored. With looping on, Segment 1 is played first, followed by a looping of Segment 2 (Segment 3 is never played). As Segments 1 and 2 may overlap; it is possible for \#s1 + \#s2 to exceed the total number of samples; in that case \#s3 will be negative.
 
-All instruments have a samplerate of 20000Hz. With pitch changes off, the instrument is always played at this frequency, regardless of the note. With pitch changes on, the transpose value is first added to the note. The instrument is then played at the corresponding frequency (where note 101 equals 20000Hz).
+Velocity envelope phases 1 and 2 are applied after note-on, and phases 3 and 4 after note-off. If \#p0 is zero, no velocity envelope is applied. For other phases, a period size of 0 is interpreted as a period size of 256 ticks. If the velocity drops to 0 at any point, the note is stopped right away, even if more phases follow. Otherwise, the note is stopped after phase 4, which always has a target volume of 0 (note that it is possible to construct velocity envelopes that never terminate).
 
-The Amiga has four audio channels. Channels 0 and 3 are panned 100\% left. Channels 1 and 2 are panned 100\% right.
+Each envelope phase n operates as follows, where \#v0 is the velocity from the note-on event (divided by two to scale it to Amiga volume levels):
+\begin{verbatim}
+vel = #v(n-1);
+while (true) {
+    set_channel_velocity(vel * #v0 / 64);
+    wait_ticks(#pn);
+    vel -= #dn;
+    if ((#dn >= 0 and vel <= #vn) or (#dn < 0 and vel >= #vn))
+        break;
+}
+if (vel <= 0)
+    stop_note();
+\end{verbatim}
+
+All instruments have a samplerate of 20000Hz. With pitch changes off, the instrument is always played at this frequency, regardless of the note. With pitch changes on, \#t is first added to the note. The instrument is then played at the corresponding frequency (where note 101 equals 20000Hz).
+
+The Amiga has four audio channels. Channels 0 and 3 are panned hard left and channels 1 and 2 are panned hard right. The first MIDI channel with playmask 0x40 is mapped to channel 0, the second to channel 1, etc. The driver seems to ignore all pan and volume commands.
 
 \subsection{Revision history}
 \label{id2499070}\hypertarget{id2499070}{}%

@@ -1,3 +1,7 @@
+2007-07-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* doc/sci.tex: Added info on Amiga Sound velocity envelopes.
+
 2007-07-16  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/savegame.cfsml: Don't store script buffers in
