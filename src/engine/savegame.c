@@ -4339,6 +4339,7 @@ read_mem_obj_t(FILE *fh, mem_obj_t *foo, char *lastval, int *line, int *hiteof)
 	foo->data.stack.entries = (reg_t *)sci_calloc(foo->data.stack.nr, sizeof(reg_t));
 	break;
 	case MEM_OBJ_HUNK:
+		init_hunk_table(&foo->data.hunks);
 		break;
 	case MEM_OBJ_DYNMEM:
 /* Auto-generated CFSML data reader code */
@@ -4365,7 +4366,7 @@ read_mem_obj_t(FILE *fh, mem_obj_t *foo, char *lastval, int *line, int *hiteof)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 577 "savegame.cfsml"
+#line 578 "savegame.cfsml"
 	break;
 	}
 
@@ -4382,7 +4383,7 @@ write_mem_obj_tp(FILE *fh, mem_obj_t **foo)
   write_mem_obj_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 589 "savegame.cfsml"
+#line 590 "savegame.cfsml"
 
 	} else { /* Nothing to write */
 		fputs("\\null\\", fh);
@@ -4420,7 +4421,7 @@ read_mem_obj_tp(FILE *fh, mem_obj_t **foo, char *lastval, int *line, int *hiteof
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 604 "savegame.cfsml"
+#line 605 "savegame.cfsml"
 		return *hiteof;
 	}
 	return 0;
@@ -4492,7 +4493,7 @@ SCI_MEMTEST;
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 671 "savegame.cfsml"
+#line 672 "savegame.cfsml"
 SCI_MEMTEST;
 
 	fclose(fh);
@@ -4612,6 +4613,9 @@ void reconstruct_scripts(state_t *s, seg_manager_t *self)
 					&s->seg_manager.heap[scr->locals_segment]->data.locals;
 				scr->export_table = (guint16 *) find_unique_script_block(s, scr->buf, sci_obj_exports);
 				scr->synonyms = find_unique_script_block(s, scr->buf, sci_obj_synonyms);
+				scr->code = NULL;
+				scr->code_blocks_nr = 0;
+				scr->code_blocks_allocated = 0;
 
 				if (!self->sci1_1)
 					scr->export_table += 3;
@@ -4792,7 +4796,7 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 941 "savegame.cfsml"
+#line 945 "savegame.cfsml"
 
 	fclose(fh);
 
@@ -4822,6 +4826,9 @@ gamestate_restore(state_t *s, char *dirname)
 
 	retval->resmgr = s->resmgr;
 
+	sfx_exit(&s->sound);
+	sfx_init(&retval->sound, retval->resmgr, 0);
+
 	_reset_graphics_input(retval);
 	reconstruct_stack(retval);
 	reconstruct_scripts(retval, &retval->seg_manager);
@@ -4830,6 +4837,7 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->gc_countdown = GC_DELAY - 1;
 	retval->save_dir_copy = make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
 	retval->save_dir_edit_offset = 0;
+	retval->sys_strings_segment = find_unique_seg_by_type(&retval->seg_manager, MEM_OBJ_SYS_STRINGS);
 
 	/* Time state: */
 	sci_get_current_time(&(retval->last_wait_time));
@@ -4877,6 +4885,7 @@ gamestate_restore(state_t *s, char *dirname)
 
 	retval->successor = NULL;
 	retval->pic_priority_table = gfxop_get_pic_metainfo(retval->gfx_state);
+	retval->game_name = sci_strdup(obj_get_name(retval, retval->game_obj));
 
 	chdir ("..");
 
