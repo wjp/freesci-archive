@@ -331,7 +331,6 @@ RECORD script_t "script_t" {
 	size_t buf_size;
 	size_t script_size;
 	size_t heap_size;
-	byte buf[DYNAMIC buf_size];
 
 	int_hash_map_tp obj_indices;
 	int exports_nr;
@@ -741,6 +740,31 @@ int clone_entry_used(clone_table_t *table, int n)
 	return 1;
 }
 
+static
+void load_script(state_t *s, seg_id_t seg)
+{
+	resource_t *script, *heap;
+	script_t *scr = &(s->seg_manager.heap[seg]->data.script);
+
+	scr->buf = (byte *) malloc(scr->buf_size);
+
+	script = scir_find_resource(s->resmgr, sci_script, scr->nr, 0);
+	if (s->version >= SCI_VERSION(1,001,000))
+		heap = scir_find_resource(s->resmgr, sci_heap, scr->nr, 0);
+
+	switch (s->seg_manager.sci1_1)
+	{
+	case 0 :
+		sm_mcpy_in_out( &s->seg_manager, 0, script->data, script->size, seg, SEG_ID);
+		break;
+	case 1 :
+		sm_mcpy_in_out( &s->seg_manager, 0, script->data, script->size, seg, SEG_ID);
+		sm_mcpy_in_out( &s->seg_manager, scr->script_size, heap->data, heap->size, seg, SEG_ID);
+		break;
+	}
+}
+
+static
 void reconstruct_scripts(state_t *s, seg_manager_t *self)
 {
 	int i;
@@ -757,6 +781,8 @@ void reconstruct_scripts(state_t *s, seg_manager_t *self)
 			{
 				int j;
 				script_t *scr = &mobj->data.script;
+
+				load_script(s, i);
 				scr->locals_block = scr->locals_segment == 0 ? NULL :
 					&s->seg_manager.heap[scr->locals_segment]->data.locals;
 				scr->export_table = (guint16 *) find_unique_script_block(s, scr->buf, sci_obj_exports);
