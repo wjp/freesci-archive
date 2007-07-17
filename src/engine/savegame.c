@@ -4893,10 +4893,8 @@ gamestate_restore(state_t *s, char *dirname)
 
 	memcpy(&(retval->selector_map), &(s->selector_map), sizeof(selector_map_t));
 
-	/* Copy version information */
-	retval->version = s->version;
-	retval->max_version = s->max_version;
-	retval->min_version = s->min_version;
+	retval->max_version = retval->version;
+	retval->min_version = retval->version;
 
 	/* Copy breakpoint information from current game instance */
 	retval->have_bp = s->have_bp;
