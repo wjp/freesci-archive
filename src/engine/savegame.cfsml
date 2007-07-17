@@ -164,6 +164,11 @@ write_int_hash_map_tp(FILE *fh, int_hash_map_t **foo);
 int
 read_int_hash_map_tp(FILE *fh, int_hash_map_t **foo, char *lastval, int *line, int *hiteof);
 
+void
+write_int_hash_map_node_tp(FILE *fh, int_hash_map_node_t **foo);
+int
+read_int_hash_map_node_tp(FILE *fh, int_hash_map_node_t **foo, char *lastval, int *line, int *hiteof);
+
 typedef mem_obj_t *mem_obj_ptr;
 
 %CFSML
@@ -245,6 +250,8 @@ RECORD state_t "state_t" {
 	string game_version;
 	sci_version_t version;
 	menubar_tp menubar;
+	int status_bar_foreground;
+	int status_bar_background;
 	seg_manager_t seg_manager;
 	int classtable_size;
 	class_t classtable[DYNAMIC classtable_size];
