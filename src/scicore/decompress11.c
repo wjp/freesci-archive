@@ -129,6 +129,8 @@ int decompress11(resource_t *result, int resh, int sci_version)
 		break;
 
 	case 18:
+	case 19:
+	case 20:
 		if (decrypt4(result->data, buffer, result->size, compressedLength)) {
 			free(result->data);
 			result->data = 0; /* So that we know that it didn't work */
@@ -139,8 +141,6 @@ int decompress11(resource_t *result, int resh, int sci_version)
 		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
-	case 19:
-	case 20:
 	case 3:
 	case 4: /* NYI */
 		fprintf(stderr,"Resource %d.%s: Warning: compression type #%d not yet implemented\n",

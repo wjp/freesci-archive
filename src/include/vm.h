@@ -64,9 +64,6 @@
 #define SCRIPT_LOCALVARPTR_OFFSET 2 -8
 /* Object-relative offset of the pointer to the underlying script's local variables */
 
-#define SCRIPT_OBJINDEX_OFFSET (s->version < SCI_VERSION(1,001,000) ? SCRIPT_LOCALVARPTR_OFFSET : 6)
-/* Re-use this space for the script index */
-
 #define SCRIPT_SELECTORCTR_OFFSET 6 -8
 /* Object-relative offset of the selector counter */
 

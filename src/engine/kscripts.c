@@ -215,6 +215,8 @@ kClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 	/* Mark as clone */
 	clone_obj->variables[SCRIPT_INFO_SELECTOR].offset = SCRIPT_INFO_CLONE;
 	clone_obj->variables[SCRIPT_SPECIES_SELECTOR] = clone_obj->pos;
+	if (IS_CLASS(parent_obj))
+		clone_obj->variables[SCRIPT_SUPERCLASS_SELECTOR] = parent_obj->pos;
 	sm_increment_lockers(&s->seg_manager, parent_obj->pos.segment, SEG_ID);
 	sm_increment_lockers(&s->seg_manager, clone_obj->pos.segment, SEG_ID);
 

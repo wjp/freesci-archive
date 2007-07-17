@@ -1625,7 +1625,7 @@ _obj_locate_varselector(state_t *s, object_t *obj, selector_t slc)
 		int varnum = obj->variables[1].offset;
 
 		if (!(obj->variables[SCRIPT_INFO_SELECTOR].offset & SCRIPT_INFO_CLASS))
-			buf = ((byte *) obj_get(s, obj->variables[6])->base_vars);
+			buf = ((byte *) obj_get(s, obj->variables[SCRIPT_SUPERCLASS_SELECTOR])->base_vars);
 
 		for (i = 0; i < varnum; i++)
 			if (getUInt16(buf + (i << 1)) == slc) /* Found it? */
