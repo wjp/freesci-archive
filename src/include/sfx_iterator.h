@@ -80,10 +80,12 @@ typedef struct {
 #define SIMSG_STOP _SIMSG_BASE,_SIMSG_BASEMSG_STOP,0,0
 #define SIMSG_PRINT(indentation) _SIMSG_BASE,_SIMSG_BASEMSG_PRINT,(indentation),0
 #define SIMSG_SET_HOLD(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_HOLD,(x),0
-#define SIMSG_SET_FADE(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_FADE,(x),0
+/*#define SIMSG_SET_FADE(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_FADE,(x),0*/
 
 /* Message transmission macro: Takes song reference, message reference */
 #define SIMSG_SEND(o, m) songit_handle_message(&(o), songit_make_message((o)->ID, m))
+#define SIMSG_SEND_FADE(o, m) songit_handle_message(&(o), songit_make_ptr_message((o)->ID, _SIMSG_BASE, _SIMSG_BASEMSG_SET_FADE, m, 0))
+
 
 typedef unsigned long songit_id_t;
 
@@ -91,7 +93,10 @@ typedef struct {
 	songit_id_t ID;
 	unsigned int recipient; /* Type of iterator supposed to receive this */
 	unsigned int type;
-	unsigned int args[SONG_ITERATOR_MESSAGE_ARGUMENTS_NR];
+	union {
+		unsigned int i;
+		void * p;
+	} args[SONG_ITERATOR_MESSAGE_ARGUMENTS_NR];
 } song_iterator_message_t;
 
 
@@ -291,6 +296,17 @@ songit_make_message(songit_id_t id,
 **             (int) recipient_class: Message recipient class
 **             (int) type: Message type
 **             (int x int) a1, a2: Arguments
+** You should only use this with the SIMSG_* macros
+*/
+
+song_iterator_message_t
+songit_make_ptr_message(songit_id_t id,
+			int recipient_class, int type, void * a1, int a2);
+/* Create a song iterator message, wherein the first parameter is a pointer
+** Parameters: (songit_id_t) id: song ID the message is targetted to
+**             (int) recipient_class: Message recipient class
+**             (int) type: Message type
+**             (void* x int) a1, a2: Arguments
 ** You should only use this with the SIMSG_* macros
 */
 

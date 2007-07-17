@@ -772,7 +772,7 @@ sfx_song_set_fade(sfx_state_t *self, song_handle_t handle,
 		stopmsg[fade->action]);
 #endif
 
-	SIMSG_SEND(song->it, SIMSG_SET_FADE((int)params));
+	SIMSG_SEND_FADE(song->it, params);
 
 	_update(self);
 }

@@ -193,6 +193,7 @@ if (1) {
 
 	if (cmd == SCI_MIDI_EOT) {
 		/* End of track? */
+fprintf(stderr, "eot; loops = %d\n", self->loops);
 		if (self->loops > 1 && channel->notes_played) {
 
 			/* If allowed, decrement the number of loops */
@@ -523,14 +524,15 @@ _sci0_handle_message(sci0_song_iterator_t *self, song_iterator_message_t msg)
 		switch (msg.type) {
 
 		case _SIMSG_BASEMSG_PRINT:
-			print_tabs_id(msg.args[0], self->ID);
+			print_tabs_id(msg.args[0].i, self->ID);
 			fprintf(stderr, "SCI0: dev=%d, active-chan=%d, size=%d, loops=%d\n",
 				self->device_id, self->active_channels, self->size,
 				self->loops);
 			break;
 
 		case _SIMSG_BASEMSG_SET_LOOPS:
-			self->loops = msg.args[0];
+fprintf(stderr, "Setting loops = %d\n", msg.args[0].i);
+			self->loops = msg.args[0].i;
 			break;
 
 		case _SIMSG_BASEMSG_CLONE: {
@@ -554,7 +556,7 @@ fprintf(stderr, "** CLONE INCREF for new %p from %p at %p\n", mem, self, mem->da
 
 		case _SIMSG_BASEMSG_SET_PLAYMASK: {
 			int i;
-			self->device_id = msg.args[0];
+			self->device_id = msg.args[0].i;
 
 			/* Set all but the rhytm channel mask bits */
 			self->channel.playmask &= ~(1 << MIDI_RHYTHM_CHANNEL);
@@ -568,13 +570,13 @@ fprintf(stderr, "** CLONE INCREF for new %p from %p at %p\n", mem, self, mem->da
 
 		case _SIMSG_BASEMSG_SET_RHYTHM:
 			self->channel.playmask &= ~(1 << MIDI_RHYTHM_CHANNEL);
-			if (msg.args[0])
+			if (msg.args[0].i)
 				self->channel.playmask |= (1 << MIDI_RHYTHM_CHANNEL);
 			break;
 
 		case _SIMSG_BASEMSG_SET_FADE:
 		{
-			fade_params_t *fp = (fade_params_t *) msg.args[0];
+			fade_params_t *fp = (fade_params_t *) msg.args[0].p;
 			self->fade.action = fp->action;
 			self->fade.final_volume = fp->final_volume;
 			self->fade.ticks_per_step = fp->ticks_per_step;
@@ -1058,7 +1060,7 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 			for (i = 0; i < self->channels_nr; i++)
 				playmask |= self->channels[i].playmask;
 
-			print_tabs_id(msg.args[0], self->ID);
+			print_tabs_id(msg.args[0].i, self->ID);
 			fprintf(stderr, "SCI1: chan-nr=%d, playmask=%04x\n",
 				self->channels_nr, playmask);
 		}
@@ -1068,7 +1070,7 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 			int tsize = sizeof(sci1_song_iterator_t);
 			sci1_song_iterator_t *mem = (sci1_song_iterator_t*)sci_malloc(tsize);
 			sci1_sample_t **samplep;
-			int delta = msg.args[0]; /* Delay until next step */
+			int delta = msg.args[0].i; /* Delay until next step */
 
 			memcpy(mem, self, tsize);
 			samplep = &(mem->next_sample);
@@ -1108,13 +1110,13 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 
 			self->device_id
 				= sci0_to_sci1_device_map
-				[sci_ffs(msg.args[0] & 0xff) - 1]
+				[sci_ffs(msg.args[0].i & 0xff) - 1]
 				[sfx_pcm_available()]
 				;
 
 			if (self->device_id == 0xff) {
 				sciprintf("[iterator-1] Warning: Device %d(%d) not supported",
-					  msg.args[0] & 0xff, sfx_pcm_available());
+					  msg.args[0].i & 0xff, sfx_pcm_available());
 			}
 			if (self->initialised) {
 				int i;
@@ -1150,13 +1152,13 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 
 		case _SIMSG_BASEMSG_SET_LOOPS:
 			if (msg.ID == self->ID)
-				self->loops = (msg.args[0] > 32767)? 99 : 0;
+				self->loops = (msg.args[0].i > 32767)? 99 : 0;
 			/* 99 is arbitrary, but we can't use '1' because of
 			** the way we're testing in the decoding section.  */
 			break;
 
 		case _SIMSG_BASEMSG_SET_HOLD:
-			self->hold = msg.args[0];
+			self->hold = msg.args[0].i;
 			break;
 		case _SIMSG_BASEMSG_SET_RHYTHM:
 			/* Ignore */
@@ -1164,7 +1166,7 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 
 		case _SIMSG_BASEMSG_SET_FADE:
 		{
-			fade_params_t *fp = (fade_params_t *) msg.args[0];
+			fade_params_t *fp = (fade_params_t *) msg.args[0].p;
 			self->fade.action = fp->action;
 			self->fade.final_volume = fp->final_volume;
 			self->fade.ticks_per_step = fp->ticks_per_step;
@@ -1236,7 +1238,7 @@ _cleanup_iterator_handle_message(song_iterator_t *i, song_iterator_message_t msg
 {
 	if (msg.recipient == _SIMSG_BASEMSG_PRINT
 	    && msg.type == _SIMSG_BASEMSG_PRINT) {
-		print_tabs_id(msg.args[0], i->ID);
+		print_tabs_id(msg.args[0].i, i->ID);
 		fprintf(stderr, "CLEANUP\n");
 	}
 
@@ -1336,9 +1338,9 @@ _ff_handle_message(fast_forward_song_iterator_t *self,
 		switch (msg.type) {
 
 		case _SIMSG_BASEMSG_PRINT:
-			print_tabs_id(msg.args[0], self->ID);
+			print_tabs_id(msg.args[0].i, self->ID);
 			fprintf(stderr, "PLASTICWRAP:\n");
-			msg.args[0]++;
+			msg.args[0].i++;
 			songit_handle_message(&(self->delegate), msg);
 			break;
 		}
@@ -1532,9 +1534,9 @@ _tee_handle_message(tee_song_iterator_t *self, song_iterator_message_t msg)
 		switch (msg.type) {
 
 		case _SIMSG_BASEMSG_PRINT:
-			print_tabs_id(msg.args[0], self->ID);
+			print_tabs_id(msg.args[0].i, self->ID);
 			fprintf(stderr, "TEE:\n");
-			msg.args[0]++;
+			msg.args[0].i++;
 			break; /* And continue with our children */
 
 		case _SIMSG_BASEMSG_CLONE: {
@@ -1544,10 +1546,10 @@ _tee_handle_message(tee_song_iterator_t *self, song_iterator_message_t msg)
 
 			if (newit->children[TEE_LEFT].it)
 				newit->children[TEE_LEFT].it =
-					songit_clone(newit->children[TEE_LEFT].it, msg.args[0]);
+					songit_clone(newit->children[TEE_LEFT].it, msg.args[0].i);
 			if (newit->children[TEE_RIGHT].it)
 				newit->children[TEE_RIGHT].it =
-					songit_clone(newit->children[TEE_RIGHT].it, msg.args[0]);
+					songit_clone(newit->children[TEE_RIGHT].it, msg.args[0].i);
 
 			return (song_iterator_t *) newit;
 		}
@@ -1870,8 +1872,21 @@ songit_make_message(songit_id_t id, int recipient, int type, int a1, int a2)
 	rv.ID = id;
 	rv.recipient = recipient;
 	rv.type = type;
-	rv.args[0] = a1;
-	rv.args[1] = a2;
+	rv.args[0].i = a1;
+	rv.args[1].i = a2;
+
+	return rv;
+}
+
+song_iterator_message_t
+songit_make_ptr_message(songit_id_t id, int recipient, int type, void * a1, int a2)
+{
+	song_iterator_message_t rv;
+	rv.ID = id;
+	rv.recipient = recipient;
+	rv.type = type;
+	rv.args[0].p = a1;
+	rv.args[1].i = a2;
 
 	return rv;
 }
