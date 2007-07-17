@@ -1,3 +1,7 @@
+2007-07-17  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/mixer/soft.c: Fixed numerous bugs
+
 2007-07-17  Lars Skovlund  <lskovlun@image.dk>
 
 	* Window placement fixes.

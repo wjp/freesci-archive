@@ -45,8 +45,6 @@
 #define MAX_DELTA_OBSERVATIONS 1000000 /* Number of times the mixer is called before we assume we truly understand timing */
 
 static int diagnosed_too_slow = 0;
-static int additional_frames = 2048; /* Additional frames to write ahead, into the queue */
-
 
 static volatile int mixer_lock = 0;
 
@@ -79,8 +77,6 @@ struct mixer_private {
 
 	int max_delta; /* maximum observed time delta (using 'frames' as a metric unit) */
 	int delta_observations; /* Number of times we played; confidence measure for max_delta */
-
-
 
 	/* Pause data */
 	int paused;
@@ -428,7 +424,7 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 		P->lsec = secs;
 		P->max_delta = 0;
 		P->delta_observations = 0;
-		P->played_this_second = self->dev->buf_size;
+		P->played_this_second = 0;
 		*skip_frames = 0;
 		return self->dev->buf_size;
 	}
@@ -444,21 +440,26 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 
 	frame_pos = FRAME_OFFSET(usecs);
 
-	played_frames = P->played_this_second - frame_pos
+	played_frames = frame_pos - P->played_this_second
 		+ ((secs - P->lsec) * self->dev->conf.rate);
+	/*
+	fprintf(stderr, "%d:%d - %d:%d  => %d\n", secs, frame_pos,
+		P->lsec, P->played_this_second, played_frames);
+	*/
 
 	if (played_frames > self->dev->buf_size)
 		played_frames = self->dev->buf_size;
 
 	/*
 	fprintf(stderr, "Between %d:? offset=%d and %d:%d offset=%d: Played %d at %d\n", P->lsec, P->played_this_second,
-		secs, usecs, frame_pos, played_frames, self->dev->conf.rate);
+	secs, usecs, frame_pos, played_frames, self->dev->conf.rate);
 	*/
+
 
 	if (played_frames > P->max_delta)
 		P->max_delta = played_frames;
 
-	free_frames = self->dev->buf_size - played_frames + additional_frames;
+	free_frames = played_frames;
 
 	if (free_frames > self->dev->buf_size) {
 		if (!diagnosed_too_slow) {
@@ -477,16 +478,16 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 	if (P->delta_observations > MAX_DELTA_OBSERVATIONS)
 		P->delta_observations = MAX_DELTA_OBSERVATIONS;
 
-	/* Disabled, broken */
-	if (0 && P->delta_observations > MIN_DELTA_OBSERVATIONS) { /* Start improving after a while */
-		int diff = self->dev->conf.rate - P->max_delta;
+/* 	/\* Disabled, broken *\/ */
+/* 	if (0 && P->delta_observations > MIN_DELTA_OBSERVATIONS) { /\* Start improving after a while *\/ */
+/* 		int diff = self->dev->conf.rate - P->max_delta; */
 
-		/* log-approximate P->max_delta over time */
-		recommended_frames = P->max_delta +
-			((diff * MIN_DELTA_OBSERVATIONS) / P->delta_observations);
-/* WTF? */
-	} else
-		recommended_frames = self->dev->buf_size; /* Initially, keep the buffer full */
+/* 		/\* log-approximate P->max_delta over time *\/ */
+/* 		recommended_frames = P->max_delta + */
+/* 			((diff * MIN_DELTA_OBSERVATIONS) / P->delta_observations); */
+/* /\* WTF? *\/ */
+/* 	} else */
+/* 		recommended_frames = self->dev->buf_size; /\* Initially, keep the buffer full *\/ */
 
 #if (DEBUG >= 1)
 	sciprintf("[soft-mixer] played since last time: %d, recommended: %d, free: %d\n",
@@ -502,7 +503,7 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 		result_frames = 0;
 
 	P->played_this_second += result_frames;
-	while (P->lsec < self->dev->conf.rate) {
+	while (P->played_this_second >= self->dev->conf.rate) {
 		/* Won't normally happen more than once */
 		P->played_this_second -= self->dev->conf.rate;
 		P->lsec++;
@@ -512,7 +513,6 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 		fprintf(stderr, "[soft-mixer] Internal assertion failed: frames-to-write %d > %d\n",
 			result_frames, self->dev->buf_size);
 	}
-
 	return result_frames;
 }
 
@@ -731,7 +731,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 			READ_NEW_VALUES();
 			--frames_left;
 #if (DEBUG >= 3)
-			sciprintf("[soft-mix] Initial read %d:%d\n", c_new.left, c_new.right);
+			sciprintf("[soft-mixer] Initial read %d:%d\n", c_new.left, c_new.right);
 #endif
 			c_old = c_new;
 			}
@@ -741,7 +741,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 			READ_NEW_VALUES();
 			--frames_left;
 #if (DEBUG >= 3)
-			sciprintf("[soft-mix] Step %d/%d made %d:%d\n", j, frame_steps, c_new.left, c_new.right);
+			sciprintf("[soft-mixer] Step %d/%d made %d:%d\n", j, frame_steps, c_new.left, c_new.right);
 #endif
 
 			/* The last frame will be subject to the fractional
@@ -776,7 +776,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 
 
 #if (DEBUG >= 3)
-		sciprintf("[soft-mix] Ultimate result: %d:%d (frac %d:%d)\n", leftsum, rightsum, left, right);
+		sciprintf("[soft-mixer] Ultimate result: %d:%d (frac %d:%d)\n", leftsum, rightsum, left, right);
 #endif
 
 		if (add_result) {
@@ -817,7 +817,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 			frames_left * f->frame_size);
 	}
 #if (DEBUG >= 2)
-	sciprintf("[soft-mix] Leaving %d over\n", fs->frame_bufstart);
+	sciprintf("[soft-mixer] Leaving %d over\n", fs->frame_bufstart);
 #endif
 
 	if (frames_read + delay_frames < frames_nr) {

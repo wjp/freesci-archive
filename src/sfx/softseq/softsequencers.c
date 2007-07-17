@@ -36,9 +36,9 @@ extern sfx_softseq_t sfx_softseq_amiga;
 
 static sfx_softseq_t *sw_sequencers[] = {
 	&sfx_softseq_opl2,
-	&sfx_softseq_amiga,
-	&sfx_softseq_pcspeaker,
 	&sfx_softseq_SN76496,
+	&sfx_softseq_pcspeaker,
+	&sfx_softseq_amiga,
 	NULL
 };
 
