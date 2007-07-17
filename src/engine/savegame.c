@@ -4895,6 +4895,7 @@ gamestate_restore(state_t *s, char *dirname)
 
 	retval->max_version = retval->version;
 	retval->min_version = retval->version;
+	retval->parser_base = make_reg(s->sys_strings_segment, SYS_STRING_PARSER_BASE);
 
 	/* Copy breakpoint information from current game instance */
 	retval->have_bp = s->have_bp;
