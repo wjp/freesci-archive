@@ -27,7 +27,7 @@
 
 
 /* Attempt to guess if recent version of Platform SDK */
-#ifdef _WIN32
+#ifdef _MSC_VER
 #	pragma message("******************** IMPORTANT MESSAGE ********************")
 #	pragma message("You must have installed a recent Platform and DirectX SDK")
 #	pragma message("for this build to be successful. Download MS SDKs from:")

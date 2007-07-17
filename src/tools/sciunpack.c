@@ -92,6 +92,10 @@ static guint8 midimask = 0x01;  /* MT-32 */
 
 resource_mgr_t *resmgr;
 
+#ifdef _WIN32
+#define fchmod(arg1, arg2)
+#endif
+
 void
 print_resource_filename(FILE* file, int type, int number)
 {

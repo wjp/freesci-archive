@@ -24,7 +24,7 @@
 
 ***************************************************************************/
 
-
+#include <stdlib.h>
 #include <engine.h>
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
@@ -35,6 +35,12 @@
 #  include <sci_win32.h>
 #  include <sys/types.h>
 #  include <sys/stat.h>
+#else
+#ifdef _WIN32
+#  include <windows.h>
+#  include <win32/usleep.h>
+#  include <win32/sci_win32.h>
+#endif
 #endif
 #if !defined(HAVE_FNMATCH) && !defined(_MSC_VER)
 #  include <beos/fnmatch.h>
@@ -228,7 +234,7 @@ sci_gettime(long *seconds, long *useconds)
 	*seconds = tv.tv_sec;
 	*useconds = tv.tv_usec;
 }
-#elif defined (_MSC_VER)
+#elif defined (_WIN32)
 
 /*WARNING(Incorrect)*/
 /* Warning: This function only retrieves the amount of mseconds since the start of

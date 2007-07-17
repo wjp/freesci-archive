@@ -25,6 +25,11 @@
 #include <sfx_sequencer.h>
 #include <resource.h>
 
+#ifdef _WIN32
+#  include <win32/sci_win32.h>
+#  include <windows.h>
+#endif
+
 #include <sys/time.h>
 #ifdef __BEOS__
 #  include <be/kernel/OS.h>

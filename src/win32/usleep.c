@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #include <windows.h>
 
 extern void
@@ -19,3 +21,5 @@ usleep (long usec)
 		} while (lCurTime.QuadPart < lEndTime.QuadPart);
 	}
 }
+
+#endif

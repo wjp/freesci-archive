@@ -47,6 +47,11 @@
 #  include <sys/time.h>
 #endif
 
+#include <SDL_config.h>
+#undef HAVE_ICONV
+#undef HAVE_ICONV_H
+#undef HAVE_ALLOCA_H
+
 #include <SDL.h>
 
 #ifndef SDL_DISABLE

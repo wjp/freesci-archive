@@ -16,6 +16,7 @@ LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	sfx/softseq/libscisoftseq.a \
 	sfx/libscisoundlib.a \
 	sfx/device/libscisounddevice.a \
+	win32/libsciwin32.a \
 	menu/libscimenu.a \
 	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ @LIB_M@ @SDL_LIBS@
 bin_PROGRAMS = freesci

@@ -192,7 +192,7 @@
 
 /**** FUNCTION DECLARATIONS ****/
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #    define scimkdir(arg1,arg2) mkdir(arg1)
 #else
 #    define scimkdir(arg1,arg2) mkdir(arg1,arg2)

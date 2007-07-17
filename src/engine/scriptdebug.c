@@ -35,8 +35,9 @@
 #include <gc.h>
 #include <sci_midi.h>
 #include <sci_widgets.h>
-#ifdef _MSC_VER
-#	include <sci_win32.h>
+#ifdef _WIN32
+#	include <win32/sci_win32.h>
+#	include <windows.h>
 #endif
 #ifdef HAVE_UNISTD_H
 /* Assume this is a sufficient precondition */
