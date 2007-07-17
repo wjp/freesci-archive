@@ -67,6 +67,9 @@
   else \
        s->picture_port->add(GFXWC(s->picture_port), GFXW(widget));
 
+#define ADD_TO_WINDOW_PORT(widget) \
+       s->wm_port->add(GFXWC(s->wm_port), GFXW(widget));
+
 #define ADD_TO_CURRENT_FG_WIDGETS(widget) \
   ADD_TO_CURRENT_PICTURE_PORT(widget)
 
@@ -1135,12 +1138,15 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 	gfxw_widget_kill_chrono(s->visual, 0);
 	s->wm_port->widfree(GFXW(s->wm_port));
 	s->picture_port->widfree(GFXW(s->picture_port));
+	s->foo_port->widfree(GFXW(s->foo_port));
 
-	s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 200), s->ega_colors[0], transparent);
+	s->wm_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
 	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
+	s->foo_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 200), s->ega_colors[0], transparent);
 
 	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
+	s->visual->add(GFXWC(s->visual), GFXW(s->foo_port));
 
 	s->port = s->picture_port;
 
@@ -2506,9 +2512,10 @@ kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 		/* We depart from official semantics here, sorry!
 		   Reasoning: Sierra SCI does not clip ports while we do.
 		   Therefore a draw to the titlebar port (which is the
-		   official semantics) cuts off the lower part of the
-		   icons in an SCI1 icon bar. */
-		if (port_nr == -1) port_nr = s->wm_port->ID;
+		   official semantics) would cut off the lower part of the
+		   icons in an SCI1 icon bar. Instead we have a
+		   foo_port that does not exist in SSCI. */
+		if (port_nr == -1) port_nr = s->foo_port->ID;
 
 		new_port = gfxw_find_port(s->visual, port_nr);
 
@@ -2692,7 +2699,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 						  gfx_rect(SKPV(5), SKPV(4), 
 							   SKPV(7)-SKPV(5), SKPV(6)-SKPV(4)));
 
-	ADD_TO_CURRENT_PORT(window);
+	ADD_TO_WINDOW_PORT(window);
 	FULL_REDRAW();
 
 	window->draw(GFXW(window), gfxw_point_zero);

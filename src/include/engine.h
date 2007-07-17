@@ -134,6 +134,7 @@ typedef struct _state
 	gfxw_port_t *titlebar_port; /* Title bar viewport (0,0,9,319) */
 	gfxw_port_t *wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
 	gfxw_port_t *picture_port; /* The background picture viewport (10,0,199,319) */
+	gfxw_port_t *foo_port; /* Full-screen port used for non-clipped icon bar draw in SCI1 */
 
 	gfx_map_mask_t pic_visible_map; /* The number of the map to display in update commands */
 	int pic_animate; /* The animation used by Animate() to display the picture */

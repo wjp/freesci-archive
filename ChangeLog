@@ -1,5 +1,7 @@
 2007-07-17  Lars Skovlund  <lskovlun@image.dk>
 
+	* Window placement fixes.
+
 	* Win32 cross-compilation work.
 
 	* src/engine/savcgame.cfsml: Also save status bar foreground /

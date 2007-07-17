@@ -124,6 +124,18 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text, int fgcolor
 	gfxop_update(state);
 }
 
+static void
+sciw_make_window_fit(rect_t *rect, gfxw_port_t *parent)
+{
+  /* This window is meant to cover the whole screen, so we allow it to go through. */
+  if (rect->xl == 319 && rect->yl == 189) return;
+
+  if (rect->x + rect->xl > parent->bounds.x + parent->bounds.xl)
+	  rect->x -= (rect->x + rect->xl) - (parent->bounds.x + parent->bounds.xl) + 2;
+
+  if (rect->y + rect->yl > parent->bounds.y + parent->bounds.yl)
+	  rect->y -= (rect->y + rect->yl) - (parent->bounds.y + parent->bounds.yl) + 2;
+}
 
 gfxw_port_t *
 sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_t bgcolor,
@@ -140,6 +152,16 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	int xextra = !(flags & WINDOW_FLAG_NOFRAME) ? 1 : 0;
 	int yextra = !(flags & WINDOW_FLAG_NOFRAME) ? 2 : 0;
 
+	if (area.xl == 319 && area.yl == 189)
+	{
+		flags |= WINDOW_FLAG_NOFRAME;
+		/* The below line makes the points bar in QfG2 work, but breaks
+		   the one in QfG1. Hm. */
+		if (bgcolor.priority == 255) /* Yep, QfG2 */
+			area.y += 3;
+	}
+
+	/*
 	if (area.y + area.yl > visual->bounds.y + visual->bounds.yl)
 	{
 		area.y -= (area.y + area.yl) - (visual->bounds.y + visual->bounds.yl) + yextra;
@@ -149,11 +171,16 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	{
 		area.x -= (area.x + area.xl) - (visual->bounds.x + visual->bounds.xl) + xextra;
 	}
+	*/
+
+	if (flags & WINDOW_FLAG_TITLE)
+		area. y += 10;
 
 	if (!(flags & (WINDOW_FLAG_TITLE | WINDOW_FLAG_NOFRAME)))
 		area.yl -= 1; /* Normal windows are drawn one pixel too small. */
 
-	win = gfxw_new_port(visual, s->port, area, color, bgcolor);
+	sciw_make_window_fit(&area, s->wm_port);
+	win = gfxw_new_port(visual, s->wm_port, area, color, bgcolor);
 
 	win->font_nr = font;
 	win->title_text = title;
@@ -168,9 +195,10 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 		return win; /* Fully transparent window */
 
 	if (flags & WINDOW_FLAG_TITLE)
-		frame = gfx_rect(area.x -1, area.y -10, area.xl + 2, area.yl + 11);
+		frame = gfx_rect(area.x-1, area.y-10, area.xl + 2, area.yl + 11);
 	else
-		frame = gfx_rect(area.x -1, area.y -1, area.xl + 2, area.yl + 2);
+	if (!(flags & WINDOW_FLAG_NO_DROP_SHADOW))
+		frame = gfx_rect(area.x-1, area.y-1, area.xl + 2, area.yl + 2);
 
 	/* Set visible window boundaries */
 	win->bounds = gfx_rect(frame.x, frame.y, frame.xl + shadow_offset, frame.yl + shadow_offset);
