@@ -1,3 +1,9 @@
+2007-07-18  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/drivers/xlib_driver.c: Likely fix for spurious
+	``RenderBadPicture'' error messages on some X11 setups.  Fix
+	originally contributed by Walter, I just applied it.
+
 2007-07-17  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/sfx/mixer/soft.c: Fixed numerous bugs

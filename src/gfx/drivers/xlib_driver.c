@@ -89,10 +89,13 @@ struct _xlib_state {
 	Cursor mouse_cursor;
 	byte *pointer_data[2];
 	int used_bytespp; /* bytes actually used to display stuff, rather than bytes occupied in data space */
+	XVisualInfo visinfo;
 #ifdef HAVE_RENDER
 	Picture picture;
 #endif
 };
+
+#define VISUAL S->visinfo.visual
 
 #define S ((struct _xlib_state *)(drv->state))
 
@@ -372,6 +375,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		 && (bytespp == 1
 		     || (depth_mod <= 7)));
 
+	S->visinfo = xvisinfo;
+
 	if (vistype < 3 || ((vistype == 3) && (bytespp != 1))) {
 		if (bytespp == 1) {
 			ERROR("Could not get an 8 bit Pseudocolor visual!\n");
@@ -383,7 +388,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	S->colormap = win_attr.colormap =
 		XCreateColormap(S->display, RootWindow(S->display, default_screen),
-				xvisinfo.visual, (bytespp == 1)? AllocAll : AllocNone);
+				VISUAL, (bytespp == 1)? AllocAll : AllocNone);
 
 	win_attr.event_mask = PointerMotionMask | StructureNotifyMask | ButtonPressMask
 		| ButtonReleaseMask | KeyPressMask | KeyReleaseMask | ExposureMask;
@@ -391,7 +396,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	S->window = XCreateWindow(S->display, RootWindow(S->display, default_screen),
 				  0, 0, xsize, ysize, 0, xvisinfo.depth, InputOutput,
-				  xvisinfo.visual, (CWBackPixel | CWBorderPixel | CWColormap | CWEventMask),
+				  VISUAL, (CWBackPixel | CWBorderPixel | CWColormap | CWEventMask),
 				  &win_attr);
 
 	if (!S->window) {
@@ -464,8 +469,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		}
 	}
 
-	foo_image = XCreateImage(S->display, DefaultVisual(S->display,
-							   DefaultScreen(S->display)),
+	foo_image = XCreateImage(S->display, VISUAL,
 				 bytespp << 3, ZPixmap, 0, (char*)sci_malloc(23), 2, 2, 8, 0);
 
 	bytespp_physical = foo_image->bits_per_pixel >> 3;
@@ -484,8 +488,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  x11_error = 0;
 	  old_handler = XSetErrorHandler(xlib_error_handler);
 
-	  foo_image = XShmCreateImage(S->display, DefaultVisual(S->display,
-								DefaultScreen(S->display)),
+	  foo_image = XShmCreateImage(S->display, VISUAL,
 				      bytespp_physical << 3, ZPixmap, 0, &shminfo, 2, 2);
 	  if (foo_image)
 	    shminfo.shmid = shmget(IPC_PRIVATE,
@@ -628,8 +631,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (S->use_render) {
 		XRenderPictFormat * format
 			= XRenderFindVisualFormat (S->display,
-						   DefaultVisual(S->display,
-								 DefaultScreen(S->display)));
+						   VISUAL);
 		S->picture =  XRenderCreatePicture (S->display,
 						    (Drawable) S->visual[1],
 						    format,
@@ -689,7 +691,7 @@ xlib_xdpy_info()
 		XVisualInfo *visual = visuals + i;
 
 		/* This works around an incompatibility between C++ and xlib: access visual->class */
-		int visual_class = *((int *) (((byte *)(visual->depth)) + sizeof(unsigned int)));
+		int visual_class = *((int *) (((byte *)(&(visual->depth))) + sizeof(unsigned int)));
 
 		printf("%d:\t%d bpp %s(%d)\n"
 		       "\tR:%08x G:%08x B:%08x\n"
@@ -877,7 +879,7 @@ xlib_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 		ERROR("Attempt to register pixmap twice!\n");
 		return GFX_ERROR;
 	}
-	pxm->internal.info = XCreateImage(S->display, DefaultVisual(S->display, DefaultScreen(S->display)),
+	pxm->internal.info = XCreateImage(S->display, VISUAL,
 					    S->used_bytespp << 3, ZPixmap, 0, (char *) pxm->data, pxm->xl,
 					    pxm->yl, 8, 0);
 
