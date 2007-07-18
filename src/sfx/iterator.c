@@ -124,6 +124,13 @@ static int
 _sci0_read_next_command(sci0_song_iterator_t *self,
 			unsigned char *buf, int *result);
 
+
+static int
+_sci0_get_pcm_data(sci0_song_iterator_t *self,
+		   sfx_pcm_config_t *format,
+		   int *xoffset,
+		   unsigned int *xsize);
+
 #define PARSE_FLAG_LOOPS_UNLIMITED (1 << 0) /* Unlimited # of loops? */
 #define PARSE_FLAG_PARAMETRIC_CUE (1 << 1) /* Assume that cues take an additional "cue value" argument */
 /* This implements a difference between SCI0 and SCI1 cues. */
@@ -193,7 +200,7 @@ if (1) {
 
 	if (cmd == SCI_MIDI_EOT) {
 		/* End of track? */
-fprintf(stderr, "eot; loops = %d\n", self->loops);
+fprintf(stderr, "eot; loops = %d, notesplayed=%d\n", self->loops, channel->notes_played);
 		if (self->loops > 1 && channel->notes_played) {
 
 			/* If allowed, decrement the number of loops */
@@ -213,7 +220,7 @@ fprintf(stderr, "eot; loops = %d\n", self->loops);
 			channel->notes_played = 0;
 			channel->state = SI_STATE_COMMAND;
 			channel->total_timepos = channel->loop_timepos;
-
+fprintf(stderr, "Looping.\n");
 			return SI_LOOP;
 		} else {
 			channel->state = SI_STATE_FINISHED;
@@ -344,9 +351,29 @@ _sci_midi_process_state(base_song_iterator_t *self, unsigned char *buf, int *res
 
 	switch (channel->state) {
 
-	case SI_STATE_PCM:
-		channel->state = SI_STATE_DELTA_TIME;
+	case SI_STATE_PCM: {
+		if (*(self->data + channel->offset) == 0
+		    && *(self->data + channel->offset + 1) == SCI_MIDI_EOT)
+			/* Fake one extra tick to trick the interpreter into not killing the song iterator right away */
+			channel->state = SI_STATE_PCM_MAGIC_DELTA;
+		else
+			channel->state = SI_STATE_DELTA_TIME;
 		return SI_PCM;
+	}
+
+	case SI_STATE_PCM_MAGIC_DELTA: {
+		sfx_pcm_config_t format;
+		int offset;
+		unsigned int size;
+		int delay;
+		if (_sci0_get_pcm_data((sci0_song_iterator_t *) self, &format, &offset, &size))
+			return SI_FINISHED; /* 'tis broken */
+		channel->state = SI_STATE_FINISHED;
+		delay = (size * 50 + format.rate - 1) / format.rate; /* number of ticks to completion*/
+
+		fprintf(stderr, "delaying %d ticks\n", delay);
+		return delay;
+	}
 
 	case SI_STATE_UNINITIALISED:
 		fprintf(stderr, SIPFX "Attempt to read command from uninitialized iterator!\n");
@@ -445,18 +472,21 @@ _sci0_header_magic_p(unsigned char *data, int offset, int size)
 		&& (data[offset + 3] == 0x00);
 }
 
-static sfx_pcm_feed_t *
-_sci0_check_pcm(sci0_song_iterator_t *self)
+
+static int
+_sci0_get_pcm_data(sci0_song_iterator_t *self,
+		   sfx_pcm_config_t *format,
+		   int *xoffset,
+		   unsigned int *xsize)
 {
 	int tries = 2;
 	int found_it = 0;
 	unsigned char *pcm_data;
 	int size;
 	unsigned int offset = SCI0_MIDI_OFFSET;
-	sfx_pcm_config_t format;
 
 	if (self->data[0] != 2)
-		return NULL;
+		return 1;
 	/* No such luck */
 
 	while ((tries--) && (offset < self->size) && (!found_it)) {
@@ -468,7 +498,7 @@ _sci0_check_pcm(sci0_song_iterator_t *self)
 		if (!fc) {
 			fprintf(stderr, SIPFX "Warning: Playing unterminated"
 				" song!\n");
-			return NULL;
+			return 1;
 		}
 
 		/* add one to move it past the END_OF_SONG marker */
@@ -484,7 +514,7 @@ _sci0_check_pcm(sci0_song_iterator_t *self)
 			"Warning: Song indicates presence of PCM, but"
 			" none found (finally at offset %04x)\n", offset);
 
-		return NULL;
+		return 1;
 	}
 
 	pcm_data = self->data + offset;
@@ -492,9 +522,9 @@ _sci0_check_pcm(sci0_song_iterator_t *self)
 	size = getInt16(pcm_data + SCI0_PCM_SIZE_OFFSET);
 
 	/* Two of the format parameters are fixed by design: */
-	format.format = SFX_PCM_FORMAT_U8;
-	format.stereo = SFX_PCM_MONO;
-	format.rate = getInt16(pcm_data + SCI0_PCM_SAMPLE_RATE_OFFSET);
+	format->format = SFX_PCM_FORMAT_U8;
+	format->stereo = SFX_PCM_MONO;
+	format->rate = getInt16(pcm_data + SCI0_PCM_SAMPLE_RATE_OFFSET);
 
 	if (offset + SCI0_PCM_DATA_OFFSET + size != self->size) {
 		int d = offset + SCI0_PCM_DATA_OFFSET + size - self->size;
@@ -507,6 +537,21 @@ _sci0_check_pcm(sci0_song_iterator_t *self)
 		if (d > 0)
 			size -= d; /* Fix this */
 	}
+
+	*xoffset = offset;
+	*xsize = size;
+
+	return 0;
+ }
+
+static sfx_pcm_feed_t *
+_sci0_check_pcm(sci0_song_iterator_t *self)
+{
+	sfx_pcm_config_t format;
+	int offset;
+	unsigned int size;
+	if (_sci0_get_pcm_data(self, &format, &offset, &size))
+		return NULL;
 
 	self->channel.state
 		= SI_STATE_FINISHED; /* Don't play both PCM and music */
@@ -1740,7 +1785,7 @@ songit_next(song_iterator_t **it, unsigned char *buf, int *result, int mask)
 			}
 
 		if (retval == SI_FINISHED)
-			fprintf(stderr, "Song finished. mask = %04x, cm=%04x\n",
+			fprintf(stderr, "[song-iterator] Song finished. mask = %04x, cm=%04x\n",
 				mask, (*it)->channel_mask);
 		if (retval == SI_FINISHED
 		    && (mask & IT_READER_MAY_CLEAN)

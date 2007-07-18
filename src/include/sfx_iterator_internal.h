@@ -40,6 +40,7 @@
 #define SI_STATE_PENDING 2 /* Pending for loop */
 #define SI_STATE_FINISHED 3 /* End of song */
 #define SI_STATE_PCM 4 /* Should report a PCM next (-> DELTA_TIME) */
+#define SI_STATE_PCM_MAGIC_DELTA 5 /* Should report a ``magic'' one tick delta time next (goes on to FINISHED) */
 
 
 /* Iterator types */

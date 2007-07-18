@@ -1,5 +1,10 @@
 2007-07-18  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/sfx/iterator.c: SCI0 PCM samples that have a delay of 0
+	assigned to them (before the terminator) will now instead ``fake''
+	a delay that corresponds to the actual time needed until they are
+	finished.
+
 	* src/gfx/drivers/xlib_driver.c: Likely fix for spurious
 	``RenderBadPicture'' error messages on some X11 setups.  Fix
 	originally contributed by Walter, I just applied it.
