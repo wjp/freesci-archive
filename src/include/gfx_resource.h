@@ -349,6 +349,17 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size);
 ** Returns   : (gfx_pixmap_color_t *) *colors_nr color_t entries with the colors
 */
 
+gfx_pixmap_color_t *
+gfxr_read_pal11(int id, int *colors_nr, byte *resource, int size);
+/* Reads an SCI1.1 palette
+** Parameters: (int) id: Resource ID for the palette (or the view it was found in)
+**             (int *) colors_nr: Pointer to the variable the number of colors
+**                                will be stored in
+**             (byte *) resource: Source data
+**             (int) size: Size of the memory block pointed to by resource
+** Returns   : (gfx_pixmap_color_t *) *colors_nr color_t entries with the colors
+*/
+
 gfxr_view_t *
 gfxr_draw_view1(int id, byte *resource, int size);
 /* Calculates an SCI1 view

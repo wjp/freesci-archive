@@ -152,9 +152,14 @@ _reset_graphics_input(state_t *s)
 		resource = scir_find_resource(s->resmgr, sci_palette, 999, 1);
 		if (resource)
 		  {
-		    s->gfx_state->resstate->static_palette = 
-			gfxr_read_pal1(999, &s->gfx_state->resstate->static_palette_entries, 
-				      resource->data, resource->size);
+		    if (s->version < SCI_VERSION(1,001,000))
+			    s->gfx_state->resstate->static_palette = 
+				    gfxr_read_pal1(999, &s->gfx_state->resstate->static_palette_entries, 
+						   resource->data, resource->size); 
+		    else
+			    s->gfx_state->resstate->static_palette = 
+				    gfxr_read_pal11(999, &s->gfx_state->resstate->static_palette_entries, 
+						    resource->data, resource->size); 
 		    scir_unlock_resource(s->resmgr, resource, sci_palette, 999);
 		  } else
 		    sciprintf("Couldn't find the default palette!\n");

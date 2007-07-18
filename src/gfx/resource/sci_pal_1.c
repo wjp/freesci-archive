@@ -34,6 +34,65 @@
 #define PALETTE_START 260
 #define COLOR_OK 0x01
 
+#define SCI_PAL_FORMAT_VARIABLE_FLAGS 0
+#define SCI_PAL_FORMAT_CONSTANT_FLAGS 1
+
+gfx_pixmap_color_t *
+gfxr_read_pal11(int id, int *colors_nr, byte *resource, int size)
+{
+	int start_color = resource[25];
+	int format = resource[32];
+	int entry_size;
+	gfx_pixmap_color_t color;
+	gfx_pixmap_color_t *retval;
+	byte *pal_data = resource + 37;
+	int _colors_nr = *colors_nr = getUInt16(resource + 29);
+	int i;
+
+	switch (format)
+	{
+	case SCI_PAL_FORMAT_VARIABLE_FLAGS :
+		entry_size = 4;
+		break;
+	case SCI_PAL_FORMAT_CONSTANT_FLAGS :
+		entry_size = 3;
+		break;
+	}
+
+	retval = (gfx_pixmap_color_t *)
+		sci_malloc(sizeof(gfx_pixmap_color_t) * (_colors_nr + start_color));
+	memset(retval, 0, sizeof(gfx_pixmap_color_t) * (_colors_nr + start_color));
+
+	for (i = 0; i < start_color; i ++)
+	{
+		retval[i].global_index = GFX_COLOR_INDEX_UNMAPPED;
+		retval[i].r = 0;
+		retval[i].g = 0;
+		retval[i].b = 0;
+	}
+	for (i = start_color; i < start_color + _colors_nr; i ++)
+	{
+		switch (format)
+		{
+		case SCI_PAL_FORMAT_CONSTANT_FLAGS:
+			retval[i].global_index = GFX_COLOR_INDEX_UNMAPPED;
+			retval[i].r = pal_data[0];
+			retval[i].g = pal_data[1];
+			retval[i].b = pal_data[2];
+			break;
+		case SCI_PAL_FORMAT_VARIABLE_FLAGS:
+			retval[i].global_index = GFX_COLOR_INDEX_UNMAPPED;
+			retval[i].r = pal_data[1];
+			retval[i].g = pal_data[2];
+			retval[i].b = pal_data[3];
+			break;
+		}
+		pal_data += entry_size;
+	}
+
+	return retval;
+}
+
 gfx_pixmap_color_t *
 gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 {
