@@ -1,5 +1,7 @@
 2007-07-18  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/sfx/mixer/soft.c: Eliminated unused variable
+
 	* src/sfx/iterator.c: SCI0 PCM samples that have a delay of 0
 	assigned to them (before the terminator) will now instead ``fake''
 	a delay that corresponds to the actual time needed until they are

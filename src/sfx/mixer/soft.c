@@ -494,10 +494,7 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 		  played_frames, recommended_frames, free_frames);
 #endif
 
-	if (recommended_frames > free_frames)
-		result_frames = free_frames;
-	else
-		result_frames = recommended_frames;
+	result_frames = free_frames;
 
 	if (result_frames < 0)
 		result_frames = 0;
@@ -664,6 +661,11 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 
 	RELEASE_LOCK();
 	/* Make sure we have sufficient information */
+	int fr = 			frames_nr
+			- delay_frames
+	  - fs->frame_bufstart;
+	fprintf(stderr,"fr=%d\n", fr);
+
 	frames_read =
 		f->poll(f, wr_dest,
 			frames_nr
