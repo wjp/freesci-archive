@@ -661,11 +661,6 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 
 	RELEASE_LOCK();
 	/* Make sure we have sufficient information */
-	int fr = 			frames_nr
-			- delay_frames
-	  - fs->frame_bufstart;
-	fprintf(stderr,"fr=%d\n", fr);
-
 	frames_read =
 		f->poll(f, wr_dest,
 			frames_nr
