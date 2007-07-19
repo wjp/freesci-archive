@@ -193,7 +193,7 @@ static int sci_max_allowed_unknown_kernel_functions[] = {
 sci_kernel_function_t kfunct_mappers[] = {
 /*00*/	DEFUN("Load", kLoad, "iii*"),
 /*01*/	DEFUN("UnLoad", kUnLoad, "i.*"),
-/*02*/	DEFUN("ScriptID", kScriptID, "ii*"),
+/*02*/	DEFUN("ScriptID", kScriptID, "Ioi*"),
 /*03*/	DEFUN("DisposeScript", kDisposeScript, "i"),
 /*04*/	DEFUN("Clone", kClone, "o"),
 /*05*/	DEFUN("DisposeClone", kDisposeClone, "o"),

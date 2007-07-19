@@ -279,6 +279,9 @@ kScriptID(state_t *s, int funct_nr, int argc, reg_t *argv)
 	seg_id_t scriptid = script_get_segment(s, script, SCRIPT_GET_LOAD);
 	script_t *scr;
 
+	if (argv[0].segment)
+		return argv[0];
+
 	if (!scriptid)
 		return NULL_REG;
 
