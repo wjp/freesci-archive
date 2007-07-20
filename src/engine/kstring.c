@@ -754,3 +754,28 @@ kGetFarText(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return argv[2];
 }
 
+reg_t
+kMessage(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	switch (UKPV(0))
+	{
+	case 0 :
+	{
+		reg_t savedir_reg = make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
+		char *savedir = kernel_dereference_char_pointer(s, savedir_reg, 0);
+		char *buffer = argc == 7 ? kernel_dereference_char_pointer(s, argv[6], 0) : NULL;
+
+		if (buffer) strcpy(buffer, savedir);
+		return make_reg(0, 1); /* Talker id */
+	}
+	case 1 :
+		return NULL_REG;
+	case 2 :
+	{
+		reg_t savedir_reg = make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
+		char *savedir = kernel_dereference_char_pointer(s, savedir_reg, 0);
+		
+		return make_reg(0, strlen(savedir) + 1);
+	}
+	}
+}
