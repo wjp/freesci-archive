@@ -147,7 +147,7 @@ kLoad(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kLock(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int restype = UKPV(0);
+	int restype = UKPV(0)&0x7f;
 	int resnr = UKPV(1);
 	int state = UKPV(2);
 

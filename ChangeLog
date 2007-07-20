@@ -1,3 +1,7 @@
+2007-07-20  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kscripts.c (kLock): Fix interpretation of resource type.
+
 2007-07-18  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/sfx/mixer/soft.c: Eliminated unused variable
