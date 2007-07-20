@@ -39,6 +39,153 @@
 #define V1_RLE 0x80 /* run-length encode? */
 #define V1_RLE_BG 0x40 /* background fill */
 
+#define NEXT_RUNLENGTH_BYTE(n) \
+  if (literal_pos == runlength_pos) \
+    literal_pos += n; \
+  runlength_pos += n; 
+
+#define NEXT_LITERAL_BYTE(n) \
+  if (literal_pos == runlength_pos) \
+    runlength_pos += n; \
+  literal_pos += n; 
+
+static int
+decompress_sci_view(int id, int loop, int cel, byte *resource, byte *dest, int mirrored, int pixmap_size, int size, 
+		    int runlength_pos, int literal_pos, int xl, int yl, int color_key)
+{
+	int writepos = mirrored? xl : 0;
+
+	if (mirrored) {
+		int linebase = 0;
+
+		while (linebase < pixmap_size && literal_pos < size && runlength_pos < size) {
+			int op = resource[runlength_pos];
+			int bytes;
+			int readbytes = 0;
+			int color;
+
+			NEXT_RUNLENGTH_BYTE(1);
+
+			if (op & V1_RLE) {
+				bytes = op & 0x3f;
+				op &= (V1_RLE | V1_RLE_BG);
+				readbytes = (op & V1_RLE_BG)? 0 : 1;
+			} else {
+				readbytes = bytes = op & 0x3f;
+				op = 0;
+			}
+
+			if (runlength_pos + readbytes > size)
+			{
+				GFXWARN("View %02x:(%d/%d) requires %d bytes to be read when %d are available at pos %d\n",
+					id, loop, cel, readbytes, size - runlength_pos, runlength_pos-1);
+				return 1;
+			}
+/*
+			if (writepos - bytes < 0) {
+				GFXWARN("View %02x:(%d/%d) describes more bytes than needed: %d/%d bytes at rel. offset 0x%04x\n",
+					id, loop, cel, writepos - bytes, pixmap_size, pos - 1);
+				bytes = pixmap_size - writepos;
+			}
+*/			
+			if (op==V1_RLE) 
+			{
+				color = resource[literal_pos];
+				NEXT_LITERAL_BYTE(1);
+			}
+
+			if (!op && literal_pos + bytes > size)
+			{
+				GFXWARN("View %02x:(%d/%d) requires %d bytes to be read when %d are available at pos %d\n",
+					id, loop, cel, bytes, size - literal_pos, literal_pos-1);
+				return 1;
+			}
+
+			while (bytes--)
+			{
+				if (op) {
+					if (op & V1_RLE_BG) {
+						writepos--;
+						*(dest + writepos) = color_key;
+					} else {
+						writepos--;
+						*(dest + writepos) = color;
+					}
+				} else {
+					writepos--;
+					*(dest + writepos) = *(resource + literal_pos);
+					NEXT_LITERAL_BYTE(1);
+					
+				}
+				if (writepos == linebase)
+				{
+					writepos+=2*xl;
+					linebase+=xl;
+				}
+			}
+		}
+	}
+        else {
+		while (writepos < pixmap_size && literal_pos < size && runlength_pos < size) {
+			int op = resource[runlength_pos];
+			int bytes;
+			int readbytes = 0;
+
+			NEXT_RUNLENGTH_BYTE(1);
+
+			if (op & V1_RLE) {
+				bytes = op & 0x3f;
+				op &= (V1_RLE | V1_RLE_BG);
+				readbytes = (op & V1_RLE_BG)? 0 : 1;
+			} else {
+				readbytes = bytes = op & 0x3f;
+				op = 0;
+			}
+
+			if (runlength_pos + readbytes > size) {
+				return 1;
+			}
+
+			if (writepos + bytes > pixmap_size) {
+				GFXWARN("View %02x:(%d/%d) describes more bytes than needed: %d/%d bytes at rel. offset 0x%04x\n",
+					id, loop, cel, writepos-bytes, pixmap_size, runlength_pos - 1);
+				bytes = pixmap_size - writepos;
+			}
+
+			if (!op && literal_pos + bytes > size)
+			{
+				GFXWARN("View %02x:(%d/%d) requires %d bytes to be read when %d are available at pos %d\n",
+					id, loop, cel, bytes, size - literal_pos, literal_pos-1);
+				return 1;
+			}
+
+			if (writepos + bytes > pixmap_size)
+			{
+				GFXWARN("Writing out of bounds: %d bytes at %d > size %d\n", bytes, writepos, pixmap_size);
+			}
+					
+			if (op) {
+				if (op & V1_RLE_BG)
+					memset(dest + writepos, color_key, bytes);
+				else {
+					int color = resource[literal_pos];
+
+					NEXT_LITERAL_BYTE(1);
+					memset(dest + writepos, color, bytes);
+				}
+			} else {
+				memcpy(dest + writepos, resource + literal_pos, bytes);
+				NEXT_LITERAL_BYTE(bytes);
+			}
+			writepos += bytes;
+
+		}
+
+	};
+
+	return 0;
+}
+
 gfx_pixmap_t *
 gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view)
 {
@@ -47,10 +194,10 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 	int xhot = (gint8) resource[4];
 	int yhot = (gint8) resource[5];
 	int pos = 8;
-	int writepos = mirrored? xl : 0;
 	int pixmap_size = xl * yl;
 	gfx_pixmap_t *retval = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xl, yl, id, loop, cel));
 	byte *dest = retval->index_data;
+	int decompress_failed;
 
 	retval->color_key = resource[6];
 	retval->xoffset = (mirrored)? xhot : -xhot;
@@ -69,105 +216,13 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 		return NULL;
 	}
 
-	if (mirrored) {
-		int linebase = 0;
+	decompress_failed = decompress_sci_view(id, loop, cel, resource, dest, mirrored, pixmap_size, size, pos, 
+						pos, xl, yl, retval->color_key);
 
-		while (linebase < pixmap_size && pos < size) {
-			int op = resource[pos++];
-			int bytes;
-			int readbytes = 0;
-			int color;
-
-			if (op & V1_RLE) {
-				bytes = op & 0x3f;
-				op &= (V1_RLE | V1_RLE_BG);
-				readbytes = (op & V1_RLE_BG)? 0 : 1;
-			} else {
-				readbytes = bytes = op & 0x7f;
-				op = 0;
-			}
-
-			if (pos + readbytes > size) {
-				gfx_free_pixmap(NULL, retval);
-				GFXERROR("View %02x:(%d/%d) requires %d bytes to be read when %d are available at pos %d\n",
-					 id, loop, cel, readbytes, size - pos, pos - 1);
-				return NULL;
-			}
-/*
-			if (writepos - bytes < 0) {
-				GFXWARN("View %02x:(%d/%d) describes more bytes than needed: %d/%d bytes at rel. offset 0x%04x\n",
-					id, loop, cel, writepos - bytes, pixmap_size, pos - 1);
-				bytes = pixmap_size - writepos;
-			}
-*/			
-			if (op&&!(op & V1_RLE_BG)) color = resource[pos++];
-			while (bytes--)
-			{
-				if (op) {
-					if (op & V1_RLE_BG) {
-						writepos--;
-						*(dest + writepos) = retval->color_key;
-					} else {
-						writepos--;
-						*(dest + writepos) = color;
-					}
-				} else {
-					writepos--;
-					*(dest + writepos) = *(resource + pos);
-					pos++;
-				}
-				if (writepos == linebase)
-				{
-					writepos+=2*xl;
-					linebase+=xl;
-				}
-			}
-		}
+	if (decompress_failed) {
+		gfx_free_pixmap(NULL, retval);
+		return NULL;
 	}
-        else {
-		while (writepos < pixmap_size && pos < size) {
-			int op = resource[pos++];
-			int bytes;
-			int readbytes = 0;
-
-			if (op & V1_RLE) {
-				bytes = op & 0x3f;
-				op &= (V1_RLE | V1_RLE_BG);
-				readbytes = (op & V1_RLE_BG)? 0 : 1;
-			} else {
-				readbytes = bytes = op & 0x7f;
-				op = 0;
-			}
-
-			if (pos + readbytes > size) {
-				gfx_free_pixmap(NULL, retval);
-				GFXERROR("View %02x:(%d/%d) requires %d bytes to be read when %d are available at pos %d\n",
-					 id, loop, cel, readbytes, size - pos, pos - 1);
-				return NULL;
-			}
-
-			if (writepos + bytes > pixmap_size) {
-				GFXWARN("View %02x:(%d/%d) describes more bytes than needed: %d/%d bytes at rel. offset 0x%04x\n",
-					id, loop, cel, writepos-bytes, pixmap_size, pos - 1);
-				bytes = pixmap_size - writepos;
-			}
-
-			if (op) {
-				if (op & V1_RLE_BG)
-					memset(dest + writepos, retval->color_key, bytes);
-				else {
-					int color = resource[pos++];
-					memset(dest + writepos, color, bytes);
-				}
-			} else {
-				memcpy(dest + writepos, resource + pos, bytes);
-				pos += bytes;
-			}
-			writepos += bytes;
-
-		}
-
-	};
 
 	return retval;
 }
@@ -294,6 +349,128 @@ gfxr_draw_view1(int id, byte *resource, int size)
 			gfxr_free_view(NULL, view);
 			return NULL;
 		}
+	}
+
+	return view;
+}
+
+#define V2_HEADER_SIZE 0
+#define V2_LOOPS_NUM 2
+#define V2_PALETTE_OFFSET 8
+#define V2_BYTES_PER_LOOP 12
+#define V2_BYTES_PER_CEL 13
+
+#define V2_COPY_OF_LOOP 0
+#define V2_IS_MIRROR 1
+#define V2_CELS_NUM 4
+#define V2_LOOP_OFFSET 14
+
+#define V2_CEL_WIDTH 0
+#define V2_CEL_HEIGHT 2
+#define V2_X_DISPLACEMENT 4
+#define V2_Y_DISPLACEMENT 6
+#define V2_COLOR_KEY 8
+#define V2_RUNLENGTH_OFFSET 24
+#define V2_LITERAL_OFFSET 28
+
+gfx_pixmap_t *
+gfxr_draw_cel11(int id, int loop, int cel, int mirrored, byte *resource_base, byte *cel_base, int size, gfxr_view_t *view)
+{
+	int xl = get_uint_16(cel_base + V2_CEL_WIDTH);
+	int yl = get_uint_16(cel_base + V2_CEL_HEIGHT);
+	int xdisplace = get_uint_16(cel_base + V2_X_DISPLACEMENT);
+	int ydisplace = get_uint_16(cel_base + V2_Y_DISPLACEMENT);
+	int runlength_offset = get_uint_16(cel_base + V2_RUNLENGTH_OFFSET);
+	int literal_offset = get_uint_16(cel_base + V2_LITERAL_OFFSET);
+	int pixmap_size = xl * yl;
+	
+	gfx_pixmap_t *retval = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xl, yl, id, loop, cel));
+	byte *dest = retval->index_data;
+	int decompress_failed;
+
+	retval->color_key = cel_base[V2_COLOR_KEY];
+	retval->xoffset = (mirrored)? xdisplace : -xdisplace;
+	retval->yoffset = -ydisplace;
+
+	if (view) {
+		retval->colors = view->colors;
+		retval->colors_nr = view->colors_nr;
+	}
+		
+	retval->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+
+	if (xl <= 0 || yl <= 0) {
+		gfx_free_pixmap(NULL, retval);
+		GFXERROR("View %02x:(%d/%d) has invalid xl=%d or yl=%d\n", id, loop, cel, xl, yl);
+		return NULL;
+	}
+
+	decompress_failed = decompress_sci_view(id, loop, cel, resource_base, dest, mirrored, pixmap_size, size,
+						runlength_offset, literal_offset, xl, yl, retval->color_key);
+
+	if (decompress_failed) {
+		gfx_free_pixmap(NULL, retval);
+		return NULL;
+	}
+
+	return retval;
+}
+
+gfxr_loop_t *
+gfxr_draw_loop11(int id, int loop, int mirrored, byte *resource_base, byte *loop_base, int size, int cels_nr,
+		 gfxr_loop_t *result, gfxr_view_t *view, int bytes_per_cel)
+{
+	byte *seeker = loop_base;
+	int i;
+
+	result->cels_nr = cels_nr;
+	result->cels = (gfx_pixmap_t **)
+		sci_malloc(sizeof(gfx_pixmap_t *) * cels_nr);
+
+	for (i = 0; i < cels_nr; i++)
+	{
+		result->cels[i] = gfxr_draw_cel11(id, loop, i, mirrored, resource_base, seeker, size, view);
+		seeker += bytes_per_cel;
+	}
+
+	return result;
+}
+
+gfxr_view_t *
+gfxr_draw_view11(int id, byte *resource, int size)
+{
+	gfxr_view_t *view;
+ 	int header_size = get_uint_16(resource + V2_HEADER_SIZE);
+	int palette_offset = get_uint_16(resource + V2_PALETTE_OFFSET);
+	int bytes_per_loop = resource[V2_BYTES_PER_LOOP];
+	int loops_num = resource[V2_LOOPS_NUM];
+	int bytes_per_cel = resource[V2_BYTES_PER_CEL];
+	int i;
+	byte *seeker;
+
+	view = (gfxr_view_t*)sci_malloc(sizeof(gfxr_view_t));
+
+	memset(view, 0, sizeof(gfxr_view_t));
+	view->ID = id;
+	view->flags = 0;
+
+	view->loops_nr = loops_num;
+	view->loops = (gfxr_loop_t *)calloc(view->loops_nr, sizeof(gfxr_loop_t));
+
+	/* There is no indication of size here, but this is certainly large enough */
+	view->colors = gfxr_read_pal11(id, &view->colors_nr, resource + palette_offset, 1284); 
+ 
+	seeker = resource + header_size;
+	for (i = 0; i < view->loops_nr; i++)
+	{
+		static char *truth[2] = {"not ",""};
+		int loop_offset = get_uint_16(seeker + V2_LOOP_OFFSET);
+		int cels = seeker[V2_CELS_NUM];
+		int mirrored = 0;
+
+		gfxr_draw_loop11(id, i, mirrored, resource, resource + loop_offset, size, cels, view->loops + i, 
+				 view, bytes_per_cel);
+		seeker += bytes_per_loop;
 	}
 
 	return view;

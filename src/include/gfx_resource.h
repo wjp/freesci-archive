@@ -264,7 +264,7 @@ gfxr_clear_pic0(gfxr_pic_t *pic, int sci_titlebar_size);
 void
 gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette,
 	       int size, byte *resource, gfxr_pic0_params_t *style, int resid, int sci1);
-/* Draws a pic resource
+/* Draws a pic resource (all formats prior to SCI1.1)
 ** Parameters: (gfxr_pic_t *) pic: The pic to draw to
 **             (int) fill_normally: If 1, the pic is drawn normally; if 0, all
 **                                  fill operations will fill with black
@@ -274,6 +274,24 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette,
 **             (gfxr_pic0_params_t *) style: The drawing style
 **             (int) resid: The resource ID
 **             (int) sci1: Nonzero if SCI1
+** Returns   : (void)
+** The result is stored in gfxr_visual_map, gfxr_priority_map, and gfxr_control_map.
+** The palette entry of gfxr_visual_map is never used.
+** Note that the picture will not be drawn dithered; use gfxr_dither_pic0 for that.
+*/
+
+void
+gfxr_draw_pic11(gfxr_pic_t *pic, int fill_normally, int default_palette,
+	       int size, byte *resource, gfxr_pic0_params_t *style, int resid);
+/* Draws a pic resource (SCI1.1)
+** Parameters: (gfxr_pic_t *) pic: The pic to draw to
+**             (int) fill_normally: If 1, the pic is drawn normally; if 0, all
+**                                  fill operations will fill with black
+**             (int) default_palette: The default palette to use for drawing
+**             (int) size: Resource size
+**             (byte *) resource: Pointer to the resource data
+**             (gfxr_pic0_params_t *) style: The drawing style
+**             (int) resid: The resource ID
 ** Returns   : (void)
 ** The result is stored in gfxr_visual_map, gfxr_priority_map, and gfxr_control_map.
 ** The palette entry of gfxr_visual_map is never used.
@@ -368,6 +386,10 @@ gfxr_draw_view1(int id, byte *resource, int size);
 **             (int) size: Size of the resource
 ** Returns   : (gfxr_view_t *) The resulting view
 */
+
+gfx_pixmap_t *
+gfxr_draw_cel11(int id, int loop, int cel, int mirrored, byte *resource_base, byte *cel_base, int size, gfxr_view_t *view);
+
 
 gfx_pixmap_t *
 gfxr_endianness_adjust(gfx_pixmap_t *pixmap, gfx_mode_t *mode);

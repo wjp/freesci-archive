@@ -2459,6 +2459,54 @@ end_op_loop:
 	GFXWARN("Reached end of pic resource %04x\n", resid);
 }
 
+void
+gfxr_draw_pic11(gfxr_pic_t *pic, int flags, int default_palette, int size,
+	       byte *resource, gfxr_pic0_params_t *style, int resid)
+{
+	int vector_data_ptr = getUInt16(resource + 16);
+	int palette_data_ptr = getUInt16(resource + 28);
+	int bitmap_data_ptr = getUInt16(resource + 32);
+
+	gfx_mode_t *mode;
+	gfx_pixmap_t *view;
+	/* Set up mode structure for resizing the view */
+	mode = gfx_new_mode(
+			    pic->visual_map->index_xl/320,
+			    pic->visual_map->index_yl/200, 
+			    1, /* 1bpp, which handles masks and the rest for us */
+			    0, 0, 0, 0, 0, 0, 0, 0, 16, 0);
+
+	pic->visual_map->colors = gfxr_read_pal11(-1, &(pic->visual_map->colors_nr), resource + palette_data_ptr, 1284);
+	view = gfxr_draw_cel11(-1, 0, 0, 0, resource, resource + bitmap_data_ptr, 100000, NULL);
+
+	if (view)
+	{
+		view->colors = pic->visual_map->colors;
+		view->colors_nr = pic->visual_map->colors_nr;
+		
+		gfx_xlate_pixmap(view, mode, GFX_XLATE_FILTER_NONE);
+		
+		if (flags & DRAWPIC01_FLAG_OVERLAID_PIC)
+			view_transparentize(view, pic->visual_map->index_data, 
+					    0, 0, 
+					    view->index_xl, view->index_yl);
+		
+		_gfx_crossblit_simple(pic->visual_map->index_data,
+				      view->index_data,
+				      pic->visual_map->index_xl, view->index_xl,
+				      view->index_xl,
+				      view->index_yl,
+				      1);
+	} else 
+	{
+		GFXWARN("No view was contained in SCI1.1 pic resource");
+	}
+		
+
+
+	gfxr_draw_pic01(pic, flags, default_palette, size - vector_data_ptr,
+			resource + vector_data_ptr, style, resid, 1);
+}
 
 void
 gfxr_dither_pic0(gfxr_pic_t *pic, int dmode, int pattern)
