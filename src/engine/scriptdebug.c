@@ -1319,7 +1319,17 @@ int prop_ofs_to_id(state_t *s, int prop_ofs, reg_t objp)
 	}
 
 	selectors = obj->variables_nr;
-	selectoroffset = ((byte *) (obj->base_obj)) + SCRIPT_SELECTOR_OFFSET + selectors * 2;
+
+	if (s->version < SCI_VERSION(1,001,000))
+		selectoroffset = ((byte *) (obj->base_obj)) + SCRIPT_SELECTOR_OFFSET + selectors * 2; 
+	else
+	{
+		if (!(obj->variables[SCRIPT_INFO_SELECTOR].offset & SCRIPT_INFO_CLASS))
+		{
+			obj = obj_get(s, obj->variables[SCRIPT_SUPERCLASS_SELECTOR]);
+			selectoroffset = (byte *) obj->base_vars;
+		} else selectoroffset = (byte *) obj->base_vars;
+	}
 
 	if (prop_ofs < 0 || (prop_ofs >> 1) >= selectors) {
 		sciprintf("Applied prop_ofs_to_id to invalid property offset %x (property #%d not"
@@ -2966,6 +2976,7 @@ int
 objinfo(state_t *s, reg_t pos)
 {
 	object_t *obj = obj_get(s, pos);
+	object_t *var_container = obj;
 	int i;
 
 	sciprintf("["PREG"]: ", PRINT_REG(pos));
@@ -2976,13 +2987,15 @@ objinfo(state_t *s, reg_t pos)
 
 	print_obj_head(s, obj);
 
+	if (!(obj->variables[SCRIPT_INFO_SELECTOR].offset & SCRIPT_INFO_CLASS))
+		var_container = obj_get(s, obj->variables[SCRIPT_SUPERCLASS_SELECTOR]);
 	sciprintf("  -- member variables:\n");
 	for (i = 0; i < obj->variables_nr; i++) {
 
 		sciprintf("    ");
-		if (i < obj->variable_names_nr)
-			sciprintf("[%03x] %s = ", VM_OBJECT_GET_VARSELECTOR(obj, i),
-				selector_name(s, VM_OBJECT_GET_VARSELECTOR(obj, i)));
+		if (i < var_container->variable_names_nr)
+			sciprintf("[%03x] %s = ", VM_OBJECT_GET_VARSELECTOR(var_container, i),
+				selector_name(s, VM_OBJECT_GET_VARSELECTOR(var_container, i)));
 		else
 			sciprintf("p#%x = ", i);
 

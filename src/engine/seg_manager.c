@@ -1109,6 +1109,7 @@ sm_script_obj_init11(seg_manager_t *self, state_t *s, reg_t obj_pos)
 			 "Function area extends beyond end of script" );
 
 		obj->variables_nr = variables_nr;
+		obj->variable_names_nr = variables_nr;
 		obj->variables = (reg_t*)sci_malloc(sizeof(reg_t) * variables_nr);
 
 		obj->methods_nr = functions_nr;

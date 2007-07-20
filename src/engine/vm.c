@@ -2281,6 +2281,7 @@ game_run(state_t **_s)
 	if (!send_selector(s, s->game_obj, s->game_obj,
 			   s->stack_base, 2,
 			   s->stack_base) || script_error_flag) {
+		objinfo(s->game_obj);
 		sciprintf("Failed to run the game! Aborting...\n");
 		return 1;
 	}
