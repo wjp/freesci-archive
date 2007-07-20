@@ -323,23 +323,35 @@ kSetCursor_SCI11(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	switch (argc)
 	{
-	case 3 :
-                GFX_ASSERT(gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2), NULL));
-		break;
-	default :
-		SCIkwarn(SCIkERROR, "kSetCursor: Unhandled case: %d arguments given!\n", argc);
+	case 1 :
+		if (UKPV(0) == 0)
+		{	
+			s->save_mouse_pointer_view = s->mouse_pointer_view;
+			s->save_mouse_pointer_loop = s->mouse_pointer_loop;
+			s->save_mouse_pointer_cel = s->mouse_pointer_cel;
+			s->mouse_pointer_view = s->mouse_pointer_loop = s->mouse_pointer_cel = -1;
+			gfxop_set_pointer_cursor(s->gfx_state, GFXOP_NO_POINTER);
+		} 
+		else
+		{
+			s->mouse_pointer_view = s->save_mouse_pointer_view;
+			s->mouse_pointer_loop = s->save_mouse_pointer_loop;
+			s->mouse_pointer_cel = s->save_mouse_pointer_cel;
+		}
+	case 2 :
+	{
+		point_t pt;
+		pt.x = UKPV(0);
+		pt.y = UKPV(1);
+
+		GFX_ASSERT(gfxop_set_pointer_position(s->gfx_state, pt));
 		break;
 	}
-	return s->r_acc;
-}
-
-reg_t
-kSetCursor_KQ5(state_t *s, int funct_nr, int argc, reg_t *argv)
-{
-	switch (argc)
-	{
 	case 3 :
-		gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2), NULL);
+                GFX_ASSERT(gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2), NULL));
+		s->mouse_pointer_view = UKPV(0);
+		s->mouse_pointer_loop = UKPV(1);
+		s->mouse_pointer_cel = UKPV(2);
 		break;
 	case 9 : {
 		point_t hotspot = gfx_point(SKPV(3), SKPV(4));
@@ -349,25 +361,30 @@ kSetCursor_KQ5(state_t *s, int funct_nr, int argc, reg_t *argv)
 		gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2), &hotspot);
 		break;
 	}
+	default :
+		SCIkwarn(SCIkERROR, "kSetCursor: Unhandled case: %d arguments given!\n", argc);
+		break;
 	}
-
 	return s->r_acc;
 }
 
 reg_t
 kSetCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	if (has_kernel_function(s, "MoveCursor"))
+	if (s->version >= SCI_VERSION(1,001,000)||
+	    has_kernel_function(s, "MoveCursor"))
 	{
-		return kSetCursor_KQ5(s, funct_nr, argc, argv);
+		return kSetCursor_SCI11(s, funct_nr, argc, argv);
 	}
 		
 	if (SKPV_OR_ALT(1,1)) {
-		s->mouse_pointer_nr = SKPV(0);
+		s->mouse_pointer_view = SKPV(0);
 	} else
-		s->mouse_pointer_nr = GFXOP_NO_POINTER;
+		s->mouse_pointer_view = GFXOP_NO_POINTER;
 
-	GFX_ASSERT(gfxop_set_pointer_cursor(s->gfx_state, s->mouse_pointer_nr));
+	s->mouse_pointer_loop = s->mouse_pointer_cel = 0; /* Not used with cursor-format pointers */
+
+	GFX_ASSERT(gfxop_set_pointer_cursor(s->gfx_state, s->mouse_pointer_view));
 
 	if (argc > 2) {
 		point_t newpos = gfx_point(SKPV(2) + s->port->bounds.x,

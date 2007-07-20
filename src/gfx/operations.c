@@ -1680,14 +1680,17 @@ gfxop_set_pointer_view(gfx_state_t *state, int nr, int loop, int cel, point_t  *
 		new_pointer->yoffset = hotspot->y;
 	}
 
-	if (!state->mouse_pointer) {
+	if (!new_pointer) {
 		GFXWARN("Attempt to set invalid pointer #%d\n", nr);
-	} else if (real_loop != loop || real_cel != cel) {
-		GFXDEBUG("Changed loop/cel from %d/%d to %d/%d in view %d\n",
-			 loop, cel, real_loop, real_cel, nr);
+		return GFX_ERROR;
+	} else 
+	{
+		if (real_loop != loop || real_cel != cel) {
+			GFXDEBUG("Changed loop/cel from %d/%d to %d/%d in view %d\n",
+				 loop, cel, real_loop, real_cel, nr);
+		}
+		return _gfxop_set_pointer(state, new_pointer);
 	}
-
-	return _gfxop_set_pointer(state, new_pointer);
 }
 
 int

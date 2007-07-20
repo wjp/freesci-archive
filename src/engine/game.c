@@ -169,10 +169,12 @@ _reset_graphics_input(state_t *s)
 	gfxop_fill_box(s->gfx_state, gfx_rect(0, 0, 320, 200), s->ega_colors[0]); /* Fill screen black */
 	gfxop_update(s->gfx_state);
 
-	s->mouse_pointer_nr = -1; /* No mouse pointer resource */
+	s->mouse_pointer_view = s->mouse_pointer_loop = s->mouse_pointer_cel = -1; /* No mouse pointer resource */
+	s->save_mouse_pointer_view = s->save_mouse_pointer_loop = s->save_mouse_pointer_cel = -1; /* No mouse pointer resource */
 	gfxop_set_pointer_position(s->gfx_state, gfx_point(160, 150));
 
-	s->mouse_pointer_nr = -1;
+	s->mouse_pointer_view = s->mouse_pointer_loop = s->mouse_pointer_cel = -1; /* No mouse pointer resource */
+	s->save_mouse_pointer_view = s->save_mouse_pointer_loop = s->save_mouse_pointer_cel = -1; /* No mouse pointer resource */
 
 
 	s->pic_is_new = 0;

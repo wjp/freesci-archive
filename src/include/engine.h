@@ -122,7 +122,12 @@ typedef struct _state
 	int save_dir_edit_offset; /* For kEdit(): Display offset for editing the savedir */
 	char *save_dir_copy_buf; /* Temp savedir buffer for kEdit() */
 
-	int mouse_pointer_nr; /* Mouse pointer resource, or -1 if disabled */
+	int mouse_pointer_view; /* Mouse pointer resource, or -1 if disabled */
+	int mouse_pointer_loop; /* Mouse pointer resource, or -1 if disabled */
+	int mouse_pointer_cel; /* Mouse pointer resource, or -1 if disabled */
+	int save_mouse_pointer_view; /* Temporary storage for mouse pointer resource, when the pointer is hidden */
+	int save_mouse_pointer_loop; /* Temporary storage for mouse pointer resource, when the pointer is hidden */
+	int save_mouse_pointer_cel; /* Temporary storage for mouse pointer resource, when the pointer is hidden */
 
 	int port_serial; /* Port serial number, for save/restore */
 	gfxw_port_t *port; /* The currently active port */
