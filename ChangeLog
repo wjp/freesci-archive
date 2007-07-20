@@ -28,6 +28,9 @@
 
 2007-07-20  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kgraphics.c (KERNEL_COLOR_PALETTE): Use the resstate
+	version of palettes.
+
 	* src/engine/kscripts.c (kLock): Fix interpretation of resource type.
 
 2007-07-18  Christoph Reichenbach  <reichenb@colorado.edu>

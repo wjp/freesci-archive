@@ -271,8 +271,8 @@ graph_restore_box(state_t *s, reg_t handle)
 #define KERNEL_COLOR_PALETTE s->gfx_state->pic->visual_map->colors
 #define KERNEL_COLORS_NR s->gfx_state->pic->visual_map->colors_nr
 #else
-#define KERNEL_COLOR_PALETTE s->gfx_state->static_palette
-#define KERNEL_COLORS_NR s->gfx_state->static_palette_entries
+#define KERNEL_COLOR_PALETTE s->gfx_state->resstate->static_palette
+#define KERNEL_COLORS_NR s->gfx_state->resstate->static_palette_entries
 #endif
 
 gfx_pixmap_color_t *
