@@ -1155,15 +1155,16 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 	gfxw_widget_kill_chrono(s->visual, 0);
 	s->wm_port->widfree(GFXW(s->wm_port));
 	s->picture_port->widfree(GFXW(s->picture_port));
-	s->foo_port->widfree(GFXW(s->foo_port));
+	s->iconbar_port->widfree(GFXW(s->iconbar_port));
 
 	s->wm_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
 	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
-	s->foo_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 200), s->ega_colors[0], transparent);
+	s->iconbar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 200), s->ega_colors[0], transparent);
+	s->iconbar_port->flags |= GFXW_FLAG_NO_IMPLICIT_SWITCH;
 
 	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
-	s->visual->add(GFXWC(s->visual), GFXW(s->foo_port));
+	s->visual->add(GFXWC(s->visual), GFXW(s->iconbar_port));
 
 	s->port = s->picture_port;
 
@@ -2530,9 +2531,9 @@ kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 		   Reasoning: Sierra SCI does not clip ports while we do.
 		   Therefore a draw to the titlebar port (which is the
 		   official semantics) would cut off the lower part of the
-		   icons in an SCI1 icon bar. Instead we have a
-		   foo_port that does not exist in SSCI. */
-		if (port_nr == -1) port_nr = s->foo_port->ID;
+		   icons in an SCI1 icon bar. Instead we have an
+		   iconbar_port that does not exist in SSCI. */
+		if (port_nr == -1) port_nr = s->iconbar_port->ID;
 
 		new_port = gfxw_find_port(s->visual, port_nr);
 
@@ -2643,7 +2644,9 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (goner == s->port) /* Did we kill the active port? */
 		s->port = pred;
 
-	while (!s->visual->port_refs[id] && id >= 0)
+/* Find the last port that exists and that isn't marked no-switch */
+	while ((!s->visual->port_refs[id] && id >= 0) ||
+	       (s->visual->port_refs[id]->flags & GFXW_FLAG_NO_IMPLICIT_SWITCH))
 		id--;
 
 	sciprintf("Activating port %d after disposing window %d\n", id, goner_nr);

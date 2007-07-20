@@ -200,9 +200,9 @@ _reset_graphics_input(state_t *s)
 
 	s->visual = gfxw_new_visual(s->gfx_state, font_nr);
 
-	/* FIXME: Not how it's supposed to be; good enough for release */
 	s->wm_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
-	s->foo_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 200), s->ega_colors[0], transparent);
+	s->iconbar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 200), s->ega_colors[0], transparent);
+	s->iconbar_port->flags |= GFXW_FLAG_NO_IMPLICIT_SWITCH;
 
 	if (s->resmgr->sci_version >= SCI_VERSION_01_VGA)
 	{
@@ -224,6 +224,7 @@ _reset_graphics_input(state_t *s)
 	s->titlebar_port->color.priority = 11;
 	s->titlebar_port->bgcolor.mask |= GFX_MASK_PRIORITY;
 	s->titlebar_port->bgcolor.priority = 11;
+	s->titlebar_port->flags |= GFXW_FLAG_NO_IMPLICIT_SWITCH;
 
 	/* but this is correct */
 	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
@@ -233,7 +234,7 @@ _reset_graphics_input(state_t *s)
 	s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->titlebar_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
-	s->visual->add(GFXWC(s->visual), GFXW(s->foo_port));
+	s->visual->add(GFXWC(s->visual), GFXW(s->iconbar_port));
 	/* Add ports to visual */
 
 	s->port = s->picture_port; /* Currently using the picture port */

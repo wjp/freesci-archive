@@ -197,7 +197,6 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	if (flags & WINDOW_FLAG_TITLE)
 		frame = gfx_rect(area.x-1, area.y-10, area.xl + 2, area.yl + 11);
 	else
-	if (!(flags & WINDOW_FLAG_NO_DROP_SHADOW))
 		frame = gfx_rect(area.x-1, area.y-1, area.xl + 2, area.yl + 2);
 
 	/* Set visible window boundaries */
