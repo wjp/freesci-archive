@@ -863,6 +863,8 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI1_SOUND_MIDI_SEND :
 	{
+		sfx_send_midi(&s->sound, handle, 
+			      UKPV(2), UKPV(3), UKPV(4), UKPV(5));
 		break;
 	}
 	case _K_SCI1_SOUND_REVERB :

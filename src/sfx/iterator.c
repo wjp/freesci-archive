@@ -1840,7 +1840,7 @@ songit_new(unsigned char *data, unsigned int size, int type, songit_id_t id)
 	base_song_iterator_t *it;
 	int i;
 
-	if (!data || size < 33) {
+	if (!data || size < 22) {
 		fprintf(stderr, SIPFX "Attempt to instantiate song iterator for null"
 			  " song data\n");
 		return NULL;

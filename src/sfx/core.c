@@ -830,6 +830,78 @@ sfx_song_set_hold(sfx_state_t *self, song_handle_t handle, int hold)
 		player->iterator_message(msg);
 }
 
+/* Different from the one in iterator.c */
+static const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0,
+				    3, 3, 0, 3, 2, 0, 3, 0};
+
+static const song_handle_t midi_send_base = 0xffff0000;
+
+static song_handle_t midi_send_handle = 0xffff0000;
+
+int
+sfx_send_midi(sfx_state_t *self, song_handle_t handle, int channel,
+	      int command, int arg1, int arg2)
+{
+	int size = 22+MIDI_cmdlen[command >> 4];
+	byte *buffer = (byte *) malloc(size);
+	song_iterator_t *it;
+
+/* Set up a dummy song resource because the iterator expects it. */
+	buffer[0] = 0xf0;
+	buffer[1] = 0x00;
+	buffer[2] = 0x00;
+	buffer[3] = 0x00;
+	buffer[4] = 0x00;
+	buffer[5] = 0x00;
+	buffer[6] = 0x00;
+	buffer[7] = 0x00;
+	buffer[8] = 0x00;
+	buffer[9] = 0x00;
+	buffer[10] = 0x00;
+	buffer[11] = 17;
+	buffer[12] = 0x00;
+	buffer[13] = MIDI_cmdlen[command>>4]+5;
+	buffer[14] = 0;
+	buffer[15] = 0xff;
+	buffer[16] = 0xff;
+	buffer[17] = channel;
+	if (command == 0x90)
+		buffer[18] = 0xf1; /* High importance, one note */
+	else
+		buffer[18] = 0xf0; /* High importance, no notes */
+	
+	buffer[19] = 0; /* Delta time */
+	buffer[20] = channel | command; /* No channel remapping yet */
+
+	switch (command)
+	{
+	case 0x80 :
+	case 0x90 :
+	case 0xb0 :
+		buffer[21] = arg1&0xff;
+		buffer[22] = arg2&0xff;
+		break;
+	case 0xc0 :
+		buffer[21] = arg1&0xff;
+		break;
+	case 0xe0 :
+		if (arg1>32768) arg1 = 65536-arg1;
+		buffer[21] = (arg1>>8)&0xff;
+		buffer[22] = arg1&0xff;
+		break;
+	}
+
+	buffer[20+MIDI_cmdlen[command>>4]] = 0x01;
+	buffer[21+MIDI_cmdlen[command>>4]] = 0xfc;
+
+	it = songit_new(buffer, size, SCI_SONG_ITERATOR_TYPE_SCI1, 0xDEADBEEF);
+	sfx_add_song(self, it, 0, midi_send_handle);
+	sfx_song_set_status(self, midi_send_handle, SOUND_STATUS_PLAYING);
+
+	midi_send_handle ++;
+	midi_send_handle = (midi_send_handle % 65536)+midi_send_base;
+}
+
 int
 sfx_get_volume(sfx_state_t *self)
 {
