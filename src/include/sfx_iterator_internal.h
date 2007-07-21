@@ -197,12 +197,17 @@ new_fast_forward_iterator(song_iterator_t *it, int delta);
 #define TEE_LEFT_PCM (1<<4)
 #define TEE_RIGHT_PCM (1<<5)
 
+#define TEE_MORPH_NONE 0 /* Not waiting to self-morph */
+#define TEE_MORPH_READY 1 /* Ready to self-morph */
+
 typedef struct {
 	INHERITS_SONG_ITERATOR;
 
 	int status;
 
 	int may_destroy; /* May destroy song iterators */
+
+	int morph_deferred; /* One of TEE_MORPH_* above */
 
 	struct {
 		song_iterator_t *it;

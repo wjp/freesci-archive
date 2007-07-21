@@ -1454,13 +1454,24 @@ _tee_read_next_command(tee_song_iterator_t *it, unsigned char *buf,
 		/* None is active? */
 		return SI_FINISHED;
 
+	if (it->morph_deferred == TEE_MORPH_READY)
+		return SI_MORPH;
+
 	if ((it->status & (TEE_LEFT_ACTIVE | TEE_RIGHT_ACTIVE))
 	    != (TEE_LEFT_ACTIVE | TEE_RIGHT_ACTIVE)) {
 		/* Not all are is active? */
+		int which;
 #ifdef DEBUG_TEE_ITERATOR
 		fprintf(stderr, "\tRequesting transformation...\n");
 #endif
-		return SI_MORPH; /* Did enough */
+		if (it->status & TEE_LEFT_ACTIVE)
+			which = TEE_LEFT;
+		else if (it->status & TEE_RIGHT_ACTIVE)
+			which = TEE_RIGHT;
+		memcpy(buf, it->children[which].buf, MAX_BUF_SIZE);
+		*result = it->children[which].result;
+		it->morph_deferred = TEE_MORPH_READY;
+		return it->children[which].retval;
 	}
 
 	/* First, check for unreported PCMs */
@@ -1686,6 +1697,7 @@ songit_new_tee(song_iterator_t *left, song_iterator_t *right, int may_destroy)
 
 	it->ID = 0;
 
+	it->morph_deferred = TEE_MORPH_NONE;
 	it->status = TEE_LEFT_ACTIVE | TEE_RIGHT_ACTIVE;
 	it->may_destroy = may_destroy;
 
