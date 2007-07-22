@@ -1313,6 +1313,7 @@ new_cleanup_iterator(unsigned int channels)
 	song_iterator_t *it = (song_iterator_t*)sci_malloc(sizeof(song_iterator_t));
 	it->channel_mask = channels;
 	it->ID = 17;
+	it->flags = 0;
 	it->death_listeners_nr = 0;
 	it->delegate = NULL;
 
@@ -1974,6 +1975,7 @@ songit_clone(song_iterator_t *it, int delta)
 {
 	SIMSG_SEND(it, SIMSG_CLONE(delta));
 	it->death_listeners_nr = 0;
+	it->flags |= SONGIT_FLAG_CLONE;
 	return it;
 }
 

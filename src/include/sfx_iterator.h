@@ -104,6 +104,7 @@ typedef struct {
 	songit_id_t ID;										  \
 	guint16 channel_mask;									  \
         fade_params_t fade;                                                                       \
+	unsigned int flags;									  \
 	int priority;                                                                             \
 	int (*next) (song_iterator_t *self, unsigned char *buf, int *buf_size);			  \
 	sfx_pcm_feed_t * (*get_pcm_feed) (song_iterator_t *s);					  \
@@ -121,6 +122,7 @@ typedef struct _song_iterator {
 	songit_id_t ID;
 	guint16 channel_mask; /* Bitmask of all channels this iterator will use */
         fade_params_t fade;                                                                       
+	unsigned int flags;
 	int priority;
 
 	int (*next) (struct _song_iterator *self,
@@ -191,6 +193,11 @@ typedef struct _song_iterator {
 
 } song_iterator_t;
 
+
+/* Song iterator flags */
+#define SONGIT_FLAG_CLONE	(1 << 0)	/* This flag is set for clones, which are exclusively used in song players.
+						** Thus, this flag distinguishes song iterators in the main thread from those
+						** in the song-player thread. */
 
 void
 song_iterator_add_death_listener(song_iterator_t *it,
