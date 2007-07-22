@@ -538,6 +538,9 @@ _k_graph_rebuild_port_with_color(state_t *s, gfx_color_t newbgcolor)
 	port->widfree(GFXW(port));
 }
 
+static int activated_icon_bar;
+static int port_origin_x;
+static int port_origin_y;
 
 reg_t
 kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
@@ -576,8 +579,10 @@ kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_GRAPH_SAVE_BOX:
 
-		area.x += s->port->zone.x;
-		area.y += s->port->zone.y;
+		area.x += s->port->zone.x + port_origin_x;
+		area.y += s->port->zone.y + port_origin_y;
+		area.xl += -port_origin_x;
+		area.yl += -port_origin_y;
 
 		return(graph_save_box(s, area));
 		break;
@@ -2522,6 +2527,13 @@ kGetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
+	if (activated_icon_bar && argc == 6)
+	{
+		port_origin_x = port_origin_y = 0;
+		activated_icon_bar = 0;
+		return s->r_acc;
+	}
+
         switch (argc) {
 	case 1 : {
 		unsigned int port_nr = SKPV(0);
@@ -2547,12 +2559,23 @@ kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return s->r_acc;
 	}
 	case 6 : {
+		port_origin_y = SKPV(0);
+		port_origin_x = SKPV(1);
+
+		if (SKPV(0) == -10)
+		{
+			s->port->draw(GFXW(s->port), gfxw_point_zero); /* Update the port we're leaving */
+			s->port = s->iconbar_port;
+			activated_icon_bar = 1;
+			return s->r_acc;
+		}
+
 		s->gfx_state->options->pic_port_bounds = gfx_rect(UKPV(5), UKPV(4),
 								 UKPV(3), UKPV(2));
 		/* FIXME: Should really only invalidate all loaded pic resources here;
 		   this is overkill */
 		gfxr_free_all_resources(s->gfx_state->driver, s->gfx_state->resstate);
-		/* Not sure we need to use UKPV(1), UKPV(0) */
+
 		break;
 	}
 	default :
