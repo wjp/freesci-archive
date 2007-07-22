@@ -1,3 +1,8 @@
+2007-07-21  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/resmgr.c: Forward-ported bugfix for priority maps when
+	using unscaled pics
+
 2007-07-20  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kscripts.c (kLock): Fix interpretation of resource type.

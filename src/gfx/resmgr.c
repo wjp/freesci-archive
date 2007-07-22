@@ -420,6 +420,38 @@ get_pic_id(gfx_resource_t *res)
 		return res->unscaled_data.pic->visual_map->ID;
 }
 
+static void
+_gfxr_unscale_pixmap_index_data(gfx_pixmap_t *pxm, gfx_mode_t *mode)
+{
+	int xmod = mode->xfact; /* Step size horizontally */
+	int ymod = pxm->index_xl * mode->yfact; /* Vertical step size */
+	int maxpos = pxm->index_xl * pxm->index_yl;
+	int pos;
+	byte *dest = pxm->index_data;
+
+	if (!(pxm->flags & GFX_PIXMAP_FLAG_SCALED_INDEX))
+		return; /* It's not scaled! */
+
+	for (pos = 0; pos < maxpos; pos += ymod) {
+		int c;
+
+		for (c = 0; c < pxm->index_xl; c += xmod)
+			*dest++ = pxm->index_data[pos + c]; /* No overwrite since
+							    ** line and offset
+							    ** readers move much
+							    ** faster
+							    ** (proof by in-
+							    ** duction, trivial
+							    ** and left to the
+							    ** reader)  */
+	}
+
+	pxm->index_xl /= mode->xfact;
+	pxm->index_yl /= mode->yfact;
+	pxm->flags &= ~GFX_PIXMAP_FLAG_SCALED_INDEX;
+}
+
+
 gfxr_pic_t *
 gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int flags,
 		int old_default_palette, int default_palette, int scaled)
@@ -454,6 +486,9 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 		}
 	}
 
+	if (state->options->pic0_unscaled) /* Unscale priority map, if we scaled it earlier */
+		_gfxr_unscale_pixmap_index_data(res->scaled_data.pic->priority_map, state->driver->mode);
+
 	if (scaled) {
 		res->lock_sequence_nr = state->options->buffer_pics_nr;
 
@@ -464,6 +499,8 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 
 	res->mode = MODE_INVALID; /* Invalidate */
 
+	if (state->options->pic0_unscaled) /* Scale priority map again, if needed */
+		res->scaled_data.pic->priority_map = gfx_pixmap_scale_index_data(res->scaled_data.pic->priority_map, state->driver->mode);
 	{
 		int old_ID = get_pic_id(res);
 		set_pic_id(res, GFXR_RES_ID(restype, new_nr)); /* To ensure that our graphical translation optoins work properly */
