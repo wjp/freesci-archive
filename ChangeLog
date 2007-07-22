@@ -1,3 +1,9 @@
+2007-07-22  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/ksound.c (kDoSound_SCI0): Disabled the old ``stop
+	this song'' command, which is really a ``play next possible song''
+	and unneccessary in FreeSCI.
+
 2007-07-21  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/resmgr.c: Forward-ported bugfix for priority maps when

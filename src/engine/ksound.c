@@ -40,7 +40,7 @@
 #define _K_SCI0_SOUND_UPDATE_VOL_PRI 9
 #define _K_SCI0_SOUND_FADE_HANDLE 10
 #define _K_SCI0_SOUND_GET_POLYPHONY 11
-#define _K_SCI0_SOUND_STOP_ALL 12
+#define _K_SCI0_SOUND_PLAY_NEXT 12
 
 #define _K_SCI01_SOUND_MASTER_VOLME 0 /* Set/Get */
 #define _K_SCI01_SOUND_MUTE_SOUND 1
@@ -144,6 +144,7 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 		case SI_LOOP:
 			SCIkdebug(SCIkSOUND, "[process-sound] Song "PREG" looped (to %d)\n",
 				  PRINT_REG(obj), cue);
+			/*			PUT_SEL32V(obj, loops, GET_SEL32V(obj, loop) - 1);*/
 			PUT_SEL32V(obj, signal, -1);
 			break;
 
@@ -201,7 +202,7 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 		case 9: sciprintf("[Signal: Obj changed]"); break;
 		case 10: sciprintf("[Fade(?)]"); break;
 		case 11: sciprintf("[ChkDriver]"); break;
-		case 12: sciprintf("[StopAll]"); break;
+		case 12: sciprintf("[PlayNextSong (formerly StopAll)]"); break;
 		default: sciprintf("[unknown]"); break;
 		}
 
@@ -319,15 +320,15 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 		s->r_acc = make_reg(0, sfx_get_player_polyphony());
 		break;
 
-	case _K_SCI0_SOUND_STOP_ALL:
-		sfx_all_stop(&s->sound);
+	case _K_SCI0_SOUND_PLAY_NEXT:
+	  /* sfx_all_stop(&s->sound);*/
 		break;
 
 	default:
 		SCIkwarn(SCIkWARNING, "Unhandled DoSound command: %x\n", command);
 
 	}
-	process_sound_events(s); /* Take care of incoming events */
+	//	process_sound_events(s); /* Take care of incoming events */
 
 	return s->r_acc;
 }
