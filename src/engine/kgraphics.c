@@ -275,13 +275,17 @@ graph_restore_box(state_t *s, reg_t handle)
 #define KERNEL_COLORS_NR s->gfx_state->resstate->static_palette_entries
 #endif
 
+static gfx_pixmap_color_t white = {GFX_COLOR_INDEX_UNMAPPED, 255, 255, 255};
+
 gfx_pixmap_color_t *
 get_pic_color(state_t *s, int color)
 {
 	if (s->resmgr->sci_version < SCI_VERSION_01_VGA) 
 		return &(s->ega_colors[color].visual);
 
-	if (color < KERNEL_COLORS_NR)
+	if (color == 255)
+		return &white;
+	else if (color < KERNEL_COLORS_NR)
 		return &(KERNEL_COLOR_PALETTE[color]); else
 		{
 			SCIkwarn(SCIkERROR, "Color index %d out of bounds for pic %d (%d max)",
