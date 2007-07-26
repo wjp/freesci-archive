@@ -2463,12 +2463,13 @@ void
 gfxr_draw_pic11(gfxr_pic_t *pic, int flags, int default_palette, int size,
 	       byte *resource, gfxr_pic0_params_t *style, int resid)
 {
+	int has_bitmap = getUInt16(resource + 4);
 	int vector_data_ptr = getUInt16(resource + 16);
 	int palette_data_ptr = getUInt16(resource + 28);
 	int bitmap_data_ptr = getUInt16(resource + 32);
-
+	int sci_titlebar_size = style->pic_port_bounds.y;
 	gfx_mode_t *mode;
-	gfx_pixmap_t *view;
+	gfx_pixmap_t *view = NULL;
 	/* Set up mode structure for resizing the view */
 	mode = gfx_new_mode(
 			    pic->visual_map->index_xl/320,
@@ -2477,7 +2478,9 @@ gfxr_draw_pic11(gfxr_pic_t *pic, int flags, int default_palette, int size,
 			    0, 0, 0, 0, 0, 0, 0, 0, 16, 0);
 
 	pic->visual_map->colors = gfxr_read_pal11(-1, &(pic->visual_map->colors_nr), resource + palette_data_ptr, 1284);
-	view = gfxr_draw_cel11(-1, 0, 0, 0, resource, resource + bitmap_data_ptr, 100000, NULL);
+
+	if (has_bitmap)
+		view = gfxr_draw_cel11(-1, 0, 0, 0, resource, resource + bitmap_data_ptr, size - bitmap_data_ptr, NULL);
 
 	if (view)
 	{
@@ -2491,7 +2494,12 @@ gfxr_draw_pic11(gfxr_pic_t *pic, int flags, int default_palette, int size,
 					    0, 0, 
 					    view->index_xl, view->index_yl);
 		
-		_gfx_crossblit_simple(pic->visual_map->index_data,
+		/* Hack to prevent overflowing the visual map buffer.
+		   Yes, this does happen otherwise. */
+		if (view->index_yl + sci_titlebar_size > 200)
+			sci_titlebar_size = 0;
+
+		_gfx_crossblit_simple(pic->visual_map->index_data+sci_titlebar_size*view->index_xl,
 				      view->index_data,
 				      pic->visual_map->index_xl, view->index_xl,
 				      view->index_xl,

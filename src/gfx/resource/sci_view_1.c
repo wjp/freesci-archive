@@ -360,8 +360,8 @@ gfxr_draw_view1(int id, byte *resource, int size)
 #define V2_BYTES_PER_LOOP 12
 #define V2_BYTES_PER_CEL 13
 
-#define V2_COPY_OF_LOOP 0
 #define V2_IS_MIRROR 1
+#define V2_COPY_OF_LOOP 2
 #define V2_CELS_NUM 4
 #define V2_LOOP_OFFSET 14
 
@@ -466,10 +466,21 @@ gfxr_draw_view11(int id, byte *resource, int size)
 		static char *truth[2] = {"not ",""};
 		int loop_offset = get_uint_16(seeker + V2_LOOP_OFFSET);
 		int cels = seeker[V2_CELS_NUM];
-		int mirrored = 0;
+		int mirrored = seeker[V2_IS_MIRROR];
+		int copy_entry = seeker[V2_COPY_OF_LOOP];
 
-		gfxr_draw_loop11(id, i, mirrored, resource, resource + loop_offset, size, cels, view->loops + i, 
-				 view, bytes_per_cel);
+		printf("%d\n", mirrored);
+		if (!mirrored)
+			gfxr_draw_loop11(id, i, 0, resource, resource + loop_offset, size, cels, view->loops + i, 
+					 view, bytes_per_cel); else
+					 {
+						 byte *temp = resource + header_size + copy_entry * bytes_per_loop;
+						 loop_offset = get_uint_16(temp + V2_LOOP_OFFSET);
+						 cels = temp[V2_CELS_NUM];
+						 gfxr_draw_loop11(id, i, 1, resource, resource + loop_offset, size, cels, 
+								  view->loops + i, view, bytes_per_cel);
+					 }
+						 
 		seeker += bytes_per_loop;
 	}
 
