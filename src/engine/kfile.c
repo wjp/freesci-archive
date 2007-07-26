@@ -1026,7 +1026,7 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int handle = UKPV(3);
 
 	fgets_wrapper(s, dest, size, handle);
-	break;
+	return argv[1];
     }
     case K_FILEIO_WRITE_STRING :
     {
