@@ -86,8 +86,8 @@ gfxr_read_font(int id, byte *resource, int size)
 	font->chars_nr = chars_nr = get_int_16(resource + FONT_MAXCHAR_OFFSET);
 	font->line_height = max_height = get_int_16(resource + FONT_HEIGHT_OFFSET);
 
-	if (chars_nr < 0 || chars_nr > 255 || max_height < 0) {
-		if (chars_nr < 0 || chars_nr > 255)
+	if (chars_nr < 0 || chars_nr > 256 || max_height < 0) {
+		if (chars_nr < 0 || chars_nr > 256)
 			GFXERROR("Font %04x: Invalid number of characters: %d\n", id,
 				 chars_nr);
 		if (max_height < 0)
