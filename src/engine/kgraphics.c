@@ -1471,7 +1471,7 @@ kDrawControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	_k_draw_control(s, obj, 0);
 	FULL_REDRAW();
-	return s->r_acc;
+	return NULL_REG;
 }
 
 
