@@ -325,7 +325,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*(?)*/	DEFUN("Memory", kMemory, "i.*"),
 /*(?)*/	DEFUN("Sort", kSort, "ooo"),
 /*(?)*/	DEFUN("AvoidPath", kAvoidPath, "ii.*"),
-/*(?)*/	DEFUN("Lock", kLock, "iii"),
+/*(?)*/	DEFUN("Lock", kLock, "iii*"),
 /*(?)*/	DEFUN("Palette", kPalette, "i*"),
 /*(?)*/	DEFUN("IsItSkip", kIsItSkip, "iiiii"),
 

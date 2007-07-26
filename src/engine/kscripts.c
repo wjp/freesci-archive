@@ -149,7 +149,7 @@ kLock(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int restype = UKPV(0)&0x7f;
 	int resnr = UKPV(1);
-	int state = UKPV(2);
+	int state = argc > 2 ? UKPV(2) : 1;
 
 	resource_t *which;
 
