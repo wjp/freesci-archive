@@ -163,6 +163,7 @@ rt_init(resource_mgr_t *resmgr, int expected_latency)
 {
 	resource_t *res = NULL;
 	void *seq_dev = NULL;
+	GTimeVal foo = {0,0};
 
 	seq = sfx_find_sequencer(NULL);
 
@@ -196,6 +197,8 @@ rt_init(resource_mgr_t *resmgr, int expected_latency)
 		play_writeahead = seq->min_write_ahead_ms;
 
 	play_writeahead *= 1000; /* microseconds */
+
+	seq->reset_timer(foo);
 
 	return SFX_OK;
 }
