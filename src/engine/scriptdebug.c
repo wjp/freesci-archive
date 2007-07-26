@@ -595,6 +595,12 @@ show_node(state_t *s, reg_t addr)
 int objinfo(state_t *s, reg_t pos);
 
 static int
+c_songlib_print(state_t *s)
+{
+	song_lib_dump(s->sound.songlib, __LINE__);
+}
+
+static int
 c_vr(state_t *s)
 {
 	reg_t reg = cmd_params[0].reg;
@@ -3664,6 +3670,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "Steps until the global variable with the\n"
 					 "specified index is modified.\n\nSEE ALSO\n\n"
 					 "  s.1, snk.1, so.1, bpx.1");
+			con_hook_command(c_songlib_print, "songlib_print", "",
+					 "");
 #ifdef HAVE_SYSV_IPC
 			con_hook_command(c_codebug, "codebug", "!s",
 					 "Starts codebugging mode\n\nUSAGE\n\n"

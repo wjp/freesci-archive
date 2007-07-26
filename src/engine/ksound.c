@@ -224,7 +224,7 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 							build_iterator(s, number,
 								       SCI_SONG_ITERATOR_TYPE_SCI0,
 								       handle),
-							0, handle));
+							0, handle, number));
 			PUT_SEL32V(obj, state, _K_SOUND_STATUS_INITIALIZED);
 		}
 		break;
@@ -441,7 +441,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 							build_iterator(s, number,
 								       SCI_SONG_ITERATOR_TYPE_SCI1,
 								       handle),
-							0, handle));	
+							0, handle, number));	
 			PUT_SEL32(obj, nodePtr, obj);
 			PUT_SEL32(obj, handle, obj);
 		}
@@ -709,6 +709,33 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int looping = GET_SEL32V(obj, loop);
 		int vol = GET_SEL32V(obj, vol);
 		int pri = GET_SEL32V(obj, pri);
+		song_t *song = song_lib_find(s->sound.songlib, handle);
+
+		if (GET_SEL32V(obj, nodePtr) && (song && number != song->resource_num))
+		{
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
+			sfx_remove_song(&s->sound, handle);
+			PUT_SEL32(obj, nodePtr, NULL_REG);
+		}
+
+		if (!GET_SEL32V(obj, nodePtr) && obj.segment)
+		{
+			if (!scir_test_resource(s->resmgr, sci_sound, number))
+			{
+				sciprintf("Could not open song number %d\n", number);
+				return NULL_REG;
+			}
+
+			sciprintf("Initializing song number %d\n", number);
+			SCRIPT_ASSERT_ZERO(sfx_add_song(&s->sound,
+							 build_iterator(s, number,
+									SCI_SONG_ITERATOR_TYPE_SCI1,
+									handle),
+							 0, handle, number));
+			PUT_SEL32(obj, nodePtr, obj);
+			PUT_SEL32(obj, handle, obj);
+		}
 
 		if (obj.segment) {
 			sfx_song_set_status(&s->sound,
@@ -740,7 +767,7 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 							 build_iterator(s, number,
 									SCI_SONG_ITERATOR_TYPE_SCI1,
 									handle),
-							 0, handle));
+							 0, handle, number));
 			PUT_SEL32(obj, nodePtr, obj);
 			PUT_SEL32(obj, handle, obj);
 		}

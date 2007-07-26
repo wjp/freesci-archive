@@ -674,7 +674,7 @@ sfx_poll_specific(sfx_state_t *self, song_handle_t handle, int *cue)
 /*****************/
 
 int
-sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t handle)
+sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t handle, int number)
 {
 	song_t *song = song_lib_find(self->songlib, handle);
 
@@ -711,6 +711,7 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 	}
 
 	song = song_new(handle, it, priority);
+	song->resource_num = number;
 	sci_get_current_time(&song->wakeup_time); /* No need to delay */
 	song_lib_add(self->songlib, song);
 	self->song = NULL; /* As above */
@@ -895,7 +896,7 @@ sfx_send_midi(sfx_state_t *self, song_handle_t handle, int channel,
 	buffer[21+MIDI_cmdlen[command>>4]] = 0xfc;
 
 	it = songit_new(buffer, size, SCI_SONG_ITERATOR_TYPE_SCI1, 0xDEADBEEF);
-	sfx_add_song(self, it, 0, midi_send_handle);
+	sfx_add_song(self, it, 0, midi_send_handle, -1);
 	sfx_song_set_status(self, midi_send_handle, SOUND_STATUS_PLAYING);
 
 	midi_send_handle ++;

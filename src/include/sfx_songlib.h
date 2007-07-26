@@ -45,6 +45,7 @@ typedef unsigned long song_handle_t;
 
 typedef struct _song {
 	song_handle_t handle;
+	int resource_num; /* Resource number */
 	int priority; /* Song priority (more important if priority is higher) */
 	int status;   /* See above */
 
