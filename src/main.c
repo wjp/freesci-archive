@@ -1640,7 +1640,7 @@ add_games(const char *dir_name, games_list_head_t *head, int *games, gfx_driver_
 
 		close(fd);
 
-		list = sci_malloc(sizeof(games_list_t));
+		list = (games_list_t*)sci_malloc(sizeof(games_list_t));
 		getcwd(list->game.dir, PATH_MAX);
 		game_name = version_guess_from_hashcode(&result, &res_version, &code);
 
@@ -1687,7 +1687,7 @@ find_games(const char* dir, game_t **games, gfx_driver_t *driver, gfx_bitmap_fon
 	if (!games_nr)
 		return 0;
 
-	*games = sci_malloc(sizeof(game_t) * games_nr);
+	*games = (game_t*)sci_malloc(sizeof(game_t) * games_nr);
 
 	i = 0;
 	while ((list = LIST_FIRST(&head))) {
@@ -1791,7 +1791,7 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 	else
 		games_nr = 0;
 
-	games = sci_realloc(games, sizeof(game_t) * (games_nr + conf_entries));
+	games = (game_t*)sci_realloc(games, sizeof(game_t) * (games_nr + conf_entries));
 
 	for (i = 0; i < conf_entries; i++) {
 		if (confs[i].name) {

@@ -594,6 +594,9 @@ show_node(state_t *s, reg_t addr)
 
 int objinfo(state_t *s, reg_t pos);
 
+void
+song_lib_dump(songlib_t songlib, int line);
+
 static int
 c_songlib_print(state_t *s)
 {

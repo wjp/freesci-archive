@@ -616,6 +616,10 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return s->r_acc;
 }
 
+int
+sfx_send_midi(sfx_state_t *self, song_handle_t handle, int channel,
+	      int command, int arg1, int arg2);
+
 reg_t
 kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 {

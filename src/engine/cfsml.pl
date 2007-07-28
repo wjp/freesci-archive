@@ -184,7 +184,7 @@ _cfsml_get_current_refpointer()
 
 static void _cfsml_register_pointer(void *ptr)
 {
-    struct _cfsml_pointer_refstruct *newref = sci_malloc(sizeof (struct _cfsml_pointer_refstruct));
+    struct _cfsml_pointer_refstruct *newref = (struct _cfsml_pointer_refstruct*)sci_malloc(sizeof (struct _cfsml_pointer_refstruct));
     #ifdef CFSML_DEBUG_MALLOC
     SCI_MEMTEST;
     fprintf(stderr,"Registering ptrref %p [%p]\n", ptr, newref);
@@ -513,7 +513,7 @@ sub create_writer
 	} else { # Normal record entry
 
 	  print "    $types{$n->{'type'}}{'writer'}";
-	  print "(fh, &(save_struc->$n->{'name'}));\n";
+	  print "(fh, ($types{$n->{'type'}}{'ctype'}*) &(save_struc->$n->{'name'}));\n";
 
 	}
 
@@ -747,7 +747,7 @@ sub create_reader
 	}
 	else { # It's a simple variable or a struct
 	    write_line_pp(__LINE__, 0);
-	    print "         if ($reader(fh, &(save_struc->$name), value, line, hiteof)) {\n";
+	    print "         if ($reader(fh, ($types{$type}{'ctype'}*) &(save_struc->$name), value, line, hiteof)) {\n";
 	    print "            _cfsml_error(\"Token expected by $reader() for $name at line %d\\n\", *line);\n";
 	    print "            return CFSML_FAILURE;\n";
 	    print "         }\n";

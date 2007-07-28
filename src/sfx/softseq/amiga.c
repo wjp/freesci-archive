@@ -452,7 +452,7 @@ static instrument_t *read_instrument(int file, int *id)
 		instrument->size = seg_size[0];
 		instrument->loop_size = seg_size[1];
 
-		instrument->loop = sci_malloc(instrument->loop_size + 1);
+		instrument->loop = (sbyte*)sci_malloc(instrument->loop_size + 1);
 		memcpy(instrument->loop, instrument->samples + loop_offset, instrument->loop_size);
 
 		instrument->samples[instrument->size] = instrument->loop[0];
@@ -599,7 +599,7 @@ ami_poll(sfx_softseq_t *self, byte *dest, int len)
 {
 	int i, j;
 	gint16 *buf = (gint16 *) dest;
-	gint16 *buffers = malloc(len * 2 * CHANNELS_NR);
+	gint16 *buffers = (gint16*)malloc(len * 2 * CHANNELS_NR);
 
 	memset(buffers, 0, len * 2 * CHANNELS_NR);
 	memset(dest, 0, len * 4);

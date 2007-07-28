@@ -769,14 +769,14 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *game_id = kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *game_id = (char*)kernel_dereference_bulk_pointer(s, argv[0], 0);
 	char *savegame_dir;
 	int savedir_nr = UKPV(1);
 	int savedir_id; /* Savegame ID, derived from savedir_nr and the savegame ID list */
-	char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
-	char *game_description = kernel_dereference_bulk_pointer(s, argv[2], 0);
+	char *game_id_file_name = (char*)sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+	char *game_description = (char*)kernel_dereference_bulk_pointer(s, argv[2], 0);
 	char *workdir = _chdir_savedir(s);
-	char *version = argc > 3 ? strdup(kernel_dereference_bulk_pointer(s, argv[3], 0)) : NULL;
+	char *version = argc > 3 ? strdup((char*)kernel_dereference_bulk_pointer(s, argv[3], 0)) : NULL;
 	TEST_DIR_OR_QUIT(workdir);
 
 	s->game_version = version;
@@ -849,13 +849,13 @@ kSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kRestoreGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *game_id = kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *game_id = (char*)kernel_dereference_bulk_pointer(s, argv[0], 0);
 	int savedir_nr = UKPV(1);
 	char *workdir = _chdir_savedir(s);
 	TEST_DIR_OR_QUIT(workdir);
 
 	if (_savegame_indices_nr < 0) {
-		char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+		char *game_id_file_name = (char*)sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 
 		strcpy(game_id_file_name, game_id);
 		strcat(game_id_file_name, FREESCI_ID_SUFFIX);

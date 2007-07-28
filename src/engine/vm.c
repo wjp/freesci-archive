@@ -197,7 +197,7 @@ script_error(state_t *s, const char *file, int line, const char *reason)
 }
 #define CORE_ERROR(area, msg) script_error(s, "[" area "] " __FILE__, __LINE__, msg)
 
-inline reg_t
+reg_t
 get_class_address(state_t *s, int classnr, int lock, reg_t caller)
 {
 	class_t *class = s->classtable + classnr;
@@ -2060,6 +2060,13 @@ script_instantiate_sci0(state_t *s, int script_nr)
 
 	return reg.segment;		/* instantiation successful */
 }
+
+void
+sm_script_relocate_exports_sci11(seg_manager_t *self, int seg);
+void
+sm_script_initialise_objects_sci11(seg_manager_t *self, state_t *s, int seg);
+void
+sm_heap_relocate(seg_manager_t *self, state_t *s, reg_t block);
 
 int
 script_instantiate_sci11(state_t *s, int script_nr)

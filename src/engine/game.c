@@ -365,14 +365,14 @@ create_class_table_sci11(state_t *s)
 		if (heap) {
 			int global_vars = getUInt16(heap->data + 2);
 
-			seeker_ptr = heap->data + 4 + global_vars*2;
+			seeker_ptr = (char*)heap->data + 4 + global_vars*2;
 			seeker_offset = 4 + global_vars*2;
 
-			while (getUInt16(seeker_ptr) == SCRIPT_OBJECT_MAGIC_NUMBER)
+			while (getUInt16((byte*)seeker_ptr) == SCRIPT_OBJECT_MAGIC_NUMBER)
 			{
-				if (getUInt16(seeker_ptr + 14) & SCRIPT_INFO_CLASS)
+				if (getUInt16((byte*)seeker_ptr + 14) & SCRIPT_INFO_CLASS)
 				{
-					classnr = getUInt16(seeker_ptr + 10);
+					classnr = getUInt16((byte*)seeker_ptr + 10);
 					if (classnr >= s->classtable_size) {
 
 						if (classnr >= SCRIPT_MAX_CLASSTABLE_SIZE) {
@@ -393,8 +393,8 @@ create_class_table_sci11(state_t *s)
 					s->classtable[classnr].script = scriptnr;
 				}
 
-				seeker_ptr += getUInt16(seeker_ptr + 2) * 2;
-				seeker_offset += getUInt16(seeker_ptr + 2) * 2;
+				seeker_ptr += getUInt16((byte*)seeker_ptr + 2) * 2;
+				seeker_offset += getUInt16((byte*)seeker_ptr + 2) * 2;
 			}
 		}
 	}

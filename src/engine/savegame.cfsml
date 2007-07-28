@@ -183,7 +183,7 @@ TYPE mem_obj_t "mem_obj_t" USING write_mem_obj_t read_mem_obj_t;
 TYPE mem_obj_ptr "mem_obj_t *" USING write_mem_obj_tp read_mem_obj_tp;
 TYPE reg_t "reg_t" USING write_reg_t read_reg_t;
 TYPE size_t "size_t" LIKE int;
-TYPE int_hash_map_tp "int_hash_map_node_t *" USING write_int_hash_map_tp read_int_hash_map_tp;
+TYPE int_hash_map_tp "int_hash_map_t *" USING write_int_hash_map_tp read_int_hash_map_tp;
 TYPE int_hash_map_node_tp "int_hash_map_node_t *" USING write_int_hash_map_node_tp read_int_hash_map_node_tp;
 
 RECORD int_hash_map_t "int_hash_map_t" {
@@ -411,7 +411,7 @@ write_int_hash_map_tp(FILE *fh, int_hash_map_t **foo)
 int
 read_int_hash_map_tp(FILE *fh, int_hash_map_t **foo, char *lastval, int *line, int *hiteof)
 {
-	*foo = malloc(sizeof(int_hash_map_t));
+	*foo = (int_hash_map_t*)malloc(sizeof(int_hash_map_t));
 	%CFSMLREAD int_hash_map_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
 	(*foo)->holes = NULL;
 	return 0;
@@ -442,7 +442,7 @@ read_int_hash_map_node_tp(FILE *fh, int_hash_map_node_t **foo, char *lastval, in
 	if (lastval[0] == '\\') {
 		*foo = NULL; /* No hash map node */
 	} else {
-		*foo = malloc(sizeof(int_hash_map_node_t));
+		*foo = (int_hash_map_node_t*)malloc(sizeof(int_hash_map_node_t));
 		if (lastval[0] != '[')
 		{
 			sciprintf("Expected opening bracket in hash_map_node_t on line %d\n", *line);
@@ -924,6 +924,9 @@ reconstruct_clones(state_t *s, seg_manager_t *self)
 		}
 }
 
+int
+_reset_graphics_input(state_t *s);
+
 state_t *
 gamestate_restore(state_t *s, char *dirname)
 {
@@ -1020,7 +1023,7 @@ gamestate_restore(state_t *s, char *dirname)
 
 	/* File IO state: */
 	retval->file_handles_nr = 2;
-	retval->file_handles = sci_calloc(2, sizeof(FILE *));
+	retval->file_handles = (FILE **)sci_calloc(2, sizeof(FILE *));
 
 	/* static parser information: */
 	retval->parser_rules = s->parser_rules;
@@ -1057,7 +1060,7 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->kernel_opt_flags = 0;
 
 	retval->successor = NULL;
-	retval->pic_priority_table = gfxop_get_pic_metainfo(retval->gfx_state);
+	retval->pic_priority_table = (int*)gfxop_get_pic_metainfo(retval->gfx_state);
 	retval->game_name = sci_strdup(obj_get_name(retval, retval->game_obj));
 
 	chdir ("..");

@@ -649,7 +649,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->res_version = SCI_VERSION_AUTODETECT;
 
 	if (homedir) {
-		conf->menu_dir = sci_malloc(strlen(homedir) + strlen(FREESCI_GAMEDIR)
+		conf->menu_dir = (char*)sci_malloc(strlen(homedir) + strlen(FREESCI_GAMEDIR)
 			+ strlen(FREESCI_GAMES_DIR) + 2 * strlen(G_DIR_SEPARATOR_S) + 1);
 		strcpy(conf->menu_dir, homedir);
 		strcat(conf->menu_dir, G_DIR_SEPARATOR_S);
