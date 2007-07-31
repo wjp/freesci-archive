@@ -3350,17 +3350,21 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 	     int bp)
 {
 	int have_windowed = s->gfx_state->driver->capabilities & GFX_CAPABILITY_WINDOWED;
+	static int last_step;
 	/* Do we support a separate console? */
 
 #ifndef WANT_CONSOLE
 	if (!have_windowed) {
 		script_debug_flag = sci_debug_flags = 0;
 		fprintf(stderr, "On-screen console disabled and driver claims not to support windowed mode.\n");
-		if (script_error_flag) {
+		if (last_step == script_step_counter)
+			fprintf(stderr, "This error seems to be unrecoverable.\n");
+		if (script_error_flag || script_step_counter == last_step) {
 			fprintf(stderr, "Aborting...\n");
 			exit(1);
 		} else
 			fprintf(stderr, "Continuing...\n");
+		last_step = script_step_counter;
 		return;
 	}
 #endif

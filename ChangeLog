@@ -1,3 +1,9 @@
+2007-07-31  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/scriptdebug.c (script_debug): Prevent endless loop
+	when a script error occurs and we have no way of accessing the
+	debugger (e.g. SDL without on-screen console). 
+
 2007-07-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/ksound.c (kDoSound_SCI0): Disabled the old ``stop
