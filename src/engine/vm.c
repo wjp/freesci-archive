@@ -2223,6 +2223,7 @@ _game_run(state_t *s, int restoring)
 			script_free_engine(s);
 			script_init_engine(s, s->version);
 			game_init(s);
+			sfx_reset_player();
 			_init_stack_base_with_selector(s, s->selector_map.play);
 			/* Call the play selector */
 

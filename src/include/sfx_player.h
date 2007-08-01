@@ -131,6 +131,13 @@ sfx_get_player_polyphony(void);
 ** Returns   : (int) Number of voices the active player can emit
 */
 
+void
+sfx_reset_player(void)
+/* Tells the player to stop its internal iterator
+** Parameters: None.
+** Returns: Nothing.
+ */
+
 song_iterator_t *
 sfx_iterator_combine(song_iterator_t *it1, song_iterator_t *it2);
 /* Combines two song iterators into one

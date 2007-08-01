@@ -52,6 +52,13 @@ sfx_pcm_available()
 }
 
 int
+sfx_reset_player(void)
+{
+	if (player)
+		player->stop();
+}
+
+int
 sfx_get_player_polyphony(void)
 {
 	if (player)
