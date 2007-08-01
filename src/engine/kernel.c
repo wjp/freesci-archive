@@ -493,7 +493,7 @@ k_Unknown(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kFlushResources(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	/* Nothing to do */
+	run_gc(s);
 	SCIkdebug(SCIkROOM, "Entering room number %d\n", UKPV(0));
 	return s->r_acc;
 }
