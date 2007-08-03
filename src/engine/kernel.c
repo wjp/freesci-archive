@@ -326,7 +326,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*(?)*/	DEFUN("AvoidPath", kAvoidPath, "ii.*"),
 /*(?)*/	DEFUN("Lock", kLock, "iii"),
 /*(?)*/	DEFUN("Palette", kPalette, "i*"),
-/*(?)*/	DEFUN("IsItSkip", kPalette, "iiiii"),
+/*(?)*/	DEFUN("IsItSkip", kIsItSkip, "iiiii"),
 
   /* Non-experimental Functions without a fixed ID */
 
