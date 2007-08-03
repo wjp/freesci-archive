@@ -1,3 +1,7 @@
+2007-08-03  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kernel.c (kRestartGame): Preserve savedir across game restarts.
+
 2007-08-01  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kernel.c (kFlushResources): Let the GC run when

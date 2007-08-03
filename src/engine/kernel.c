@@ -420,6 +420,9 @@ char *old_save_dir;
 reg_t
 kRestartGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
+	char *deref_save_dir = kernel_dereference_bulk_pointer(s, s->save_dir_copy, 1);
+
+	old_save_dir = strdup(deref_save_dir);
 	s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
 	s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE; /* This appears to help */
 	s->execution_stack_pos = s->execution_stack_base;
@@ -434,6 +437,15 @@ kRestartGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kGameIsRestarting(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
+	char *deref_save_dir = kernel_dereference_bulk_pointer(s, s->save_dir_copy, 1);
+
+	if (old_save_dir&&deref_save_dir)
+	{
+		strcpy(deref_save_dir, old_save_dir);
+		free(old_save_dir);
+		old_save_dir = NULL;
+	}
+
 	s->r_acc = make_reg(0, (s->restarting_flags & SCI_GAME_WAS_RESTARTED));
 
 	if (argc) {/* Only happens during replay */
