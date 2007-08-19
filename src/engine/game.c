@@ -126,6 +126,26 @@ _init_graphics_input(state_t *s)
 	return 0;
 }
 
+static void
+_sci1_alloc_system_colors(state_t *s)
+{
+	gfx_color_t white;
+	gfx_color_t black;
+
+	white.visual.global_index = 255;
+	white.visual.r = white.visual.g = white.visual.b = 255;
+	white.alpha = 0;
+	white.priority = white.control = 0;
+	white.mask = GFX_MASK_VISUAL;
+	gfxop_set_system_color(s->gfx_state, &white);
+
+	black.visual.global_index = 0;
+	black.visual.r = black.visual.g = black.visual.b = 0;
+	black.alpha = 0;
+	black.priority = black.control = 0;
+	black.mask = GFX_MASK_VISUAL;
+	gfxop_set_system_color(s->gfx_state, &black);
+}
 
 int
 _reset_graphics_input(state_t *s)
@@ -160,6 +180,7 @@ _reset_graphics_input(state_t *s)
 			    s->gfx_state->resstate->static_palette = 
 				    gfxr_read_pal11(999, &s->gfx_state->resstate->static_palette_entries, 
 						    resource->data, resource->size); 
+		    _sci1_alloc_system_colors(s);
 		    scir_unlock_resource(s->resmgr, resource, sci_palette, 999);
 		  } else
 		    sciprintf("Couldn't find the default palette!\n");
