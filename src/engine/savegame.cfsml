@@ -842,6 +842,12 @@ void reconstruct_scripts(state_t *s, seg_manager_t *self)
 
 						base_obj = obj_get(s, scr->objects[j].variables[SCRIPT_SPECIES_SELECTOR]);
 
+						if (!base_obj)
+						{
+							sciprintf("Object without a base class: Script %d, index %d (reg address "PREG"\n",
+								  scr->nr, j, PRINT_REG(scr->objects[j].variables[SCRIPT_SPECIES_SELECTOR]));
+							continue;
+						}
 						scr->objects[j].variable_names_nr = base_obj->variables_nr;
 						scr->objects[j].base_obj = base_obj->base_obj;
 
@@ -852,6 +858,14 @@ void reconstruct_scripts(state_t *s, seg_manager_t *self)
 			}
 			}
 		}
+}
+
+void
+reconstruct_clones(state_t *s, seg_manager_t *self)
+{
+	int i;
+	mem_obj_t *mobj;
+
 	for (i = 0; i < self->heap_size; i++)
 		if (self->heap[i])
 		{
@@ -889,6 +903,13 @@ void reconstruct_scripts(state_t *s, seg_manager_t *self)
 						continue;
 					}
 					base_obj = obj_get(s, seeker->entry.variables[SCRIPT_SPECIES_SELECTOR]);
+					if (!base_obj)
+					{
+						sciprintf("Clone entry without a base class: %d\n", j);
+						seeker->entry.base = seeker->entry.base_obj = NULL;
+						seeker->entry.base_vars = seeker->entry.base_method = NULL;
+						continue;
+					}
 					seeker->entry.base = base_obj->base;
 					seeker->entry.base_obj = base_obj->base_obj;
 					seeker->entry.base_vars = base_obj->base_vars;
@@ -984,6 +1005,7 @@ gamestate_restore(state_t *s, char *dirname)
 	_reset_graphics_input(retval);
 	reconstruct_stack(retval);
 	reconstruct_scripts(retval, &retval->seg_manager);
+	reconstruct_clones(retval, &retval->seg_manager);
 	retval->game_obj = s->game_obj;
 	retval->script_000 = &retval->seg_manager.heap[script_get_segment(s, 0, SCRIPT_GET_DONT_LOAD)]->data.script;
 	retval->gc_countdown = GC_DELAY - 1;
