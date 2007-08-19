@@ -470,7 +470,7 @@ gfxr_draw_view11(int id, byte *resource, int size)
 		int copy_entry = seeker[V2_COPY_OF_LOOP];
 
 		printf("%d\n", mirrored);
-		if (!mirrored)
+		if (copy_entry == 255)
 			gfxr_draw_loop11(id, i, 0, resource, resource + loop_offset, size, cels, view->loops + i, 
 					 view, bytes_per_cel); else
 					 {
