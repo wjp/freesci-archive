@@ -132,7 +132,7 @@ sfx_get_player_polyphony(void);
 */
 
 void
-sfx_reset_player(void)
+sfx_reset_player(void);
 /* Tells the player to stop its internal iterator
 ** Parameters: None.
 ** Returns: Nothing.

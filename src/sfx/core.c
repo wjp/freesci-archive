@@ -51,7 +51,7 @@ sfx_pcm_available()
 	return (pcm_device != NULL);
 }
 
-int
+void
 sfx_reset_player(void)
 {
 	if (player)
@@ -349,9 +349,9 @@ _update_multi_song(sfx_state_t *self)
 			_sfx_set_song_status(self, oldseeker,
 					     SOUND_STATUS_SUSPENDED);
 			if (self->debug & SFX_DEBUG_SONGS) {
-				sciprintf("[SFX] Stopping song %lx\n", oldseeker->it->ID);
+				sciprintf("[SFX] Stopping song %lx\n", oldseeker->handle);
 			}
-			if (player)
+			if (player && oldseeker->it)
 				player->iterator_message
 					(songit_make_message(oldseeker->it->ID, SIMSG_STOP));
 		}

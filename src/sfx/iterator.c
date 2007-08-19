@@ -220,7 +220,7 @@ fprintf(stderr, "eot; loops = %d, notesplayed=%d\n", self->loops, channel->notes
 			channel->notes_played = 0;
 			channel->state = SI_STATE_COMMAND;
 			channel->total_timepos = channel->loop_timepos;
-fprintf(stderr, "Looping.\n");
+			fprintf(stderr, "Looping song iterator %08x.\n", self->ID);
 			return SI_LOOP;
 		} else {
 			channel->state = SI_STATE_FINISHED;
