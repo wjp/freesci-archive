@@ -44,7 +44,7 @@ gfxr_interpreter_options_hash(gfx_resource_type_t type, int version,
 
 	case GFX_RESOURCE_TYPE_PIC:
 		if (version >= SCI_VERSION_01_VGA)
-			return 0;
+			return options->pic_port_bounds.y;
 		else
 			return (options->pic0_unscaled)? 0x10000 :
 				(options->pic0_dither_mode << 12)
