@@ -568,14 +568,27 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel, int palette)
 			*loop = view->loops_nr - 1;
 
 	loop_data = view->loops + (*loop);
+	if (loop_data == NULL)
+	{
+		GFXWARN("Trying to load invalid loop %d of view %d\n", *loop, nr);
+		return NULL;
+	}
 
 	if (*cel < 0)
+	{
+		sciprintf("Resetting cel! %d\n", *cel);
 		*cel = 0;
+	}
 	else
 		if (*cel >= loop_data->cels_nr)
 			*cel = loop_data->cels_nr - 1;
 
 	cel_data = loop_data->cels[*cel];
+	if (loop_data == NULL)
+	{
+		GFXWARN("Trying to load invalid view/loop/cel %d/%d/%d\n", nr, *loop, *cel);
+		return NULL;
+	}
 
 	if (!cel_data->data) {
 		gfx_get_res_config(state->options, cel_data);
