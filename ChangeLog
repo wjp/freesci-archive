@@ -1,5 +1,9 @@
 2007-08-22  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/gfx/drivers/xlib_driver.c: Backported RenderBadPicture fix.
+
+2007-08-22  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* reconf: Removed (autoreconf can be used instead)
 
 	* config.guess, config.sub, depcomp, install-sh, libtool, ltconfig,
