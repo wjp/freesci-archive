@@ -71,11 +71,30 @@ struct {
 	{"midiout", parse_midiout_driver}
 };
 
+typedef struct _file_stack {
+	char *name;
+	YY_BUFFER_STATE handle;
+	struct _file_stack *next;
+} file_stack_t;
+
+static file_stack_t *file_stack = NULL;
+static char *yy_filename = NULL;
+static YY_BUFFER_STATE yy_fsci_active_buffer;
+
+static int
+push_file(char *name);
+
+static int
+pop_file(void);
+
+FILE *initial_file;
 
 static void
 set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_name,
 		       char *option, char *value);
 
+static char *
+purge_comments(char *comments);
 
 static int
 parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses a string with a name value pair */
@@ -297,6 +316,26 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 
 %%
 
+(view|pic|cursor)[^_A-Za-z0-9"("]*"("([^";"]|"#"[^\n]*\n)*";" {
+      gfx_update_conf(&(conf[cur_section].gfx_options), purge_comments(yytext));
+}
+
+"%include"[^<\n]*<[^>\n]*> {
+	char *filename = strchr(yytext, '<');
+	char *end = strchr(filename, '>');
+
+	*end-- = 0;
+	while (isblank(*end))
+		*end-- = 0;
+
+	filename++;
+	while (*filename && isblank(*filename))
+		filename++;
+
+	push_file(filename);
+	YY_NEW_FILE;
+}
+
 "["[_[:alnum:]]+"]"\r* {
 	char *cleanup;
 
@@ -464,11 +503,84 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 %%
 
 int
-yywrap()
+yywrap(void)
 {
-        return 1; /* no further input */
+	return pop_file(); /* no further input */
 }
 
+static int
+push_file(char *name)
+{
+	file_stack_t *newfs;
+	file_stack_t *s;
+	FILE *newfile;
+
+	if (yy_filename && !strcmp(name, yy_filename)) {
+			fprintf(stderr, "[conf] Warning: Attempted immediate circular inclusion of config file '%s'\n",
+				name);
+		return 1;
+	}
+
+	s = file_stack;
+	while (s) {
+		if (!strcmp(name, s->name)) {
+			fprintf(stderr, "[conf] Warning: Attempted circular inclusion of config file '%s'\n",
+				name);
+			return 1;
+		}
+		s = s->next;
+	}
+
+	if (!(newfile = fopen(name, "r"))) {
+		fprintf(stderr, "[conf] Warning: Could not open configuration file '%s'\n", name);
+		return 1;
+	}
+
+	if (yyin) {
+		newfs = malloc(sizeof(struct _file_stack));
+		newfs->handle = yy_fsci_active_buffer;
+		newfs->name = yy_filename;
+
+		newfs->next = file_stack;
+		file_stack = newfs;
+	}
+
+	yy_filename = strdup(name);
+	yy_fsci_active_buffer = yy_create_buffer(newfile, YY_BUF_SIZE);
+	yy_switch_to_buffer(yy_fsci_active_buffer);
+
+	return 0;
+}
+
+static int
+pop_file(void)
+{
+	if (file_stack) {
+		void *goner = file_stack;
+		yy_delete_buffer(yy_fsci_active_buffer);
+		fclose(yyin);
+		yy_fsci_active_buffer = file_stack->handle;
+		yy_switch_to_buffer(yy_fsci_active_buffer);
+
+		free(yy_filename);
+		yy_filename = file_stack->name;
+		file_stack = file_stack->next;
+
+		free(goner);
+		return 0;
+	} else {
+		if (yy_filename) {
+			free(yy_filename);
+			yy_filename = NULL;
+		}
+		if (yyin) {
+			yy_delete_buffer(yy_fsci_active_buffer);
+			fclose(yyin);
+			yyin = NULL;
+		}
+		return 1; /* Done */
+	}
+}
 
 char *
 crop_value(char *yytext)
@@ -535,6 +647,7 @@ config_init(config_entry_t **_conf, char *conffile)
 			/* So we've got a home directory */
 			if (chdir(homedir)) {
 				fprintf(stderr,"Warning: Could not enter home directory!\n");
+				*_conf = conf; /* Set the result variable */
 				return 1;
 			}
 
@@ -542,6 +655,7 @@ config_init(config_entry_t **_conf, char *conffile)
 				if (scimkdir(FREESCI_GAMEDIR, 0700)) {
 
 					fprintf(stderr,"Warning: Could not enter/create ~/"FREESCI_GAMEDIR"\n");
+					*_conf = conf; /* Set the result variable */
 					return 1;
 				}
 
@@ -562,7 +676,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	} /* !conffile */
 
 
-	if (!(yyin = fopen(conf_path, "r"))) {
+	if ((push_file(conf_path))) {
 		printf("No configuration file found; using defaults.\n");
 		*_conf = conf; /* Set the result variable */
 		sci_free(conf_path);
@@ -573,7 +687,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	printf("Parsing config file...\n");
 	yylex(); /* Parse the file */
 
-	fclose(yyin); /* Ignore error conditions- might be lex implementation dependant */
+	while (!pop_file());  /* Ignore error conditions- might be lex implementation dependant */
 	sci_free(conf_path);
 	sci_free(exported_conf_path);
 
@@ -948,6 +1062,10 @@ configure_default(config_entry_t *conf)
 	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
+	for (i = 0; i < GFX_RESOURCE_TYPES_NR; i++) {
+		conf->gfx_options.res_conf.assign[i] = NULL;
+		conf->gfx_options.res_conf.mod[i] = NULL;
+	}
 
 	conf->gfx_driver_name = NULL;
 	conf->pcmout_driver = pcmout_find_driver(NULL);
@@ -994,4 +1112,26 @@ configure_platform(config_entry_t *conf)
 	conf->pcmout_buffer_size = 192;
 	conf->midi_device = midi_find_device("adlibemu");
 #endif
+}
+
+static char *
+purge_comments(char *comments)
+{
+	char *c = comments;
+	int overwrite = 0;
+	char ch;
+
+	/* Tear out all comments */
+	while ((ch = *c)) {
+		if (ch == '#')
+			overwrite = 1;
+		if (ch == '\n')
+			overwrite = 0;
+		if (overwrite)
+			*c = ' ';
+
+		c++;
+	}
+
+	return comments;
 }

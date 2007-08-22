@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /Gf /Gy /I "..\include" /D "NDEBUG" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FR /YX /FD /D VERSION=\"0.3.4-dev\" /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /Gf /Gy /I "..\..\include" /D "NDEBUG" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FR /YX /FD /D VERSION=\"0.3.4-dev\" /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x419 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib release/fsci.lib /nologo /subsystem:console /debug /machine:I386 /out:"..\..\bin\sciunpack.exe"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib release/fsci.lib /nologo /subsystem:console /debug /machine:I386 /out:"..\..\..\bin\sciunpack.exe"
 
 !ELSEIF  "$(CFG)" == "sciunpack - Win32 Debug"
 
@@ -66,7 +66,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /GX /ZI /Od /I "..\include" /D "_DEBUG" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FD /GZ /D "VERSION=\" 0.3.3-dev\"" /c
+# ADD CPP /nologo /MDd /W3 /GX /ZI /Od /I "..\..\include" /D "_DEBUG" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FD /GZ /D "VERSION=\" 0.3.3-dev\"" /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -92,23 +92,23 @@ SOURCE=.\getopt.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\tools\listwords.c
+SOURCE=..\..\tools\listwords.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\sci_memory.c
+SOURCE=..\..\scicore\sci_memory.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\tools\sciunpack.c
+SOURCE=..\..\tools\sciunpack.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\tools\scriptdump.c
+SOURCE=..\..\tools\scriptdump.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\tools\vocabdump.c
+SOURCE=..\..\tools\vocabdump.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -116,55 +116,55 @@ SOURCE=..\tools\vocabdump.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\include\config.h
+SOURCE=..\..\include\config.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\console.h
+SOURCE=..\..\include\console.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\engine.h
+SOURCE=..\..\include\engine.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics.h
+SOURCE=..\..\include\graphics.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\heap.h
+SOURCE=..\..\include\heap.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\menubar.h
+SOURCE=..\..\include\menubar.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\resource.h
+SOURCE=..\..\include\resource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\script.h
+SOURCE=..\..\include\script.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sound.h
+SOURCE=..\..\include\sound.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\uinput.h
+SOURCE=..\..\include\uinput.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\versions.h
+SOURCE=..\..\include\versions.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\vm.h
+SOURCE=..\..\include\vm.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\vocabulary.h
+SOURCE=..\..\include\vocabulary.h
 # End Source File
 # End Group
 # End Target

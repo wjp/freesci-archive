@@ -1020,50 +1020,6 @@ xlib_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t 
 
   /*** Mouse pointer operations ***/
 
-byte *
-xlib_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
-{
-	int linewidth = (pointer->xl + 7) >> 3;
-	int lines = pointer->yl;
-	int xc, yc;
-	int xfact = drv->mode->xfact;
-	byte *data = sci_calloc(linewidth, lines);
-	byte *linebase = data, *pos;
-	byte *src = pointer->index_data;
-
-
-	for (yc = 0; yc < pointer->index_yl; yc++) {
-		int scalectr;
-		int bitc = 0;
-		pos = linebase;
-
-
-		for (xc = 0; xc < pointer->index_xl; xc++) {
-			int draw = mode?
-				(*src == 0) : (*src < 255);
-
-			for (scalectr = 0; scalectr < xfact; scalectr++) {
-				if (draw)
-					*pos |= (1 << bitc);
-
-				bitc++;
-				if (bitc == 8) {
-					bitc = 0;
-					pos++;
-				}
-			}
-
-			src++;
-		}
-		for (scalectr = 1; scalectr < drv->mode->yfact; scalectr++)
-			memcpy(linebase + linewidth * scalectr, linebase, linewidth);
-
-		linebase += linewidth * drv->mode->yfact;
-	}
-
-	return data;
-}
-
 static int
 xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 {
@@ -1094,8 +1050,8 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 			cols[i].blue |= (cols[i].blue << 8);
 		}
 
-		S->pointer_data[0] = visual_data = xlib_create_cursor_data(drv, pointer, 1);
-		S->pointer_data[1] = mask_data = xlib_create_cursor_data(drv, pointer, 0);
+		visual_data = gfx_create_mono_cursor_mask(pointer, drv->mode->xfact, drv->mode->yfact, 1);
+		mask_data = gfx_create_mono_cursor_mask(pointer, drv->mode->xfact, drv->mode->yfact, 0);
 		S->pointer_data[0] = NULL;
 		S->pointer_data[1] = NULL;
 		visual = XCreateBitmapFromData(S->display, S->window, (char *) visual_data, real_xl, pointer->yl);

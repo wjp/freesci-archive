@@ -25,16 +25,17 @@
 
 ***************************************************************************/
 
-/* Attempt to guess if recent version of Platform SDK */
-#ifdef _WIN32
-#	pragma message("******************** IMPORTANT MESSAGE ********************")
-#	pragma message("You must have installed a recent Platform and DirectX SDK")
-#	pragma message("for this build to be successful. Download MS SDKs from:")
-#	pragma message("www.microsoft.com/msdownload/platformsdk/sdkupdate")
-#	pragma message("***********************************************************")
-#	include <windows.h>
-#	if (WINVER < 0x500)
-#		error *** BUILD FAILED: Need more recent SDKs or fix your SDK paths in Tools Options ***
+#ifdef _MSC_VER
+#	if _MSC_VER < 1300
+#		pragma message("******************** IMPORTANT MESSAGE ********************")
+#		pragma message("You must have installed a recent Platform and DirectX SDK")
+#		pragma message("for this build to be successful. Download MS SDKs from:")
+#		pragma message("www.microsoft.com/msdownload/platformsdk/sdkupdate")
+#		pragma message("***********************************************************")
+#		include <windows.h>
+#		if (WINVER < 0x500)
+#			error *** BUILD FAILED: Need more recent SDKs or fix your SDK paths in Tools Options ***
+#		endif
 #	endif
 #endif
 
@@ -166,7 +167,7 @@ _reset_graphics_input(state_t *s)
 
 	s->priority_first = 42; /* Priority zone 0 ends here */
 
-	if (s->version <= SCI_VERSION_FTU_PRIORITY_14_ZONES)
+	if (s->version < SCI_VERSION_FTU_PRIORITY_14_ZONES)
 		s->priority_last = 200; else
 		s->priority_last = 190;
 

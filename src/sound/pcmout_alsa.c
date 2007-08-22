@@ -33,122 +33,172 @@ static snd_pcm_t *pcm_handle;
 
 static snd_output_t *output;
 
-static char *alsa_device = "hw:0,0"; 
+static char *default_device = "hw:0,0";
+
+/*static char *alsa_device = "default"; */
 
 static void *sound_thread (void *arg)
 {
-  int count, err;
+	int count, err;
 
-  while(run) {
-    count = mix_sound(buffer_size);
-    //    printf("XXXX Fill buffer, %04x, count: %d \n", *buffer, count);
-    if ((err = snd_pcm_writei(pcm_handle, buffer, count)) < 0) {
-      snd_pcm_prepare(pcm_handle);
-      printf("ALSA: Write error: %s\n", snd_strerror(err));
-    }
-  }
-  pthread_exit(0);
+	while(run) {
+		count = mix_sound(buffer_size);
+		/*    printf("XXXX Fill buffer, %04x, count: %d \n", *buffer, count);*/
+		if ((err = snd_pcm_writei(pcm_handle, buffer, count)) < 0) {
+			snd_pcm_prepare(pcm_handle);
+			printf("ALSA: Write error: %s\n", snd_strerror(err));
+		}
+	}
+	pthread_exit(0);
 }
 
-static int pcmout_alsa_open(gint16 *b, guint16 size, guint16 rate, guint8 stereo) 
+
+static int
+alsa_stop(void)
 {
-  snd_pcm_hw_params_t *hwparams;
-  int channels = (stereo) ? 2 : 1;
-  int periods = 8;
-  int err;
-  snd_pcm_stream_t stream = SND_PCM_STREAM_PLAYBACK;
-  snd_pcm_access_t pcm_access = SND_PCM_ACCESS_RW_INTERLEAVED;
+	int err;
+
+	if ((err = snd_pcm_drop(pcm_handle)) < 0) {
+		printf("ALSA:  Can't stop PCM device\n");
+		return -1;
+	}
+	if ((err = snd_pcm_close(pcm_handle)) < 0) {
+		printf("ALSA:  Can't close PCM device\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+alsa_try_init(char *alsa_device, int size,
+	      int rate, int channels,
+	      snd_pcm_hw_params_t *hwparams)
+{
+	int periods = 8;
+	snd_pcm_stream_t stream = SND_PCM_STREAM_PLAYBACK;
+	snd_pcm_access_t pcm_access = SND_PCM_ACCESS_RW_INTERLEAVED;
 #ifdef WORDS_BIGENDIAN
-  snd_pcm_format_t alsa_format = SND_PCM_FORMAT_S16_BE;
+	snd_pcm_format_t alsa_format = SND_PCM_FORMAT_S16_BE;
 #else
-  snd_pcm_format_t alsa_format = SND_PCM_FORMAT_S16_LE;
+	snd_pcm_format_t alsa_format = SND_PCM_FORMAT_S16_LE;
 #endif
+	int err;
 
-  buffer = b;
-  buffer_size = size;
+	output = NULL;
+	pcm_handle = NULL;
 
-  snd_pcm_hw_params_alloca(&hwparams);
+	if ((err = snd_output_stdio_attach(&output, stdout, 0)) < 0) {
+		printf("Output failed:  %s\n", snd_strerror(err));
+		return -1;
+	}
 
-  if ((err = snd_output_stdio_attach(&output, stdout, 0)) < 0) {
-    printf("Output failed:  %s\n", snd_strerror(err));
-    return -1;
-  }
+	if ((err = snd_pcm_open(&pcm_handle, alsa_device, stream, 0)) < 0) {
+		printf("ALSA: Playback open error: %s\n", snd_strerror(err));
+		return -1;
+	}
 
-  if ((err = snd_pcm_open(&pcm_handle, alsa_device, stream, 0)) < 0) {
-    printf("ALSA: Playback open error: %s\n", snd_strerror(err));
-    return -1;
-  }
+	if ((err = snd_pcm_hw_params_any(pcm_handle, hwparams)) < 0) {
+		printf("ALSA: Can not configure this PCM device.\n");
+		return -1;
+	}
 
-  if ((err = snd_pcm_hw_params_any(pcm_handle, hwparams)) < 0) {
-    printf("ALSA: Can not configure this PCM device.\n");
-    return -1;
-  }
+	if ((err = snd_pcm_hw_params_set_access(pcm_handle, hwparams, pcm_access)) < 0) {
+		printf("ALSA: Error setting access.\n");
+		return -1;
+	}
 
-  if ((err = snd_pcm_hw_params_set_access(pcm_handle, hwparams, pcm_access)) < 0) {
-    printf("ALSA: Error setting access.\n");    return -1;
-  }
+	if ((err = snd_pcm_hw_params_set_format(pcm_handle, hwparams, alsa_format)) < 0) {
+		printf("ALSA: Error setting format.\n");
+		return -1;
+	}
 
-  if ((err = snd_pcm_hw_params_set_format(pcm_handle, hwparams, alsa_format)) < 0) {
-    printf("ALSA: Error setting format.\n");
-    return -1;
-  }
+	if ((err = snd_pcm_hw_params_set_rate(pcm_handle, hwparams, rate, 0)) < 0) {
+		printf("ALSA: Error setting rate.\n");
+		return -1;
+	}
 
-  if ((err = snd_pcm_hw_params_set_rate(pcm_handle, hwparams, rate, 0)) < 0) {
-    printf("ALSA: Error setting rate.\n");
-    return -1;
-  }
+	if ((err = snd_pcm_hw_params_set_channels(pcm_handle, hwparams, channels)) < 0) {
+		printf("ALSA: Error setting channels.\n");
+		return -1;
+	}
 
-  if ((err = snd_pcm_hw_params_set_channels(pcm_handle, hwparams, channels)) < 0) {
-    printf("ALSA: Error setting channels.\n");
-    return -1;
-  }
+	if ((err = snd_pcm_hw_params_set_periods(pcm_handle, hwparams, periods, 0)) < 0) {
+		printf("ALSA: Error setting periods.\n");
+		return -1;
+	}
 
-  if ((err = snd_pcm_hw_params_set_periods(pcm_handle, hwparams, periods, 0)) < 0) {
-    printf("ALSA: Error setting periods.\n");
-    return -1;
-  }
+	/* buffer size, in frames */
+	if ((err = snd_pcm_hw_params_set_buffer_size(pcm_handle, hwparams, size*periods)>>2) < 0) {
+		printf("ALSA: Error setting buffersize.\n");
+		return -1;
+	}
 
-  /* buffer size, in frames */
-  if ((err = snd_pcm_hw_params_set_buffer_size(pcm_handle, hwparams, size*periods)>>2) < 0) {
-    printf("ALSA: Error setting buffersize.\n");
-    return -1;
-  }
+	if ((err = snd_pcm_hw_params(pcm_handle, hwparams)) < 0) {
+		printf("ALSA: Error setting HW params.\n");
+		return -1;
+	}
+}
 
-  if ((err = snd_pcm_hw_params(pcm_handle, hwparams)) < 0) {
-    printf("ALSA: Error setting HW params.\n");
-    return -1;
-  }
+
+static int
+pcmout_alsa_open(gint16 *b, guint16 size, guint16 rate, guint8 stereo) 
+{
+	int channels = (stereo) ? 2 : 1;
+	snd_pcm_hw_params_t *hwparams;
+	char *alt_device = "default"; /* Not present everywhere */
+	snd_pcm_hw_params_alloca(&hwparams);
+
+	buffer = b;
+	buffer_size = size;
+
+	printf("ALSA: Opening '%s'\n", default_device);
+	if (alsa_try_init(default_device, size, rate, channels, hwparams)) {
+		printf("ALSA: Trying alternative '%s'\n", alt_device);
+		if (alsa_try_init(alt_device, size, rate, channels, hwparams)) {
+			printf("ALSA: Alternative also failed\n");
+			return -1;
+		}
+	} else printf("Initialisation done\n");
 
 #if 0
-  snd_pcm_dump(pcm_handle, output);
+	snd_pcm_dump(pcm_handle, output);
 #endif
 
-  pthread_create (&thread, NULL, sound_thread, NULL);
+	pthread_create (&thread, NULL, sound_thread, NULL);
 
-  return 0;
+	return 0;
 }
 
-static int pcmout_alsa_close() {
-  int err;
+static int
+pcmout_alsa_close()
+{
+	int err;
   
-  run = 0;
+	run = 0;
 
-  pthread_join(thread, NULL);
+	pthread_join(thread, NULL);
 
-  if ((err = snd_pcm_drop(pcm_handle)) < 0) {
-    printf("ALSA:  Can't stop PCM device\n");
-  }
-  if ((err = snd_pcm_close(pcm_handle)) < 0) {
-    printf("ALSA:  Can't close PCM device\n");
-  }
+	alsa_stop();
 
-  return 0;
+	return 0;
+}
+
+static int
+pcmout_alsa_set_parameter(pcmout_driver_t *_, char *attr, char *value)
+{
+	if (strcmp(attr, "device") == 0)
+		default_device = value;
+	else
+		return -1;
+
+	return 0;
 }
 
 pcmout_driver_t pcmout_driver_alsa = {
   "alsa",
-  "v0.01",
-  NULL,
+  "v0.2",
+  &pcmout_alsa_set_parameter,
   &pcmout_alsa_open,
   &pcmout_alsa_close
 };

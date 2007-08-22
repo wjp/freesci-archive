@@ -1,0 +1,58 @@
+.exports
+	&MAINOBJ
+
+.locals
+FD:	$0000
+OUT:	$0000
+
+
+.code
+
+;--------------------------------------------------
+; PRINTFN: Prints accumulator to FD
+;--------------------------------------------------
+PRINTFN:
+	link $0000
+  	push
+	pushi 48
+	add
+  	sal 1
+	pushi 2
+	lsl 0
+	pushi &OUT
+  	callk $2a $4
+	ret
+
+;--------------------------------------------------
+; TESTSTRING: Try string in acc
+;--------------------------------------------------
+TESTSAID:
+	pushi 2
+	push
+	pushi &EVENTOBJ
+	callk $24 $4	; Parse
+	pushi 1
+	pushi &SPEC0
+	callk $25 $2	; Said
+
+	pushi 0
+	call &PRINTFN 0
+	ret
+  	
+
+;--------------------------------------------------
+; MAINFN: Main entry point
+;--------------------------------------------------
+MAINFN:	SelfID
+
+	;; File initialisation
+	pushi 2
+	pushi &FILENAME
+	pushi 2		; Create anew
+	callk $29 $4	; FOpen
+	sal 0		; fd
+
+;;	pushi 0
+;;	callk $57 $0	; Debug
+	;; Begin main functionality
+

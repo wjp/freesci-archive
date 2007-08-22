@@ -168,3 +168,5 @@
 /* Define as `__inline' if that's what the C compiler calls it, or to nothing
    if it is not supported. */
 /* #undef inline */
+
+#define VERSION "0.3.5"

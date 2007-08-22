@@ -153,7 +153,7 @@ kLock(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		break;
 	case 0 :
 		which = scir_find_resource(s->resmgr, restype, resnr, 0);
-		scir_unlock_resource(s->resmgr, which, resnr, restype);
+		scir_unlock_resource(s->resmgr, which, restype, resnr);
 		break;
 	}
 }

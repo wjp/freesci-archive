@@ -29,8 +29,9 @@ Global
 		{B021BAB6-4674-43EF-95C9-F98CFA3B8DAD}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionItems) = postSolution
-		..\..\ChangeLog = ..\..\ChangeLog
-		..\..\README.Win32 = ..\..\README.Win32
+		..\..\..\ChangeLog = ..\..\..\ChangeLog
+		..\..\..\README = ..\..\..\README
+		..\..\..\README.Win32 = ..\..\..\README.Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

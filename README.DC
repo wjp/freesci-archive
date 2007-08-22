@@ -1,6 +1,6 @@
 FreeSCI - Dreamcast
 
-Last update: 2003-07-30
+Last update: 2006-02-12
 
 
 Index
@@ -11,18 +11,18 @@ Index
 2.1  Loading over a serial link
 2.2  Loading over a network link
 2.3  Loading from a CD-R
-3    Game CD's
+3    Game CDs
 3.1  Making a game CD
 4    Loading a SCI game
-5    Playing a SCI game
-6    Saving (PLEASE READ!)
-7    Known issues (PLEASE READ!)
-7.1  FreeSCI config file
-7.2  Sound
-7.3  Mad Catz Keyboard Adapter
-8    Acknowledgments
-9    Trademark notices
-10   Get involved
+5    Configuration options
+6    Controls
+7    Saving (PLEASE READ!)
+8    Known issues (PLEASE READ!)
+8.1  FreeSCI config file
+8.2  Mad Catz Keyboard Adapter
+9    Acknowledgments
+10   Trademark notices
+11   Get involved
 
 
 1    Building FreeSCI
@@ -35,9 +35,11 @@ You will need the following:
 - GCC version 3.0.4 and binutils for both SH4 and ARM. It is highly
   recommended that you use version 3.0.4 of GCC, earlier and later versions
   are known to cause problems.
-- KallistiOS (KOS) version 1.2.1 (or latest CVS if that version hasn't been
-  released yet). Available from http://cadcdev.sourceforge.net. (Please refer
-  to the KOS documentation for instructions on how to set it up.)
+- KallistiOS (KOS) version 1.2.x. Available from
+  http://cadcdev.sourceforge.net. (Please refer to the KOS documentation for
+  instructions on how to set it up.) In order to prevent VMU corruption,
+  this patch should be applied to KOS:
+  http://sourceforge.net/mailarchive/message.php?msg_id=11422941.
 
 1) Execute your KOS environ script.
 2) Change to the src/dc directory of the FreeSCI distribution.
@@ -112,7 +114,7 @@ You will need:
 7) Use the IP Creator to create an `IP.BIN' file: `makeip ip.txt IP.BIN'.
 8) Dump this `IP.BIN' bootstrap into the ISO image: `( cat IP.BIN ; dd
    if=freesci.iso bs=2048 skip=16 ) > data.raw'.
-9) Record the data track to the CD: `cdrecord dev=0,0,0 -xa1 data.raw'
+9) Record the data track to the CD: `cdrecord dev=0,0,0 -xa data.raw'
 
 You should now have a selfbooting FreeSCI CD, just put it in your Dreamcast
 and turn it on.
@@ -131,54 +133,100 @@ and turn it on.
      -o freesci.iso newdir'.
 
 
-3    Game CD's
---------------
+3    Game CDs
+-------------
 
 FreeSCI supports almost any Mode 1 data CD containing SCI games, there are no
 requirements on directory layout. As a result of this, you can run games
-directly from Sierra collection CD's.
+directly from Sierra collection CDs.
 
 3.1  Making a game CD
 ---------------------
 
 You might want to create your own compilation of SCI games and burn it on a
 CD. Each game should have it's own subdirectory. Other than that, you can
-use any directory layout you like. The game CD's should be Mode 1 data CD's.
+use any directory layout you like. The game CDs should be Mode 1 data CDs.
 
 
-4    Loading a SCI game
------------------------
+4    Loading an SCI game
+------------------------
 
 The FreeSCI game menu interface can only be used with a controller. After you
-have loaded FreeSCI, it will ask you to insert a game CD. Insert a game CD into
-your Dreamcast and press `A'. The CD will be scanned for SCI games, which may
-take a while depending on the number of files on the CD. You will be
-presented with a list of directories containing a SCI game. Please note that
-this list could also contain games which are currently not compatible with
-FreeSCI. Please refer to http://freesci.linuxgames.com for more info on
-which games should work and which won't.
+have loaded FreeSCI, it will wait for a CD to be inserted. After you insert
+a CD it will be scanned for SCI games, which may take a while depending on the
+number of files on the CD. You will be presented with a list of directories
+containing an SCI game. Please note that this list could also contain games
+which are currently not compatible with FreeSCI. Please refer to
+http://freesci.org for more info on which games should work and which won't.
 
 Use the directional pad to move the selection bar to the game you want to
 play. The R and L shoulder buttons can be used to move immediately to the
 next or previous page respectively, which might be useful if there are many
 games on the CD. Push the `A' button to start the currently selected game.
 
-If you accidently inserted the wrong game CD you can insert another one and
-press `Y'. This will cause the CD to be scanned and the list of games on
-that CD to be displayed.
+
+5   Configuration options
+-------------------------
+
+If you press B in the game menu interface you will be presented with a list
+of config options. Please check the README file for more information. Press A
+to change the options and press B to go back to the game list.
+
+Video Mode - Sets the `render_mode' option of the Dreamcast graphics driver.
+Letterboxed = vram
+Full-Screen = pvr
+
+Dithering - Sets the `pic0_dither_mode' option.
+256 Color Dithering = dither256
+Interpolate = flat
+16 Color Dithering = dither
+
+Antialiasing - Sets the `pic_antialiasing' option.
+Off - none
+On - simple
+
+Music Mode - Sets the `midi_device', `pcmout_driver' and `midiout_driver'
+options.
+Adlib Emulation = adlibemu, dc, null
+External General MIDI (*) = mt32gm, null, dcraw
+External MT-32 (*) = mt32, null, dcraw
+Off = null, null, null
+* Requires a Dreamcast MIDI Interface Cable (HKT-9200) and a midi device.
+
+PCM Mode - Sets the `pcmout_stereo' option.
+Mono = 0
+Stereo = 1
+
+PCM Quality - Sets the `pcmout_rate' and `pcmout_buffer_size' options.
+16000Hz = 16000, 192
+22050Hz = 22050, 256
+11025Hz = 11025, 128
 
 
-5    Playing a SCI game
------------------------
+6    Controls
+-------------
 
-FreeSCI supports the keyboard and mouse interfaces for SCI games. It's
-currently not possible to use the controller as a joystick. FreeSCI makes no
-requirements on a keyboard or mouse being present. However, all currently
-supported SCI games require a keyboard, while the mouse is optional. For
-further gameplay instructions, refer to your Sierra game manual.
+FreeSCI supports keyboard and mouse. A keyboard is highly recommended.
+However it's also possible to use only the controller:
+
+Directional pad - Cursor keys
+B button - Enter
+X button - Space
+Y button - Escape
+L trigger - Left mouse button
+R trigger - Right mouse button
+Start - Toggle virtual keyboard
+
+While the virtual keyboard is active, the controls are as follows:
+
+Directional pad - Move cursor
+A - Press currently selected key
+
+The key marked `Fn' will switch the keyboard to a second layout with
+additional keys.
 
 
-6    Saving
+7    Saving
 -----------
 
 You can save your game to memorycard. There's a few things to keep in mind
@@ -205,35 +253,28 @@ though:
    fit on the memorycard.
 
 
-7    Known issues
+8    Known issues
 -----------------
 
 This section lists a number of known issues related specifically to the
 Dreamcast port.
 
-7.1  FreeSCI config file
+8.1  FreeSCI config file
 ------------------------
 
 The FreeSCI config file that is used on other platforms is currently not
-supported on the Dreamcast. It's therefor not possible to change any FreeSCI
-options at this time. This should be remedied in future versions.
+supported on Dreamcast. The only options that can be changed are those
+presented by the startup menu (see section 5).
 
-7.2  Sound
-----------
-
-The sound is generated by an adlib emulator that uses up quite a lot of CPU
-power. To reduce sound choppiness the bit-rate had to be reduced. Some
-instruments and/or sound effects may sound weird because of this.
-
-7.3  Mad Catz Keyboard Adapter
+8.2  Mad Catz Keyboard Adapter
 ------------------------------
 
 The Mad Catz Keyboard Adapter is currently not supported. The reason why it
 isn't working right is currently unknown. This issue is being investigated.
 
 
-8    Acknowledgments
----------------------
+9    Acknowledgments
+--------------------
 
 Thanks to Dan Potter for creating KOS, the development kit used to port
 FreeSCI to the Dreamcast.
@@ -242,10 +283,8 @@ Thanks to Bruce Philip for trying out several FreeSCI binaries and keyboard
 test programs to help me figure out what the problem is with the Mad Catz
 Keyboard Adapter.
 
-Thanks to Sega Corporation for creating the wonderful Dreamcast console.
 
-
-9    Trademark notices
+10   Trademark notices
 ----------------------
 
 Sega and Dreamcast are registered trademarks of Sega Corporation.
@@ -253,11 +292,11 @@ Sega and Dreamcast are registered trademarks of Sega Corporation.
 Mad Catz is a registered trademark of Mad Catz, Inc..
 
 
-10   Get involved
+11   Get involved
 -----------------
 
 If you want to help out, check out the development page on the FreeSCI website
 for more information.
 
 The FreeSCI Team
-http://freesci.linuxgames.com
+http://freesci.org

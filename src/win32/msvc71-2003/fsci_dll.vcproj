@@ -18,6 +18,7 @@
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2"
 			WholeProgramOptimization="TRUE">
 			<Tool
 				Name="VCCLCompilerTool"
@@ -28,7 +29,7 @@
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
+				AdditionalIncludeDirectories="..\..\..\..\SDL\include,..\..\include,..\..\include\win32"
 				PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;WANT_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -49,11 +50,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib"
-				OutputFile="..\..\bin\fsci.dll"
+				OutputFile="..\..\..\bin\fsci.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\SDL\lib"
+				AdditionalLibraryDirectories="..\..\..\..\SDL\lib"
 				IgnoreDefaultLibraryNames="libci.lib"
-				ModuleDefinitionFile=".\freesci.def"
+				ModuleDefinitionFile="..\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/fsci.pdb"
 				ImportLibrary=".\Release/fsci.lib"
@@ -94,16 +95,19 @@
 			IntermediateDirectory=".\fsci_dll_Debug"
 			ConfigurationType="2"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE">
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
+				AdditionalIncludeDirectories="..\..\..\..\SDL\include,..\..\include,..\..\include\win32"
 				PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;WANT_CONSOLE"
+				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				EnableFunctionLevelLinking="TRUE"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\fsci_dll_Debug/fsci_dll.pch"
+				EnableFunctionLevelLinking="FALSE"
+				RuntimeTypeInfo="TRUE"
+				UsePrecompiledHeader="0"
+				PrecompiledHeaderFile=""
 				AssemblerListingLocation=".\fsci_dll_Debug/"
 				ObjectFile=".\fsci_dll_Debug/"
 				ProgramDataBaseFileName=".\fsci_dll_Debug/"
@@ -119,9 +123,9 @@
 				AdditionalDependencies="SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib"
 				OutputFile="Debug\fsci.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\SDL\lib"
+				AdditionalLibraryDirectories="..\..\..\..\SDL\lib"
 				IgnoreDefaultLibraryNames="libci.lib"
-				ModuleDefinitionFile=".\freesci.def"
+				ModuleDefinitionFile="..\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/fsci.pdb"
 				ImportLibrary=".\Debug/fsci.lib"
@@ -167,7 +171,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
+				AdditionalIncludeDirectories="..\..\..\..\SDL\include,..\..\include,..\..\include\win32"
 				PreprocessorDefinitions="SATISFY_PURIFY;NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;WANT_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -189,9 +193,9 @@
 				AdditionalDependencies="SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib"
 				OutputFile="Purify\fsci.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\SDL\lib"
+				AdditionalLibraryDirectories="..\..\..\..\SDL\lib"
 				IgnoreDefaultLibraryNames="libci.lib"
-				ModuleDefinitionFile=".\freesci.def"
+				ModuleDefinitionFile="..\freesci.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Purify/fsci.pdb"
 				GenerateMapFile="TRUE"
@@ -235,46 +239,11 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
-			<File
-				RelativePath="..\gfx\drivers\dx_driver.h">
-			</File>
-			<File
-				RelativePath="usleep.c">
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="1"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-						BrowseInformation="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Purify|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"/>
-				</FileConfiguration>
-			</File>
 			<Filter
 				Name="engine"
 				Filter="">
 				<File
-					RelativePath="..\engine\game.c">
+					RelativePath="..\..\engine\game.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -306,7 +275,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\grammar.c">
+					RelativePath="..\..\engine\grammar.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -338,7 +307,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\heap.c">
+					RelativePath="..\..\engine\heap.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -370,7 +339,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kernel.c">
+					RelativePath="..\..\engine\kernel.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -402,7 +371,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kevent.c">
+					RelativePath="..\..\engine\kevent.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -434,7 +403,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kfile.c">
+					RelativePath="..\..\engine\kfile.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -466,7 +435,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kgraphics.c">
+					RelativePath="..\..\engine\kgraphics.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -498,7 +467,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\klists.c">
+					RelativePath="..\..\engine\klists.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -530,7 +499,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kmath.c">
+					RelativePath="..\..\engine\kmath.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -562,7 +531,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kmenu.c">
+					RelativePath="..\..\engine\kmenu.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -594,7 +563,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kmovement.c">
+					RelativePath="..\..\engine\kmovement.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -626,7 +595,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kpathing.c">
+					RelativePath="..\..\engine\kpathing.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -658,7 +627,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kscripts.c">
+					RelativePath="..\..\engine\kscripts.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -690,7 +659,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\ksound.c">
+					RelativePath="..\..\engine\ksound.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -722,7 +691,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\kstring.c">
+					RelativePath="..\..\engine\kstring.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -754,7 +723,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\said.c">
+					RelativePath="..\..\engine\said.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -786,7 +755,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\savegame.c">
+					RelativePath="..\..\engine\savegame.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -818,10 +787,10 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\savegame.cfsml">
+					RelativePath="..\..\engine\savegame.cfsml">
 				</File>
 				<File
-					RelativePath="..\engine\scriptdebug.c">
+					RelativePath="..\..\engine\scriptdebug.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -853,39 +822,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\engine\simplesaid.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\vm.c">
+					RelativePath="..\..\engine\vm.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -921,7 +858,7 @@
 				Name="gfx"
 				Filter="">
 				<File
-					RelativePath="..\gfx\alpha_mvi_crossblit.c">
+					RelativePath="..\..\gfx\alpha_mvi_crossblit.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -953,7 +890,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\antialias.c">
+					RelativePath="..\..\gfx\antialias.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -985,13 +922,13 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\font-5x8.c">
+					RelativePath="..\..\gfx\font-5x8.c">
 				</File>
 				<File
-					RelativePath="..\gfx\font-6x10.c">
+					RelativePath="..\..\gfx\font-6x10.c">
 				</File>
 				<File
-					RelativePath="..\gfx\font.c">
+					RelativePath="..\..\gfx\font.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1023,7 +960,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\gfx_console.c">
+					RelativePath="..\..\gfx\gfx_console.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1055,7 +992,10 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\gfx_resource.c">
+					RelativePath="..\..\gfx\gfx_res_options.c">
+				</File>
+				<File
+					RelativePath="..\..\gfx\gfx_resource.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1087,7 +1027,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\gfx_support.c">
+					RelativePath="..\..\gfx\gfx_support.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1119,7 +1059,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\gfx_tools.c">
+					RelativePath="..\..\gfx\gfx_tools.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1151,7 +1091,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\menubar.c">
+					RelativePath="..\..\gfx\menubar.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1183,7 +1123,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\operations.c">
+					RelativePath="..\..\gfx\operations.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1215,7 +1155,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\resmgr.c">
+					RelativePath="..\..\gfx\resmgr.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1247,7 +1187,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\sbtree.c">
+					RelativePath="..\..\gfx\sbtree.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1279,7 +1219,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\sci_widgets.c">
+					RelativePath="..\..\gfx\sci_widgets.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1311,39 +1251,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\gfx\widgets.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\gfx\wrapper.c">
+					RelativePath="..\..\gfx\widgets.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1378,7 +1286,7 @@
 					Name="resource"
 					Filter="">
 					<File
-						RelativePath="..\gfx\resource\sci_cursor_0.c">
+						RelativePath="..\..\gfx\resource\sci_cursor_0.c">
 						<FileConfiguration
 							Name="Release|Win32">
 							<Tool
@@ -1410,7 +1318,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\gfx\resource\sci_font.c">
+						RelativePath="..\..\gfx\resource\sci_font.c">
 						<FileConfiguration
 							Name="Release|Win32">
 							<Tool
@@ -1442,7 +1350,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\gfx\resource\sci_pal_1.c">
+						RelativePath="..\..\gfx\resource\sci_pic_0.c">
 						<FileConfiguration
 							Name="Release|Win32">
 							<Tool
@@ -1474,7 +1382,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\gfx\resource\sci_pic_0.c">
+						RelativePath="..\..\gfx\resource\sci_resmgr.c">
 						<FileConfiguration
 							Name="Release|Win32">
 							<Tool
@@ -1506,71 +1414,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\gfx\resource\sci_resmgr.c">
-						<FileConfiguration
-							Name="Release|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="1"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="0"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BasicRuntimeChecks="3"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Purify|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="0"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BasicRuntimeChecks="3"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\gfx\resource\sci_view_0.c">
-						<FileConfiguration
-							Name="Release|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="1"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="0"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BasicRuntimeChecks="3"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Purify|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="0"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BasicRuntimeChecks="3"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\gfx\resource\sci_view_1.c">
+						RelativePath="..\..\gfx\resource\sci_view_0.c">
 						<FileConfiguration
 							Name="Release|Win32">
 							<Tool
@@ -1606,7 +1450,7 @@
 					Name="drivers"
 					Filter="">
 					<File
-						RelativePath="..\gfx\drivers\dd_driver.cpp">
+						RelativePath="..\..\gfx\drivers\dx_driver.cpp">
 						<FileConfiguration
 							Name="Release|Win32">
 							<Tool
@@ -1638,7 +1482,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\gfx\drivers\dd_driver_line.cpp">
+						RelativePath="..\..\gfx\drivers\gfx_drivers.c">
 						<FileConfiguration
 							Name="Release|Win32">
 							<Tool
@@ -1670,7 +1514,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\gfx\drivers\dx_driver.cpp">
+						RelativePath="..\..\gfx\drivers\null_driver.c">
 						<FileConfiguration
 							Name="Release|Win32">
 							<Tool
@@ -1702,71 +1546,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\gfx\drivers\gfx_drivers.c">
-						<FileConfiguration
-							Name="Release|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="1"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="0"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BasicRuntimeChecks="3"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Purify|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="0"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BasicRuntimeChecks="3"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\gfx\drivers\null_driver.c">
-						<FileConfiguration
-							Name="Release|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="1"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="0"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BasicRuntimeChecks="3"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Purify|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								Optimization="0"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-								BasicRuntimeChecks="3"
-								BrowseInformation="1"/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\gfx\drivers\sdl_driver.c">
+						RelativePath="..\..\gfx\drivers\sdl_driver.c">
 						<FileConfiguration
 							Name="Release|Win32">
 							<Tool
@@ -1803,7 +1583,7 @@
 				Name="scicore"
 				Filter="">
 				<File
-					RelativePath="..\scicore\console.c">
+					RelativePath="..\..\scicore\console.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1835,7 +1615,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\decompress0.c">
+					RelativePath="..\..\scicore\decompress0.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1867,7 +1647,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\decompress01.c">
+					RelativePath="..\..\scicore\decompress01.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1899,7 +1679,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\decompress1.c">
+					RelativePath="..\..\scicore\decompress1.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1931,7 +1711,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\decompress11.c">
+					RelativePath="..\..\scicore\decompress11.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1963,7 +1743,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\old_objects.c">
+					RelativePath="..\..\scicore\resource.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -1995,7 +1775,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\resource.c">
+					RelativePath="..\..\scicore\resource_map.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2027,7 +1807,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\resource_map.c">
+					RelativePath="..\..\scicore\resource_patch.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2059,7 +1839,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\resource_patch.c">
+					RelativePath="..\..\scicore\sci_memory.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2091,7 +1871,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\resourcecheck.c">
+					RelativePath="..\..\scicore\script.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2123,7 +1903,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\sci_memory.c">
+					RelativePath="..\..\scicore\tools.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2155,7 +1935,10 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\script.c">
+					RelativePath="..\..\scicore\versions.c">
+				</File>
+				<File
+					RelativePath="..\..\scicore\vocab.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2187,74 +1970,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\scicore\tools.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\scicore\versions.c">
-				</File>
-				<File
-					RelativePath="..\scicore\vocab.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\scicore\vocab_debug.c">
+					RelativePath="..\..\scicore\vocab_debug.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2290,7 +2006,7 @@
 				Name="sound"
 				Filter="">
 				<File
-					RelativePath="..\sound\event_ss.c">
+					RelativePath="..\..\sound\fmopl.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2322,7 +2038,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\event_ss_win32.c">
+					RelativePath="..\..\sound\midi_adlibemu.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2354,7 +2070,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\fmopl.c">
+					RelativePath="..\..\sound\midi_device.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2386,7 +2102,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\midi_adlib.c">
+					RelativePath="..\..\sound\midi_mt32.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2418,7 +2134,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\midi_adlibemu.c">
+					RelativePath="..\..\sound\midi_mt32gm.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2450,7 +2166,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\midi_device.c">
+					RelativePath="..\..\sound\midiout.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2482,7 +2198,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\midi_mt32.c">
+					RelativePath="..\..\sound\midiout_win32mci.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2514,7 +2230,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\midi_mt32gm.c">
+					RelativePath="..\..\sound\oldmidi.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2546,7 +2262,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\midiout.c">
+					RelativePath="..\..\sound\pcmout.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2578,7 +2294,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\midiout_win32mci.c">
+					RelativePath="..\..\sound\pcmout_sdl.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2610,7 +2326,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\oldmidi.c">
+					RelativePath="..\..\sound\polled_ss.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2642,7 +2358,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\pcmout.c">
+					RelativePath="..\..\sound\polled_ss_win32.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2674,7 +2390,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\pcmout_sdl.c">
+					RelativePath="..\..\sound\sfx_save.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2706,7 +2422,10 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\polled_ss.c">
+					RelativePath="..\..\sound\sfx_save.cfsml">
+				</File>
+				<File
+					RelativePath="..\..\sound\sound.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2738,7 +2457,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\polled_ss_win32.c">
+					RelativePath="..\..\sound\soundserver.c">
 					<FileConfiguration
 						Name="Release|Win32">
 						<Tool
@@ -2770,167 +2489,14 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\sound\sfx_save.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
+					RelativePath="..\..\sound\thread_ss_sdl.c">
 				</File>
+			</Filter>
+			<Filter
+				Name="win32"
+				Filter="">
 				<File
-					RelativePath="..\sound\sfx_save.cfsml">
-				</File>
-				<File
-					RelativePath="..\sound\song_iterator.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\sound\sound.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\sound\soundserver.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\sound\thread_ss_sdl.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
+					RelativePath="..\usleep.c">
 				</File>
 			</Filter>
 		</Filter>
@@ -2938,244 +2504,232 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\include\console.h">
+				RelativePath="..\..\include\console.h">
 			</File>
 			<File
-				RelativePath="..\include\engine.h">
+				RelativePath="..\..\include\engine.h">
 			</File>
 			<File
-				RelativePath="..\include\event.h">
+				RelativePath="..\..\include\event.h">
 			</File>
 			<File
-				RelativePath="..\sound\fmopl.h">
+				RelativePath="..\..\sound\fmopl.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_driver.h">
+				RelativePath="..\..\include\gfx_driver.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_drivers_list.h">
+				RelativePath="..\..\include\gfx_drivers_list.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_operations.h">
+				RelativePath="..\..\include\gfx_operations.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_options.h">
+				RelativePath="..\..\include\gfx_options.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_resmgr.h">
+				RelativePath="..\..\include\gfx_res_options.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_resource.h">
+				RelativePath="..\..\include\gfx_resmgr.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_sci.h">
+				RelativePath="..\..\include\gfx_resource.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_state.h">
+				RelativePath="..\..\include\gfx_sci.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_state_internal.h">
+				RelativePath="..\..\include\gfx_state_internal.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_system.h">
+				RelativePath="..\..\include\gfx_system.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_tools.h">
+				RelativePath="..\..\include\gfx_tools.h">
 			</File>
 			<File
-				RelativePath="..\include\gfx_widgets.h">
+				RelativePath="..\..\include\gfx_widgets.h">
 			</File>
 			<File
-				RelativePath="..\include\graphics.h">
+				RelativePath="..\..\include\graphics_png.h">
 			</File>
 			<File
-				RelativePath="..\include\graphics_png.h">
+				RelativePath="..\..\include\heap.h">
 			</File>
 			<File
-				RelativePath="..\include\heap.h">
+				RelativePath="..\..\include\kdebug.h">
 			</File>
 			<File
-				RelativePath="..\include\kdebug.h">
+				RelativePath="..\..\include\kernel.h">
 			</File>
 			<File
-				RelativePath="..\include\kernel.h">
+				RelativePath="..\..\include\menubar.h">
 			</File>
 			<File
-				RelativePath="..\include\menubar.h">
+				RelativePath="..\..\include\midi_device.h">
 			</File>
 			<File
-				RelativePath="..\include\midi_device.h">
+				RelativePath="..\..\include\midiout.h">
 			</File>
 			<File
-				RelativePath="..\include\midiout.h">
+				RelativePath="..\..\include\modules.h">
 			</File>
 			<File
-				RelativePath="..\include\modules.h">
+				RelativePath="..\..\include\old_objects.h">
 			</File>
 			<File
-				RelativePath="..\include\old_objects.h">
+				RelativePath="..\..\include\pcmout.h">
 			</File>
 			<File
-				RelativePath="..\include\pcmout.h">
+				RelativePath="..\..\include\resource.h">
 			</File>
 			<File
-				RelativePath="..\include\resource.h">
+				RelativePath="..\..\include\sbtree.h">
 			</File>
 			<File
-				RelativePath="..\include\sbtree.h">
+				RelativePath="..\..\include\sci_conf.h">
 			</File>
 			<File
-				RelativePath="..\include\sci_conf.h">
+				RelativePath="..\..\include\sci_graphics.h">
 			</File>
 			<File
-				RelativePath="..\include\sci_dos.h">
+				RelativePath="..\..\include\sci_memory.h">
 			</File>
 			<File
-				RelativePath="..\include\sci_graphics.h">
+				RelativePath="..\..\include\sci_widgets.h">
 			</File>
 			<File
-				RelativePath="..\include\sci_memory.h">
+				RelativePath="..\..\include\sciresource.h">
 			</File>
 			<File
-				RelativePath="..\include\sci_widgets.h">
+				RelativePath="..\..\include\scitypes.h">
 			</File>
 			<File
-				RelativePath="..\include\sciresource.h">
+				RelativePath="..\..\include\script.h">
 			</File>
 			<File
-				RelativePath="..\include\scitypes.h">
+				RelativePath="..\..\include\sound.h">
 			</File>
 			<File
-				RelativePath="..\include\script.h">
+				RelativePath="..\..\include\soundserver.h">
 			</File>
 			<File
-				RelativePath="..\include\sound.h">
+				RelativePath="..\..\include\uinput.h">
 			</File>
 			<File
-				RelativePath="..\include\soundserver.h">
+				RelativePath="..\..\include\util.h">
 			</File>
 			<File
-				RelativePath="..\include\uinput.h">
+				RelativePath="..\..\include\versions.h">
 			</File>
 			<File
-				RelativePath="..\include\util.h">
+				RelativePath="..\..\include\vm.h">
 			</File>
 			<File
-				RelativePath="..\include\versions.h">
-			</File>
-			<File
-				RelativePath="..\include\vm.h">
-			</File>
-			<File
-				RelativePath="..\include\vocabulary.h">
+				RelativePath="..\..\include\vocabulary.h">
 			</File>
 			<Filter
 				Name="win32"
 				Filter="">
 				<File
-					RelativePath="..\gfx\drivers\dd_driver.h">
+					RelativePath="..\..\include\graphics_directx.h">
 				</File>
 				<File
-					RelativePath="..\include\graphics_ddraw.h">
-				</File>
-				<File
-					RelativePath="..\include\win32\messages.h">
-				</File>
-				<File
-					RelativePath="..\include\win32\sci_win32.h">
+					RelativePath="..\..\include\win32\sci_win32.h">
 				</File>
 			</Filter>
 			<Filter
 				Name="SDL"
 				Filter="">
 				<File
-					RelativePath="..\..\..\SDL\include\begin_code.h">
+					RelativePath="..\..\..\..\SDL\include\begin_code.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\close_code.h">
+					RelativePath="..\..\..\..\SDL\include\close_code.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL.h">
+					RelativePath="..\..\..\..\SDL\include\SDL.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_active.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_active.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_audio.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_audio.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_byteorder.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_byteorder.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_cdrom.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_cdrom.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_copying.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_copying.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_endian.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_endian.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_error.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_error.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_events.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_events.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_getenv.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_getenv.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_joystick.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_joystick.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_keyboard.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_keyboard.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_keysym.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_keysym.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_main.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_main.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_mouse.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_mouse.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_mutex.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_mutex.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_name.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_name.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_opengl.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_opengl.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_quit.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_quit.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_rwops.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_rwops.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_syswm.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_syswm.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_thread.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_thread.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_timer.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_timer.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_types.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_types.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_version.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_version.h">
 				</File>
 				<File
-					RelativePath="..\..\..\SDL\include\SDL_video.h">
+					RelativePath="..\..\..\..\SDL\include\SDL_video.h">
 				</File>
 			</Filter>
 		</Filter>
 		<File
-			RelativePath="freesci.def">
+			RelativePath="..\freesci.def">
 		</File>
 	</Files>
 	<Globals>

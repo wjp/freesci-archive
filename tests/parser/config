@@ -1,0 +1,19 @@
+# Some binaries:
+## Dosbox
+DOSBOX_BIN="dosbox -conf ${HOME}/.dosbox"
+
+## SML of New Jersey
+SMLNJ=sml
+
+## SCI Assembler
+SCIS="${HOME}/work/port/scis/scis"
+
+
+# A game to test with:
+TEST_GAME_DIR="${HOME}/work/port/sci/dumb"
+
+# This is where FreeSCI stores its temp result files:
+FSCI_DATA_DIR="${HOME}/.freesci/said"
+
+#VERBOSE=1
+

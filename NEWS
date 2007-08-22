@@ -1,3 +1,30 @@
+  Looks like we managed to beat our previous record once again: Just
+over two years since 0.3.4 was released.  I guess we all are getting
+older, more mature, more dedicated to our other projects, and more
+lazy overall...  but before I go off into mindless rambling, le tme
+rather summarise what's new, and what's improved.
+  First, we have a new port:  FreeSCI now works on the GP32 handheld,
+thanks to Walter van Niftrik's dedicated work.  Work on other
+handhelds is underway and will be announced when it's ready.  Unless
+you're a member of the GP32 user crowd, the change you're most likely
+to notice instead are Hugues Valois' new game selection screen:  If
+you have a properly configured ~/.freesci/config (or platform-specific
+equivalent) but don't specify a game name or directory as parameter to
+FreeSCI, Hugues' game selection screen will now pop up and ask you to
+choose one of your registered games.  The next most noticeable change
+is the default sound setup: We now no longer default to GM output, but
+instead to OPL/2 software emulation.  On many platforms, timing is
+still suboptimal; this we hope to address eventually by backporting
+the Glutton sound subsystem.  Other changes are optimised background
+image drawing (for the "unsophisticated" case, important for low-power
+and low-res devices), support for the "Show()" kernel call (for
+walking around on the priority and control maps, useful primarily for
+SCI game developers), and the usual lot of bug fixes.
+  That's it for this iteration; enjoy!
+
+
+--- 0.3.4 ---
+
 One year in between releases-- we're not really getting better in this
 respect. Anyway, FreeSCI has seen quite a number of changes-- particularly
 bugfixes-- in that year, but also ports to support some previously un-

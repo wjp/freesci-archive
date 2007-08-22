@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "NDEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=\"0.3.4\" /D "WIN32" /D "_CONSOLE" /D "HAVE_SDL" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /FR /YX /FD /D /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\..\SDL\include" /I "..\..\include" /I "..\..\include\win32" /D "NDEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=\"0.3.4\" /D "WIN32" /D "_CONSOLE" /D "HAVE_SDL" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /FR /YX /FD /D /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -51,7 +51,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 Release\fsci.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /debug /machine:I386 /out:"..\..\bin\freesci.exe" /fixed:no
+# ADD LINK32 Release\fsci.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /subsystem:console /debug /machine:I386 /out:"..\..\..\bin\freesci.exe" /fixed:no
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
@@ -68,7 +68,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D PACKAGE=\"freesci\" /D VERSION=__TIMESTAMP__ /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FR /YX /FD /D /GZ /c
+# ADD CPP /nologo /MDd /W3 /GX /Zi /Od /I "..\..\..\..\SDL\include" /I "..\..\include" /I "..\..\include\win32" /D "_DEBUG" /D PACKAGE=\"freesci\" /D VERSION=__TIMESTAMP__ /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FR /YX /FD /D /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -93,8 +93,8 @@ LINK32=link.exe
 # PROP Intermediate_Dir "sciv_Purify"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
-# ADD CPP /nologo /MT /W3 /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "SATISFY_PURIFY" /D "_DEBUG" /D PACKAGE=\"freesci\" /D VERSION=__TIMESTAMP__ /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FR /YX /FD /GZ /c
+# ADD BASE CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\..\SDL\include" /I "..\..\include" /I "..\..\include\win32" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MT /W3 /GR /GX /Zi /Od /I "..\..\..\..\SDL\include" /I "..\..\include" /I "..\..\include\win32" /D "SATISFY_PURIFY" /D "_DEBUG" /D PACKAGE=\"freesci\" /D VERSION=__TIMESTAMP__ /D "HAVE_GETOPT_H" /D "HAVE_LIBPNG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -118,35 +118,35 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\config.c
+SOURCE=..\..\config.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\config.l
+SOURCE=..\..\config.l
 # End Source File
 # Begin Source File
 
-SOURCE=..\menu\game_select.c
+SOURCE=..\..\menu\game_select.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\menu\game_select_init.c
+SOURCE=..\..\menu\game_select_init.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\menu\game_select_screen.c
+SOURCE=..\..\menu\game_select_screen.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\getopt.c
+SOURCE=..\getopt.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\main.c
+SOURCE=..\..\main.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\sci_memory.c
+SOURCE=..\..\scicore\sci_memory.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -154,143 +154,143 @@ SOURCE=..\scicore\sci_memory.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\include\console.h
+SOURCE=..\..\include\console.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\engine.h
+SOURCE=..\..\include\engine.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\event.h
+SOURCE=..\..\include\event.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\game_select.h
+SOURCE=..\..\include\game_select.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\games.h
+SOURCE=..\..\include\games.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\win32\getopt.h
+SOURCE=..\..\include\win32\getopt.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_driver.h
+SOURCE=..\..\include\gfx_driver.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_operations.h
+SOURCE=..\..\include\gfx_operations.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_options.h
+SOURCE=..\..\include\gfx_options.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_resmgr.h
+SOURCE=..\..\include\gfx_resmgr.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_resource.h
+SOURCE=..\..\include\gfx_resource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_state_internal.h
+SOURCE=..\..\include\gfx_state_internal.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_system.h
+SOURCE=..\..\include\gfx_system.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_tools.h
+SOURCE=..\..\include\gfx_tools.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_widgets.h
+SOURCE=..\..\include\gfx_widgets.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics.h
+SOURCE=..\..\include\graphics.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\heap.h
+SOURCE=..\..\include\heap.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\kdebug.h
+SOURCE=..\..\include\kdebug.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\kernel.h
+SOURCE=..\..\include\kernel.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\menubar.h
+SOURCE=..\..\include\menubar.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\midi_device.h
+SOURCE=..\..\include\midi_device.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\midiout.h
+SOURCE=..\..\include\midiout.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\resource.h
+SOURCE=..\..\include\resource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sbtree.h
+SOURCE=..\..\include\sbtree.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sci_conf.h
+SOURCE=..\..\include\sci_conf.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sci_memory.h
+SOURCE=..\..\include\sci_memory.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sciresource.h
+SOURCE=..\..\include\sciresource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\scitypes.h
+SOURCE=..\..\include\scitypes.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\script.h
+SOURCE=..\..\include\script.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sound.h
+SOURCE=..\..\include\sound.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\soundserver.h
+SOURCE=..\..\include\soundserver.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\uinput.h
+SOURCE=..\..\include\uinput.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\versions.h
+SOURCE=..\..\include\versions.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\vm.h
+SOURCE=..\..\include\vm.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\vocabulary.h
+SOURCE=..\..\include\vocabulary.h
 # End Source File
 # End Group
 # End Target

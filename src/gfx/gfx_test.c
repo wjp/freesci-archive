@@ -44,11 +44,24 @@
 #include <gfx_tools.h>
 #include <gfx_operations.h>
 
-int
-sci0_palette;
+
+int sci0_palette;
+
+gfx_pixmap_color_t gfx_sci0_image_colors[1][16];
+
+gfx_pixmap_color_t *
+gfxr_interpreter_get_static_palette(gfx_resstate_t *state, int version, int *colors_nr, void *internal)
+{
+	return NULL;
+}
+
+
+void sci_sched_yield()
+{
+}
 
 int
-sciprintf(char *fmt, ...)
+sciprintf(const char *fmt, ...)
 {
 	va_list argp;
 	va_start(argp, fmt);

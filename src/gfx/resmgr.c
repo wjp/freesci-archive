@@ -241,14 +241,22 @@ gfxr_free_tagged_resources(gfx_driver_t *driver, gfx_resstate_t *state)
 #define XLATE_AS_APPROPRIATE(key, entry) \
 	if (maps & key) { \
 		if (res->unscaled_data.pic \
-                    && (force || !res->unscaled_data.pic->entry->data)) \
+                    && (force || !res->unscaled_data.pic->entry->data)) { \
+				if (key == GFX_MASK_VISUAL) \
+			        	gfx_get_res_config(options, res->unscaled_data.pic->entry); \
 			        gfx_xlate_pixmap(res->unscaled_data.pic->entry, mode, filter); \
-		if (scaled && res->scaled_data.pic \
-                    && (force || !res->scaled_data.pic->entry->data)) \
+		} if (scaled && res->scaled_data.pic \
+                    && (force || !res->scaled_data.pic->entry->data)) { \
+				if (key == GFX_MASK_VISUAL) \
+			        	gfx_get_res_config(options, res->scaled_data.pic->entry); \
 			        gfx_xlate_pixmap(res->scaled_data.pic->entry, mode, filter); \
+                } \
 	}
+
 static gfxr_pic_t *
-gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled, int force, gfx_mode_t *mode, int filter, int endianize)
+gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled,
+		      int force, gfx_mode_t *mode, int filter, int endianize,
+		      gfx_options_t *options)
 {
 	XLATE_AS_APPROPRIATE(GFX_MASK_VISUAL, visual_map);
 	XLATE_AS_APPROPRIATE(GFX_MASK_PRIORITY, priority_map);
@@ -291,11 +299,11 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 			need_unscaled = 0;
 			pic = gfxr_interpreter_init_pic(state->version,
 							&mode_1x1_color_index,
-							(restype << 16) | nr,
+							GFXR_RES_ID(restype, nr),
 							state->misc_payload);
 		} else pic = gfxr_interpreter_init_pic(state->version,
 						       state->driver->mode,
-						       (restype << 16) | nr,
+						       GFXR_RES_ID(restype, nr),
 						       state->misc_payload);
 
 		if (!pic) {
@@ -308,7 +316,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 		if (need_unscaled) {
 			unscaled_pic = gfxr_interpreter_init_pic(state->version,
 								 &mode_1x1_color_index,
-								 (restype << 16) | nr,
+								 GFXR_RES_ID(restype, nr),
 								 state->misc_payload);
 			if (!unscaled_pic) {
 				GFXERROR("Failed to allocate unscaled pic!\n");
@@ -332,7 +340,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 
 		if (!res) {
 			res = sci_malloc(sizeof(gfx_resource_t));
-			res->ID = ((restype << 16) | nr);
+			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->options->buffer_pics_nr;
 			sbtree_set(tree, nr, (void *) res);
 		} else {
@@ -352,9 +360,10 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	/* If the pic was only just drawn, we'll have to antialiase and endianness-adjust it now */
 
 	npic = gfxr_pic_xlate_common(res, maps,
-				    scaled || state->options->pic0_unscaled,
-				    0, state->driver->mode,
-				    state->options->pic_xlate_filter, 0);
+				     scaled || state->options->pic0_unscaled,
+				     0, state->driver->mode,
+				     state->options->pic_xlate_filter, 0,
+				     state->options);
 
 
 	if (must_post_process_pic) {
@@ -401,6 +410,33 @@ _gfxr_unscale_pixmap_index_data(gfx_pixmap_t *pxm, gfx_mode_t *mode)
 	pxm->flags &= ~GFX_PIXMAP_FLAG_SCALED_INDEX;
 }
 
+
+static void
+set_pic_id(gfx_resource_t *res, int id)
+{
+	if (res->scaled_data.pic) {
+		gfxr_pic_t *pic = res->scaled_data.pic;
+		pic->control_map->ID = id;
+		pic->priority_map->ID = id;
+		pic->visual_map->ID = id;
+	}
+
+	if (res->unscaled_data.pic) {
+		gfxr_pic_t *pic = res->unscaled_data.pic;
+		pic->control_map->ID = id;
+		pic->priority_map->ID = id;
+		pic->visual_map->ID = id;
+	}
+}
+
+static int
+get_pic_id(gfx_resource_t *res)
+{
+	if (res->scaled_data.pic)
+		return res->scaled_data.pic->visual_map->ID;
+	else
+		return res->unscaled_data.pic->visual_map->ID;
+}
 
 gfxr_pic_t *
 gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int flags,
@@ -449,7 +485,14 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 
 	res->mode = MODE_INVALID; /* Invalidate */
 
-	pic = gfxr_pic_xlate_common(res, maps, scaled, 1/*force*/, state->driver->mode, state->options->pic_xlate_filter, 1);
+	{
+		int old_ID = get_pic_id(res);
+		set_pic_id(res, GFXR_RES_ID(restype, new_nr)); /* To ensure that our graphical translation optoins work properly */
+		pic = gfxr_pic_xlate_common(res, maps, scaled, 1/*force*/, state->driver->mode,
+					    state->options->pic_xlate_filter, 1,
+					    state->options);
+		set_pic_id(res, old_ID);
+	}
 
 	if (state->options->pic0_unscaled) /* Scale priority map again, if needed */
 		res->scaled_data.pic->priority_map = gfx_pixmap_scale_index_data(res->scaled_data.pic->priority_map, state->driver->mode);
@@ -489,7 +532,7 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel)
 		if (!res) {
 			res = sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.view = NULL;
-			res->ID = ((restype << 16) | nr);
+			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
 			res->mode = hash;
 			sbtree_set(tree, nr, (void *) res);
@@ -510,19 +553,27 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel)
 		if (*loop >= view->loops_nr)
 			*loop = view->loops_nr - 1;
 
-	loop_data = view->loops + (*loop);
-
-	if (*cel < 0)
+	if (view->loops_nr <= 0) {
+		sciprintf("Warning: view.%x has no loops! This game is probably corrupt.\n", nr);
+		*loop = -1;
 		*cel = 0;
-	else
-		if (*cel >= loop_data->cels_nr)
-			*cel = loop_data->cels_nr - 1;
+	} else {
 
-	cel_data = loop_data->cels[*cel];
+		loop_data = view->loops + (*loop);
 
-	if (!cel_data->data) {
-		gfx_xlate_pixmap(cel_data, state->driver->mode, state->options->view_xlate_filter);
-		gfxr_endianness_adjust(cel_data, state->driver->mode);
+		if (*cel < 0)
+			*cel = 0;
+		else
+			if (*cel >= loop_data->cels_nr)
+				*cel = loop_data->cels_nr - 1;
+
+		cel_data = loop_data->cels[*cel];
+
+		if (!cel_data->data) {
+			gfx_get_res_config(state->options, cel_data);
+			gfx_xlate_pixmap(cel_data, state->driver->mode, state->options->view_xlate_filter);
+			gfxr_endianness_adjust(cel_data, state->driver->mode);
+		}
 	}
 
 	return view;
@@ -563,7 +614,7 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 		if (!res) {
 			res = sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.font = NULL;
-			res->ID = ((restype << 16) | nr);
+			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
 			res->mode = hash;
 			sbtree_set(tree, nr, (void *) res);
@@ -608,13 +659,14 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr)
 		if (!res) {
 			res = sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.pointer = NULL;
-			res->ID = ((restype << 16) | nr);
+			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
 			res->mode = hash;
 			sbtree_set(tree, nr, (void *) res);
 		} else {
 			gfx_free_pixmap(state->driver, res->unscaled_data.pointer);
 		}
+		gfx_get_res_config(state->options, cursor);
 		gfx_xlate_pixmap(cursor, state->driver->mode, state->options->cursor_xlate_filter);
                 gfxr_endianness_adjust(cursor, state->driver->mode);
 

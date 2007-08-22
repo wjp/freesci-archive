@@ -1,3 +1,4 @@
+
 /***************************************************************************
  gfx_operations Copyright (C) 2000 Christoph Reichenbach
 
@@ -1647,7 +1648,7 @@ gfxop_set_pointer_view(gfx_state_t *state, int nr, int loop, int cel)
 	new_pointer = _gfxr_get_cel(state, nr, &real_loop, &real_cel);
 
 
-	if (!state->mouse_pointer) {
+	if (!state->mouse_pointer || (real_loop == -1)) {
 		GFXWARN("Attempt to set invalid pointer #%d\n", nr);
 	} else if (real_loop != loop || real_cel != cel) {
 		GFXDEBUG("Changed loop/cel from %d/%d to %d/%d in view %d\n",
@@ -1882,7 +1883,10 @@ gfxop_lookup_view_get_cels(gfx_state_t *state, int nr, int loop)
 		GFXWARN("Loop number was corrected from %d to %d in view %d\n", loop, real_loop, nr);
 	}
 
-	return view->loops[real_loop].cels_nr;
+	if (loop == -1)
+		return 0;
+	else
+		return view->loops[real_loop].cels_nr;
 }
 
 
@@ -1896,7 +1900,10 @@ gfxop_check_cel(gfx_state_t *state, int nr, int *loop, int *cel)
 		return GFX_ERROR;
 	}
 
-	return GFX_OK;
+	if (*loop == -1)
+		return GFX_ERROR;
+	else
+		return GFX_OK;
 }
 
 int
@@ -1935,6 +1942,13 @@ gfxop_get_cel_parameters(gfx_state_t *state, int nr, int loop, int cel,
 		return GFX_ERROR;
 	}
 
+	if (loop == -1) {
+		*width = 0;
+		*height = 0;
+		offset-> x = offset->y = 0;
+		return GFX_OK;
+	}
+
 	pxm = view->loops[loop].cels[cel];
 	*width = pxm->index_xl;
 	*height = pxm->index_yl;
@@ -1960,6 +1974,10 @@ _gfxop_draw_cel_buffer(gfx_state_t *state, int nr, int loop, int cel,
 		GFXWARN("Attempt to draw loop/cel %d/%d in invalid view %d\n", loop, cel, nr);
 		return GFX_ERROR;
 	}
+
+	if (loop == -1)
+		return GFX_OK;
+
 	pxm = view->loops[loop].cels[cel];
 
 	old_x = pos.x -= pxm->xoffset;

@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "NDEBUG" /D PACKAGE=\"FreeSCI\" /D "_WINDOWS" /D "WIN32" /D "_USRDLL" /D "_CONSOLE" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_MEMCHR" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /D "HAVE_DIRECTX" /FR /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\..\SDL\include" /I "..\..\include" /I "..\..\include\win32" /D "NDEBUG" /D PACKAGE=\"FreeSCI\" /D "_WINDOWS" /D "WIN32" /D "_USRDLL" /D "_CONSOLE" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_MEMCHR" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /D "HAVE_DIRECTX" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "NDEBUG"
@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 ..\..\..\SDL\lib\SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib kernel32.lib user32.lib gdi32.lib shell32.lib uuid.lib /nologo /dll /debug /machine:I386 /out:"..\..\bin\fsci.dll" /fixed:no
+# ADD LINK32 ..\..\..\..\SDL\lib\SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib kernel32.lib user32.lib gdi32.lib shell32.lib uuid.lib /nologo /dll /debug /machine:I386 /out:"..\..\..\bin\fsci.dll" /fixed:no
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "_WINDOWS" /D "WIN32" /D "_USRDLL" /D "_CONSOLE" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_MEMCHR" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /D "HAVE_DIRECTX" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /GX /Zi /Od /I "..\..\..\..\SDL\include" /I "..\..\include" /I "..\..\include\win32" /D "_DEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "_WINDOWS" /D "WIN32" /D "_USRDLL" /D "_CONSOLE" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_MEMCHR" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /D "HAVE_DIRECTX" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "_DEBUG"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\..\..\SDL\lib\SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib kernel32.lib user32.lib gdi32.lib shell32.lib uuid.lib /nologo /dll /incremental:no /debug /machine:I386 /out:"Debug\fsci.dll" /pdbtype:sept /fixed:no
+# ADD LINK32 ..\..\..\..\SDL\lib\SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib kernel32.lib user32.lib gdi32.lib shell32.lib uuid.lib /nologo /dll /incremental:no /debug /machine:I386 /out:"Debug\fsci.dll" /pdbtype:sept /fixed:no
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
@@ -98,8 +98,8 @@ LINK32=link.exe
 # PROP Intermediate_Dir "fsci_dll_Purify"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "DEBUG_SOUND_SERVER" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
-# ADD CPP /nologo /MT /W3 /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "SATISFY_PURIFY" /D "_DEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "_WINDOWS" /D "WIN32" /D "_USRDLL" /D "_CONSOLE" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_MEMCHR" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /D "HAVE_DIRECTX" /FR /YX /FD /GZ /c
+# ADD BASE CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\..\SDL\include" /I "..\..\include" /I "..\..\include\win32" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "DEBUG_SOUND_SERVER" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MT /W3 /GR /GX /Zi /Od /I "..\..\..\..\SDL\include" /I "..\..\include" /I "..\..\include\win32" /D "SATISFY_PURIFY" /D "_DEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "_WINDOWS" /D "WIN32" /D "_USRDLL" /D "_CONSOLE" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_MEMCHR" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_STRING_H" /D "HAVE_DIRECTX" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -108,8 +108,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 dxguid.lib dxerr8.lib msvcrtd.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /pdb:none /map /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Purify/fsci.dll"
-# ADD LINK32 ..\..\..\SDL\lib\SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib kernel32.lib user32.lib gdi32.lib shell32.lib uuid.lib /nologo /dll /incremental:no /map:"Purify/fsci.map" /debug /machine:I386 /out:"Purify\fsci.dll" /fixed:no
+# ADD BASE LINK32 dxguid.lib dxerr8.lib msvcrtd.lib ..\..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /pdb:none /map /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Purify/fsci.dll"
+# ADD LINK32 ..\..\..\..\SDL\lib\SDL.lib d3d8.lib d3dx8.lib dxerr8.lib winmm.lib kernel32.lib user32.lib gdi32.lib shell32.lib uuid.lib /nologo /dll /incremental:no /map:"Purify/fsci.map" /debug /machine:I386 /out:"Purify\fsci.dll" /fixed:no
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -127,87 +127,87 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\engine\game.c
+SOURCE=..\..\engine\game.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\grammar.c
+SOURCE=..\..\engine\grammar.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\heap.c
+SOURCE=..\..\engine\heap.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kernel.c
+SOURCE=..\..\engine\kernel.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kevent.c
+SOURCE=..\..\engine\kevent.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kfile.c
+SOURCE=..\..\engine\kfile.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kgraphics.c
+SOURCE=..\..\engine\kgraphics.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\klists.c
+SOURCE=..\..\engine\klists.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kmath.c
+SOURCE=..\..\engine\kmath.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kmenu.c
+SOURCE=..\..\engine\kmenu.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kmovement.c
+SOURCE=..\..\engine\kmovement.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kpathing.c
+SOURCE=..\..\engine\kpathing.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kscripts.c
+SOURCE=..\..\engine\kscripts.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\ksound.c
+SOURCE=..\..\engine\ksound.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\kstring.c
+SOURCE=..\..\engine\kstring.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\said.c
+SOURCE=..\..\engine\said.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\savegame.c
+SOURCE=..\..\engine\savegame.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\savegame.cfsml
+SOURCE=..\..\engine\savegame.cfsml
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\scriptdebug.c
+SOURCE=..\..\engine\scriptdebug.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\simplesaid.c
+SOURCE=..\..\engine\simplesaid.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\vm.c
+SOURCE=..\..\engine\vm.c
 # End Source File
 # End Group
 # Begin Group "gfx"
@@ -218,31 +218,31 @@ SOURCE=..\engine\vm.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\gfx\resource\sci_cursor_0.c
+SOURCE=..\..\gfx\resource\sci_cursor_0.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\resource\sci_font.c
+SOURCE=..\..\gfx\resource\sci_font.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\resource\sci_pal_1.c
+SOURCE=..\..\gfx\resource\sci_pal_1.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\resource\sci_pic_0.c
+SOURCE=..\..\gfx\resource\sci_pic_0.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\resource\sci_resmgr.c
+SOURCE=..\..\gfx\resource\sci_resmgr.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\resource\sci_view_0.c
+SOURCE=..\..\gfx\resource\sci_view_0.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\resource\sci_view_1.c
+SOURCE=..\..\gfx\resource\sci_view_1.c
 # End Source File
 # End Group
 # Begin Group "drivers"
@@ -250,92 +250,92 @@ SOURCE=..\gfx\resource\sci_view_1.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\gfx\drivers\dd_driver.cpp
+SOURCE=..\..\gfx\drivers\dd_driver.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\drivers\dd_driver_line.cpp
+SOURCE=..\..\gfx\drivers\dd_driver_line.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\drivers\dx_driver.cpp
+SOURCE=..\..\gfx\drivers\dx_driver.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\drivers\gfx_drivers.c
+SOURCE=..\..\gfx\drivers\gfx_drivers.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\drivers\null_driver.c
+SOURCE=..\..\gfx\drivers\null_driver.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\drivers\sdl_driver.c
+SOURCE=..\..\gfx\drivers\sdl_driver.c
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=..\gfx\alpha_mvi_crossblit.c
+SOURCE=..\..\gfx\alpha_mvi_crossblit.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\antialias.c
+SOURCE=..\..\gfx\antialias.c
 # End Source File
 # Begin Source File
 
-SOURCE="..\gfx\font-5x8.c"
+SOURCE="..\..\gfx\font-5x8.c"
 # End Source File
 # Begin Source File
 
-SOURCE="..\gfx\font-6x10.c"
+SOURCE="..\..\gfx\font-6x10.c"
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\font.c
+SOURCE=..\..\gfx\font.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\gfx_console.c
+SOURCE=..\..\gfx\gfx_console.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\gfx_resource.c
+SOURCE=..\..\gfx\gfx_resource.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\gfx_support.c
+SOURCE=..\..\gfx\gfx_support.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\gfx_tools.c
+SOURCE=..\..\gfx\gfx_tools.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\menubar.c
+SOURCE=..\..\gfx\menubar.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\operations.c
+SOURCE=..\..\gfx\operations.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\resmgr.c
+SOURCE=..\..\gfx\resmgr.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\sbtree.c
+SOURCE=..\..\gfx\sbtree.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\sci_widgets.c
+SOURCE=..\..\gfx\sci_widgets.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\widgets.c
+SOURCE=..\..\gfx\widgets.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\gfx\wrapper.c
+SOURCE=..\..\gfx\wrapper.c
 # End Source File
 # End Group
 # Begin Group "scicore"
@@ -343,63 +343,63 @@ SOURCE=..\gfx\wrapper.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\scicore\console.c
+SOURCE=..\..\scicore\console.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\decompress0.c
+SOURCE=..\..\scicore\decompress0.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\decompress01.c
+SOURCE=..\..\scicore\decompress01.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\decompress1.c
+SOURCE=..\..\scicore\decompress1.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\decompress11.c
+SOURCE=..\..\scicore\decompress11.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\old_objects.c
+SOURCE=..\..\scicore\old_objects.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\resource.c
+SOURCE=..\..\scicore\resource.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\resource_map.c
+SOURCE=..\..\scicore\resource_map.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\resource_patch.c
+SOURCE=..\..\scicore\resource_patch.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\resourcecheck.c
+SOURCE=..\..\scicore\resourcecheck.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\sci_memory.c
+SOURCE=..\..\scicore\sci_memory.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\script.c
+SOURCE=..\..\scicore\script.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\tools.c
+SOURCE=..\..\scicore\tools.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\vocab.c
+SOURCE=..\..\scicore\vocab.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\scicore\vocab_debug.c
+SOURCE=..\..\scicore\vocab_debug.c
 # End Source File
 # End Group
 # Begin Group "sound"
@@ -407,92 +407,92 @@ SOURCE=..\scicore\vocab_debug.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\sound\event_ss.c
+SOURCE=..\..\sound\event_ss.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\event_ss_win32.c
+SOURCE=..\..\sound\event_ss_win32.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\fmopl.c
+SOURCE=..\..\sound\fmopl.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\midi_adlib.c
+SOURCE=..\..\sound\midi_adlib.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\midi_adlibemu.c
+SOURCE=..\..\sound\midi_adlibemu.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\midi_device.c
+SOURCE=..\..\sound\midi_device.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\midi_mt32.c
+SOURCE=..\..\sound\midi_mt32.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\midi_mt32gm.c
+SOURCE=..\..\sound\midi_mt32gm.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\midiout.c
+SOURCE=..\..\sound\midiout.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\midiout_win32mci.c
+SOURCE=..\..\sound\midiout_win32mci.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\oldmidi.c
+SOURCE=..\..\sound\oldmidi.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\pcmout.c
+SOURCE=..\..\sound\pcmout.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\pcmout_sdl.c
+SOURCE=..\..\sound\pcmout_sdl.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\polled_ss.c
+SOURCE=..\..\sound\polled_ss.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\polled_ss_win32.c
+SOURCE=..\..\sound\polled_ss_win32.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\sfx_save.c
+SOURCE=..\..\sound\sfx_save.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\sfx_save.cfsml
+SOURCE=..\..\sound\sfx_save.cfsml
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\song_iterator.c
+SOURCE=..\..\sound\song_iterator.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\sound.c
+SOURCE=..\..\sound\sound.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\soundserver.c
+SOURCE=..\..\sound\soundserver.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\thread_ss_sdl.c
+SOURCE=..\..\sound\thread_ss_sdl.c
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\usleep.c
+SOURCE=..\usleep.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -503,19 +503,19 @@ SOURCE=.\usleep.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\gfx\drivers\dd_driver.h
+SOURCE=..\..\gfx\drivers\dd_driver.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics_ddraw.h
+SOURCE=..\..\include\graphics_ddraw.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\win32\messages.h
+SOURCE=..\..\include\win32\messages.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\win32\sci_win32.h
+SOURCE=..\..\include\win32\sci_win32.h
 # End Source File
 # End Group
 # Begin Group "SDL"
@@ -523,297 +523,297 @@ SOURCE=..\include\win32\sci_win32.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\begin_code.h
+SOURCE=..\..\..\..\SDL\include\begin_code.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\close_code.h
+SOURCE=..\..\..\..\SDL\include\close_code.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL.h
+SOURCE=..\..\..\..\SDL\include\SDL.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_active.h
+SOURCE=..\..\..\..\SDL\include\SDL_active.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_audio.h
+SOURCE=..\..\..\..\SDL\include\SDL_audio.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_byteorder.h
+SOURCE=..\..\..\..\SDL\include\SDL_byteorder.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_cdrom.h
+SOURCE=..\..\..\..\SDL\include\SDL_cdrom.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_copying.h
+SOURCE=..\..\..\..\SDL\include\SDL_copying.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_endian.h
+SOURCE=..\..\..\..\SDL\include\SDL_endian.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_error.h
+SOURCE=..\..\..\..\SDL\include\SDL_error.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_events.h
+SOURCE=..\..\..\..\SDL\include\SDL_events.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_getenv.h
+SOURCE=..\..\..\..\SDL\include\SDL_getenv.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_joystick.h
+SOURCE=..\..\..\..\SDL\include\SDL_joystick.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_keyboard.h
+SOURCE=..\..\..\..\SDL\include\SDL_keyboard.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_keysym.h
+SOURCE=..\..\..\..\SDL\include\SDL_keysym.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_main.h
+SOURCE=..\..\..\..\SDL\include\SDL_main.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_mouse.h
+SOURCE=..\..\..\..\SDL\include\SDL_mouse.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_mutex.h
+SOURCE=..\..\..\..\SDL\include\SDL_mutex.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_name.h
+SOURCE=..\..\..\..\SDL\include\SDL_name.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_opengl.h
+SOURCE=..\..\..\..\SDL\include\SDL_opengl.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_quit.h
+SOURCE=..\..\..\..\SDL\include\SDL_quit.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_rwops.h
+SOURCE=..\..\..\..\SDL\include\SDL_rwops.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_syswm.h
+SOURCE=..\..\..\..\SDL\include\SDL_syswm.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_thread.h
+SOURCE=..\..\..\..\SDL\include\SDL_thread.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_timer.h
+SOURCE=..\..\..\..\SDL\include\SDL_timer.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_types.h
+SOURCE=..\..\..\..\SDL\include\SDL_types.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_version.h
+SOURCE=..\..\..\..\SDL\include\SDL_version.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\SDL\include\SDL_video.h
+SOURCE=..\..\..\..\SDL\include\SDL_video.h
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=..\include\console.h
+SOURCE=..\..\include\console.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\engine.h
+SOURCE=..\..\include\engine.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\event.h
+SOURCE=..\..\include\event.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\fmopl.h
+SOURCE=..\..\sound\fmopl.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_driver.h
+SOURCE=..\..\include\gfx_driver.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_drivers_list.h
+SOURCE=..\..\include\gfx_drivers_list.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_operations.h
+SOURCE=..\..\include\gfx_operations.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_options.h
+SOURCE=..\..\include\gfx_options.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_resmgr.h
+SOURCE=..\..\include\gfx_resmgr.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_resource.h
+SOURCE=..\..\include\gfx_resource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_sci.h
+SOURCE=..\..\include\gfx_sci.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_state.h
+SOURCE=..\..\include\gfx_state.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_state_internal.h
+SOURCE=..\..\include\gfx_state_internal.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_system.h
+SOURCE=..\..\include\gfx_system.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_tools.h
+SOURCE=..\..\include\gfx_tools.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\gfx_widgets.h
+SOURCE=..\..\include\gfx_widgets.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics.h
+SOURCE=..\..\include\graphics.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics_png.h
+SOURCE=..\..\include\graphics_png.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\heap.h
+SOURCE=..\..\include\heap.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\kdebug.h
+SOURCE=..\..\include\kdebug.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\kernel.h
+SOURCE=..\..\include\kernel.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\menubar.h
+SOURCE=..\..\include\menubar.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\midi_device.h
+SOURCE=..\..\include\midi_device.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\midiout.h
+SOURCE=..\..\include\midiout.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\modules.h
+SOURCE=..\..\include\modules.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\old_objects.h
+SOURCE=..\..\include\old_objects.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\pcmout.h
+SOURCE=..\..\include\pcmout.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\resource.h
+SOURCE=..\..\include\resource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sbtree.h
+SOURCE=..\..\include\sbtree.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sci_conf.h
+SOURCE=..\..\include\sci_conf.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sci_dos.h
+SOURCE=..\..\include\sci_dos.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sci_graphics.h
+SOURCE=..\..\include\sci_graphics.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sci_memory.h
+SOURCE=..\..\include\sci_memory.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sci_widgets.h
+SOURCE=..\..\include\sci_widgets.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sciresource.h
+SOURCE=..\..\include\sciresource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\scitypes.h
+SOURCE=..\..\include\scitypes.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\script.h
+SOURCE=..\..\include\script.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sound.h
+SOURCE=..\..\include\sound.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\soundserver.h
+SOURCE=..\..\include\soundserver.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\uinput.h
+SOURCE=..\..\include\uinput.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\util.h
+SOURCE=..\..\include\util.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\versions.h
+SOURCE=..\..\include\versions.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\vm.h
+SOURCE=..\..\include\vm.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\vocabulary.h
+SOURCE=..\..\include\vocabulary.h
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\freesci.def
+SOURCE=..\freesci.def
 # End Source File
 # End Target
 # End Project

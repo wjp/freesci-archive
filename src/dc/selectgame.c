@@ -33,7 +33,7 @@
 #include <config.h>
 #endif
 
-static char copyright[] = "FreeSCI " VERSION " Copyright (C) 1999, 2000-2003"
+static char copyright[] = "FreeSCI " VERSION " Copyright (C) 1999, 2000-2006"
 	" Alex Angas, Rainer Canavan, Ruediger Hanke, Matt Hargett,"
 	" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,"
 	" Carl Muckenhoupt, Walter van Niftrik, Solomon Peachy,"

@@ -2,13 +2,17 @@ TODO for 0.3.5:
 
 Primary goals:
 	* update calle, callk docs
+	* Address parser errors
+	* Add dynamic module system for gfx/PCM/midiout drivers
+	* A better domain-specific language for customising graphics
+	* Make sure all READMEs are present in the Makefile.ams
 
 Secondary goals:
-	+ Change "version dependancies" to global "interpreter type flags"
-	+ Add on-screen editor for sound mappings
+	* Change "version dependancies" to global "interpreter type flags"
+	* Add on-screen editor for sound mappings
 	* docs: Mention words with class set to zero (no word).
-	* grammar.c: Replace proto-Earley parser with backtracking Earley
-	* Don't crash when loading SCI1 resources
+	+ grammar.c: Replace proto-Earley parser with backtracking Earley
+	+ Don't crash when loading SCI1 resources
 
 Bonus goals:
 	+ Add glx graphics driver

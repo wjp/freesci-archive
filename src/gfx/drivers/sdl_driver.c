@@ -242,13 +242,9 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	S->primary = NULL;
 
+	i = SDL_HWSURFACE | SDL_HWPALETTE;
 #ifdef ARM_WINCE
-	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF | SDL_NOFRAME;
-#endif
-#ifdef _WIN32	
-	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE;
-#else	
-	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
+	i |= SDL_NOFRAME;
 #endif
 		if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
@@ -591,11 +587,8 @@ sdl_init(struct _gfx_driver *drv)
 	}
 	SDL_EnableUNICODE(SDL_ENABLE);
 
-#ifdef _WIN32
-	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE;
-#else
-	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
-#endif
+	i = SDL_HWSURFACE | SDL_HWPALETTE;
+
 	if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
 	}
@@ -1083,6 +1076,7 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
 		if (flags & SCI_SDL_FULLSCREEN) {
 			if (SDL_BlitSurface(S->visual[data_source], &srect, S->primary, &drect))
 				SDLERROR("primary surface update failed!\n");
+			SDL_UpdateRect(S->primary, drect.x, drect.y, drect.w, drect.h);
 			UpdateCE(drv);				
 		} else {
 			if (SDL_BlitSurface(S->visual[data_source], &srect, S->scl_buffer, &drect))
@@ -1094,13 +1088,14 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
 				SDLERROR("primary surface update failed!\n");
 				
 			SDL_FreeSurface(temp);				
+			SDL_UpdateRect(S->primary, 0, 0, 0, 0);
 		}
 
 #else
 		if (SDL_BlitSurface(S->visual[data_source], &srect, S->primary, &drect))
 			SDLERROR("primary surface update failed!\n");			
+		SDL_UpdateRect(S->primary, drect.x, drect.y, drect.w, drect.h);
 #endif			
-		SDL_Flip(S->primary);
 		break;
 	default:
 		GFXERROR("Invalid buffer %d in update!\n", buffer);

@@ -570,9 +570,10 @@ typedef struct {
 
 } sound_server_state_t;
 
-
+/*
 void
 sci0_event_ss(sound_server_state_t *ss_state);
+*/
 
 void
 sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state);

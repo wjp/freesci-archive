@@ -1,4 +1,4 @@
-Thanks for downloading the fifth alpha release of FreeSCI!
+4Thanks for downloading the sixth alpha release of FreeSCI!
 
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
 series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
@@ -98,8 +98,16 @@ FreeSCI will create a directory called .freesci in a platform-specific location
 
 This directory stores FreeSCI data files such as saved games. If a file called
 'config' exists in this directory, it will be read and parsed by the interpreter
-after the game has been loaded. This file may be used to specify a variety of
-configuration options.
+after the game has been loaded; this file may ask for specifications from
+other files to be included (as with the C preprocessor) by using the notation
+
+	%include < [filename] >
+
+where [filename] is the name of the file to be included; as far as the
+configuration file reader is concerned, this is equivalent to replacing
+the entire statement with the contents of the file [filename]. FreeSCI
+automatically checks for and warns about circular inclusion. Include files
+should be stored in the same directory.
 
 
 Currently, the configuration file may contain:
@@ -294,7 +302,7 @@ kinda self-explanatory, eh?  :)
 
 2.1.1.4 DirectX driver:
 -----------------------
-The DirectX driver does not support any options at this time.
+Please see README.Win32 for details on DirectX options.
 
 2.1.1.5 DirectFB driver:
 ------------------------
@@ -414,7 +422,112 @@ pcmout_stereo:       1 for stereo, 0 for mono.  Defaults to stereo.
 pcmout_buffer_size:  Buffer size in frames. Range is from 64 to 8192.
                      Defaults to 1024.
 
-2.2 Config file example:
+The PCM subsystem uses the prefix 'pcm' for driver-specific options.
+
+2.1.3 ALSA driver
+-----------------
+The ALSA driver (infix 'alsa') has precisely one option:
+- device: ALSA device to play back through (default "hw:0,0").
+
+
+2.2 Graphical per-resource customisation
+----------------------------------------
+FreeSCI supports a number of ways for customising the way in which graphics
+contained in SCI games are rendered on a per-resource level, i.e. by
+specifying certain options explicitly for the resource under consideration.
+ This is expressed by specifying two things to FreeSCI (per customisation
+step): A pattern and an alteration, terminated by a semicolon (';')
+character.
+
+2.2.1 Patterns
+--------------
+  The pattern specifies which resources the alteration applies to; for
+example, it may be applied to all cels of a certain view, to all pics with
+a certain palette, etc. Patterns may look like the following:
+
+  view  ( [nrs] )( [nrs] )( [nrs] )
+  pic   ( [nrs] )( [nrs] )
+  cursor( [nrs] )
+
+...where [nrs] may be a comma-separated collection of numbers, the
+asterisk wildcard ('*') for "all possible options", or a sequence
+'n..m', which indicates that all numbers x such that  n <= x <= m
+are matched. Ranges may be used (comma-separatedly) in combination with
+individual values. For example,
+
+  view (1,2)(1..3)(*)
+
+would match all cels of loops 1,2 and 3 in view.1 and view.2.
+Trailing '(*)' may be omitted, so the above may be re-written as
+
+  view (1,2)(1..3)
+
+with identical semantics.
+  For all resources, the first parenthesised set of values describes
+the resources it will match on (view number, pic number, etc.). For
+views, the second and third parenthesised sets describe the set of
+loops and cels matched on, respectively. For pics, the second
+parenthesised set describes the default SCI0 pic palette matched on,
+where applicable.
+
+
+2.2.2 Modifications
+-------------------
+FreeSCI distinguishes between two classes of modifications: Absolute and
+relative modifications. The current sets of absolute and relative
+modifications are depicted below. The difference between these is that
+at most one absolute modification may be applied to a given resource--
+currently, the last one specified is used-- whereas all relative
+modifications are sequentially applied to it (after applying the
+absolute modification).
+
+2.2.2.1 Absolute modifications
+------------------------------
+
+(a) Setting the resource palette
+
+  [pattern] = [palette]
+
+  ...where [palette] is one of the following:
+
+	default		- The default EGA palette
+	amiga		- A palette matching the AGI Amiga palette
+	gray		- A grayscale palette
+
+  
+
+2.2.2.2 Relative modifications
+------------------------------
+
+(a) Setting resource brightness
+
+  [pattern] *= [value]
+
+  This multiplies the described resources' brightness by [value].
+  For example, a [value] of 2.0 would double their brightness.
+
+
+(b) Linearly modifying resource colour channels
+
+  [pattern] *= ([rf], [gf], [bf])
+
+  This linearly modifies the three colour channels of the matched
+  resources independently. [rf], [gf] and [bf] may be floating point
+  numbers; they modify the red, green, and blue colour channel,
+  respectively.
+
+
+2.2.3 Examples for graphical per-resource customisation
+-------------------------------------------------------
+
+  pic(1..100) *= 0.4 ;
+  # darken the first 100 pics, starting at 1
+
+  view(*)(1,3,5) = gray ;
+  # Mark loops 1,3 and 5 in all views by turning their cels gray
+
+
+2.3 Config file example:
 ------------------------
 # FreeSCI config file
 
@@ -440,6 +553,20 @@ resource_dir = /usr/local/share/freesci/qg1
 version = 0.000.453
 # This SQ3 version is ancient
 resource_dir = /home/bob/stuff/misc/other/games/more/sierra/old/sq/3
+
+[LSL3]
+
+# Max the graphics!
+pic0_dither_mode = dither256
+pic0_dither_pattern = unscaled
+pic_buffer_size = 2
+view_filter = trilinear
+pic_filter = trilinear
+cursor_filter = trilinear
+text_filter = trilinear
+animation_delay = 5
+
+resource_dir = /home/fred/lsl3
 -----------------------
 
 

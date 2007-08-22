@@ -394,3 +394,47 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 
 
 
+
+byte *
+gfx_create_mono_cursor_mask(gfx_pixmap_t *pointer, int xfact, int yfact, int mode)
+{
+	int linewidth = (pointer->xl + 7) >> 3;
+	int lines = pointer->yl;
+	int xc, yc;
+	byte *data = sci_calloc(linewidth, lines);
+	byte *linebase = data, *pos;
+	byte *src = pointer->index_data;
+
+
+	for (yc = 0; yc < pointer->index_yl; yc++) {
+		int scalectr;
+		int bitc = 0;
+		pos = linebase;
+
+
+		for (xc = 0; xc < pointer->index_xl; xc++) {
+			int draw = mode?
+				(*src == 0) : (*src < GFX_COLOR_INDEX_TRANSPARENT);
+
+			for (scalectr = 0; scalectr < xfact; scalectr++) {
+				if (draw)
+					*pos |= (1 << bitc);
+
+				bitc++;
+				if (bitc == 8) {
+					bitc = 0;
+					pos++;
+				}
+			}
+
+			src++;
+		}
+		for (scalectr = 1; scalectr < yfact; scalectr++)
+			memcpy(linebase + linewidth * scalectr, linebase, linewidth);
+
+		linebase += linewidth * yfact;
+	}
+
+	return data;
+}
+

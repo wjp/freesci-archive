@@ -1,5 +1,5 @@
 /***************************************************************************
- dx_driver.cpp Copyright (C) 2002,2003,2005 Alexander R Angas,
+ dx_driver.cpp Copyright (C) 2002,2003,2005-6 Alexander R Angas,
                Some portions Copyright (C) 1999 Dmitry Jemerov
 
  This program may be modified and copied freely according to the terms of
@@ -25,12 +25,19 @@
  History:
 
 	20051106 (AAngas) - Rewrite
+	20060201 (AAngas) - Fixed wrong format for texture priority maps
+	20060205 (AAngas) - Changed pointer to use D3DXSprite
+	20060208 (AAngas) - Fixed pointer alpha blending bug
+	20060307 (AAngas) - Fixed crash on exit
+
 
 TODO:
-	Fix alpha on mouse pointer
+	Corrupt cursor at different resolutions
+	Full screen
 	Lost devices
+	Moving and activating window
 	Allow user to specify hardware or software vertex processing
-	Add fancies
+	Fancies
 
 ***************************************************************************/
 
@@ -40,10 +47,16 @@ TODO:
 #error NOTE: This file MUST be compiled as C++. In Visual C++, use the /Tp command line option.
 #endif
 
-#include "dx_driver.h"
+#include <graphics_directx.h>
 
+#define TO_STRING2(x) #x
+#define TO_STRING(x) TO_STRING2(x)
 #if (DIRECT3D_VERSION < 0x0800)
-#error ERROR: DirectX 8 or higher is required for this driver.
+#	error The DirectX 8 SDK (or higher) is required for this driver.
+#elif (DIRECT3D_VERSION > 0x0800)
+#	pragma message (" ")
+#	pragma message ("*** This driver has been developed against version 8 of the DirectX SDK and may not work against your version " TO_STRING(DIRECT3D_VERSION))
+#	pragma message (" ")
 #endif
 
 
@@ -69,29 +82,12 @@ RenderD3D(struct _gfx_driver *drv)
 	// Check we haven't lost the device
 	if (CheckDevice(drv))
 	{
-		// Combine primary vis with mouse pointer (if there is one)
-		LPDIRECT3DSURFACE8 sbuf, dbuf;
-		DODX( (dx_state->pTexVisuals[PRIMARY_VIS]->GetSurfaceLevel(0, &sbuf)), RenderD3D );
-		DODX( (dx_state->pTexPScne->GetSurfaceLevel(0, &dbuf)), RenderD3D );
-		DODX( (dx_state->pDevice->CopyRects(sbuf, NULL, 0, dbuf, NULL)), RenderD3D );
-		SAFE_RELEASE(sbuf);
-
-		if (dx_state->pTexPointer)
-		{
-			RECT srcRect = {0, 0, dx_state->pointerDims.x, dx_state->pointerDims.y};
-			POINT pp = {drv->pointer_x, drv->pointer_y};
-			DODX( (dx_state->pTexPointer->GetSurfaceLevel(0, &sbuf)), RenderD3D );
-			DODX( (dx_state->pDevice->CopyRects(sbuf, &srcRect, 1, dbuf, &pp)), RenderD3D );
-			SAFE_RELEASE(sbuf);
-		}
-		SAFE_RELEASE(dbuf);
-
 		// Begin scene
 		DODX( (dx_state->pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0,0,0), 1.0, 0)), RenderD3D );
 		DODX( (dx_state->pDevice->BeginScene()), RenderD3D );
 
 		// Set texture
-		DODX( (dx_state->pDevice->SetTexture( 0, dx_state->pTexPScne )), RenderD3D );	// Scene image
+		DODX( (dx_state->pDevice->SetTexture( 0, dx_state->pTexVisuals[PRIMARY_VIS] )), RenderD3D );	// Scene image
 
 		// Set texture states for scene
 		DODX( (dx_state->pDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE )), RenderD3D );
@@ -102,6 +98,15 @@ RenderD3D(struct _gfx_driver *drv)
 		DODX( (dx_state->pDevice->SetStreamSource(0, dx_state->pVertBuff, sizeof(CUSTOMVERTEX))), RenderD3D );
 		DODX( (dx_state->pDevice->SetVertexShader( D3DFVF_CUSTOMVERTEX )), RenderD3D );
 		DODX( (dx_state->pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2)), RenderD3D );
+
+		// Draw the pointer sprite
+		if (dx_state->pTexPointer)
+		{
+			D3DXVECTOR2 pointerPos((float)drv->pointer_x, (float)drv->pointer_y);
+			DODX( (dx_state->pSPointer->Begin()), RenderD3D );
+			DODX( (dx_state->pSPointer->Draw(dx_state->pTexPointer, NULL, NULL, NULL, 0.0, &pointerPos, 0xFFFFFFFF)), RenderD3D );
+			DODX( (dx_state->pSPointer->End()), RenderD3D );
+		}
 
 		// Present scene
 		DODX( (dx_state->pDevice->EndScene()), RenderD3D );
@@ -152,7 +157,7 @@ InitWindow(struct _gfx_driver *drv)
 	dx_state->wc.lpszClassName = DX_CLASS_NAME;
 	if ( RegisterClassEx( &dx_state->wc ) == 0 )
 	{
-		sciprintf("dx_init_specific(): RegisterClassEx failed (%u)\n", GetLastError());
+		sciprintf("InitWindow(): RegisterClassEx failed (%u)\n", GetLastError());
 		return GFX_FATAL;
 	}
 
@@ -165,7 +170,7 @@ InitWindow(struct _gfx_driver *drv)
 
 	if ( dx_state->hWnd == NULL )
 	{
-		sciprintf("dx_init_specific(): CreateWindow failed (%u)\n", GetLastError());
+		sciprintf("InitWindow(): CreateWindow failed (%u)\n", GetLastError());
 		return GFX_FATAL;
 	}
 
@@ -236,12 +241,9 @@ InitD3D(struct _gfx_driver *drv)
 		}
 	}
 
-	// Get current display mode and optimise for this screen
+	// Get current display mode
 	DODX( (dx_state->pD3d->GetAdapterDisplayMode( dx_state->adapterId, &dx_state->displayMode )), InitD3D );
 	sciprintf("   Display %lu x %lu\n", dx_state->displayMode.Width, dx_state->displayMode.Height);
-	if (dx_state->xfact == 0)
-		dx_state->xfact = (int)(dx_state->displayMode.Width / 320);
-	dx_state->yfact = dx_state->xfact;
 
 	// Turn off Windows mouse pointer
 	ShowCursor(FALSE);
@@ -263,14 +265,6 @@ InitScene(struct _gfx_driver *drv)
 	DODX((dx_state->pDevice->SetRenderState( D3DRS_LIGHTING, FALSE )), InitScene);				// Disable lighting features
 	DODX((dx_state->pDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE )), InitScene);		// Don't cull back side of polygons
 	DODX((dx_state->pDevice->SetRenderState( D3DRS_ZENABLE, D3DZB_FALSE )), InitScene);		 	// No depth buffering
-/*
-	// Set alpha blending
-	DODX((dx_state->pDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, true)), InitScene);
-	DODX((dx_state->pDevice->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA)), InitScene);		// Source blend factor
-	DODX((dx_state->pDevice->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA)), InitScene);	// Dest blend factor
-
-	DODX((dx_state->pDevice->SetTextureStageState( 0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE)), InitScene);// Set alpha from texture
-*/
 
 	return GFX_OK;
 }
@@ -280,7 +274,7 @@ InitScene(struct _gfx_driver *drv)
 static int
 dx_set_param(struct _gfx_driver *drv, char *attribute, char *value)
 {
-	// Full screen
+/*	// Full screen
 	if (!strncmp(attribute, "fullscreen", 11)) {
 		if (string_truep(value))
 			flags |= DX_FLAGS_FULLSCREEN;
@@ -289,7 +283,7 @@ dx_set_param(struct _gfx_driver *drv, char *attribute, char *value)
 
 		return GFX_OK;
 	}
-
+*/
 	// Adapter ID
 	if (!strncmp(attribute, "adapterid", 11)) {
 		int aid = D3DADAPTER_DEFAULT;
@@ -314,25 +308,30 @@ dx_init_specific(struct _gfx_driver *drv,
 	int alpha_mask = 0x00000000, red_mask = 0x00ff0000, green_mask = 0x0000ff00, blue_mask = 0x000000ff;
 	gfx_return_value_t d3dret;
 
+	// Error checking
+	if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
+		sciprintf("Attempt to open window with invalid scale factors (%d,%d) and bpp=%d!\n",
+		 xfact, yfact, bytespp);
+		return GFX_ERROR;
+	}
+
+	// Prepare memory for gfx_dx_struct_t
 	drv->state = (struct gfx_dx_struct_t *) sci_malloc(sizeof(gfx_dx_struct_t));
 	ZeroMemory(drv->state, sizeof(gfx_dx_struct_t));
 	dx_state->adapterId = -1;	// we will set this later
 
-	// Check for scaling
-	if (xfact != 0)
-		dx_state->xfact = xfact;
-	if (yfact != 0)
-		dx_state->yfact = yfact;
+	// Set window size factor
+	dx_state->xfact = xfact;
+	dx_state->yfact = yfact;
+	dx_state->xsize = dx_state->xfact * 320;
+	dx_state->ysize = dx_state->yfact * 200;
+	dx_state->bpp = bytespp;
+	sciprintf("   Window %d x %d @ %d bpp\n", dx_state->xsize, dx_state->ysize, dx_state->bpp << 3);
 
 	// Set up Direct3D
 	d3dret = InitD3D(drv);
 	if (d3dret != GFX_OK)
 		return d3dret;
-
-	// Set window size factor (now that InitD3D has told us how big the window is)
-	dx_state->xsize = dx_state->xfact * 320;
-	dx_state->ysize = dx_state->yfact * 200;
-	dx_state->bpp = bytespp;
 
 	// Create window
 	InitWindow(drv);
@@ -379,15 +378,13 @@ dx_init_specific(struct _gfx_driver *drv,
 	{
 		DODX((dx_state->pDevice->CreateTexture(dx_state->xsize, dx_state->ysize,
 			1, 0,
-			D3DFMT_P8,
+			dx_state->d3dFormat,
 			D3DPOOL_MANAGED,
 			&dx_state->pTexPrioritys[i])), dx_init_specific);
 	}
-	DODX((dx_state->pDevice->CreateTexture(dx_state->xsize, dx_state->ysize,
-		1, 0,
-		dx_state->d3dFormat,
-		D3DPOOL_MANAGED,
-		&dx_state->pTexPScne)), dx_init_specific);
+
+	// Create sprite for pointer
+	DODX( (D3DXCreateSprite(dx_state->pDevice, &dx_state->pSPointer)), dx_init_specific );
 
 	// Allocate priority maps
 	for (int i = 0; i < NUM_PRIORITY_BUFFERS; i++)
@@ -406,11 +403,17 @@ dx_init_specific(struct _gfx_driver *drv,
 	dx_state->queue_size  = 256;
 	dx_state->event_queue = (sci_event_t *) sci_malloc (dx_state->queue_size * sizeof (sci_event_t));
 
-	// Set up graphics mode
+	// Set up graphics mode for primary vis
 	drv->mode = gfx_new_mode(dx_state->xfact, dx_state->yfact, dx_state->bpp,
 			   red_mask, green_mask, blue_mask, alpha_mask,
 			   red_shift, green_shift, blue_shift, alpha_shift,
 			   (dx_state->bpp == 1) ? 256 : 0, 0);
+
+	// Set up graphics mode for pointer
+	dx_state->pointerMode = gfx_new_mode(dx_state->xfact, dx_state->yfact, dx_state->bpp,
+    									0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000,
+										        24,         16,          8,          0,
+										0, GFX_MODE_FLAG_REVERSE_ALPHA);
 
 	return GFX_OK;
 }
@@ -420,7 +423,7 @@ dx_init_specific(struct _gfx_driver *drv,
 static int
 dx_init(struct _gfx_driver *drv)
 {
-	return dx_init_specific(drv, NULL, NULL, 4);
+	return dx_init_specific(drv, 2, 2, 4);
 }
 
 
@@ -438,10 +441,15 @@ dx_exit(struct _gfx_driver *drv)
 	for (i = 0; i < NUM_VISUAL_BUFFERS; i++)
 		SAFE_RELEASE( dx_state->pTexVisuals[i] );
 	SAFE_RELEASE( dx_state->pTexPointer );
-	SAFE_RELEASE( dx_state->pTexPScne );
+	SAFE_RELEASE( dx_state->pSPointer );
 	SAFE_RELEASE( dx_state->pVertBuff );
     SAFE_RELEASE( dx_state->pDevice );
     SAFE_RELEASE( dx_state->pD3d );
+
+	if ( dx_state->pointerMode )
+		gfx_free_mode(dx_state->pointerMode);
+	if ( drv->mode )
+		gfx_free_mode(drv->mode);
 
 	if ( dx_state->event_queue )
 		sci_free(dx_state->event_queue);
@@ -839,6 +847,9 @@ dx_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 {
 	HRESULT hr;
 
+	if (pointer->data == NULL)
+		return GFX_OK;
+
 	LPDIRECT3DTEXTURE8 pntTex;
 	LPDIRECT3DSURFACE8 pntSrf;
 
@@ -847,11 +858,15 @@ dx_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 	dx_state->pointerDims = pDims;
 	RECT r = {0, 0, pointer->xl, pointer->yl};
 
+	// Recreate pointer data according to the graphics mode we need
+	gfx_pixmap_free_data(pointer);
+	gfx_xlate_pixmap(pointer, dx_state->pointerMode, GFX_XLATE_FILTER_NONE);
+
 	// Create texture and fill with pointer data
 	DODX( (dx_state->pDevice->CreateTexture(pointer->xl, pointer->yl, 1, 0, dx_state->d3dFormat, D3DPOOL_MANAGED, &pntTex )), dx_set_pointer );
 	DODX( (pntTex->GetSurfaceLevel(0, &pntSrf)), dx_set_pointer );
 
-	DODX( (D3DXLoadSurfaceFromMemory(pntSrf, NULL, &r, pointer->data, dx_state->d3dFormat, 256, NULL, &r, D3DX_FILTER_NONE, 0xcccccccc)), dx_set_pointer);
+	DODX( (D3DXLoadSurfaceFromMemory(pntSrf, NULL, &r, pointer->data, dx_state->d3dFormat, 256, NULL, &r, D3DX_FILTER_NONE, 0)), dx_set_pointer);
 
 	SAFE_RELEASE(pntSrf);
 
@@ -868,35 +883,16 @@ dx_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 static int
 show_pointer(struct _gfx_driver *drv, LPARAM pos)
 {
-	HRESULT hr;
 	POINTS mousePos;	// mouse coordinates
-	POINT mPos;			// where to copy mouse pointer to
-	LPDIRECT3DSURFACE8 sbuf, dbuf;
-
-	// Copy over where pointer was last frame
-	POINT poldPnt = {drv->pointer_x, drv->pointer_y};
-	RECT roldPnt = {drv->pointer_x, drv->pointer_y, drv->pointer_x + dx_state->pointerDims.x, drv->pointer_y + dx_state->pointerDims.y};
-	DODX( (dx_state->pTexVisuals[PRIMARY_VIS]->GetSurfaceLevel(0, &sbuf)), show_pointer );
-	DODX( (dx_state->pTexPScne->GetSurfaceLevel(0, &dbuf)), show_pointer );
-	DODX( (dx_state->pDevice->CopyRects( sbuf, &roldPnt, 1, dbuf, &poldPnt)), show_pointer );
-	SAFE_RELEASE(sbuf);
 
 	// Sort out coordinates
 	mousePos = MAKEPOINTS(pos);
-	mPos.x = mousePos.x;
-	mPos.y = mousePos.y;
-	//sciprintf("Mouse pos: %i,%i\n", mousePos.x, mousePos.y);
-
-	// Copy over mouse pointer
-	DODX( (dx_state->pTexPointer->GetSurfaceLevel(0, &sbuf)), show_pointer );
-	dx_state->pDevice->CopyRects( sbuf, NULL, 0, dbuf, &mPos);
 
 	// Update pos
 	drv->pointer_x = mousePos.x;
 	drv->pointer_y = mousePos.y;
 
-	SAFE_RELEASE(sbuf);
-	SAFE_RELEASE(dbuf);
+	RenderD3D(drv);
 
 	return GFX_OK;
 }
@@ -1146,7 +1142,7 @@ ProcessMessages(struct _gfx_driver *drv)
 extern "C"
 gfx_driver_t gfx_driver_dx = {
 	"directx",
-	"0.4",
+	"0.4.2",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,	/* mode */

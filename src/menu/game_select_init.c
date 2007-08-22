@@ -27,8 +27,8 @@
 
 #include <sci_memory.h>
 #include <gfx_operations.h>
-#include "game_select.h"
-#include "sciresource.h"
+#include <game_select.h>
+#include <sciresource.h>
 
 /* NOTE: THIS CODE BASED ON _gfxop_init_common (COPIED AND MODIFIED) */
 static int

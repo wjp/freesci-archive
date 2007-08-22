@@ -22,7 +22,7 @@
 .\"
 .\" Modified Mon Apr 12 19:50:18 CEST 2004 by Bas Zoetekouw
 .\"
-.TH freesci 6 "Apr 12th, 2004" "FreeSCI 0.3.4c" FreeSCI
+.TH freesci 6 "Apr 12th, 2004" "FreeSCI 0.3.5" FreeSCI
 
 .SH NAME
 freesci \- free interpreter for SCI bytecode
@@ -191,6 +191,10 @@ The config file section before the first game\-specific section is the
 global configuration section; anything specified here will be used as
 the setting for any game that does not explicitly request different
 settings.
+
+.P
+It is possible to include other files with the \fB%include<#>\fR directive. FreeSCI
+will automatically detect and warn about circular inclusions.
 
 .P
 Here is a complete listing of all options supported:
@@ -423,6 +427,16 @@ Selects the OSS sequencer device number; this defaults to \fB1\fR.
 Chooses a file the OSS sequencer should print debug output to. This is
 not particularly helpful for everyday use, and disabled by default.
 
+.TP
+.BR "pcmout.alsa.device = #"
+Selects an ALSA PCM device for PCM output. Currently defaults to \fBhw:0,0\fR.
+
+.TP
+PER-RESOURCE COLOUR CUSTOMISATION:
+
+.TP
+FreeSCI allows the brightness and hue of in-game images to be customised. A complete description of this mechanism can be found in the accompanying README.
+
 
 .SH EXAMPLES
 Here is an exemplary configuartion file:
@@ -431,7 +445,7 @@ Here is an exemplary configuartion file:
 .nf
 .RS
 # FreeSCI configuration file
-# For FreeSCI version 0.3.4
+# For FreeSCI version 0.6.2
 
 # default values:
 
@@ -562,6 +576,12 @@ Solomon Peachy <\fIpizza@shaftnet.org\fR>
 Rickard Lind <\fIrpl@dd.chalmers.se\fR>
 .IP \(bu
 Rink Springer <\fIrink@springer.cx\fR>
+.IP \(bu
+Hugues Valois <\fIhugues_valois@hotmail.com\fR>
+.IP \(bu
+Ruediger Hanke <\fItomjoad@muenster.de\fR>
+.IP \(bu
+Alexander Angas <\fwgd@adelaide.on.net\fR>
 .IP \(bu
 Walter van Niftrik <\fIw.f.b.w.v.niftrik@stud.tue.nl\fR>
 .IP \(bu

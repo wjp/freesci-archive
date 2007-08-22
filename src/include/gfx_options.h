@@ -31,6 +31,7 @@
 
 #include <gfx_resource.h>
 #include <gfx_tools.h>
+#include <gfx_res_options.h>
 
 /* Dirty rectangle heuristics: */
 
@@ -68,6 +69,8 @@ typedef struct _gfx_options {
 	gfxr_font_scale_filter_t fixed_font_xlate_filter; /* Scale filter for systems that provide font support which isn't scaled */
 
 	gfxr_antialiasing_t pic0_antialiasing;
+
+	gfx_res_fullconf_t res_conf; /* Resource customisation: Per-resource palettes etc. */
 
 	int dirty_frames;
 

@@ -130,7 +130,6 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 	return GFX_OK;
 }
 
-
 gfxr_view_t *
 gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal)
 {
@@ -170,6 +169,7 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr, void *internal)
 	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
 	resource_t *res = scir_find_resource(resmgr, sci_cursor, nr, 0);
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
+	int resid = GFXR_RES_ID(GFX_RESOURCE_TYPE_CURSOR, nr);
 
 	if (!res || !res->data)
 		return NULL;
@@ -180,9 +180,9 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr, void *internal)
 	}
 
 	if (state->version == SCI_VERSION_0)
-		return gfxr_draw_cursor0(res->id, res->data, res->size);
+		return gfxr_draw_cursor0(resid, res->data, res->size);
 	else
-		return gfxr_draw_cursor01(res->id, res->data, res->size);
+		return gfxr_draw_cursor01(resid, res->data, res->size);
 }
 
 

@@ -1,0 +1,7 @@
+Per-resource graphical customisation for SCI games
+--------------------------------------------------
+
+Use the %include<> directive or copy and paste the *.scifx files into your
+config file (check the README for your platform to find out where it is
+located) after the appropriate game section (cf. sample configuration file
+in the README) to spice up your graphics just a little bit.

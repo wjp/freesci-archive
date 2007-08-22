@@ -135,7 +135,9 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     vocab_decypher_said_block(s, said_block);
   }
 
-  if (!(s->parser_event) || (GET_SELECTOR(s->parser_event, claimed))) {
+  if (!(s->parser_event)
+      || (GET_SELECTOR(s->parser_event, claimed))
+      || ((GET_SELECTOR(s->parser_event, type) & 0x80) == 0)) {
     s->acc = 0;
     return;
   }

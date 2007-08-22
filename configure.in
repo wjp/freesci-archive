@@ -4,7 +4,7 @@ AC_CONFIG_SRCDIR([acinclude.m4])
 
 AC_CANONICAL_TARGET([])
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.3.4c-devel)
+AM_INIT_AUTOMAKE(freesci, 0.3.5pre2)
 
 AC_PROG_CC
 #AC_LIBTOOL_DLOPEN
@@ -187,6 +187,7 @@ if test x"$have_x" = xyes; then
 		fi
 		AC_CHECK_LIB(Xi, XGrabDevice, [X_LIBS="$X_LIBS -lXi"])
 		AC_CHECK_LIB(X11, XOpenDisplay, [X_LIBS="$X_LIBS -lX11"])
+		AC_CHECK_LIB(Xext, XShmAttach, [X_LIBS="$X_LIBS -lXext"])
 
 		fsci_xlib_driver="yes"
 	fi
@@ -286,6 +287,11 @@ AC_ARG_WITH(console,
 	[AC_DEFINE(WANT_CONSOLE)],
 	[])
 
+AC_ARG_WITH(tools,
+	[  --with-tools		  Build freesci development tools],
+	[wanttools=yes],
+	[wanttools=no])
+
 AC_ARG_WITH(forced-console,
 	[  --with-forced-console   Enforce usage of on-screen console on all gfx drivers],
 	[
@@ -320,6 +326,7 @@ case $target in
 esac
 
 AM_CONDITIONAL(MORPHOS, test x$morphos = xyes)
+AM_CONDITIONAL(WANT_TOOLS, test x$wanttools = xyes)
 
 AC_CONFIG_FILES([Makefile    \
 	debian/Makefile \
@@ -328,6 +335,7 @@ AC_CONFIG_FILES([Makefile    \
         doc/misc/Makefile \
         doc/man/Makefile \
         conf/Makefile \
+	custom/Makefile \
 	src/Makefile  \
 	src/scicore/Makefile \
 	src/engine/Makefile \

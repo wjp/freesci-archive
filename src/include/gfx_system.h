@@ -192,8 +192,9 @@ else SUBMERGE_PARTIAL(b, a, z, zl)
 }
 
 
-
+/* This is defined in Win32 and should be renamed if it still needs to be used
 #define RECT(a) a.x, a.y, a.xl, a.yl
+*/
 
 /* Merges two rects
 ** Parameters: (rect_t x rect_t) a,b: The two rects to merge

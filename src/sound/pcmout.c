@@ -125,7 +125,7 @@ struct _pcmout_driver *pcmout_find_driver(char *name)
 
         while (pcmout_drivers[retval] &&
 	       strcasecmp(name, pcmout_drivers[retval]->name))
-                retval++;
+		retval++;
 
         return pcmout_drivers[retval];
 }

@@ -11,8 +11,7 @@ scicore/
 
 
 
-Christoph Reichenbach: <creichen@rbg.informatik.tu-darmstadt.de>
-[Maintenance]
+Christoph Reichenbach: <creichen@gmail.com>
 [Makefile.am, configure.in etc.]
 [Bug fixes]
 main.c
@@ -118,6 +117,7 @@ win32/
 
 
 Lars Skovlund: <lskovlun@image.dk>
+[Maintenance]
 [Most research]
 [Major bugfixes]
 engine/
@@ -268,6 +268,7 @@ Walter van Niftrik: <w.f.b.w.v.niftrik@stud.tue.nl>
 dc/
 	dc.c
 	dc_save.c
+gp32/
 gfx/
 	drivers/
 		dc_driver.c
@@ -283,7 +284,18 @@ morphos/
 sound/
 	midiout_morphos.c
 
+Ismail Khatib:
+wince/
+
+
 
 Rainer Canavan:
 sound/
 	midiout_irixmd.c
+
+
+Hugues Valois:
+main.c
+menu/
+	game_select_init.c
+	game_select_screen.c

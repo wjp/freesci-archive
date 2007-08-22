@@ -49,7 +49,7 @@
 #ifdef _MSC_VER
 #	ifndef VERSION
 #		ifdef NDEBUG
-#			define VERSION "0.3.4"
+#			define VERSION "0.3.5"
 #		else
 #			define VERSION __TIMESTAMP__
 #		endif

@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5FC2D6CC-D500-4F38-AF75-77C1E37A3444}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\ChangeLog = ..\..\..\ChangeLog
+		..\..\..\README = ..\..\..\README
+		..\..\..\README.Win32 = ..\..\..\README.Win32
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fsci_dll", "fsci_dll\fsci_dll.vcproj", "{576F250E-1CAE-4C39-836B-739477DA6249}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sciv", "sciv\sciv.vcproj", "{1C34096E-24B5-4276-ADCC-255E9E055062}"
+	ProjectSection(ProjectDependencies) = postProject
+		{576F250E-1CAE-4C39-836B-739477DA6249} = {576F250E-1CAE-4C39-836B-739477DA6249}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{576F250E-1CAE-4C39-836B-739477DA6249}.Debug|Win32.ActiveCfg = Debug|Win32
+		{576F250E-1CAE-4C39-836B-739477DA6249}.Debug|Win32.Build.0 = Debug|Win32
+		{576F250E-1CAE-4C39-836B-739477DA6249}.Release|Win32.ActiveCfg = Release|Win32
+		{576F250E-1CAE-4C39-836B-739477DA6249}.Release|Win32.Build.0 = Release|Win32
+		{1C34096E-24B5-4276-ADCC-255E9E055062}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1C34096E-24B5-4276-ADCC-255E9E055062}.Debug|Win32.Build.0 = Debug|Win32
+		{1C34096E-24B5-4276-ADCC-255E9E055062}.Release|Win32.ActiveCfg = Release|Win32
+		{1C34096E-24B5-4276-ADCC-255E9E055062}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -170,7 +170,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int max_movcnt = GET_SELECTOR(client, moveSpeed);
 
 	if (SCI_VERSION_MAJOR(s->version)>0)
-	  signal&=~_K_VIEW_SIG_FLAG_HIT_OBSTACLE;
+		signal&=~_K_VIEW_SIG_FLAG_HIT_OBSTACLE;
 	PUT_SELECTOR(client, signal, signal); /* This is a NOP for SCI0 */
 	oldx = x;
 	oldy = y;

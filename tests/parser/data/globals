@@ -1,0 +1,21 @@
+# Global definitions
+
+# Import configuration:
+. ../config
+
+
+# Directories
+GEN_DIR=generated
+TMP_DIR=tmp
+STATS_DIR=stats
+
+
+# FSCI definitions
+FSCI_BIN="../../../src/freesci -Pnull -gnull -d "${TEST_GAME_DIR}""
+FSCI_RESULT=fsci
+
+# SSCI definitions
+SSCI_BIN=./dosbox.sh
+SSCI_RESULT=ssci
+
+

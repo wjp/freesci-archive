@@ -414,7 +414,7 @@ gfx_get_driver_name(int nr);
 ** with 0 <= nr' < nr so that gfx_get_driver_name(nr') == NULL.
 */
 
-/*** Utility functions for set_parameter implementations */
+/*** Utility functions for set_parameter implementations ***/
 
 int
 string_truep(char *value);
@@ -432,6 +432,23 @@ string_falsep(char *value);
 ** along the lines of "no"
 */
 
+
+/*** Utility functions for driver implementations ***/
+/* Cf. also gfx_support.c for line drawing facilities */
+
+byte *
+gfx_create_mono_cursor_mask(gfx_pixmap_t *pointer, int xfact, int yfact, int mode);
+/* Computes the bitmap(s) underlying a mouse pointer
+** Parameters: (gfx_pixmap_t *) pointer: Pixmap of the pointer whose index data will
+**                                       serve as source for the bitmaps
+**             (int x int) xfact, yfact: horizontal and vertical scaling factors
+**             (int) mode: If 0, compute the opaqueness map (1 means opaque, 0 means transparent)
+**                         Otherwise, compute the "is-zero" map, useful for monochrome pointers which
+**                         only use transparency, 0, and 1.
+** Returns   : A freshly allocated bitmap matching the above specification. If
+**             (pointer->xl * xfact)  mod 8  > 0, then empty (zero) bits will be added for
+**             padding at the end of each bitmap line.
+*/
 
 
 #endif /* !_SCI_GFX_DRIVER_H_ */

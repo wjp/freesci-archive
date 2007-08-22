@@ -1,3 +1,183 @@
+2006-07-17  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* config.h, config.log: Removed.
+
+	* src/gfx/drivers/sdl_driver.c: Removed double buffering code.
+
+2006-03-14  Alex Angas <arangas@internode.on.net>
+
+	* src/include/graphics_directx.h:
+	* src/gfx/drivers/dx_driver.cpp: Fixed crash on exit. Now starts at same
+	size as SDL driver always.
+
+	* src/win32/msvc6/fsci_dll.dsp:
+	* src/win32/msvc6/sciv.dsp: More fixes from move to new folder.
+
+	* src/README.Win32: Updated instructions on paths to Vis Studio projects.
+
+2006-03-04  Alex Angas <arangas@internode.on.net>
+
+	* src/win32/msvc8-2005/fsci_dll/fsci_dll.vcproj: Keeps intermediate files
+	out of the bin folder for Release configuration now.
+
+	* src/win32/msvc71-2003: New folder for Visual Studio 2003 solution.
+	* src/win32/msvc71-2003/freesci.sln:
+	* src/win32/msvc71-2003/fsci_dll.vcproj:
+	* src/win32/msvc71-2003/sciv.vcproj: Moved from src/win32.
+
+	* src/win32/msvc6: New folder for Visual Studio 6 workspace.
+	* src/win32/msvc6/classes.dsp:
+	* src/win32/msvc6/console.dsp:
+	* src/win32/msvc6/freesci.dsw:
+	* src/win32/msvc6/fsci_dll.dsp:
+	* src/win32/msvc6/listwords.dsp:
+	* src/win32/msvc6/scidisasm.dsp:
+	* src/win32/msvc6/sciunpack.dsp:
+	* src/win32/msvc6/sciv.dsp:
+	* src/win32/msvc6/scriptdump.dsp:
+	* src/win32/msvc6/vocabdump.dsp:
+	* src/win32/msvc6/win32_profiler.bat: Moved from src/win32.
+
+2006-02-27  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* tests/parser/test-specs: Added initial parser test suite
+
+2006-02-25  Alex Angas <arangas@internode.on.net>
+
+	* src/win32/msvc8-2005: New folder.
+	* src/win32/msvc8-2005/FreeSCI.sln: VS 2005 solution file.
+	* src/win32/msvc8-2005/fsci_dll: New folder for fsci.dll.
+	* src/win32/msvc8-2005/fsci_dll/fsci_dll.vcproj: Project file for fsci.dll.
+	* src/win32/msvc8-2005/sciv: New folder for FreeSCI.exe.
+	* src/win32/msvc8-2005/sciv/sciv.vcproj: Project file for FreeSCI.exe.
+
+	* src/README.Win32: Instructions for VS 2005.
+
+	* src/include/graphics_directx.h: Removed unneccessary include.
+
+2006-02-22  Alex Angas <arangas@internode.on.net>
+
+	* src/README.Win32: Documentation update.
+	* src/README: Moved high graphics config example from Win32 here.
+
+	* src/gfx/drivers/dx_driver.cpp: Updated compiler checks for DX version.
+
+2006-02-17  Christoph Reichenbach <creichen@gmail.com>
+
+	* Added Makefile generation for 'custom' subdirectory
+
+2006-02-15  Alex Angas <arangas@internode.on.net>
+
+	* src/engine/game.c: Compilation fix for non-Win32.
+
+2006-02-14  Alex Angas <arangas@internode.on.net>
+
+	* src/menu/game_select_init.c: Changed include "" to <>.
+
+	* src/engine/game.c: Compiler warning for old SDK versions only.
+	* src/gfx/drivers/dx_driver.cpp: Compiler warning for non-DirectX 8 SDK.
+
+	* src/win32/freesci.sln: Added README to solution.
+	* src/win32/fsci_dll.vcproj: Defined character set as in sciv, disabled
+	pre-compiled header, created win32 filter in source folder, removed files
+	no longer used.
+	* src/win32/sciv.vcproj: Added post-build step to copy SDL.dll, disabled
+	pre-compiled header, added win32 filter in source folder, removed files
+	no longer used.
+	* src/win32/freesci.def: Removed files no longer used.
+
+2006-02-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README.GP32: Updated.
+
+	* src/gp32/config.h, src/gp32/Makefile: Updated.
+
+2006-02-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/config.h: Renamed from config.h.in.
+	* src/dc/Makefile, src/Makefile.am: Updated.
+
+	* README.DC: Updated.
+
+2006-02-08  Alex Angas <arangas@internode.on.net>
+
+	* src/include/graphics_directx.h:
+	* src/gfx/drivers/dx_driver.cpp: Correct pointer alpha.
+
+	* src/win32/fsci_dll.vcproj:
+	* src/include/soundserver.h: Removed Win32 event sound server.
+
+	* include/engine.h:
+	* src/dc/selectgame.c:
+	* src/main.c: Updated version number and copyright years.
+
+2006-02-05  Alex Angas <arangas@internode.on.net>
+
+	* src/gfx/drivers/dx_driver.cpp: Replaced mouse pointer code.
+	* src/include/graphics_directx.h: Moved from gfx/drivers/dx_driver.h.
+
+	* src/gfx/drivers/gfx_drivers.c:
+	* src/include/gfx_system.h: Removed DirectDraw driver reference.
+
+	* src/win32/fsci_dll.vcproj: Updated to fix build errors and removed
+	DirectDraw driver.
+	* src/win32/freesci.def: Updated to fix build errors.
+
+	* README: Referred option for DirectX driver to README.Win32
+	* README.Win32: Updated bits and pieces and added more info on DirectX.
+
+2006-02-05  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/gfx_support.c (gfx_create_mono_cursor_mask): Relocated
+	cursor bitmask computation to a place where it is more easily
+	re-usable
+
+	* src/scicore/resource.c (scir_unlock_resource): Swapped
+	parameters to correspond to prototype.
+
+	* src/sound/pcmout_alsa.c: ALSA pcmout now has a 'device'
+	parameter (default is still "hw:0,0")
+
+	* src/main.c (main): Added driver option support for pcmout
+	
+	* src/sound/midi_device.c: Adlibemu is now the default sound
+	device
+
+	* src/config.l (config_init): Fixed missing config file corner
+	case issue (more) correctly
+
+	* configure.in: Added -lXext support for compiling on some OS X
+	versions
+
+	* src/main.c (main): Added sanity check to avoid segfault when
+	using game name w/o having ~/.freesci/config
+
+	* src/gfx/resmgr.c (gfxr_add_to_pic): Ensure that add-to-pic will
+	use the added pic's resource ID for determining resource-specific
+	updates
+
+2006-02-04  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/kgraphics.c: Fixed 14 priority zone bug according to
+	Hugues' specifications.
+
+	* src/gfx/resource/sci_resmgr.c (gfxr_interpreter_get_cursor):
+	Cursor IDs are now initialised properly
+
+	* src/gfx/gfx_res_options.c (apply_mod): Back-ported resource
+	options
+
+2006-02-01  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* README.Win32 (SOUND): Eliminated reference to event sound server
+
+	* src/engine/kgraphics.c (_find_priority_band): Treat
+	SCI_VERSION_FTU_PRIORITY_14_ZONES consistently with >= rather than >
+
+2006-01-30  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/config.l: Backport the %include directive.
+
 2005-12-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/game.c (game_init): Swapped parameters in memset() to

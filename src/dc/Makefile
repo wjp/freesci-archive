@@ -43,6 +43,7 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/gfx/font-5x8.o \
 	$(FSCI_BASE)/src/gfx/font-6x10.o \
 	$(FSCI_BASE)/src/gfx/gfx_console.o \
+	$(FSCI_BASE)/src/gfx/gfx_res_options.o \
 	$(FSCI_BASE)/src/gfx/gfx_resource.o \
 	$(FSCI_BASE)/src/gfx/gfx_support.o \
 	$(FSCI_BASE)/src/gfx/gfx_tools.o \
@@ -98,7 +99,7 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 
 all: $(BIN_TARGET)
 
-%.o: %.c config.h
+%.o: %.c
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LOCAL_CFLAGS) -D_arch_$(KOS_ARCH) $(KOS_ALL_INCS) -c $< -o $@
 
 include $(KOS_BASE)/Makefile.rules
@@ -108,17 +109,13 @@ KOS_LOCAL_CFLAGS := -I$(FSCI_BASE)/src/include -I$(FSCI_BASE)/src/dc \
 	-DWANT_CONSOLE
 
 clean: rm-elf rm-bin
-	-rm -f $(OBJS) config.h
+	-rm -f $(OBJS)
 
 rm-elf:
 	-rm -f $(ELF_TARGET)
 
 rm-bin:
 	-rm -f $(BIN_TARGET)
-
-config.h: config.h.in
-	cp config.h.in config.h
-	echo -e '\n#define VERSION "0.3.4c-devel-'`date +%Y%m%d`'"' >> config.h
 
 $(ELF_TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(ELF_TARGET) $(KOS_START) \

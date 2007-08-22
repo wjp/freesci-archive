@@ -37,8 +37,6 @@
 #define GFXR_PIC0_PALETTE_SIZE 40
 #define GFXR_PIC0_NUM_PALETTES 4
 
-#define INTERCOL(a, b) ((int) sqrt((((3.3 * (a))*(a)) + ((1.7 * (b))*(b))) / 5.0))
-/* Macro for color interpolation */
 
 #define SCI_PIC0_MAX_FILL 30 /* Number of times to fill before yielding to scheduler */
 
@@ -47,6 +45,8 @@
 int sci0_palette = 0;
 
 
+#define INTERCOL(a, b) ((int) sqrt((((3.3 * (a))*(a)) + ((1.7 * (b))*(b))) / 5.0))
+/* Macro for color interpolation */
 /* Default color maps */
 gfx_pixmap_color_t gfx_sci0_image_colors[SCI0_MAX_PALETTE+1][GFX_SCI0_IMAGE_COLORS_NR] = {
 	{{GFX_COLOR_SYSTEM, 0x00, 0x00, 0x00}, {GFX_COLOR_SYSTEM, 0x00, 0x00, 0xaa},

@@ -115,7 +115,7 @@ check_features()
 
 	helper = 0x100;
 #ifdef __DECC
-	helper = asm("amask %0, %v0", helper);
+	axp_have_mvi = asm("amask %0, %v0", helper);
 #else
 	__asm__ ("amask %1, %0"
 		 : "=r"(axp_have_mvi)
@@ -901,11 +901,12 @@ main(int argc, char** argv)
 	getcwd(startdir, PATH_MAX);
 	script_debug_flag = cl_options.script_debug_flag;
 
-	printf("FreeSCI %s Copyright (C) 1999, 2000-2003\n", VERSION);
+	printf("FreeSCI %s Copyright (C) 1999, 2000-2006\n", VERSION);
 	printf(" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,\n"
 		   " Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel, Lars Skovlund,\n"
 		   " Rink Springer, Petr Vyhnak, Solomon Peachy, Matt Hargett, Alex Angas,\n"
 		   " Walter van Niftrik, Ruediger Hanke, Rainer Canavan, Ismail Khatib\n"
+                   " Hugues Valois\n"
 	       "This program is free software. You can copy and/or modify it freely\n"
 	       "according to the terms of the GNU general public license, v2.0\n"
 	       "or any later version, at your option.\n"
@@ -919,7 +920,6 @@ main(int argc, char** argv)
 	conf_nr = read_config(game_name, &confs, &conf_entries, &version);
 
 	if (game_name) {
-
 		active_conf = confs + conf_nr;
 
 		if (!cl_options.gamedir)
@@ -1195,6 +1195,19 @@ main(int argc, char** argv)
 	        pcmout_sample_rate = active_conf->pcmout_rate;
 	        pcmout_stereo = active_conf->pcmout_stereo;
 	        pcmout_buffer_size = active_conf->pcmout_buffer_size;
+
+		if (pcmout_driver) {
+			driver_option_t *option = get_driver_options(active_conf, FREESCI_DRIVER_SUBSYSTEM_PCM, pcmout_driver->name);
+			while (option) {
+				if ((pcmout_driver->set_parameter)(pcmout_driver, option->option, option->value)) {
+					fprintf(stderr, "Fatal error occured in pcmout driver while processing \"%s = %s\"\n",
+						option->option, option->value);
+					exit(1);
+				}
+
+				option = option->next;
+			}
+		}
 	}
 
 	/* Configure the midiout driver */

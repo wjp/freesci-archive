@@ -35,6 +35,7 @@ OBJS =	$(FSCI_BASE)/src/engine/game.o \
 	$(FSCI_BASE)/src/gfx/font-5x8.o \
 	$(FSCI_BASE)/src/gfx/font-6x10.o \
 	$(FSCI_BASE)/src/gfx/gfx_console.o \
+	$(FSCI_BASE)/src/gfx/gfx_res_options.o \
 	$(FSCI_BASE)/src/gfx/gfx_resource.o \
 	$(FSCI_BASE)/src/gfx/gfx_support.o \
 	$(FSCI_BASE)/src/gfx/gfx_tools.o \

@@ -188,7 +188,7 @@ _find_priority_band(state_t *s, int nr)
 	else {
 		int retval;
 
-		if (s->version > SCI_VERSION_FTU_PRIORITY_14_ZONES)
+		if (s->version >= SCI_VERSION_FTU_PRIORITY_14_ZONES)
 			retval = SCI0_PRIORITY_BAND_FIRST_14_ZONES(nr);
 		else
 			retval = SCI0_PRIORITY_BAND_FIRST(nr);
@@ -1015,7 +1015,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->priority_first = 42;
 
-	if (s->version <= SCI_VERSION_FTU_PRIORITY_14_ZONES)
+	if (s->version < SCI_VERSION_FTU_PRIORITY_14_ZONES)
 		s->priority_last = 200;
 	else
 		s->priority_last = 190;

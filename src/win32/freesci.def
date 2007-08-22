@@ -52,8 +52,6 @@ EXPORTS
   game_init
   game_run
   game_exit
-  loadObjects
-  printObject
   makeMIDI0
   map_MIDI_instruments
   script_set_gamestate_save_dir
@@ -119,3 +117,4 @@ EXPORTS
   gfx_pixmap_alloc_data
   gfxr_draw_font
   gfxr_font_calculate_size
+  gfx_update_conf
