@@ -17,4 +17,4 @@
 #define STDC_HEADERS 1
 #define X_DISPLAY_MISSING 1
 #define YYTEXT_POINTER 1
-#define VERSION "0.3.5"
+#define VERSION "0.3.6-devel"
