@@ -33,6 +33,7 @@
 
 #include <gfx_operations.h>
 #include <kernel_types.h>
+#include <gc.h>
 
 
 /* New kernel functions */
@@ -425,7 +426,7 @@ char *old_save_dir;
 reg_t
 kRestartGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *deref_save_dir = kernel_dereference_bulk_pointer(s, s->save_dir_copy, 1);
+	char *deref_save_dir = (char*)kernel_dereference_bulk_pointer(s, s->save_dir_copy, 1);
 
 	old_save_dir = strdup(deref_save_dir);
 	s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
@@ -442,7 +443,7 @@ kRestartGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kGameIsRestarting(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *deref_save_dir = kernel_dereference_bulk_pointer(s, s->save_dir_copy, 1);
+	char *deref_save_dir = (char*)kernel_dereference_bulk_pointer(s, s->save_dir_copy, 1);
 
 	if (old_save_dir&&deref_save_dir)
 	{

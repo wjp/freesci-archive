@@ -32,6 +32,7 @@
 #include <kernel_types.h>
 #include <seg_manager.h>
 #include <gc.h>
+#include <sfx_player.h>
 
 #if !defined (_WIN32)
 #include <sys/resource.h>
@@ -2276,6 +2277,8 @@ _game_run(state_t *s, int restoring)
 	return s;
 }
 
+int objinfo(state_t *s, reg_t pos);
+
 int
 game_run(state_t **_s)
 {
@@ -2289,7 +2292,7 @@ game_run(state_t **_s)
 	if (!send_selector(s, s->game_obj, s->game_obj,
 			   s->stack_base, 2,
 			   s->stack_base) || script_error_flag) {
-		objinfo(s->game_obj);
+		objinfo(s, s->game_obj);
 		sciprintf("Failed to run the game! Aborting...\n");
 		return 1;
 	}

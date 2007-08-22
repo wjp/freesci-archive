@@ -162,6 +162,9 @@ gfxr_palettize_view(gfxr_view_t *view, gfx_pixmap_color_t *source, int source_en
 }
 
 gfxr_view_t *
+gfxr_draw_view11(int id, byte *resource, int size);
+
+gfxr_view_t *
 gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int palette)
 {
 	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
