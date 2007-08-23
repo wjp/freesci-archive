@@ -111,10 +111,10 @@ typedef struct {
 enum {
 	FRAC_BITS = 16,
 	FRAC_LO_MASK = ((1L << FRAC_BITS) - 1),
-	FRAC_HI_MASK = ((1L << FRAC_BITS) - 1) << FRAC_BITS,
+	FRAC_HI_MASK = (((1L << (32 - FRAC_BITS)) - 1) << FRAC_BITS),
  
 	FRAC_ONE = (1L << FRAC_BITS),		// 1.0
-	FRAC_HALF = (1L << (FRAC_BITS-1))	// 0.5
+	FRAC_HALF = (1L << (FRAC_BITS-1)),	// 0.5
 };
 
 /*
@@ -125,7 +125,7 @@ typedef gint32 frac_t;
 static inline frac_t double_to_frac(double value) { return (frac_t)(value * FRAC_ONE); }
 static inline double frac_to_double(frac_t value) { return ((double)value) / FRAC_ONE; }
 
-static inline frac_t int_to_frac(gint16 value) { return value << FRAC_BITS; }
-static inline gint16 frac_to_int(frac_t value) { return value >> FRAC_BITS; }
+static inline frac_t int_to_frac(gint32 value) { return value << FRAC_BITS; }
+static inline gint32 frac_to_int(frac_t value) { return value >> FRAC_BITS; }
 
 #endif /* !SCI_TYPES */

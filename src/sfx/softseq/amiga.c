@@ -48,6 +48,18 @@
 
 /* #define DEBUG */
 
+typedef struct envelope {
+	/* Phase period length in samples */
+	int length;
+	/* Velocity delta per period */
+	int delta;
+	/* Target velocity */
+	int target;
+} envelope_t;
+
+/* Fast decay envelope */
+static envelope_t env_decay = {FREQUENCY / (32 * 64), 1, 0};
+
 typedef struct instrument {
 	char name[30];
 	int mode;
@@ -57,14 +69,14 @@ typedef struct instrument {
 	int loop_size;
 	/* Transpose value in semitones */
 	int transpose;
-	/* Envelope type? */
-	int env_type;
+	/* Envelope */
+	envelope_t envelope[4];
 	sbyte *samples;
 	sbyte *loop;
 } instrument_t;
 
 typedef struct bank {
-	char name[31];
+	char name[30];
 	int size;
 	instrument_t *instruments[256];
 } bank_t;
@@ -72,7 +84,11 @@ typedef struct bank {
 typedef struct channel {
 	int instrument;
 	int note;
+	int note_velocity;
 	int velocity;
+	int envelope;
+	/* Number of samples till next envelope event */
+	int envelope_samples;
 	int decay;
 	int looping;
 	int hw_channel;
@@ -115,6 +131,18 @@ static int freq_table[] = {
 	59932, 63496, 67271, 71271, 75509, 80000, 84757, 89796
 };
 
+static void
+set_envelope(channel_t *channel, envelope_t *envelope, int phase)
+{
+	channel->envelope = phase;
+	channel->envelope_samples = envelope[phase].length;
+
+	if (phase == 0)
+		channel->velocity = channel->note_velocity / 2;
+	else
+		channel->velocity = envelope[phase - 1].target;
+}
+
 static inline int
 interpolate(sbyte *samples, frac_t offset)
 {
@@ -122,7 +150,6 @@ interpolate(sbyte *samples, frac_t offset)
 	int diff = (samples[x + 1] - samples[x]) << 8;
 
 	return (samples[x] << 8) + frac_to_int(diff * (offset & FRAC_LO_MASK));
-//	return samples[x] << 8;
 }
 
 static void
@@ -160,21 +187,61 @@ play_instrument(gint16 *dest, channel_t *channel, int count)
 		if (amount > rem)
 			amount = rem;
 
+		/* Stop at next envelope event */
+		if ((channel->envelope_samples != -1) && (amount > channel->envelope_samples))
+			amount = channel->envelope_samples;
+
 		for (i = 0; i < amount; i++) {
-			dest[index++] = interpolate(samples, channel->offset) * channel->velocity * vol / (127 * 127);
+			dest[index++] = interpolate(samples, channel->offset) * channel->velocity / 64 * channel->note_velocity * vol / (127 * 127);
 			channel->offset += channel->rate;
-
-			/* Decay quickly */
-			if (channel->decay && channel->velocity > 0)
-				channel->velocity--;
 		}
 
-		if (index == count) {
-			/* Stop note after velocity has dropped to 0 */
-			if (channel->decay && channel->velocity == 0)
-				channel->note = -1;
+		if (channel->envelope_samples != -1)
+			channel->envelope_samples -= amount;
+
+		if (channel->envelope_samples == 0) {
+			envelope_t *envelope;
+			int delta, target, velocity;
+
+			if (channel->decay)
+				envelope = &env_decay;
+			else
+				envelope = &instrument->envelope[channel->envelope];
+
+			delta = envelope->delta;
+			target = envelope->target;
+			velocity = channel->velocity - envelope->delta;
+
+			/* Check whether we have reached the velocity target for the current phase */
+			if ((delta >= 0 && velocity <= target) || (delta < 0 && velocity >= target)) {
+				channel->velocity = target;
+
+				/* Stop note after velocity has dropped to 0 */
+				if (target == 0) {
+					channel->note = -1;
+					break;
+				} else
+					switch (channel->envelope) {
+					case 0:
+					case 2:
+						/* Go to next phase */
+						set_envelope(channel, instrument->envelope, channel->envelope + 1);
+						break;
+					case 1:
+					case 3:
+						/* Stop envelope */
+						channel->envelope_samples = -1;
+						break;
+					}
+			} else {
+				/* We haven't reached the target yet */
+				channel->envelope_samples = envelope->length;
+				channel->velocity = velocity;
+			}
+		}
+
+		if (index == count)
 			break;
-		}
 
 		if (frac_to_int(channel->offset) >= seg_end) {
 			if (instrument->mode & MODE_LOOP) {
@@ -210,7 +277,9 @@ stop_channel(int ch)
 	/* Start decay phase for note on this hw channel, if any */
 	for (i = 0; i < CHANNELS_NR; i++)
 		if (channels[i].note != -1 && channels[i].hw_channel == ch && !channels[i].decay) {
+			/* Trigger fast decay envelope */
 			channels[i].decay = 1;
+			channels[i].envelope_samples = env_decay.length;
 			break;
 		}
 }
@@ -234,8 +303,9 @@ stop_note(int ch, int note)
 
 	instrument = bank.instruments[channels[channel].instrument];
 
-	if (instrument->env_type)
-		channels[channel].decay = 1;
+	/* Start the envelope phases for note-off if looping is on and envelope is enabled */
+	if ((instrument->mode & MODE_LOOP) && (instrument->envelope[0].length != 0))
+		set_envelope(&channels[channel], instrument->envelope, 2);
 }
 
 static void
@@ -283,7 +353,15 @@ start_note(int ch, int note, int velocity)
 
 	channels[channel].instrument = hw_channels[ch].instrument;
 	channels[channel].note = note;
-	channels[channel].velocity = velocity;
+	channels[channel].note_velocity = velocity;
+
+	if ((instrument->mode & MODE_LOOP) && (instrument->envelope[0].length != 0))
+		set_envelope(&channels[channel], instrument->envelope, 0);
+	else {
+		channels[channel].velocity = 64;
+		channels[channel].envelope_samples = -1;
+	}
+
 	channels[channel].offset = 0;
 	channels[channel].hw_channel = ch;
 	channels[channel].decay = 0;
@@ -307,6 +385,7 @@ static instrument_t *read_instrument(int file, int *id)
 	int size;
 	int seg_size[3];
 	int loop_offset;
+	int i;
 
 	if (read(file, header, 61) < 61) {
 		sciprintf("[sfx:seq:amiga] Error: failed to read instrument header\n");
@@ -320,8 +399,20 @@ static instrument_t *read_instrument(int file, int *id)
 	seg_size[2] = read_int16(header + 47) * 2;
 
 	instrument->mode = header[33];
-	instrument->transpose = header[34];
-	instrument->env_type = header[49];
+	instrument->transpose = (gint8) header[34];
+	for (i = 0; i < 4; i++) {
+		int length = (gint8) header[49 + i];
+
+		if (length == 0 && i > 0)
+			length = 256;
+
+		instrument->envelope[i].length = length * FREQUENCY / 60;
+		instrument->envelope[i].delta = (gint8) header[53 + i];
+		instrument->envelope[i].target = header[57 + i];
+	}
+	/* Final target must be 0 */
+	instrument->envelope[3].target = 0;
+
 	loop_offset = read_int32(header + 37) & ~1;
 	size = seg_size[0] + seg_size[1] + seg_size[2];
 
@@ -335,7 +426,6 @@ static instrument_t *read_instrument(int file, int *id)
 	sciprintf("                Mode: %02x\n", instrument->mode);
 	sciprintf("                Looping: %s\n", instrument->mode & MODE_LOOP ? "on" : "off");
 	sciprintf("                Pitch changes: %s\n", instrument->mode & MODE_PITCH ? "on" : "off");
-	sciprintf("                Envelope type: %i\n", instrument->env_type);
 	sciprintf("                Segment sizes: %i %i %i\n", seg_size[0], seg_size[1], seg_size[2]);
 	sciprintf("                Segment offsets: 0 %i %i\n", loop_offset, read_int32(header + 43));
 #endif
@@ -348,7 +438,7 @@ static instrument_t *read_instrument(int file, int *id)
 	if (instrument->mode & MODE_LOOP) {
 		if (loop_offset + seg_size[1] > size) {
 #ifdef DEBUG
-			sciprintf("[sfx:seq:amiga] Warning: looping samples extends %i bytes past end of sample block\n",
+			sciprintf("[sfx:seq:amiga] Warning: looping samples extend %i bytes past end of sample block\n",
 				loop_offset + seg_size[1] - size);
 #endif
 			seg_size[1] = size - loop_offset;
@@ -415,8 +505,8 @@ ami_init(sfx_softseq_t *self, byte *patch, int patch_len)
 	}
 
 	bank.size = read_int16(header + 38);
-	strncpy(bank.name, (char *) header + 8, 30);
-	bank.name[30] = 0;
+	strncpy(bank.name, (char *) header + 8, 29);
+	bank.name[29] = 0;
 #ifdef DEBUG
 	sciprintf("[sfx:seq:amiga] Reading %i instruments from bank \"%s\"\n", bank.size, bank.name);
 #endif

@@ -1,3 +1,9 @@
+2007-08-23  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/softseq/amiga.c: Implemented velocity envelopes.
+	* doc/sci.tex: Correction in the Amiga music section.
+	* src/include/scitypes.h: Fixed point type fix.
+
 2007-08-03  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kernel.c: Map IsItSkip() correctly.

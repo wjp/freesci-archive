@@ -3299,11 +3299,12 @@ while (true) {
     set_channel_velocity(vel * #v0 / 64);
     wait_ticks(#pn);
     vel -= #dn;
-    if ((#dn >= 0 and vel <= #vn) or (#dn < 0 and vel >= #vn))
+    if ((#dn >= 0 and vel <= #vn) or (#dn < 0 and vel >= #vn)) {
+        if (#vn == 0)
+            stop_note();
         break;
+    }
 }
-if (vel <= 0)
-    stop_note();
 \end{verbatim}
 
 All instruments have a samplerate of 20000Hz. With pitch changes off, the instrument is always played at this frequency, regardless of the note. With pitch changes on, \#t is first added to the note. The instrument is then played at the corresponding frequency (where note 101 equals 20000Hz).
