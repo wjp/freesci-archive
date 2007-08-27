@@ -1,3 +1,17 @@
+2007-08-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* reconf: Removed (autoreconf can be used instead)
+
+	* config.guess, config.sub, depcomp, install-sh, libtool, ltconfig,
+	ltmain.sh, missing, mkinstalldirs: Removed (can be installed with
+	autoreconf -i).
+
+	* configure.ac: Renamed from configure.in, changed version to
+	0.7.0-devel.
+	* output.logs, stamp-h, stamp-h.in: Removed.
+	* src/graphics, src/sound: Removed empty directories.
+	* src/python.tar.gz: Removed.
+
 2007-08-23  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/softseq/amiga.c: Implemented velocity envelopes.
