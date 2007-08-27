@@ -1,3 +1,7 @@
+2007-08-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/Makefile: Dreamcast build fix.
+
 2007-08-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* reconf: Removed (autoreconf can be used instead)

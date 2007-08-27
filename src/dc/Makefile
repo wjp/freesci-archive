@@ -149,9 +149,9 @@ rm-elf:
 rm-bin:
 	-rm -f $(BIN_TARGET)
 
-config.h: config.h.in ../../configure.in
+config.h: config.h.in ../../configure.ac
 	cp config.h.in config.h
-	sed -n -e 's/AM_INIT_AUTOMAKE(.*,[[:blank:]]*\([[:graph:]]*\)[[:blank:]]*)/#define VERSION "\1"/p' ../../configure.in >> config.h
+	sed -n -e 's/AM_INIT_AUTOMAKE(.*,[[:blank:]]*\([[:graph:]]*\)[[:blank:]]*)/#define VERSION "\1"/p' ../../configure.ac >> config.h
 
 $(ELF_TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(ELF_TARGET) $(KOS_START) \
