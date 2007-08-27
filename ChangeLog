@@ -1,3 +1,7 @@
+2007-08-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/demo: Directory removed.
+
 2007-08-22  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/xlib_driver.c: Backported RenderBadPicture fix.
