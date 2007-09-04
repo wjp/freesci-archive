@@ -1,3 +1,8 @@
+2007-09-04  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/resource_map.c (sci1_read_resource_map): Determine
+	resource map entry size explicitly in all cases.
+
 2007-08-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/Makefile: Dreamcast build fix.

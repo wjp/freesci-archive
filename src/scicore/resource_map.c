@@ -361,6 +361,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	byte buf[SCI1_RESMAP_ENTRIES_SIZE];
 	int lastrt;
 	int entrysize;
+	int entry_size_selector;
 
 	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY | O_BINARY);
 
@@ -375,8 +376,9 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
 	}
 
+	entry_size_selector = sci10_or_11(types);
 	if (*sci_version == SCI_VERSION_AUTODETECT)
-		*sci_version = sci10_or_11(types);
+		*sci_version = entry_size_selector;
 
 	if (*sci_version == SCI_VERSION_AUTODETECT) /* That didn't help */
 	{
@@ -385,8 +387,9 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 		return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
 	}
 
-	entrysize = *sci_version == SCI_VERSION_1_1 ? SCI11_RESMAP_ENTRIES_SIZE
-	                                            : SCI1_RESMAP_ENTRIES_SIZE;
+	entrysize = entry_size_selector == SCI_VERSION_1_1 
+	  ? SCI11_RESMAP_ENTRIES_SIZE
+	  : SCI1_RESMAP_ENTRIES_SIZE;
 						       
 	if ((fsize = sci_fd_size(fd)) < 0) {
 		perror("Error occured while trying to get filesize of resource.map");
@@ -420,7 +423,12 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 		res->number= SCI1_RESFILE_GET_NUMBER(buf);
 		res->status = SCI_STATUS_NOMALLOC;
 
-		if (*sci_version < SCI_VERSION_1_1)
+		if ((res->type == sci_heap) &&
+		    (res->number == 0))
+		  {
+		    printf("%d: %02x %02x %02x %02x %02x %02x\n", i, buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
+		  }
+		if (entry_size_selector < SCI_VERSION_1_1)
 		{
 		    res->file = SCI1_RESFILE_GET_FILE(buf);
 		    res->file_offset = SCI1_RESFILE_GET_OFFSET(buf);
