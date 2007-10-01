@@ -1,3 +1,8 @@
+2007-10-01  Lars Skovlund  <lskovlun@image.dk>
+
+	* doc/sci.tex: Added section on message and audio files, written
+	but then forgotten.
+
 2007-09-04  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/resource_map.c (sci1_read_resource_map): Determine
