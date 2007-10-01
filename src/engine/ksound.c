@@ -80,6 +80,7 @@
 #define _K_SCI1_SOUND_REVERB 19 /* Get/Set */
 #define _K_SCI1_SOUND_UPDATE_VOL_PRI 20
 
+#define _K_SCI1_AUDIO_POSITION 6 /* Return current position in audio stream */
 
 #define SCI1_SOUND_FLAG_MAY_PAUSE        1 /* Only here for completeness; The interpreter doesn't touch this bit */
 #define SCI1_SOUND_FLAG_SCRIPTED_PRI     2 /* but does touch this */
@@ -918,4 +919,15 @@ kDoSound(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return kDoSound_SCI0(s, funct_nr, argc, argv);
 }
 
+reg_t
+kDoAudio(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	switch (UKPV(0))
+	{
+	case _K_SCI1_AUDIO_POSITION :
+		return make_reg(0, -1); /* Finish immediately */
+	}
+
+	return s->r_acc;
+}
 

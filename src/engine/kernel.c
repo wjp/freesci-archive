@@ -163,6 +163,7 @@ reg_t kGetSaveDir(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kTextSize(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kIsItSkip(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kMessage(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDoAudio(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t k_Unknown(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 /* The Unknown/Unnamed kernel function */
@@ -339,6 +340,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*(?)*/	DEFUN("TimesCot", kTimesCot, "ii"),
 /*(?)*/	DEFUN("TimesTan", kTimesTan, "ii"),
 DEFUN("Message", kMessage, ".*"),
+DEFUN("DoAudio", kDoAudio, ".*"),
 
 
   /* Special and NOP stuff */

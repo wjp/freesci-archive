@@ -1,5 +1,7 @@
 2007-10-01  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/ksound.c (kDoAudio): Stub added.
+
 	* doc/sci.tex: Added section on message and audio files, written
 	but then forgotten.
 
