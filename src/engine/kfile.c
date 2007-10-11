@@ -380,8 +380,8 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, reg_t *argv)
 	switch(mode) {
 
 	case K_DEVICE_INFO_GET_DEVICE: {
-		char *input_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
-		char *output_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
+		char *input_s = (char*)kernel_dereference_bulk_pointer(s, argv[1], 0);
+		char *output_s = (char*)kernel_dereference_bulk_pointer(s, argv[2], 0);
 
 		GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
 		strncpy(output_s, dir_buffer, 2);
@@ -390,7 +390,7 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 
 	case K_DEVICE_INFO_GET_CURRENT_DEVICE: {
-		char *output_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
+		char *output_s = (char*)kernel_dereference_bulk_pointer(s, argv[1], 0);
 
 		_getcwd (dir_buffer, sizeof (dir_buffer)-1);
 		strncpy(output_s, dir_buffer, 2);
@@ -399,8 +399,8 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 
 	case K_DEVICE_INFO_PATHS_EQUAL: {
-		char *path1_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
-		char *path2_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
+		char *path1_s = (char*)kernel_dereference_bulk_pointer(s, argv[1], 0);
+		char *path2_s = (char*)kernel_dereference_bulk_pointer(s, argv[2], 0);
 
 		GetFullPathName (path1_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
 		GetFullPathName (path2_s, sizeof (dir_buffer2)-1, dir_buffer2, NULL);
@@ -414,7 +414,7 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 
 	case K_DEVICE_INFO_IS_FLOPPY: {
-		char *input_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
+		char *input_s = (char*)kernel_dereference_bulk_pointer(s, argv[1], 0);
 
 		GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
 		dir_buffer [3] = 0;  /* leave X:\ */

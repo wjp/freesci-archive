@@ -473,7 +473,7 @@ char *
 sci_get_homedir(void)
 {
 #ifdef _WIN32
-	char *_path_buf = malloc(MAX_PATH);
+	char *_path_buf = (char*)malloc(MAX_PATH);
 	char *dr = getenv("HOMEDRIVE");
 	char *path = getenv("HOMEPATH");
 
