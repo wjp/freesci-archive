@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 	 "It comes with ABSOLUTELY NO WARRANTY.\n");
   if (argc < 3)
     {
-      fprintf(stderr,"Syntax: %s <resource dir> <sound number> [<sound number> ...]\n");
+      fprintf(stderr,"Syntax: %s <resource dir> <sound number> [<sound number> ...]\n", argv[0]);
       return 1;
     }
 

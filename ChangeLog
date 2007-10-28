@@ -1,5 +1,7 @@
 2007-10-28  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/sfx/softseq/opl2.c: Pitch bend support.
+
 	* src/tools/musicplayer.c: New tool.
 
 2007-10-01  Lars Skovlund  <lskovlun@image.dk>

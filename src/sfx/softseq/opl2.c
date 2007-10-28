@@ -273,23 +273,18 @@ void synth_setvolume_R (int voice, int volume)
 
 void synth_setnote (int voice, int note, int bend)
 {
-    int n, fre, oct, delta;
+    int n, fre, oct;
+    float delta;
 
     delta = 0;
 
     n = note % 12;
 
-    if (bend > 8192) {
-      // pitch bend up.
-      bend -= 8192;
-      delta = (ym3812_note[n+1] - ym3812_note[n]) * bend / 8192; 
-    } else if (bend < 8192) {
-      // bend down.
-      delta = (ym3812_note[n-1] - ym3812_note[n]) -
-	((ym3812_note[n-1] - ym3812_note[n]) * bend / 8192);
-    }
+    delta = pow(2, (float) (bend%8192)/8192.0);
 
-    fre = ym3812_note[n] + delta;
+    if (bend > 8192)
+	    fre = ym3812_note[n]*delta; else
+		    fre = ym3812_note[n]/delta;
 
     oct = note / 12 - 1;
 
@@ -405,6 +400,25 @@ int adlibemu_start_note(int chn, int note, int velocity)
 #endif
 
   return 0;
+}
+
+static
+void adlibemu_update_pitch(int chn, int note, int newpitch)
+{
+  int i;
+  int matched = 0;
+
+  pitch[chn] = newpitch;
+
+  for (i=0;i<ADLIB_VOICES;i++) {
+    if (oper_chn[i] == chn)
+      {
+	matched++;
+	synth_setnote(i, oper_note[i], newpitch);
+      }
+  }
+
+//  printf("Matched %d notes on channel %d.\n", matched, chn);
 }
 
 void test_adlib (void) {
@@ -591,8 +605,11 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 de
   case 0x90:  /* noteon and noteoff */
     return adlibemu_start_note(channel, note, velocity);
   case 0xe0:   /* Pitch bend */
-    pitch[channel] = (note & 0x7f) | ((velocity & 0x7f) << 7);
-    break;
+    {
+      int bend = (note & 0x7f) | ((velocity & 0x7f) << 7);
+//      printf("Bend to %d\n", bend);
+      adlibemu_update_pitch(channel, note, bend);
+    }
   case 0xb0:    /* CC changes. */
     switch (note) {
     case 0x07:
