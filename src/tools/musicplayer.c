@@ -59,6 +59,7 @@ int main(int argc, char** argv)
   song_handle_t dummy1;
   int dummy2;
   int arg;
+  int it_type = SCI_SONG_ITERATOR_TYPE_SCI0;
 
   printf("FreeSCI %s music player Copyright (C) 1999-2007\n", VERSION);
   printf(" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,\n"
@@ -81,6 +82,9 @@ int main(int argc, char** argv)
     return 2;
   }
 
+  if (resmgr->sci_version >= SCI_VERSION_01)
+    it_type = SCI_SONG_ITERATOR_TYPE_SCI1;
+
   sfx_init(&sound, resmgr, 0);
   sfx_set_volume(&sound, 127);
 
@@ -89,8 +93,7 @@ int main(int argc, char** argv)
     {
       sound_nr = atoi(argv[arg]);
       printf("Playing resource %d...\n", sound_nr);
-      if (sfx_add_song(&sound, build_iterator(resmgr, sound_nr,
-					      SCI_SONG_ITERATOR_TYPE_SCI1,
+      if (sfx_add_song(&sound, build_iterator(resmgr, sound_nr, it_type,	
 					      DUMMY_SOUND_HANDLE),
 		       0, DUMMY_SOUND_HANDLE, sound_nr))
 	{
