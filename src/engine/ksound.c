@@ -592,15 +592,14 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	case _K_SCI01_SOUND_MIDI_SEND :
 	{
 		int channel = SKPV(2);
-		int command = UKPV(3);
-		int param = SKPV(4);
+		int command = UKPV(3) == 0xff ? 
+		  0xe0 : /* Pitch wheel */
+		  0xb0; /* UKPV(3) is actually a controller number */
+		int controller = UKPV(3);
+		int param = UKPV(4);
 
-		if (command == 0xff) /* Pitch wheel */
-		{
-		} else /* command indicates a MIDI controller # otherwise */
-		{ 
-		}
-
+		sfx_send_midi(&s->sound, handle, 
+			      channel, command, controller, param);
 		break;
 	}
 	case _K_SCI01_SOUND_REVERB :

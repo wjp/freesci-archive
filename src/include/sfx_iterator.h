@@ -99,7 +99,6 @@ typedef struct {
 	} args[SONG_ITERATOR_MESSAGE_ARGUMENTS_NR];
 } song_iterator_message_t;
 
-
 #define INHERITS_SONG_ITERATOR \
 	songit_id_t ID;										  \
 	guint16 channel_mask;									  \
@@ -347,6 +346,5 @@ sfx_play_iterator_pcm(song_iterator_t *it, unsigned long handle);
 ** Returns   : (int) 0 if the effect will not be played, nonzero if it will
 ** This assumes that the last call to 'it->next()' returned SI_PCM.
 */
-
 
 #endif

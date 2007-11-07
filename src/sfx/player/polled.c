@@ -42,6 +42,11 @@ static int new_song = 0;
 #define TIME_INC 60
 static int time_counter = 0;
 
+static void
+pp_tell_synth(int buf_nr, byte *buf)
+{
+  seq->handle_command(seq, buf[0], buf_nr-1, buf+1);
+}
 
 
 /*----------------------*/
@@ -87,6 +92,7 @@ ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 				break; /* Boooring... .*/
 
 			case 0: /* MIDI command */
+				
 				seq->handle_command(seq, buf[0], buf_nr - 1, buf+1);
 				break;
 
@@ -308,5 +314,6 @@ sfx_player_t sfx_player_polled = {
 	&pp_resume,
 	&pp_exit,
 	&pp_timer_callback,
+	&pp_tell_synth,
 	0 /* polyphony */
 };

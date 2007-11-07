@@ -30,6 +30,7 @@
 #include <sfx_timer.h>
 #include <sfx_player.h>
 #include <sfx_mixer.h>
+#include <sci_midi.h>
 
 
 /*#define DEBUG_SONG_API*/
@@ -56,6 +57,15 @@ sfx_reset_player(void)
 {
 	if (player)
 		player->stop();
+}
+
+tell_synth_func *
+sfx_get_player_tell_func(void)
+{
+	if (player)
+		return player->tell_synth;
+	else
+		return NULL;
 }
 
 int
@@ -850,64 +860,47 @@ int
 sfx_send_midi(sfx_state_t *self, song_handle_t handle, int channel,
 	      int command, int arg1, int arg2)
 {
-	int size = 22+MIDI_cmdlen[command >> 4];
-	byte *buffer = (byte *) malloc(size);
-	song_iterator_t *it;
+	byte buffer[5];
+	tell_synth_func *tell = sfx_get_player_tell_func();
+	song_t *song = song_lib_find(self->songlib, handle);
 
-/* Set up a dummy song resource because the iterator expects it. */
-	buffer[0] = 0xf0;
-	buffer[1] = 0x00;
-	buffer[2] = 0x00;
-	buffer[3] = 0x00;
-	buffer[4] = 0x00;
-	buffer[5] = 0x00;
-	buffer[6] = 0x00;
-	buffer[7] = 0x00;
-	buffer[8] = 0x00;
-	buffer[9] = 0x00;
-	buffer[10] = 0x00;
-	buffer[11] = 17;
-	buffer[12] = 0x00;
-	buffer[13] = MIDI_cmdlen[command>>4]+5;
-	buffer[14] = 0;
-	buffer[15] = 0xff;
-	buffer[16] = 0xff;
-	buffer[17] = channel;
-	if (command == 0x90)
-		buffer[18] = 0xf1; /* High importance, one note */
-	else
-		buffer[18] = 0xf0; /* High importance, no notes */
-	
-	buffer[19] = 0; /* Delta time */
-	buffer[20] = channel | command; /* No channel remapping yet */
+	/* Yes, in that order. SCI channel mutes are actually done via
+	   a counting semaphore. 0 means to decrement the counter, 1
+	   to increment it. */
+	static char *channel_state[] = {"ON","OFF"}; 
+
+	if (command == 0xb0 &&
+	    arg1 == SCI_MIDI_CHANNEL_MUTE)
+	{
+		sciprintf("TODO: channel mute (channel %d %s)!\n", channel,
+			  channel_state[arg2]);
+		/* We need to have a GET_PLAYMASK interface to use
+		   here. SET_PLAYMASK we've got.
+		*/
+		return SFX_OK;
+	}   
+
+	buffer[0] = channel | command; /* No channel remapping yet */
 
 	switch (command)
 	{
 	case 0x80 :
 	case 0x90 :
 	case 0xb0 :
-		buffer[21] = arg1&0xff;
-		buffer[22] = arg2&0xff;
+		buffer[1] = arg1&0xff;
+		buffer[2] = arg2&0xff;
 		break;
 	case 0xc0 :
-		buffer[21] = arg1&0xff;
+		buffer[1] = arg1&0xff;
 		break;
 	case 0xe0 :
-		if (arg1>32768) arg1 = 65536-arg1;
-		buffer[21] = (arg1>>8)&0xff;
-		buffer[22] = arg1&0xff;
+		buffer[1] = (arg1&0x7f) | 0x80;
+		buffer[2] = (arg1&0xff00) >> 7;
 		break;
 	}
 
-	buffer[20+MIDI_cmdlen[command>>4]] = 0x01;
-	buffer[21+MIDI_cmdlen[command>>4]] = 0xfc;
-
-	it = songit_new(buffer, size, SCI_SONG_ITERATOR_TYPE_SCI1, 0xDEADBEEF);
-	sfx_add_song(self, it, 0, midi_send_handle, -1);
-	sfx_song_set_status(self, midi_send_handle, SOUND_STATUS_PLAYING);
-
-	midi_send_handle ++;
-	midi_send_handle = (midi_send_handle % 65536)+midi_send_base;
+	tell(MIDI_cmdlen[command >> 4], buffer);
+	return SFX_OK;
 }
 
 int

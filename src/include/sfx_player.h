@@ -33,6 +33,8 @@
 #ifndef _SFX_PLAYER_H
 #define _SFX_PLAYER_H
 
+typedef void tell_synth_func(int buf_nr, byte *buf);
+
 typedef struct {
 	const char *name;
 	const char *version;
@@ -114,6 +116,12 @@ typedef struct {
 	** used to emit sound.
 	*/
 
+	tell_synth_func *tell_synth;
+        /* Pass a raw MIDI event to the synth
+	   Parameters: (int) argc: Length of buffer holding the midi event
+	               (byte *) argv: The buffer itself
+	*/
+
 	int polyphony; /* Number of voices that can play simultaneously */
 
 } sfx_player_t;
@@ -123,6 +131,12 @@ sfx_find_player(char *name);
 /* Looks up a player by name or finds the default player
 ** Parameters: (char *) name: Name of the player to look up, or NULL for dedault
 ** Returns   : (sfx_player_t *) The player requested, or NULL if none was found
+*/
+
+tell_synth_func *
+sfx_get_player_tell_func(void);
+/* Gets the callback function of the player in use.
+** Returns:   (tell_synth_func *) The callback function.
 */
 
 int

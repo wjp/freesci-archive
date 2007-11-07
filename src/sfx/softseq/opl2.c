@@ -21,6 +21,7 @@
 #include <sfx_iterator.h>
 #include <sfx_softseq.h>
 #include <sfx_adlib.h>
+#include <math.h>
 
 #include "fmopl.h"
 

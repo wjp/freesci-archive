@@ -1,3 +1,13 @@
+2007-11-07  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/sfx/sfx_player.h: Interface to inject MIDI messages into a
+	playing song.
+
+	* src/sfx/core.c: MIDI Send based on the above interface.
+
+	* src/sfx/iterator.c: Reset pitch bend setting when a song
+	stops (based on the same interface).
+
 2007-10-28  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/softseq/opl2.c: Pitch bend support.

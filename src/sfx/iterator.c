@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <sfx_iterator_internal.h>
+#include <sfx_player.h>
 #include <resource.h>
 #include <sci_memory.h>
 
@@ -135,6 +136,26 @@ _sci0_get_pcm_data(sci0_song_iterator_t *self,
 #define PARSE_FLAG_PARAMETRIC_CUE (1 << 1) /* Assume that cues take an additional "cue value" argument */
 /* This implements a difference between SCI0 and SCI1 cues. */
 
+void
+_reset_synth_channels(base_song_iterator_t *self, song_iterator_channel_t *channel)
+{
+	int i;
+	byte buf[5];
+	tell_synth_func *tell = sfx_get_player_tell_func();
+
+	for (i = 0; i < MIDI_CHANNELS; i++)
+	{
+		if (channel->saw_notes & (1 << i))
+		{
+			buf[0] = 0xe0 | i; /* Pitch bend */
+			buf[1] = 0x80; /* Wheel center */
+			buf[2] = 0x40;
+			tell(3, buf);
+			/* TODO: Reset other controls? */
+		}
+	}
+}
+
 static int
 _parse_sci_midi_command(base_song_iterator_t *self, unsigned char *buf,	int *result,
 			song_iterator_channel_t *channel,
@@ -158,6 +179,7 @@ _parse_sci_midi_command(base_song_iterator_t *self, unsigned char *buf,	int *res
 	midi_op = cmd >> 4;
 	midi_channel = cmd & 0xf;
 	paramsleft = MIDI_cmdlen[midi_op];
+	channel->saw_notes |= 1 << midi_channel;
 
 #if 0
 if (1) {
@@ -200,7 +222,8 @@ if (1) {
 
 	if (cmd == SCI_MIDI_EOT) {
 		/* End of track? */
-fprintf(stderr, "eot; loops = %d, notesplayed=%d\n", self->loops, channel->notes_played);
+		_reset_synth_channels(self, channel);
+		fprintf(stderr, "eot; loops = %d, notesplayed=%d\n", self->loops, channel->notes_played);
 		if (self->loops > 1 && channel->notes_played) {
 
 			/* If allowed, decrement the number of loops */
@@ -642,6 +665,8 @@ static void
 _base_init_channel(song_iterator_channel_t *channel, int id, int offset,
 		   int end)
 {
+	int i;
+
 	channel->playmask = PLAYMASK_NONE; /* Disable all channels */
 	channel->id = id;
 	channel->notes_played = 0;
@@ -656,6 +681,7 @@ _base_init_channel(song_iterator_channel_t *channel, int id, int offset,
 		= channel->initial_offset
 		= offset;
 	channel->end = end;
+	channel->saw_notes = 0;
 }
 
 static void
@@ -666,6 +692,8 @@ _sci0_init(sci0_song_iterator_t *self)
 	self->ccc = 0; /* Reset cumulative cue counter */
 	self->active_channels = 1;
 	_base_init_channel(&(self->channel), 0, SCI0_MIDI_OFFSET, self->size);
+	_reset_synth_channels((base_song_iterator_t *) self, 
+			      &(self->channel));
 	self->delay_remaining = 0;
 
 	if (self->data[0] == 2) /* Do we have an embedded PCM? */
@@ -824,6 +852,8 @@ _sci1_song_init(sci1_song_iterator_t *self)
 					printf("Channel %d has mapping bits %02x\n", 
 					       channel_nr, self->data[track_offset] & 0xf0);
 
+				_reset_synth_channels((base_song_iterator_t *) self, 
+						      channel);
 				_base_init_channel(channel,
 						   channel_nr,
 						   /* Skip over header bytes: */
@@ -1053,6 +1083,7 @@ _sci1_process_next_command(sci1_song_iterator_t *self,
 		if (retval == SI_LOOP) {
 			self->channels_looped++;
 			self->channels[chan].state = SI_STATE_PENDING;
+			self->channels[chan].delay = 0;
 
 			if (self->channels_looped == self->active_channels) {
 				int i;

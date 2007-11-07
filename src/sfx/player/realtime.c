@@ -130,6 +130,12 @@ play_song(song_iterator_t *it, GTimeVal *wakeup_time, int writeahead_time)
 }
 
 static void
+rt_tell_synth(int buf_nr, byte *buf)
+{
+  seq->event(buf[0], buf_nr-1, buf+1);
+}
+
+static void
 rt_timer_callback(void)
 {
 	if (play_it && !play_it_done) {
@@ -301,5 +307,6 @@ sfx_player_t sfx_player_realtime = {
 	&rt_resume,
 	&rt_exit,
 	&rt_timer_callback,
+	&rt_tell_synth,
 	0 /* polyphony */
 };

@@ -72,6 +72,7 @@ typedef struct {
 	int total_timepos; /* Number of ticks since the beginning, ignoring loops */
 	int timepos_increment; /* Number of ticks until the next command (to add) */
 
+	int saw_notes;  /* Bitmask of channels we have currently played notes on */
 	byte last_cmd;	/* Last operation executed, for running status */
 } song_iterator_channel_t;
 
