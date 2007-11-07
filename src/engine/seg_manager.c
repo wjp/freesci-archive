@@ -1751,6 +1751,7 @@ list_all_outgoing_references_clones (seg_interface_t *self, state_t *s, reg_t ad
 	
 	if (!(ENTRY_IS_VALID(clone_table, addr.offset))) {
 		fprintf(stderr, "Unexpected request for outgoing references from clone at "PREG"\n", PRINT_REG(addr));
+//		BREAKPOINT();
 		return;
 	}
 
