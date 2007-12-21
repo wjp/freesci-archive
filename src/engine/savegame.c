@@ -4845,7 +4845,7 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 952 "savegame.cfsml"
+#line 957 "savegame.cfsml"
 
 	fclose(fh);
 
