@@ -44,7 +44,7 @@ typedef enum {
 	SEG_ID
 } id_flag;
 
-void dbg_print( const char* msg, int i );	/* for debug only */
+//void dbg_print( const char* msg, void *i );	/* for debug only */
 
 /* verify the the given condition is true, output the message if condition is false, and exit
 ** Parameters:

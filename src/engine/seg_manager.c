@@ -49,7 +49,7 @@ mem_obj_t* mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, me
 					
 #define INVALID_SCRIPT_ID -1
 	
-void dbg_print( const char* msg, int i ) {
+void dbg_print( const char* msg, void *i ) {
 #ifdef DEBUG_SEG_MANAGER
 	char buf[1000];
 	sprintf( buf, "%s = [0x%x], dec:[%d]", msg, i, i);
@@ -287,7 +287,7 @@ int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr)
 	sm_set_script_size(mem, s, script_nr);
 	mem->data.script.buf = (byte*) sci_malloc (mem->data.script.buf_size);
 	
-	dbg_print( "mem->data.script.buf ", (int) mem->data.script.buf );
+	dbg_print( "mem->data.script.buf ", mem->data.script.buf );
 	if (!mem->data.script.buf) {
 		sm_free_script ( mem );
 		sciprintf("seg_manager.c: Not enough memory space for script size" );
