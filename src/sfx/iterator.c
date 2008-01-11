@@ -150,7 +150,8 @@ _reset_synth_channels(base_song_iterator_t *self, song_iterator_channel_t *chann
 			buf[0] = 0xe0 | i; /* Pitch bend */
 			buf[1] = 0x80; /* Wheel center */
 			buf[2] = 0x40;
-			tell(3, buf);
+			if (tell)
+				tell(3, buf);
 			/* TODO: Reset other controls? */
 		}
 	}

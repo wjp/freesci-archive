@@ -899,7 +899,8 @@ sfx_send_midi(sfx_state_t *self, song_handle_t handle, int channel,
 		break;
 	}
 
-	tell(MIDI_cmdlen[command >> 4], buffer);
+	if (tell)
+		tell(MIDI_cmdlen[command >> 4], buffer);
 	return SFX_OK;
 }
 
