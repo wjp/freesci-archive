@@ -124,7 +124,8 @@ play_song(song_iterator_t *it, GTimeVal *wakeup_time, int writeahead_time)
 		default:
 			play_moredelay = delay - 1;
 			*wakeup_time = song_next_wakeup_time(wakeup_time, delay);
-			seq->delay(delay);
+			if (seq->delay)
+				seq->delay(delay);
 		}
 	}
 }
@@ -204,7 +205,8 @@ rt_init(resource_mgr_t *resmgr, int expected_latency)
 
 	play_writeahead *= 1000; /* microseconds */
 
-	seq->reset_timer(foo);
+	if (seq->reset_timer)
+		seq->reset_timer(foo);
 
 	return SFX_OK;
 }
