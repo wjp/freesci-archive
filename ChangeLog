@@ -1,3 +1,8 @@
+2008-01-14  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/gfx_pixmap_scale.c (FUNCNAME): Workaround for gcc 4.2.3
+	bug on EMT64/AMD64
+
 2007-11-07  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/sfx_player.h: Interface to inject MIDI messages into a

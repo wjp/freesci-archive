@@ -72,6 +72,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	if (!separate_alpha_map)
 		result_colors[pxm->color_key] = alpha_color;
 
+	src = pxm->index_data; /* Workaround for gcc 4.2.3 bug on EMT64 */
 	for (y = 0; y < pxm->index_yl; y++) {
 		byte *prev_dest = dest;
 		byte *prev_alpha_dest = alpha_dest;
