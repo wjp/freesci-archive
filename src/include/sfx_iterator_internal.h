@@ -178,9 +178,8 @@ new_fast_forward_iterator(song_iterator_t *it, int delta);
 ** Parameters: (song_iterator_t *) it: The iterator to wrap
 **             (int) delta: The number of ticks to skip
 ** Returns   : (song_iterator_t) A newly created song iterator
-**                               which skips all note commands and
-**                               delta times until 'delta' has been
-**                               used up
+**                               which skips all delta times
+**                               until 'delta' has been used up
 */
 
 /**********************************/

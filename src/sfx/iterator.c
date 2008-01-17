@@ -1382,8 +1382,7 @@ _ff_read_next_command(fast_forward_song_iterator_t *self,
 				return -self->delta;
 		}
 
-		if (rv == SI_FINISHED
-		    || (rv == 0 && buf[0] >= 0xa0)) /* Filter out play events */
+		if (rv <= 0)
 			return rv;
 	}
 }
