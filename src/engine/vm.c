@@ -2310,11 +2310,7 @@ game_restore(state_t **_s, char *game_name)
 	int debug_state = _debugstate_valid;
 
 	sciprintf("Restoring savegame '%s'...\n", game_name);
-	fprintf(stderr, "Quick-restore disabled until VM reconstruction is complete!\n");
-	return 0;
-#if 0
 	s = gamestate_restore(*_s, game_name);
-#endif
 
 	if (!s) {
 		sciprintf("Restoring gamestate '%s' failed.\n", game_name);
@@ -2323,6 +2319,15 @@ game_restore(state_t **_s, char *game_name)
 	_debugstate_valid = debug_state;
 	script_abort_flag = 0;
 	s->restarting_flags = 0;
+
+	s->execution_stack_pos = -1; /* Resatart with replay */
+					
+	_init_stack_base_with_selector(s, s->selector_map.replay);
+	/* Call the replay selector */
+
+	send_selector(s, s->game_obj, s->game_obj,
+		      s->stack_base, 2,
+		      s->stack_base);
 
 	*_s = s = _game_run(s, 1);
 
