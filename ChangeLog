@@ -10,6 +10,8 @@
 
 2008-01-17  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kgraphics.c (kAddToPic): Proper check for NULL arguments.
+
 	* src/engine/vm.c (game_restore): Bring back Quick-restore
 
 2008-01-14  Christoph Reichenbach  <reichenb@colorado.edu>

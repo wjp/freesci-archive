@@ -2493,14 +2493,16 @@ kAddToPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 		}
 
 	} else {
-		list_t *list = LOOKUP_LIST(list_ref);
+		list_t *list;
 
-		if (!list) {
-			if (list_ref.segment || list_ref.offset)
-				SCIkdebug(SCIkWARNING, "Attempt to AddToPic single non-list: "PREG"\n",
-					  PRINT_REG(list_ref));
+		if (!list_ref.segment && !list_ref.segment) {
+			SCIkdebug(SCIkWARNING, "Attempt to AddToPic single non-list: "PREG"\n",
+				  PRINT_REG(list_ref));
 			return s->r_acc;
 		}
+
+		
+		list = LOOKUP_LIST(list_ref);
 
 		pic_views = gfxw_new_list(s->picture_port->bounds, 1);
 
