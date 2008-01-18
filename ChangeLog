@@ -1,3 +1,13 @@
+2008-01-18  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (_k_draw_control): Treat lsTop as a
+	memory offset instead of as a string offset.
+
+	* src/engine/kstrings.c (kMessage): More sensible dummy message.
+
+	* src/gfx/font.c (gfxr_draw_font): Don't complain about memory
+	allocation when all input colors are black.
+
 2008-01-17  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* Makefile.am (EXTRA_DIST): Removed ``reconf'', thereby fixing

@@ -1750,7 +1750,7 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 		char **entries_list = NULL;
 		char *seeker;
 		int entries_nr;
-		int lsTop = GET_SEL32V(obj, lsTop);
+		int lsTop = GET_SEL32V(obj, lsTop)-text_pos.offset;
 		int list_top = 0;
 		int selection = 0;
 		int entry_size = GET_SEL32V(obj, x);
