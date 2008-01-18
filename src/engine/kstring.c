@@ -754,6 +754,8 @@ kGetFarText(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return argv[2];
 }
 
+#define DUMMY_MESSAGE "No MESSAGE support in FreeSCI yet"
+
 reg_t
 kMessage(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
@@ -761,21 +763,16 @@ kMessage(state_t *s, int funct_nr, int argc, reg_t *argv)
 	{
 	case 0 :
 	{
-		reg_t savedir_reg = make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
-		char *savedir = kernel_dereference_char_pointer(s, savedir_reg, 0);
 		char *buffer = argc == 7 ? kernel_dereference_char_pointer(s, argv[6], 0) : NULL;
 
-		if (buffer) strcpy(buffer, savedir);
+		if (buffer) strcpy(buffer, DUMMY_MESSAGE);
 		return make_reg(0, 1); /* Talker id */
 	}
 	case 1 :
-		return NULL_REG;
+		return NULL_REG; /* No message following this one */
 	case 2 :
 	{
-		reg_t savedir_reg = make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
-		char *savedir = kernel_dereference_char_pointer(s, savedir_reg, 0);
-		
-		return make_reg(0, strlen(savedir) + 1);
+		return make_reg(0, strlen(DUMMY_MESSAGE) + 1); /* Length of indicated message */
 	}
 	}
 }
