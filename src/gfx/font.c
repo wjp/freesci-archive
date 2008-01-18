@@ -318,6 +318,8 @@ gfxr_draw_font(gfx_bitmap_font_t *font, const char *stext, int characters,
 	gfx_pixmap_t *pxm;
 	int fore_0, fore_1, back;
 	int i;
+	int hack = 0;
+	gfx_pixmap_color_t dummy = {0};
 	byte *offset;
 
 	for (i = 0; i < characters; i++) {
@@ -334,6 +336,13 @@ gfxr_draw_font(gfx_bitmap_font_t *font, const char *stext, int characters,
 	pxm = gfx_pixmap_alloc_index_data(gfx_new_pixmap(width, height, GFX_RESID_NONE, 0, 0));
 
 	pxm->colors_nr = !!fg0 + !!fg1 + !!bg;
+	if (pxm->colors_nr == 0)
+	  {
+	    GFXWARN("Pixmap would have zero colors, resetting!\n");
+	    pxm->colors_nr = 3;
+	    hack = 1;
+	    fg0 = fg1 = bg = &dummy;
+	  }
 	pxm->colors = (gfx_pixmap_color_t*)sci_malloc(sizeof(gfx_pixmap_color_t) * pxm->colors_nr);
 #ifdef SATISFY_PURIFY
 	memset(pxm->colors, 0, sizeof(gfx_pixmap_color_t) * pxm->colors_nr);
@@ -342,17 +351,17 @@ gfxr_draw_font(gfx_bitmap_font_t *font, const char *stext, int characters,
 
 	i = 0;
 
-	if (fg0) {
+	if (fg0 || hack) {
 		memcpy(pxm->colors + i, fg0, sizeof(gfx_pixmap_color_t));
 		fore_0 = i++;
 	} else fore_0 = pxm->color_key;
 
-	if (fg1) {
+	if (fg1 || hack) {
 		memcpy(pxm->colors + i, fg1, sizeof(gfx_pixmap_color_t));
 		fore_1 = i++;
 	} else fore_1 = pxm->color_key;
 
-	if (bg) {
+	if (bg || hack) {
 		memcpy(pxm->colors + i, bg, sizeof(gfx_pixmap_color_t));
 		back = i++;
 	} else back = pxm->color_key;
