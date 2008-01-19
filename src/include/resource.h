@@ -147,7 +147,7 @@
 #  define G_DIR_SEPARATOR_S "/"
 #endif
 
-#if defined(__MORPHOS__) || defined(_MSC_VER) || defined(ARM_WINCE)
+#if defined(__MORPHOS__) || defined(_MSC_VER) || defined(ARM_WINCE) || defined(__amigaos4__)
 #  define PATH_MAX 255
 #endif
 

@@ -1,3 +1,8 @@
+2008-01-19  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/include/resource.h, src/scicore/tools.c (sci_get_homedir):
+	Merged AmigaOS4 patch by Hubert Maier.
+
 2008-01-18  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (_k_draw_control): Treat lsTop as a

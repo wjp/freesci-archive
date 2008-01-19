@@ -488,6 +488,8 @@ sci_get_homedir(void)
 	return getenv("HOME");
 #elif defined(_DREAMCAST)
 	return NULL;
+#elif defined(__amigaos4__)
+	return "/PROGDIR/";
 #else
 #  error Please add a $HOME policy for your platform!
 #endif
