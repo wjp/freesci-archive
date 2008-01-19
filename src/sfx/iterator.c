@@ -1347,7 +1347,6 @@ new_cleanup_iterator(unsigned int channels)
 	it->ID = 17;
 	it->flags = 0;
 	it->death_listeners_nr = 0;
-	it->delegate = NULL;
 
 	it->cleanup = NULL;
 	it->get_pcm_feed = NULL;
@@ -1414,14 +1413,26 @@ _ff_handle_message(fast_forward_song_iterator_t *self,
 	else if (msg.recipient == _SIMSG_BASE) {
 		switch (msg.type) {
 
+		case _SIMSG_BASEMSG_CLONE: {
+			int tsize = sizeof(fast_forward_song_iterator_t);
+			fast_forward_song_iterator_t *clone = (fast_forward_song_iterator_t *)sci_malloc(tsize);
+			memcpy(clone, self, tsize);
+			songit_handle_message(&clone->delegate, msg);
+			return (song_iterator_t *) clone;
+		}
+
 		case _SIMSG_BASEMSG_PRINT:
 			print_tabs_id(msg.args[0].i, self->ID);
 			fprintf(stderr, "PLASTICWRAP:\n");
 			msg.args[0].i++;
 			songit_handle_message(&(self->delegate), msg);
 			break;
+
+		default:
+			songit_handle_message(&(self->delegate), msg);
 		}
-	}
+	} else
+		songit_handle_message(&(self->delegate), msg);
 
 	return NULL;
 }
@@ -1735,7 +1746,6 @@ songit_new_tee(song_iterator_t *left, song_iterator_t *right, int may_destroy)
 
 	it->children[TEE_LEFT].it = left;
 	it->children[TEE_RIGHT].it = right;
-	it->delegate = NULL;
 	it->death_listeners_nr = 0;
 
 	/* By default, don't remap */
@@ -1823,10 +1833,12 @@ songit_next(song_iterator_t **it, unsigned char *buf, int *result, int mask)
 
 	do {
 		retval = (*it)->next(*it, buf, result);
-		if (retval == SI_MORPH)
+		if (retval == SI_MORPH) {
+			fprintf(stderr, "  Morphing %p (stored at %p)\n", *it, it);
 			if (!SIMSG_SEND((*it), SIMSG_ACK_MORPH)) {
 				BREAKPOINT();
-			}
+			} else fprintf(stderr, "SI_MORPH successful");
+		}
 
 		if (retval == SI_FINISHED)
 			fprintf(stderr, "[song-iterator] Song finished. mask = %04x, cm=%04x\n",
@@ -1927,7 +1939,6 @@ songit_new(unsigned char *data, unsigned int size, int type, songit_id_t id)
 	}
 	it->ID = id;
 
-	it->delegate = NULL;
 	it->death_listeners_nr = 0;
 
 	it->data = (unsigned char*)sci_refcount_memdup(data, size);
@@ -1986,11 +1997,6 @@ songit_handle_message(song_iterator_t **it_reg_p, song_iterator_message_t msg)
 {
 	song_iterator_t *it = *it_reg_p;
 	song_iterator_t *newit;
-
-	if (it->delegate && songit_handle_message(&(it->delegate), msg))
-		return 1; /* Handled recursively */
-
-	/* No one else could handle it: */
 
 	newit = it->handle_message(it, msg);
 

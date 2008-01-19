@@ -150,7 +150,6 @@ setup_simple_iterator(int delay, char *cues, int cues_nr)
 	simple_iterator.flags = 0;
 	simple_iterator.priority = 1;
 
-	simple_iterator.delegate = NULL;
 	simple_iterator.death_listeners_nr = 0;
 
 	simple_iterator.cleanup = simple_it_cleanup;

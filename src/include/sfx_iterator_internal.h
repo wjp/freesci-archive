@@ -168,6 +168,7 @@ is_cleanup_iterator(song_iterator_t *it);
 
 typedef struct {
 	INHERITS_SONG_ITERATOR;
+	song_iterator_t *delegate;
 	int delta; /* Remaining time */
 } fast_forward_song_iterator_t;
 

@@ -1,3 +1,14 @@
+2008-01-19  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/iterator.c (songit_handle_message): extract method,
+	move method, inline method refactorings to push ``delegate''
+	handling into fast_forward_song_iterator_t->handle_message()
+	(_ff_handle_message): first clone self, then recurse-- on the
+	clone only-- if we get a clone message.
+
+	* src/include/sfx_iterator.h (_song_iterator): push down field
+	refactoring: ``delegate'' now in fast_forward_song_iterator_t
+
 2008-01-19  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/resource.h, src/scicore/tools.c (sci_get_homedir):

@@ -110,7 +110,6 @@ typedef struct {
 	song_iterator_t * (* handle_message)(song_iterator_t *self, song_iterator_message_t msg); \
 	void (*init) (struct _song_iterator *self);						  \
 	void (*cleanup) (struct _song_iterator *self);						  \
-	struct _song_iterator *delegate;							  \
 	listener_t death_listeners[SONGIT_MAX_LISTENERS];					  \
 	int death_listeners_nr									  \
 
@@ -179,9 +178,6 @@ typedef struct _song_iterator {
 	** Does not physically free(self) yet. May be NULL if nothing needs to be done.
 	** Must not recurse on its delegate.
 	*/
-
-	struct _song_iterator *delegate;
-	/* A delegate, for stacking song iterators */
 
 	/* Death listeners */
 	/* These are not reset during initialisation */
