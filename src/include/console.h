@@ -133,6 +133,7 @@ con_hook_command(int command(struct _state *s), const char *name, const char *pa
 **   s (a 'string' (char *))
 **   h (a byte, described in hexadecimal digits)
 **   a (a heap address, register or object name)
+**   r (any register value)
 **   x* (an arbitrary (possibly 0) number of 'x' tokens)
 ** The '*' token may only be used as the last token of the list.
 ** Another way to specify optional parameters is by means of the
@@ -250,22 +251,5 @@ close_console_file(void);
 ** Parameters: (void)
 ** Returns   : (void)
 */
-
-/***************************************************************************/
-/* console commands */
-
-int c_version(struct _state *s); /* displays the package and version number */
-int c_list(struct _state *s); /* lists various types of things */
-int c_man(struct _state *s); /* 'manual page' */
-int c_set(struct _state *s); /* sets an int variable */
-int c_print(struct _state *s); /* prints a variable */
-int c_size(struct _state *s); /* displays the size of a resource */
-int c_dump(struct _state *s); /* gives a hex dump of a resource */
-int c_objinfo(struct _state *s); /* shows some info about one class */
-int c_objmethods(struct _state *s); /* Disassembles all methods of a class */
-int c_hexgrep(struct _state *s); /* Searches a string in one resource or resource class */
-int c_selectornames(struct _state *s); /* Displays all selector names */
-int c_kernelnames(struct _state *s); /* Displays all kernel function names */
-int c_dissectscript(struct _state *s); /* Splits a script into objects and explains them */
 
 #endif /* _SCI_CONSOLE_H_ */ 

@@ -1,3 +1,11 @@
+2008-01-20  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/scriptconsole.c (con_parse): Eliminated 'r' parameter
+	type for console operations
+
+	* src/engine/scriptdebug.c: Made static symbols static that ought
+	to be static
+
 2008-01-19  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/sfx/iterator.c (songit_handle_message): extract method,

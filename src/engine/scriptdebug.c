@@ -1848,7 +1848,7 @@ c_codebug(state_t *s)
 }
 #endif
 
-int
+static int
 c_backtrace(state_t *s)
 {
 	int i;
@@ -1921,7 +1921,7 @@ c_backtrace(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_redraw_screen(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -1938,7 +1938,7 @@ c_redraw_screen(state_t *s)
 }
 
 
-int
+static int
 c_clear_screen(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -1951,7 +1951,7 @@ c_clear_screen(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_visible_map(state_t *s)
 {
   if (!s) {
@@ -1973,7 +1973,7 @@ WARNING(fixme!)
 }
 
 
-int
+static int
 c_gfx_current_port(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -1988,7 +1988,7 @@ c_gfx_current_port(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_print_port(state_t *s)
 {
 	gfxw_port_t *port;
@@ -2017,7 +2017,7 @@ c_gfx_print_port(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_priority(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -2039,7 +2039,7 @@ c_gfx_priority(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_print_visual(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -2055,7 +2055,7 @@ c_gfx_print_visual(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_print_dynviews(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -2071,7 +2071,7 @@ c_gfx_print_dynviews(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_print_dropviews(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -2087,7 +2087,7 @@ c_gfx_print_dropviews(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_drawpic(state_t *s)
 {
 	int flags = 1, default_palette = 0;
@@ -2115,7 +2115,7 @@ c_gfx_drawpic(state_t *s)
 extern gfxw_widget_t *debug_widgets[];
 extern int debug_widget_pos;
 
-int
+static int
 c_gfx_print_widget(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -2143,7 +2143,7 @@ c_gfx_print_widget(state_t *s)
 }
 #endif
 
-int
+static int
 c_gfx_show_map(state_t *s)
 {
 	int map = cmd_params[0].val;
@@ -2180,7 +2180,7 @@ c_gfx_show_map(state_t *s)
 }
 
 
-int
+static int
 c_gfx_draw_cel(state_t *s)
 {
 	int view = cmd_params[0].val;
@@ -2200,7 +2200,7 @@ c_gfx_draw_cel(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_fill_screen(state_t *s)
 {
 	int col = cmd_params[0].val;
@@ -2220,7 +2220,7 @@ c_gfx_fill_screen(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_draw_rect(state_t *s)
 {
 	int col = cmd_params[4].val;
@@ -2240,7 +2240,7 @@ c_gfx_draw_rect(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_propagate_rect(state_t *s)
 {
 	int map = cmd_params[4].val;
@@ -2277,7 +2277,7 @@ rr = GET_SELECTOR(pos, rr); \
 tt = GET_SELECTOR(pos, tt); \
 bb = GET_SELECTOR(pos, bb);
 
-int
+static int
 c_gfx_draw_viewobj(state_t *s)
 {
 #ifdef __GNUC__
@@ -2362,7 +2362,7 @@ c_gfx_draw_viewobj(state_t *s)
 }
 
 
-int
+static int
 c_gfx_flush_resources(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -2378,7 +2378,7 @@ c_gfx_flush_resources(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_gfx_update_zone(state_t *s)
 {
 	if (!_debugstate_valid) {
@@ -2398,7 +2398,7 @@ c_gfx_update_zone(state_t *s)
 
 }
 
-int
+static int
 c_disasm(state_t *s)
 {
 	reg_t vpc = cmd_params[0].reg;
@@ -2434,7 +2434,7 @@ c_disasm(state_t *s)
 }
 
 
-int
+static int
 c_sg(state_t *s)
 {
 	_debug_seeking = _DEBUG_SEEK_GLOBAL;
@@ -2445,7 +2445,7 @@ c_sg(state_t *s)
 }
 
 
-int
+static int
 c_snk(state_t *s)
 {
 	int callk_index;
@@ -2491,7 +2491,7 @@ c_snk(state_t *s)
 }
 
 
-int
+static int
 c_sret(state_t *s)
 {
 	_debug_seeking = _DEBUG_SEEK_LEVEL_RET;
@@ -2500,7 +2500,7 @@ c_sret(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_go(state_t *s)
 {
 	_debug_seeking = 0;
@@ -2510,14 +2510,14 @@ c_go(state_t *s)
 }
 
 
-int
+static int
 c_set_acc(state_t *s)
 {
 	s->r_acc = cmd_params[0].reg;
 	return 0;
 }
 
-int
+static int
 c_send(state_t *s)
 {
 	reg_t object = cmd_params[0].reg;
@@ -2577,7 +2577,7 @@ c_send(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_resource_id(state_t *s)
 {
 	int id = cmd_params[0].val;
@@ -2586,7 +2586,7 @@ c_resource_id(state_t *s)
 	return 0;
 }
 
-int
+static int
 c_listclones(state_t *s)
 {
 	int i, j = 0;
@@ -3502,7 +3502,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 #if 0
 			con_hook_command(c_stepover, "so", "", "Executes one operation skipping over sends");
 #endif
-			con_hook_command(c_disasm, "disasm", "!rs*", "Disassembles one or more commands\n\n"
+			con_hook_command(c_disasm, "disasm", "!as*", "Disassembles one or more commands\n\n"
 					 "USAGE\n\n  disasm [startaddr] <options>\n\n"
 					 "  Valid options are:\n"
 					 "  bwt  : Print byte/word tag\n"
@@ -3525,8 +3525,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  If invoked with a parameter, it will\n  look for that specific callk.\n");
 			con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");
 			con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
-			con_hook_command(c_set_acc, "set_acc", "!r", "Sets the accumulator");
-			con_hook_command(c_send, "send", "!asr*", "Sends a message to an object\nExample: send ?fooScript cue");
+			con_hook_command(c_set_acc, "set_acc", "!a", "Sets the accumulator");
+			con_hook_command(c_send, "send", "!asa*", "Sends a message to an object\nExample: send ?fooScript cue");
 			con_hook_command(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution"
 					 " stack\n  level.");
 			con_hook_command(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"

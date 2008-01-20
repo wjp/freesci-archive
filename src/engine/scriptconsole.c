@@ -33,6 +33,23 @@
 
 state_t *con_gamestate = NULL;
 
+/***************************************************************************/
+/* console commands */
+
+static int c_version(struct _state *s); /* displays the package and version number */
+static int c_list(struct _state *s); /* lists various types of things */
+static int c_man(struct _state *s); /* 'manual page' */
+static int c_set(struct _state *s); /* sets an int variable */
+static int c_print(struct _state *s); /* prints a variable */
+static int c_size(struct _state *s); /* displays the size of a resource */
+static int c_dump(struct _state *s); /* gives a hex dump of a resource */
+static int c_objinfo(struct _state *s); /* shows some info about one class */
+static int c_objmethods(struct _state *s); /* Disassembles all methods of a class */
+static int c_hexgrep(struct _state *s); /* Searches a string in one resource or resource class */
+static int c_selectornames(struct _state *s); /* Displays all selector names */
+static int c_kernelnames(struct _state *s); /* Displays all kernel function names */
+static int c_dissectscript(struct _state *s); /* Splits a script into objects and explains them */
+
 typedef struct {
 	const char *name;
 	const char *description;
@@ -333,7 +350,7 @@ clone_is_used(clone_table_t *t, int idx)
 }
 
 int
-parse_reg_t(state_t *s, char *str, reg_t *dest, int addresses_only)
+parse_reg_t(state_t *s, char *str, reg_t *dest)
 { /* Returns 0 on success */
 	int rel_offsetting = 0;
 	char *offsetting = NULL;
@@ -522,9 +539,6 @@ parse_reg_t(state_t *s, char *str, reg_t *dest, int addresses_only)
 			return 1;
 	}
 
-	if (addresses_only&&!(dest->segment))
-		return 1;
-
 	return 0;
 }
 
@@ -625,7 +639,7 @@ con_parse (state_t *s, const char *command)
 					     || paramt[strlen (paramt) - 1] != '*'))
 					sciprintf ("%s: too many parameters", cmd);
 				else {
-					int carry = !need_state || s; /* /me wants an
+					int do_execute = !need_state || s; /* /me wants an
 								      ** implication arrow */
 					char paramtype;
 					int paramtypepos = 0;
@@ -646,19 +660,17 @@ con_parse (state_t *s, const char *command)
 
 						case 'a':
 							if (parse_reg_t(s, cmd_params[i].str,
-									  &(cmd_params[i].reg), 0))
-										carry = 0;
-							break;
-						case 'r': if (parse_reg_t(s, cmd_params[i].str,
-									  &(cmd_params[i].reg), 1))
-										carry = 0;
+									&(cmd_params[i].reg))) {
+								sciprintf("%s: '%s' is not an address or object\n", cmd, cmd_params[i].str);
+								do_execute = 0;
+							}
 							break;
 						case 'i': {
 							char *orgstr = cmd_params[i].str;
 
 							cmd_params[i].val = strtol (orgstr, &endptr, 0);
 							if (*endptr != '\0') {
-								carry = 0;
+								do_execute = 0;
 								sciprintf ("%s: '%s' is not an int\n", cmd, orgstr);
 							}
 						}
@@ -670,7 +682,7 @@ con_parse (state_t *s, const char *command)
 							cmd_params[i].val = strtol (orgstr, &endptr, 16);
 
 							if (*endptr != '\0') {
-								carry = 0;
+								do_execute = 0;
 								sciprintf ("%s: '%s' is not a hex number\n", cmd, orgstr);
 							}
 
@@ -688,9 +700,9 @@ con_parse (state_t *s, const char *command)
 						}
 					}
 
-					if (carry == 1) {
+					if (do_execute) {
 						command_todo->command(s);
-					}
+					} else fprintf(stderr, "Skipping command...\n");
 				}
 			}
 		}
@@ -849,7 +861,7 @@ get_resource_number (char *resid)
   return res;
 }
 
-int
+static int
 c_version (state_t * s)
 {
 	if (NULL == s) {
@@ -867,7 +879,7 @@ c_version (state_t * s)
 	return 0;
 }
 
-int
+static int
 c_list_words(state_t *s)
 {
 	word_t **words;
@@ -986,7 +998,7 @@ _cmd_print_page(cmd_mm_entry_t *data, int full)
 	else sciprintf("%s\n", data->name);
 }
 
-int
+static int
 c_list (state_t * s)
 {
 	if (_lists_need_sorting)
@@ -1061,7 +1073,7 @@ c_list (state_t * s)
 }
 
 
-int
+static int
 c_man (state_t * s)
 {
 	int section = 0;
@@ -1099,7 +1111,7 @@ c_man (state_t * s)
 	return 0;
 }
 
-int
+static int
 c_set (state_t * s)
 {
 	cmd_var_t *var = (cmd_var_t *) cmd_mm_find(cmd_params[0].str, CMD_MM_VAR);
@@ -1110,7 +1122,7 @@ c_set (state_t * s)
 	return 0;
 }
 
-int
+static int
 c_print (state_t * s)
 {
 	cmd_var_t *var = (cmd_var_t *) cmd_mm_find(cmd_params[0].str, CMD_MM_VAR);
@@ -1124,7 +1136,7 @@ c_print (state_t * s)
 }
 
 
-int
+static int
 c_size (state_t * s)
 {
   int res = get_resource_number (cmd_params[0].str);
@@ -1145,7 +1157,7 @@ c_size (state_t * s)
 }
 
 
-int
+static int
 c_dump (state_t * s)
 {
   int res = get_resource_number (cmd_params[0].str);
@@ -1165,7 +1177,7 @@ c_dump (state_t * s)
 }
 
 
-int
+static int
 c_hexgrep (state_t * s)
 {
   int i, seeklen, resnr, restype, resmax;
@@ -1251,7 +1263,7 @@ c_hexgrep (state_t * s)
 }
 
 
-int
+static int
 c_selectornames (state_t * s)
 {
   int namectr;
@@ -1282,7 +1294,7 @@ c_selectornames (state_t * s)
   return 0;
 }
 
-int
+static int
 c_kernelnames (state_t * s)
 {
   int knamectr;
@@ -1308,7 +1320,7 @@ c_kernelnames (state_t * s)
   return 0;
 }
 
-int
+static int
 c_dissectscript (state_t * s)
 {
   if (NULL == s)
