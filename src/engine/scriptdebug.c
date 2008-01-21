@@ -1178,10 +1178,9 @@ c_save_game(state_t *s)
 		}
 	}
 
-/* 	if (gamestate_save(s, cmd_params[0].str)) { */
-/* 		sciprintf("Saving the game state to '%s' failed\n", cmd_params[0].str); */
-/* 	} */
-	sciprintf("Savegames are not presently supported.");
+ 	if (gamestate_save(s, cmd_params[0].str)) {
+ 		sciprintf("Saving the game state to '%s' failed\n", cmd_params[0].str);
+ 	}
 
 	return 0;
 }
