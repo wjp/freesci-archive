@@ -5160,11 +5160,18 @@ _reset_graphics_input(state_t *s);
 static
 void reconstruct_sounds(state_t *s)
 {
-  song_t *seeker = *(s->sound.songlib.lib);
+  song_t *seeker;
   int it_type = s->resmgr->sci_version >= SCI_VERSION_01 ?
     SCI_SONG_ITERATOR_TYPE_SCI1
     : SCI_SONG_ITERATOR_TYPE_SCI0;
 
+  if (s->sound.songlib.lib)
+    seeker = *(s->sound.songlib.lib);
+  else
+    {
+      song_lib_init(&s->sound.songlib);
+      seeker = NULL;
+    }
   while (seeker)
     {
       song_iterator_t *base, *ff;
@@ -5268,7 +5275,7 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 1103 "savegame.cfsml"
+#line 1110 "savegame.cfsml"
 
 	fclose(fh);
 

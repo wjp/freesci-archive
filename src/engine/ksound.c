@@ -110,7 +110,7 @@ script_set_priority(state_t *s, reg_t obj, int priority)
 	PUT_SEL32V(obj, flags, flags);
 }
 
-static song_iterator_t *
+song_iterator_t *
 build_iterator(state_t *s, int song_nr, int type, songit_id_t id)
 {
 	resource_t *song = scir_find_resource(s->resmgr, sci_sound, song_nr, 0);
