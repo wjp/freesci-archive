@@ -662,6 +662,12 @@ fprintf(stderr, "** CLONE INCREF for new %p from %p at %p\n", mem, self, mem->da
 	return NULL;
 }
 
+static int
+_sci0_get_timepos(sci0_song_iterator_t *self)
+{
+  return self->channel.total_timepos;
+}
+
 static void
 _base_init_channel(song_iterator_channel_t *channel, int id, int offset,
 		   int end)
@@ -1299,6 +1305,18 @@ _sci1_cleanup(sci1_song_iterator_t *it)
 	_sci0_cleanup((sci0_song_iterator_t *)it);
 }
 
+static int
+_sci1_get_timepos(sci1_song_iterator_t *self)
+{
+	int max = 0;
+	int i;
+
+	for (i = 0; i < self->channels_nr; i++)
+		if (self->channels[i].total_timepos > max)
+			max = self->channels[i].total_timepos;
+
+	return max;
+}
 
 /*****************************/
 /*-- Cleanup song iterator --*/
@@ -1352,6 +1370,7 @@ new_cleanup_iterator(unsigned int channels)
 	it->get_pcm_feed = NULL;
 	it->init = _cleanup_iterator_init;
 	it->handle_message = _cleanup_iterator_handle_message;
+	it->get_timepos = NULL;
 	it->next = _cleanup_iterator_next;
 	return it;
 }
@@ -1451,6 +1470,11 @@ new_fast_forward_iterator(song_iterator_t *capsit, int delta)
 	fast_forward_song_iterator_t *it =
 		(fast_forward_song_iterator_t*)sci_malloc(sizeof(fast_forward_song_iterator_t));
 
+	if (capsit == NULL)
+	{
+	    free(it);
+	    return NULL;
+	}
 	it->ID = 0;
 
 	it->delegate = capsit;
@@ -1464,11 +1488,12 @@ new_fast_forward_iterator(song_iterator_t *capsit, int delta)
 	it->handle_message = (song_iterator_t *(*)(song_iterator_t *,
 						   song_iterator_message_t))
 		_ff_handle_message;
+	it->get_timepos = NULL;
 	it->init = (void(*)(song_iterator_t *))
 		_ff_init;
 	it->cleanup = NULL;
 	it->channel_mask = capsit->channel_mask;
-
+	
 
 	return (song_iterator_t *) it;
 }
@@ -1806,6 +1831,8 @@ songit_new_tee(song_iterator_t *left, song_iterator_t *right, int may_destroy)
 	it->init = (void(*)(song_iterator_t *))
 		_tee_init;
 
+	it->get_timepos = NULL;
+
 	song_iterator_add_death_listener((song_iterator_t *)it,
 					 left, (void (*)(void *, void*))
 					 songit_tee_death_notification);
@@ -1911,6 +1938,7 @@ songit_new(unsigned char *data, unsigned int size, int type, songit_id_t id)
 		    it->cleanup = (void(*)(song_iterator_t *))_sci0_cleanup;
 		    ((sci0_song_iterator_t *)it)->channel.state
 			    = SI_STATE_UNINITIALISED;
+		    it->get_timepos = (int(*)(song_iterator_t *))_sci0_get_timepos;
 		    break;
 
 	    case SCI_SONG_ITERATOR_TYPE_SCI1:
@@ -1929,6 +1957,7 @@ songit_new(unsigned char *data, unsigned int size, int type, songit_id_t id)
 			    _sci1_handle_message;
 		    it->init = (void(*)(song_iterator_t *))_sci1_init;
 		    it->cleanup = (void(*)(song_iterator_t *))_sci1_cleanup;
+		    it->get_timepos = (int(*)(song_iterator_t *))_sci1_get_timepos;
 		    break;
 
 	    default:

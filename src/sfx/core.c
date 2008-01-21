@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <sfx_timer.h>
+#include <sfx_iterator_internal.h>
 #include <sfx_player.h>
 #include <sfx_mixer.h>
 #include <sci_midi.h>
@@ -544,6 +545,10 @@ sfx_exit(sfx_state_t *self)
 
 	song_lib_free(self->songlib);
 
+	if (pcm_device) {
+		pcm_device->exit(pcm_device);
+		pcm_device = NULL;
+	}
 	if (timer && timer->exit())
 		fprintf(stderr, "[SFX] Timer reported error on exit\n");
 
@@ -559,10 +564,6 @@ sfx_exit(sfx_state_t *self)
 		/* See above: This must happen AFTER stopping the mixer */
 		player->exit();
 
-	if (pcm_device) {
-		pcm_device->exit(pcm_device);
-		pcm_device = NULL;
-	}
 }
 
 static inline int
@@ -823,6 +824,7 @@ sfx_song_set_loops(sfx_state_t *self, song_handle_t handle, int loops)
 		handle, loops);
 #endif
 	songit_handle_message(&(song->it), msg);
+	song->loops = ((base_song_iterator_t *) song->it)->loops;
 
 	if (player/* && player->send_iterator_message*/)
 		/* FIXME: The above should be optional! */
@@ -837,8 +839,9 @@ sfx_song_set_hold(sfx_state_t *self, song_handle_t handle, int hold)
 		= songit_make_message(handle, SIMSG_SET_HOLD(hold));
 	ASSERT_SONG(song);
 
+	song->hold = hold;
 #ifdef DEBUG_SONG_API
-	fprintf(stderr, "[sfx-core] Setting loops on %08lx to %d\n",
+	fprintf(stderr, "[sfx-core] Setting hold on %08lx to %d\n",
 		handle, loops);
 #endif
 	songit_handle_message(&(song->it), msg);

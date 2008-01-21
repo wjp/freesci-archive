@@ -32,6 +32,7 @@
 
 #include <sci_memory.h>
 #include <gfx_operations.h>
+#include <sfx_engine.h>
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
@@ -165,6 +166,11 @@ int
 read_int_hash_map_tp(FILE *fh, int_hash_map_t **foo, char *lastval, int *line, int *hiteof);
 
 void
+write_songlib_t(FILE *fh, songlib_t *foo);
+int
+read_songlib_t(FILE *fh, songlib_t *foo, char *lastval, int *line, int *hiteof);
+
+void
 write_int_hash_map_node_tp(FILE *fh, int_hash_map_node_t **foo);
 int
 read_int_hash_map_node_tp(FILE *fh, int_hash_map_node_t **foo, char *lastval, int *line, int *hiteof);
@@ -185,7 +191,22 @@ TYPE reg_t "reg_t" USING write_reg_t read_reg_t;
 TYPE size_t "size_t" LIKE int;
 TYPE int_hash_map_tp "int_hash_map_t *" USING write_int_hash_map_tp read_int_hash_map_tp;
 TYPE int_hash_map_node_tp "int_hash_map_node_t *" USING write_int_hash_map_node_tp read_int_hash_map_node_tp;
+TYPE songlib_t "songlib_t" USING write_songlib_t read_songlib_t;
+TYPE song_tp "song_t *" USING write_song_tp read_song_tp;
+TYPE song_iterator_t "song_iterator_t" USING write_song_iterator_t read_song_iterator_t;
+TYPE song_handle_t "song_handle_t" LIKE int;
 
+RECORD song_t "song_t" {
+	song_handle_t handle;
+	int resource_num;
+	int priority;
+	int status;
+	int restore_behavior;
+	int restore_time;
+	int loops;
+	int hold;
+}
+	
 RECORD int_hash_map_t "int_hash_map_t" {
 	int base_value;
 	int_hash_map_node_tp nodes[STATIC DCS_INT_HASH_MAX+1];
@@ -244,6 +265,10 @@ RECORD class_t "class_t" {
 	reg_t reg;
 }
 
+RECORD sfx_state_t "sfx_state_t" {
+	songlib_t songlib;
+}
+
 RECORD state_t "state_t" {
 	int savegame_version;
 
@@ -255,6 +280,7 @@ RECORD state_t "state_t" {
 	seg_manager_t seg_manager;
 	int classtable_size;
 	class_t classtable[DYNAMIC classtable_size];
+	sfx_state_t sound;
 }
 
 RECORD local_variables_t "local_variables_t" {
@@ -371,6 +397,51 @@ RECORD dynmem_t "dynmem_t" {
 
 %END CFSML
 
+void 
+write_songlib_t(FILE *fh, songlib_t *songlib)
+{
+  song_t *seeker = *(songlib->lib);
+  int songcount = song_lib_count(*songlib);
+
+  fprintf(fh, "{\n");
+  fprintf(fh, "songcount = %d\n", songcount);
+  fprintf(fh, "list = \n");
+  fprintf(fh, "[\n");
+  while (seeker)
+    {
+      seeker->restore_time = seeker->it->get_timepos(seeker->it);
+      %CFSMLWRITE song_t seeker INTO fh;
+      seeker = seeker->next;
+    }
+  fprintf(fh, "]\n");
+  fprintf(fh, "}\n");
+}
+
+int
+read_songlib_t(FILE *fh, songlib_t *songlib, char *lastval, int *line, int *hiteof)
+{
+  int songcount;
+  int i;
+  song_t *newsong;
+  int oldstatus;
+
+  fscanf(fh, "{\n");
+  fscanf(fh, "songcount = %d\n", &songcount);
+  fscanf(fh, "list = \n");
+  fscanf(fh, "[\n");
+  *line += 4;
+  song_lib_init(songlib);
+  for (i = 0; i < songcount; i++)
+    {
+      %CFSMLREAD song_tp &newsong FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+      song_lib_add(*songlib, newsong);
+    }  
+  fscanf(fh, "]\n");
+  fscanf(fh, "}\n");;
+  *line += 2;
+  return 0;
+}
+
 struct {
 	int type;
 	char *name;
@@ -392,8 +463,7 @@ mem_obj_string_to_enum(char *str)
 	int i;
 
 	for (i = 0; i <= MEM_OBJ_MAX; i++)
-	{
-		if (!strcasecmp(mem_obj_string_names[i].name, str))
+	{		if (!strcasecmp(mem_obj_string_names[i].name, str))
 			return i;
 	}
 
@@ -408,6 +478,27 @@ write_int_hash_map_tp(FILE *fh, int_hash_map_t **foo)
 	%CFSMLWRITE int_hash_map_t *foo INTO fh;
 }
 
+void
+write_song_tp(FILE *fh, song_t **foo)
+{
+	%CFSMLWRITE song_t *foo INTO fh;
+}
+
+song_iterator_t *
+build_iterator(state_t *s, int song_nr, int type, songit_id_t id);
+
+int
+read_song_tp(FILE *fh, song_t **foo, char *lastval, int *line, int *hiteof)
+{
+  char *token;
+  int assignment;
+  *foo = (song_t*) malloc(sizeof(song_t));
+  token = _cfsml_get_identifier(fh, line, hiteof, &assignment);
+  %CFSMLREAD song_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN token LINECOUNTER *line;
+  (*foo)->delay = 0;
+  (*foo)->it = NULL;
+  (*foo)->next_playing = (*foo)->next_stopping = (*foo)->next = NULL;
+}
 int
 read_int_hash_map_tp(FILE *fh, int_hash_map_t **foo, char *lastval, int *line, int *hiteof)
 {
@@ -927,6 +1018,40 @@ reconstruct_clones(state_t *s, seg_manager_t *self)
 int
 _reset_graphics_input(state_t *s);
 
+static
+void reconstruct_sounds(state_t *s)
+{
+  song_t *seeker = *(s->sound.songlib.lib);
+  int it_type = s->resmgr->sci_version >= SCI_VERSION_01 ?
+    SCI_SONG_ITERATOR_TYPE_SCI1
+    : SCI_SONG_ITERATOR_TYPE_SCI0;
+
+  while (seeker)
+    {
+      song_iterator_t *base, *ff;
+      int oldstatus;
+      song_iterator_message_t msg;
+
+      base = ff = build_iterator(s, seeker->resource_num, it_type, seeker->handle);
+      if (seeker->restore_behavior == RESTORE_BEHAVIOR_CONTINUE)
+	  ff = (song_iterator_t *) new_fast_forward_iterator(base, seeker->restore_time);
+      ff->init(ff);
+
+      msg = songit_make_message(seeker->handle, SIMSG_SET_LOOPS(seeker->loops));
+      songit_handle_message(&ff, msg);
+      msg = songit_make_message(seeker->handle, SIMSG_SET_HOLD(seeker->hold));
+      songit_handle_message(&ff, msg);
+
+
+      oldstatus = seeker->status;
+      seeker->status = SOUND_STATUS_STOPPED;
+      seeker->it = ff;
+      sfx_song_set_status(&s->sound, seeker->handle, oldstatus);
+      seeker = seeker->next;
+    }
+
+}
+
 state_t *
 gamestate_restore(state_t *s, char *dirname)
 {
@@ -935,6 +1060,7 @@ gamestate_restore(state_t *s, char *dirname)
 	int i;
 	int read_eof = 0;
 	state_t *retval;
+	songlib_t temp;
 
 	if (chdir (dirname)) {
 		sciprintf("Game state '%s' does not exist\n", dirname);
@@ -949,6 +1075,7 @@ gamestate_restore(state_t *s, char *dirname)
 		}
 	}
 */
+	sfx_exit(&s->sound);
 	retval = (state_t *) sci_malloc(sizeof(state_t));
 
 	memset(retval, 0, sizeof(state_t));
@@ -1002,8 +1129,10 @@ gamestate_restore(state_t *s, char *dirname)
 
 	retval->resmgr = s->resmgr;
 
-	sfx_exit(&s->sound);
+	temp = retval->sound.songlib;
 	sfx_init(&retval->sound, retval->resmgr, 0);
+	song_lib_free(retval->sound.songlib);
+	retval->sound.songlib = temp;
 
 	_reset_graphics_input(retval);
 	reconstruct_stack(retval);
@@ -1062,6 +1191,13 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->successor = NULL;
 	retval->pic_priority_table = (int*)gfxop_get_pic_metainfo(retval->gfx_state);
 	retval->game_name = sci_strdup(obj_get_name(retval, retval->game_obj));
+
+	retval->sound.it = NULL;
+	retval->sound.flags = s->sound.flags;
+	retval->sound.song = NULL;
+	retval->sound.suspended = s->sound.suspended;
+	retval->sound.debug = s->sound.debug;
+	reconstruct_sounds(retval);
 
 	chdir ("..");
 

@@ -89,6 +89,8 @@ song_new(song_handle_t handle, song_iterator_t *it, int priority)
 	retval->status = SOUND_STATUS_STOPPED;
 	retval->next_playing = NULL;
 	retval->next_stopping = NULL;
+	retval->restore_behavior = RESTORE_BEHAVIOR_CONTINUE;
+	retval->restore_time = 0;
 
 	return retval;
 }
@@ -251,6 +253,13 @@ song_lib_count(songlib_t songlib)
 	return retval;
 }
 
+void
+song_lib_set_restore_behavior(songlib_t songlib, song_handle_t handle, RESTORE_BEHAVIOR action)
+{
+	song_t *seeker = song_lib_find(songlib, handle);
+
+	seeker->restore_behavior = action;
+}
 
 void
 song_lib_dump(songlib_t songlib, int line)

@@ -43,11 +43,24 @@
 
 typedef unsigned long song_handle_t;
 
+typedef enum {
+	RESTORE_BEHAVIOR_CONTINUE, /* restart a song when restored from
+				     a saved game */
+	RESTORE_BEHAVIOR_RESTART /* continue it from where it was */
+} RESTORE_BEHAVIOR;
+
 typedef struct _song {
 	song_handle_t handle;
 	int resource_num; /* Resource number */
 	int priority; /* Song priority (more important if priority is higher) */
 	int status;   /* See above */
+
+	int restore_behavior;
+	int restore_time;
+
+/* Grabbed from the sound iterator, for save/restore purposes */
+	int loops; 
+	int hold; 
 
 	song_iterator_t *it;
 	long delay; /* Delay before accessing the iterator, in microseconds */
@@ -172,6 +185,16 @@ song_next_wakeup_time(GTimeVal *lastslept, long ticks);
 **             (long) ticks: Number of ticks to count
 ** Returns   : (GTimeVal) A structure describing the time at which the
 **                              specified number of ticks has passed
+*/
+
+void
+song_lib_set_restore_behavior(songlib_t songlib, song_handle_t handle, 
+			      RESTORE_BEHAVIOR action);
+/* Determines what should be done with the song "handle" when
+** restoring it from a saved game.
+** Parameters: (songlib_t) songlib: The library that contains the song
+**             (song_handle_t) handle: Its handle
+**             (RESTORE_BEHAVIOR) action: The desired action
 */
 
 #endif /* !_SCI_SOUND_SERVER_H_ */

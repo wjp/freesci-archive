@@ -297,6 +297,8 @@ static int
 pp_exit(void)
 {
 	seq->exit(seq);
+	songit_free(play_it);
+	play_it = NULL;
 
 	return SFX_OK;
 }

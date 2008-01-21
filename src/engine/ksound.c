@@ -420,6 +420,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int looping = GET_SEL32V(obj, loop);
 		int vol = GET_SEL32V(obj, vol);
 		int pri = GET_SEL32V(obj, pri);
+		RESTORE_BEHAVIOR rb = (RESTORE_BEHAVIOR) UKPV(2); 		/* Too lazy to look up a default value for this */
 
 		if (obj.segment) {
 			sfx_song_set_status(&s->sound,
@@ -428,6 +429,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 					   handle, looping);
 			sfx_song_renice(&s->sound,
 					handle, pri);
+			song_lib_set_restore_behavior(s->sound.songlib, handle, rb);
 		}
 
 		break;

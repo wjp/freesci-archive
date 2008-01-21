@@ -33,6 +33,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <sfx_iterator_internal.h>
 #include <sfx_engine.h>
 #include <sfx_core.h>
 #include <resource.h>
@@ -91,10 +92,13 @@ int main(int argc, char** argv)
   arg = 2 - 1;
   while (++arg < argc)
     {
+      song_iterator_t *base, *ff;
       sound_nr = atoi(argv[arg]);
+      base = ff = build_iterator(resmgr, sound_nr, it_type,	
+				 DUMMY_SOUND_HANDLE);
+      ff = new_fast_forward_iterator(base, 528);
       printf("Playing resource %d...\n", sound_nr);
-      if (sfx_add_song(&sound, build_iterator(resmgr, sound_nr, it_type,	
-					      DUMMY_SOUND_HANDLE),
+      if (sfx_add_song(&sound, ff,
 		       0, DUMMY_SOUND_HANDLE, sound_nr))
 	{
 	  fprintf(stderr, "Could not start sound resource. Does it exist?\n");
@@ -106,6 +110,7 @@ int main(int argc, char** argv)
     }
   sfx_exit(&sound);
   scir_free_resource_manager(resmgr);
+  return 0;
 }
 
 

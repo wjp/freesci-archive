@@ -1,3 +1,14 @@
+2008-01-21  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/scriptdebug.c: bring back quick-save too.
+
+	* src/sfx/softseq/opl2.c: Downwards pitch bend fix.
+
+	* src/sfx/songlib.c: Duplicate some iterator information for
+	saving purposes. Not complete yet.
+
+	* src/engine/savegame.cfsml: Add song library persistence.
+
 2008-01-20  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/scriptconsole.c (con_parse): Eliminated 'r' parameter

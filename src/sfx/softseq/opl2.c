@@ -281,6 +281,8 @@ void synth_setnote (int voice, int note, int bend)
 
     n = note % 12;
 
+    if (bend < 8192)
+      bend = 8192-bend;
     delta = pow(2, (float) (bend%8192)/8192.0);
 
     if (bend > 8192)
