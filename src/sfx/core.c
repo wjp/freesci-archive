@@ -258,13 +258,16 @@ _update_single_song(sfx_state_t *self)
 	song_t *newsong = song_lib_find_active(self->songlib);
 
 	if (newsong != self->song) {
-
+		
 		_freeze_time(self); /* Store song delay time */
 
 		if (player)
 			player->stop();
 
-	if (newsong) {
+		if (newsong) {
+			if (!newsong->it)
+				return; /* Restore in progress and not ready for this yet */
+			
 			/* Change song */
 			if (newsong->status == SOUND_STATUS_WAITING)
 				_sfx_set_song_status(self, newsong,
@@ -279,7 +282,7 @@ _update_single_song(sfx_state_t *self)
 				_sfx_set_song_status(self, newsong,
 						     SOUND_STATUS_WAITING);
 		}
-
+		
 		if (self->debug & SFX_DEBUG_SONGS) {
 			sciprintf("[SFX] Changing active song:");
 			if (!self->song)
@@ -287,21 +290,21 @@ _update_single_song(sfx_state_t *self)
 			else
 				sciprintf(" pausing %08lx, now playing",
 					  self->song->handle);
-
+			
 			if (newsong)
 				sciprintf(" %08lx\n", newsong->handle);
 			else
 				sciprintf(" none\n");
 		}
-
-
+	
+	
 		self->song = newsong;
 		_thaw_time(self); /* Recover song delay time */
-
+		
 		if (newsong && player) {
 			song_iterator_t *clonesong
 				= songit_clone(newsong->it, newsong->delay);
-
+		
 			player->add_iterator(clonesong,
 					     newsong->wakeup_time);
 		}

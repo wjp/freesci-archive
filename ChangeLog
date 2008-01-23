@@ -1,3 +1,8 @@
+2008-01-23  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/sfx/core.c (_update_single_song): Fix segfault during
+	restore in SCI0 games.
+
 2008-01-21  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/scriptdebug.c: bring back quick-save too.
