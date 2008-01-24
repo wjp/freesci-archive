@@ -1,3 +1,8 @@
+2008-01-24  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/gfx_test.c (gfxr_interpreter_init_pic): Initialize
+	pic->internal to NULL.
+
 2008-01-23  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/core.c (_update_single_song): Fix segfault during
