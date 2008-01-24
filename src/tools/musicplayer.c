@@ -61,6 +61,7 @@ int main(int argc, char** argv)
   int dummy2;
   int arg;
   int it_type = SCI_SONG_ITERATOR_TYPE_SCI0;
+  song_iterator_t *base, *ff;
 
   printf("FreeSCI %s music player Copyright (C) 1999-2007\n", VERSION);
   printf(" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,\n"
@@ -92,11 +93,9 @@ int main(int argc, char** argv)
   arg = 2 - 1;
   while (++arg < argc)
     {
-      song_iterator_t *base, *ff;
       sound_nr = atoi(argv[arg]);
       base = ff = build_iterator(resmgr, sound_nr, it_type,	
 				 DUMMY_SOUND_HANDLE);
-      ff = new_fast_forward_iterator(base, 528);
       printf("Playing resource %d...\n", sound_nr);
       if (sfx_add_song(&sound, ff,
 		       0, DUMMY_SOUND_HANDLE, sound_nr))
