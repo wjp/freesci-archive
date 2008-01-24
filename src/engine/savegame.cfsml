@@ -175,6 +175,9 @@ write_int_hash_map_node_tp(FILE *fh, int_hash_map_node_t **foo);
 int
 read_int_hash_map_node_tp(FILE *fh, int_hash_map_node_t **foo, char *lastval, int *line, int *hiteof);
 
+int
+read_song_tp(FILE *fh, song_t **foo, char *lastval, int *line, int *hiteof);
+
 typedef mem_obj_t *mem_obj_ptr;
 
 %CFSML
@@ -1017,6 +1020,9 @@ reconstruct_clones(state_t *s, seg_manager_t *self)
 
 int
 _reset_graphics_input(state_t *s);
+
+song_iterator_t *
+new_fast_forward_iterator(song_iterator_t *it, int delta);
 
 static
 void reconstruct_sounds(state_t *s)
