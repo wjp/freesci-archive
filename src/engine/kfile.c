@@ -324,7 +324,7 @@ static void
 _chdir_restoredir(char *dir)
 {
 	if (chdir(dir)) {
-		sciprintf(__FILE__": Can't seemt to return to previous homedir '%s'\n",
+		sciprintf(__FILE__": Can't seem to return to previous homedir '%s'\n",
 			  dir);
 	}
 	free(dir);
