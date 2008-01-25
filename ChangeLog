@@ -1,3 +1,8 @@
+2008-01-26  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kstring.c (kStrAt): Relax heuristics a bit to also
+	cover the Memory() emulation in QfG2.
+
 2008-01-24  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/gfx_test.c (gfxr_interpreter_init_pic): Initialize

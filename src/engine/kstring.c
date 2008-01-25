@@ -425,8 +425,6 @@ kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-int save_str_offset; /* Referenced externally from vm.c */
-
 /* Simple heuristic to work around array handling peculiarity in SQ4:
 It uses StrAt() to read the individual elements, so we must determine
 whether a string is really a string or an array. */
@@ -458,7 +456,7 @@ kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return NULL_REG;
 	}
 
-	if ((argc == 2) &&
+	if (
 /* Our pathfinder already works around the issue we're trying to fix */
 	    (strcmp(sm_get_description(&(s->seg_manager), argv[0]),
 		    AVOIDPATH_DYNMEM_STRING) != 0)  &&
