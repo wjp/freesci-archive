@@ -93,11 +93,7 @@
 
 #ifdef _WIN32
 #  include <io.h>
-#  undef inline /* just to be sure it is not defined */
-#  define inline __inline
-#  define strcasecmp _stricmp
-#  define strncasecmp _strnicmp
-#  define vsnprintf _vsnprintf
+#  include <sci_win32.h>
 #else /* !_WIN32 */
 #  define DLLEXTERN
 #endif /* !_WIN32 */

@@ -586,12 +586,14 @@ sdl_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
 static int
 sdl_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 {
+	SDL_Surface *reg_surface;
+
 	if (pxm->internal.info) {
 		SDLERROR("Attempt to register pixmap twice!\n");
 		return GFX_ERROR;
 	}
 
-	SDL_Surface *reg_surface = 
+	reg_surface = 
 		SDL_CreateRGBSurfaceFrom(pxm->data, pxm->xl, pxm->yl,
 					 S->used_bytespp << 3,
 					 S->used_bytespp * pxm->xl,

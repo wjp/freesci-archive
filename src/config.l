@@ -41,9 +41,6 @@
 #ifdef _MSC_VER
 #  include <ctype.h>
 #  include <direct.h>
-
-#  define strcasecmp stricmp
-
 #endif
 
 config_entry_t *conf;

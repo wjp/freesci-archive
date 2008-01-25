@@ -78,7 +78,6 @@
 #  ifdef _MSC_VER
 #    include <direct.h>
 #    define PATH_MAX 255
-#    define strcasecmp stricmp
 #  endif
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
@@ -999,6 +998,7 @@ main(int argc, char** argv)
 	char startdir[PATH_MAX+1] = "";
 	char resource_dir[PATH_MAX+1] = "";
 	char work_dir[PATH_MAX+1] = "";
+	char *cwd;
 	char *gfx_driver_name = NULL;
 /*	char *midiout_driver_name = NULL;
 	char *midi_device_name = NULL;
@@ -1143,7 +1143,7 @@ main(int argc, char** argv)
 	}
 
 	/* Set the CWD as the savegame dir */
-	char *cwd = sci_getcwd();
+	cwd = sci_getcwd();
 	script_set_gamestate_save_dir(gamestate, cwd);
 	sci_free(cwd);
 

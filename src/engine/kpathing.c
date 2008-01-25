@@ -927,14 +927,14 @@ near_point(point_t p, polygon_t *polygon, point_t *ret)
 */
 {
 	vertex_t *vertex;
-	pointf_t near;
+	pointf_t near_p;
 	float dist = HUGE_DISTANCE;
 
 	CLIST_FOREACH(vertex, &polygon->vertices, entries) {
 		point_t p1 = vertex->v;
 		point_t p2 = CLIST_NEXT(vertex, entries)->v;
 		float w, h, l, u;
-		pointf_t new;
+		pointf_t new_point;
 		float new_dist;
 
 		/* Ignore edges on the screen border */
@@ -953,19 +953,19 @@ near_point(point_t p, polygon_t *polygon, point_t *ret)
 		if (u > 1.0f)
 			u = 1.0f;
 
-		new.x = p1.x + u * (p2.x - p1.x);
-		new.y = p1.y + u * (p2.y - p1.y);
+		new_point.x = p1.x + u * (p2.x - p1.x);
+		new_point.y = p1.y + u * (p2.y - p1.y);
 
-		new_dist = distance(to_pointf(p), new);
+		new_dist = distance(to_pointf(p), new_point);
 
 		if (new_dist < dist) {
-			near = new;
+			near_p = new_point;
 			dist = new_dist;
 		}
 	}
 
 	/* Find point not contained in polygon */
-	return find_free_point(near, polygon, ret);
+	return find_free_point(near_p, polygon, ret);
 }
 
 static int
@@ -1103,7 +1103,7 @@ fix_point(pf_state_t *s, point_t p, point_t *ret, polygon_t **ret_pol)
 	}
 
 	if (polygon) {
-		point_t near;
+		point_t near_p;
 
 		if (polygon->type == POLY_TOTAL_ACCESS) {
 			/* Remove totally accessible polygon if it contains
@@ -1115,8 +1115,8 @@ fix_point(pf_state_t *s, point_t p, point_t *ret, polygon_t **ret_pol)
 		}
 
 		/* Otherwise, compute near point */
-		if (near_point(p, polygon, &near) == PF_OK) {
-			*ret = near;
+		if (near_point(p, polygon, &near_p) == PF_OK) {
+			*ret = near_p;
 
 			if (!POINT_EQUAL(p, *ret))
 				*ret_pol = polygon;

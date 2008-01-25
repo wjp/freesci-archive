@@ -396,12 +396,12 @@ game_select_scan_info(gfx_driver_t *gfx_driver, gfx_bitmap_font_t* font_default,
 	gfx_box_text(gfx_driver, gfx_rect(GS_SCAN_WINDOW_LEFT + 6, GS_SCAN_WINDOW_TOP + 16, GS_SCAN_WINDOW_WIDTH - 11, 8), font_default, create_pixmap_color_t(black), create_pixmap_color_t(white), "Please wait, scanning for games...", 0);
 
 	if (name) {
-		snprintf(text, 256, "Adding: %s", name);
+		vsnprintf(text, 256, "Adding: %s", name);
 	
 		gfx_box_text(gfx_driver, gfx_rect(GS_SCAN_WINDOW_LEFT + 6, GS_SCAN_WINDOW_TOP + 32, GS_SCAN_WINDOW_WIDTH - 11, 8), font_default, create_pixmap_color_t(black), create_pixmap_color_t(white), text, 0);
 	}
 	
-	snprintf(text, 256, "Games found: %i", total);
+	vsnprintf(text, 256, "Games found: %i", total);
 
 	gfx_box_text(gfx_driver, gfx_rect(GS_SCAN_WINDOW_LEFT + 6, GS_SCAN_WINDOW_TOP + 48, GS_SCAN_WINDOW_WIDTH - 11, 8), font_default, create_pixmap_color_t(black), create_pixmap_color_t(white), text, 0);
 

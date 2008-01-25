@@ -37,6 +37,7 @@
 #endif
 #ifdef _WIN32
 #  include <io.h>
+#  include <sci_win32.h>
 #endif
 #ifdef _DREAMCAST
 #  include <stdio.h>
