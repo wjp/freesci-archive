@@ -34,7 +34,7 @@
 ## ------------------------------------------------------------------------
 ## copied from kvoice's acinclude.m4
 ##
-AC_DEFUN(AC_FIND_FILE,
+AC_DEFUN([AC_FIND_FILE],
 [
 $3=NO
 for i in $2;
@@ -50,7 +50,7 @@ done
 ])
 
 
-AC_DEFUN(AC_CHECK_FSCI_DLOPEN,
+AC_DEFUN([AC_CHECK_FSCI_DLOPEN],
 [
 dlopen="no"
 SCIV_LDFLAGS=""
@@ -72,7 +72,7 @@ AC_SUBST(SCIV_LDFLAGS)
 # Tries to preprocess a file including header.h (and <foo.h>) while trying out "",
 # "-Ipath1", "-Ipath2" etc. as include paths. Writes the result to result_var
 # (any element of {"no", "-Ipath1", "-Ipath2", "-Ipath3"}
-AC_DEFUN(AC_CHECK_INCLUDE_PATH,
+AC_DEFUN([AC_CHECK_INCLUDE_PATH],
 [
 OLDCPPFLAGS="$CPPFLAGS"
 $4=no
@@ -105,7 +105,7 @@ CPPFLAGS=$OLDCPPFLAGS
 # for in the default link path, then /usr/lib, and /usr/foo/lib. To compile, xfork.h is
 # included, and libfoo is linked appropriately. The resulting valid -L/-l combination
 # would be stored in result_var. If none is found, result_var is set to "no".
-AC_DEFUN(AC_CHECK_LINK_PATH,
+AC_DEFUN([AC_CHECK_LINK_PATH],
 [
 OLDCFLAGS=$CFLAGS
 $6=no
@@ -137,7 +137,7 @@ CFLAGS=$OLDCFLAGS
 ##
 ## Customizing functions for libggi: Based on similar functions for qt
 ##
-AC_DEFUN(AC_PATH_GGI,
+AC_DEFUN([AC_PATH_GGI],
 [
 AC_MSG_CHECKING([for ggi])
 
@@ -202,7 +202,7 @@ AC_SUBST(ac_ggi_libraries)
 ##
 ## Customizing functions for libggi: Based on similar functions for qt
 ##
-AC_DEFUN(AC_PATH_DIRECTFB,
+AC_DEFUN([AC_PATH_DIRECTFB],
 [
 AC_MSG_CHECKING([for directfb])
 
@@ -264,7 +264,7 @@ AC_SUBST(ac_directfb_libraries)
 ])
 
 
-AC_DEFUN(AC_CHECK_XSHM,
+AC_DEFUN([AC_CHECK_XSHM],
 [
 AC_MSG_CHECKING([for the X11 MIT-SHM extension])
 
@@ -293,7 +293,7 @@ AC_LANG_RESTORE
 ##
 ## Searching for curses/ncurses: Based on similar functions for qt
 ##
-AC_DEFUN(AC_PATH_CURSES,
+AC_DEFUN([AC_PATH_CURSES],
 [
 AC_MSG_CHECKING([for (n)curses])
 
@@ -353,7 +353,7 @@ AC_SUBST(ac_curses_libraries)
 ##
 ## Customizing functions for libpng: Based on similar functions for qt
 ##
-AC_DEFUN(AC_PATH_PNG,
+AC_DEFUN([AC_PATH_PNG],
 [
 AC_MSG_CHECKING([for libpng])
 ## libpng must be statically linked against libz for this to work... :-/
@@ -409,7 +409,7 @@ AC_SUBST(ac_png_libraries)
 
 
 # Checks for endianness, unless endianness is specified by a parameter
-AC_DEFUN(AC_C_PARAMETRIZED_BIGENDIAN,
+AC_DEFUN([AC_C_PARAMETRIZED_BIGENDIAN],
 [
 force_endian=no
 
@@ -446,7 +446,7 @@ fi
 ##
 ## Checks for glx
 ##
-AC_DEFUN(AC_PATH_GLX,
+AC_DEFUN([AC_PATH_GLX],
 [
 AC_MSG_CHECKING([for glx])
 
@@ -522,7 +522,7 @@ dnl
 dnl For backwards compatibility, if ACTION_IF_NOT_FOUND is not specified,
 dnl and the alsa libraries are not found, a fatal AC_MSG_ERROR() will result.
 dnl
-AC_DEFUN(AM_PATH_ALSA,
+AC_DEFUN([AM_PATH_ALSA],
 [dnl Save the original CFLAGS, LDFLAGS, and LIBS
 alsa_save_CFLAGS="$CFLAGS"
 alsa_save_LDFLAGS="$LDFLAGS"
@@ -655,7 +655,7 @@ AC_SUBST(ALSA_LIBS)
 dnl AM_PATH_SDL([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for SDL, and define SDL_CFLAGS and SDL_LIBS
 dnl
-AC_DEFUN(AM_PATH_SDL,
+AC_DEFUN([AM_PATH_SDL],
 [dnl 
 dnl Get the cflags and libraries from the sdl-config script
 dnl
@@ -822,7 +822,7 @@ int main (int argc, char *argv[])
 
 # serial 1
 
-AC_DEFUN(AM_WITH_DMALLOC,
+AC_DEFUN([AM_WITH_DMALLOC],
 [AC_MSG_CHECKING(if malloc debugging is wanted)
 AC_ARG_WITH(dmalloc,
 [  --with-dmalloc          use dmalloc, available at http://dmalloc.com],
@@ -843,7 +843,7 @@ fi], [AC_MSG_RESULT(no)])
 ## From Alex Angas                             ##
 ## ------------------------------------------- ##
 
-AC_DEFUN(AM_WITH_MALLOC_DEBUG,
+AC_DEFUN([AM_WITH_MALLOC_DEBUG],
 [AC_MSG_CHECKING(whether to output debug info at every memory (de)allocation)
 AC_ARG_WITH(malloc-debug,
 [  --with-malloc-debug     output debug information at every memory
@@ -862,7 +862,7 @@ fi], [AC_MSG_RESULT(no)])
 ## From Alex Angas                              ##
 ## -------------------------------------------- ##
 
-AC_DEFUN(AM_WITHOUT_MALLOC_CHECKS,
+AC_DEFUN([AM_WITHOUT_MALLOC_CHECKS],
 [AC_MSG_CHECKING(whether to check memory allocations for NULL)
 AC_ARG_WITH(malloc-checks,
 [  --without-malloc-checks do not check memory allocations for NULL.],
@@ -880,7 +880,7 @@ fi], [AC_MSG_RESULT(yes)])
 ## From Alex Angas                              ##
 ## -------------------------------------------- ##
 
-AC_DEFUN(AM_WITHOUT_SOUND,
+AC_DEFUN([AM_WITHOUT_SOUND],
 [AC_MSG_CHECKING(whether to compile with sound)
 AC_ARG_WITH(sound,
 [  --without-sound         Do not compile with sound.],

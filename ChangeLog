@@ -1,5 +1,7 @@
 2008-01-26  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* acinclude.m4: Fixed underquoted definitions
+
 	* src/sfx/seq/mt32.c (midi_mt32_allstop): Cut down event parameter
 	size to 2, eliminating an unneccessary uninitialised byte that was
 	otherwise sent to the MT-32.
