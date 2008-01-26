@@ -346,7 +346,7 @@ int midi_mt32_allstop(void)
 	buf[2] = 0;
 
 	for (i = 0; i < 16; i++) {
-		midi_mt32_event((guint8)(0xb0 | i), 3, buf);
+		midi_mt32_event((guint8)(0xb0 | i), 2, buf);
 	}
 
 	return 0;

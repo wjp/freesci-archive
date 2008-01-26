@@ -1,3 +1,9 @@
+2008-01-26  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/seq/mt32.c (midi_mt32_allstop): Cut down event parameter
+	size to 2, eliminating an unneccessary uninitialised byte that was
+	otherwise sent to the MT-32.
+
 2008-01-26  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kstring.c (kStrAt): Relax heuristics a bit to also
