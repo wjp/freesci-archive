@@ -154,7 +154,7 @@ static struct {
 	{"Even more FreeSCI hackers & contributors",
 	 "Johannes Manhave\nDocument format translation"
 	 "\n\n"
-	 "Jordi Vilalta\nNumerous code clean-up patches"
+	 "Jordi Vilalta\nNumerous code and website clean-up patches"
 	 "\n\n"
 	 "Lars Skovlund\nProject mainenance, most documentation, bugfixes, SCI1 support"
 	 "\n\n"
