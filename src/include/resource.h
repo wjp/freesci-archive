@@ -419,6 +419,12 @@ sci_file_size(const char *fname);
 ** Returns   : (int) filesize of the file, -1 on error
 */
 
+#ifdef HAVE_UNLINK
+#  define sci_unlink unlink
+#else  /* !HAVE_UNLINK */
+#  error "Please provide an int sci_unlink(const char *) for removing filesystem entries"
+#endif /* !HAVE_UNLINK */
+
 #ifndef HAVE_FFS
 int sci_ffs(int _mask);
 #else
