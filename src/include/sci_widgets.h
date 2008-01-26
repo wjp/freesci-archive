@@ -56,7 +56,8 @@
 #define CONTROL_STATE_GRAY 0x0004
 /* Used by the interpreter to flag some widgets to determine whether they should be surrounded by a frame */
 #define CONTROL_STATE_FRAMED 0x0008
-
+/* Used by the interpreter to flag buttons that are enabled */
+#define CONTROL_STATE_ENABLED 0x0001
 
 void
 sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text, int fgcolor, int bgcolor);
