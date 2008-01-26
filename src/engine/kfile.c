@@ -367,6 +367,8 @@ kGetCWD(state_t *s, int funct_nr, int argc, reg_t *argv)
 #define K_DEVICE_INFO_GET_CURRENT_DEVICE 1
 #define K_DEVICE_INFO_PATHS_EQUAL 2
 #define K_DEVICE_INFO_IS_FLOPPY 3
+#define K_DEVICE_INFO_GET_SAVECAT_NAME 7
+#define K_DEVICE_INFO_GET_SAVEFILE_NAME 8
 
 #ifdef _WIN32
 
@@ -423,6 +425,26 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 		break;
 
+/* SCI uses these in a less-than-portable way to delete savegames.
+** Read http://www-plan.cs.colorado.edu/creichen/freesci-logs/2005.10/log20051019.html
+** for more information on our workaround for this.
+*/
+	case K_DEVICE_INFO_GET_SAVECAT_NAME: {
+		char *output_buffer = kernel_dereference_char_pointer(s, argv[1], 0);
+		char *game_prefix = kernel_dereference_char_pointer(s, argv[2], 0);
+
+		sprintf(output_buffer, "%s/__throwaway", s->work_dir);
+	}
+
+		break;
+	case K_DEVICE_INFO_GET_SAVEFILE_NAME: {
+		char *output_buffer = kernel_dereference_char_pointer(s, argv[1], 0);
+		char *game_prefix = kernel_dereference_char_pointer(s, argv[2], 0);
+		int savegame_id = UKPV(3);
+		sprintf(output_buffer, "%s/__throwaway", s->work_dir);
+		delete_savegame(s, savegame_id);
+	}
+		break;
 	default: {
 		SCIkwarn(SCIkERROR, "Unknown DeviceInfo() sub-command: %d\n", mode);
 	}
@@ -474,6 +496,26 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 		break;
 
+/* SCI uses these in a less-than-portable way to delete savegames.
+** Read http://www-plan.cs.colorado.edu/creichen/freesci-logs/2005.10/log20051019.html
+** for more information on our workaround for this.
+*/
+	case K_DEVICE_INFO_GET_SAVECAT_NAME: {
+		char *output_buffer = kernel_dereference_char_pointer(s, argv[1], 0);
+		char *game_prefix = kernel_dereference_char_pointer(s, argv[2], 0);
+
+		sprintf(output_buffer, "%s/__throwaway", s->work_dir);
+	}
+
+		break;
+	case K_DEVICE_INFO_GET_SAVEFILE_NAME: {
+		char *output_buffer = kernel_dereference_char_pointer(s, argv[1], 0);
+		char *game_prefix = kernel_dereference_char_pointer(s, argv[2], 0);
+		int savegame_id = UKPV(3);
+		sprintf(output_buffer, "%s/__throwaway", s->work_dir);
+		delete_savegame(s, savegame_id);
+	}
+		break;
 	default: {
 		SCIkwarn(SCIkERROR, "Unknown DeviceInfo() sub-command: %d\n", mode);
 	}
@@ -765,7 +807,27 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return s->r_acc;
 }
 
+void
+delete_savegame(state_t *s, int savedir_nr)
+{
+	char *workdir = _chdir_savedir(s);
+	char *savedir = _k_get_savedir_name(savedir_nr);
+	char buffer[256];
 
+	sciprintf("Deleting savegame '%s'\n", savedir);
+
+	sprintf(buffer, "%s/%s.id", savedir, s->game_name);
+	sci_unlink(buffer);
+
+	sprintf(buffer, "%s/state", savedir, s->game_name);
+	sci_unlink(buffer);
+
+	rmdir(savedir);
+
+	free(savedir);
+	_chdir_restoredir(workdir);
+}
+	
 reg_t
 kSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
