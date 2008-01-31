@@ -822,7 +822,7 @@ delete_savegame(state_t *s, int savedir_nr)
 	sprintf(buffer, "%s/state", savedir, s->game_name);
 	sci_unlink(buffer);
 
-	rmdir(savedir);
+	sci_rmdir(savedir);
 
 	free(savedir);
 	_chdir_restoredir(workdir);

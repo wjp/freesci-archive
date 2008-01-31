@@ -425,6 +425,12 @@ sci_file_size(const char *fname);
 #  error "Please provide an int sci_unlink(const char *) for removing filesystem entries"
 #endif /* !HAVE_UNLINK */
 
+#ifdef HAVE_RMDIR
+#  define sci_rmdir rmdir
+#else  /* !HAVE_RMDIR */
+#  error "Please provide an int sci_rmdir(const char *) for removing directories"
+#endif /* !HAVE_RMDIR */
+
 #ifndef HAVE_FFS
 int sci_ffs(int _mask);
 #else
