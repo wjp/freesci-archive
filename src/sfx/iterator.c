@@ -177,6 +177,12 @@ _parse_sci_midi_command(base_song_iterator_t *self, unsigned char *buf,	int *res
 		cmd = channel->last_cmd;
 	}
 
+	if (cmd == 0xfe)
+	{
+		fprintf(stderr, "song iterator subsystem: Corrupted sound resource detected.\n");
+		return SI_FINISHED;
+	}
+
 	midi_op = cmd >> 4;
 	midi_channel = cmd & 0xf;
 	paramsleft = MIDI_cmdlen[midi_op];
@@ -682,6 +688,7 @@ _base_init_channel(song_iterator_channel_t *channel, int id, int offset,
 	channel->total_timepos = 0;
 	channel->timepos_increment = 0;
 	channel->delay = 0; /* Only used for more than one channel */
+	channel->last_cmd = 0xfe;
 
 	channel->offset
 		= channel->loop_offset
