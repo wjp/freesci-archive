@@ -107,6 +107,7 @@ play_song(song_iterator_t *it, GTimeVal *wakeup_time, int writeahead_time)
 			play_it_done = 1;
 			return;
 
+		case SI_IGNORE:
 		case SI_LOOP:
 		case SI_RELATIVE_CUE:
 		case SI_ABSOLUTE_CUE:

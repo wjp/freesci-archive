@@ -36,6 +36,7 @@
 #define SI_ABSOLUTE_CUE -3 /* Found a song cue (absolute) */
 #define SI_RELATIVE_CUE -4 /* Found a song cue (relative) */
 #define SI_PCM -5 /* Found a PCM */
+#define SI_IGNORE -6 /* This event got edited out by the remapper */
 #define SI_MORPH -255 /* Song iterator requested self-morph. */
 
 #define FADE_ACTION_NONE              0

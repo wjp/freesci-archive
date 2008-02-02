@@ -86,6 +86,7 @@ ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 				play_it = NULL;
 				return written; /* We're done... */
 
+			case SI_IGNORE:
 			case SI_LOOP:
 			case SI_RELATIVE_CUE:
 			case SI_ABSOLUTE_CUE:
