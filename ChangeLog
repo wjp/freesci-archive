@@ -1,3 +1,54 @@
+2008-01-26  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/include/resource.h: Added sci_unlink as a wrapper to ``unlink'' 
+
+	* acinclude.m4: Fixed underquoted definitions
+
+	* src/sfx/seq/mt32.c (midi_mt32_allstop): Cut down event parameter
+	size to 2, eliminating an unneccessary uninitialised byte that was
+	otherwise sent to the MT-32.
+
+2008-01-26  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kstring.c (kStrAt): Relax heuristics a bit to also
+	cover the Memory() emulation in QfG2.
+
+2008-01-25  Alex Angas  <arangas@internode.on.net>
+
+	* README.Win32: Updated documentation.
+
+	* src/config.c:
+	* src/config.l:
+	* src/include/resource.h:
+	* src/include/win32/sci_win32.h: Moved Win32-specific redefines for
+	strcasecmp,	strncasecmp, vsnprintf, inline to sci_win32.h.
+
+	* src/main.c: Moved Win32-specific redefine and declaration of cwd for
+	successful compilation with Microsoft C compiler.
+
+	* src/engine/kpathing.c: Renamed variables with Win32 used words 'new'
+	and 'near' to 'new_point' and 'near_p'.
+
+	* src/gfx/drivers/sdl_driver.c: Moved declaration of reg_surface for
+	successful compilation with Microsoft C compiler.
+
+	* src/include/scitypes.h: Added include for sci_win32.h.
+
+	* src/menu/game_select_screen.c: Replaced snprintf with vsnprintf (latter
+	doesn't exist under Win32).
+
+	* src/scicore/fnmatch.c: Wrapped #ifdef HAVE_CONFIG_H around include.
+
+	* src/sfx/seq/mt32.c: Wrapped #ifdef HAVE_SYS_TIME_H around include.
+
+	* src/gfx/drivers/gfx_drivers.c:
+	* src/gfx/drivers/dx_driver.cpp:
+	* src/include/graphics_directx.h: Ported DirectX driver from stable.
+
+	* src/win32/msvc60: Moved Visual Studio 6.0 files here.
+	* src/win32/msvc71-2003: Moved Visual Studio 2003 files here.
+	* src/win32/msvc80-2005: Created Visual Studio 2005 files here.
+
 2008-01-24  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/gfx_test.c (gfxr_interpreter_init_pic): Initialize
