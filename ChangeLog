@@ -1,5 +1,8 @@
 2008-02-05  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/sfx/player/polled.c (pp_resume): Reset pause flag even when
+	there is nothing to resume.
+
 	* src/sfx/player/polled.c (pp_add_iterator): Fix race condition
 	with the mixer.
 

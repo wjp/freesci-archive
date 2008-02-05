@@ -286,7 +286,10 @@ static int
 pp_resume(void)
 {
 	if (!play_it)
+	{
+		play_paused = 0;
 		return SFX_OK; /* Nothing to resume */
+	}
 
 	if (play_paused)
 		new_song = 1; /* Fake starting a new song, re-using the old
