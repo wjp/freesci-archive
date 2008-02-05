@@ -1,3 +1,8 @@
+2008-02-05  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/sfx/player/polled.c (pp_add_iterator): Fix race condition
+	with the mixer.
+
 2008-01-26  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/include/resource.h: Added sci_unlink as a wrapper to ``unlink'' 
