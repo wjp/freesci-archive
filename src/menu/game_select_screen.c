@@ -220,6 +220,9 @@ gfx_box_text(gfx_driver_t *gfx_driver, rect_t box, gfx_bitmap_font_t* font, gfx_
 		width = pixmap->index_xl * gfx_driver->mode->xfact;
 		height = pixmap->index_yl * gfx_driver->mode->yfact;
 
+		if (width > box.xl)
+			width = box.xl;
+
 		if (gfx_driver->draw_pixmap(gfx_driver, pixmap, GFX_NO_PRIORITY, gfx_rect(0, 0, width, height), gfx_rect(box.x + margin_x, box.y + margin_y, width, height), GFX_BUFFER_BACK) != GFX_OK)
 		{
 			GFXERROR("Error occured while drawing pixmap.\n");
