@@ -406,7 +406,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		{"run", no_argument, NULL, 0 },
 		{"debug", no_argument, NULL, 1 },
 		{"gamedir", required_argument, 0, 'd'},
-		{"gamemenu", required_argument, 0, 'G'},
+		{"menudir", required_argument, 0, 'G'},
 		{"no-sound", required_argument, 0, 'q'},
 		{"sci-version", required_argument, 0, 'V'},
 		{"graphics", required_argument, 0, 'g'},
@@ -576,7 +576,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			       EXPLAIN_OPTION("--gamedir dir\t", "-ddir", "read game resources from dir")
 			       EXPLAIN_OPTION("--menudir dir\t", "-Gdir", "display menu for all games under dir") 
 			       EXPLAIN_OPTION("--run\t\t", "-r", "do not start the debugger")
-			       EXPLAIN_OPTION("--sci-version\t", "-Vver", "set the version for freesci to emulate")
+			       EXPLAIN_OPTION("--sci-version ver", "-Vver", "set the version for freesci to emulate")
 			       EXPLAIN_OPTION("--version\t", "-v", "display version number and exit")
 			       EXPLAIN_OPTION("--debug\t", "-D", "start up in debug mode")
 			       EXPLAIN_OPTION("--help\t", "-h", "display this help text and exit")
