@@ -1575,6 +1575,9 @@ _tee_read_next_command(tee_song_iterator_t *it, unsigned char *buf,
 				it->children[i].retval);
 #endif
 
+			if (it->children[i].retval == SI_ABSOLUTE_CUE ||
+			    it->children[i].retval == SI_RELATIVE_CUE)
+			  return it->children[i].retval;
 			if (it->children[i].retval == SI_FINISHED) {
 				it->status &= ~active_masks[i];
 				/* Recurse to complete */

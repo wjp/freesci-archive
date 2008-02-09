@@ -545,11 +545,15 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 			break;
 
 		case SI_RELATIVE_CUE:
+			signal = cue;
 			SCIkdebug(SCIkSOUND, "---    [CUE] "PREG" Relative Cue: %d\n",
 				  PRINT_REG(obj), cue);
 
-			PUT_SEL32V(obj, dataInc, cue);
-			PUT_SEL32V(obj, signal, cue + 127);
+			/* FIXME to match commented-out semantics
+			 * below, with proper storage of dataInc and
+			 * signal in the iterator code. */
+			PUT_SEL32V(obj, dataInc, signal);
+			PUT_SEL32V(obj, signal, signal);
 			break;
 
 		case SI_FINISHED:
