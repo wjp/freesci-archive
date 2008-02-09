@@ -25,3 +25,7 @@ messages, so that they are easily identifiable using the below list.
 
 7. SQ1 calls UnLoad() with only one argument when exiting the Ulence
    Flats bar.
+   
+8. SQ4/Floppy will set the speed to maximum if you access the control
+   panel without tweaking the speed slider. Either tweak the speed
+   slider, or use function keys to access the control panel functionality.

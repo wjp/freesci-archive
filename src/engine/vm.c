@@ -147,12 +147,12 @@ validate_variable(reg_t *r, int type, int max, int index, int line)
 }
 
 static inline reg_t
-validate_read_var(reg_t *r, int type, int max, int index, int line)
+validate_read_var(reg_t *r, int type, int max, int index, int line, reg_t default_value)
 {
 	if (!validate_variable(r, type, max, index, line))
 		return r[index];
 	else
-		return make_reg(0, 0);
+		return default_value;
 }
 
 static inline void
@@ -177,7 +177,7 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 
 #endif
 
-#define READ_VAR(type, index) validate_read_var(variables[type], type, variables_max[type], index, __LINE__)
+#define READ_VAR(type, index, def) validate_read_var(variables[type], type, variables_max[type], index, __LINE__, def)
 #define WRITE_VAR(type, index, value) validate_write_var(variables[type], type, variables_max[type], index, __LINE__, value)
 #define WRITE_VAR16(type, index, value) WRITE_VAR(type, index, make_reg(0, value));
 
@@ -1402,7 +1402,7 @@ run_vm(state_t *s, int restoring)
 		case 0x43: /* lap */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
 			var_number = opparams[0];
-			s->r_acc = READ_VAR(var_type, var_number);
+			s->r_acc = READ_VAR(var_type, var_number, s->r_acc);
 			break;
 
 		case 0x44: /* lsg */
@@ -1411,7 +1411,7 @@ run_vm(state_t *s, int restoring)
 		case 0x47: /* lsp */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
 			var_number = opparams[0];
-			PUSH32(READ_VAR(var_type, var_number));
+			PUSH32(READ_VAR(var_type, var_number, s->r_acc));
 			break;
 
 		case 0x48: /* lagi */
@@ -1420,7 +1420,7 @@ run_vm(state_t *s, int restoring)
 		case 0x4b: /* lapi */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
 			var_number = opparams[0] + validate_arithmetic(s->r_acc);
-			s->r_acc = READ_VAR(var_type, var_number);
+			s->r_acc = READ_VAR(var_type, var_number, s->r_acc);
 			break;
 
 		case 0x4c: /* lsgi */
@@ -1429,7 +1429,7 @@ run_vm(state_t *s, int restoring)
 		case 0x4f: /* lspi */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
 			var_number = opparams[0] + validate_arithmetic(s->r_acc);
-			PUSH32(READ_VAR(var_type, var_number));
+			PUSH32(READ_VAR(var_type, var_number, s->r_acc));
 			break;
 
 		case 0x50: /* sag */
@@ -1479,7 +1479,8 @@ run_vm(state_t *s, int restoring)
 			var_number = opparams[0];
 			s->r_acc = make_reg(0,
 					    1 + validate_arithmetic(READ_VAR(var_type,
-									     var_number)));
+									     var_number,
+									     s->r_acc)));
 			WRITE_VAR(var_type, var_number, s->r_acc);
 			break;
 
@@ -1491,7 +1492,8 @@ run_vm(state_t *s, int restoring)
 			var_number = opparams[0];
 			r_temp = make_reg(0,
 					  1 + validate_arithmetic(READ_VAR(var_type,
-									   var_number)));
+									   var_number,
+									   s->r_acc)));
 			PUSH32(r_temp);
 			WRITE_VAR(var_type, var_number, r_temp);
 			break;
@@ -1504,7 +1506,8 @@ run_vm(state_t *s, int restoring)
 			var_number = opparams[0] + validate_arithmetic(s->r_acc);
 			s->r_acc = make_reg(0,
 					    1 + validate_arithmetic(READ_VAR(var_type,
-									     var_number)));
+									     var_number,
+									     s->r_acc)));
 			WRITE_VAR(var_type, var_number, s->r_acc);
 			break;
 
@@ -1516,7 +1519,8 @@ run_vm(state_t *s, int restoring)
 			var_number = opparams[0] + validate_arithmetic(s->r_acc);
 			r_temp = make_reg(0,
 					  1 + validate_arithmetic(READ_VAR(var_type,
-									   var_number)));
+									   var_number,
+									   s->r_acc)));
 			PUSH32(r_temp);
 			WRITE_VAR(var_type, var_number, r_temp);
 			break;
@@ -1529,7 +1533,7 @@ run_vm(state_t *s, int restoring)
 			var_number = opparams[0];
 			s->r_acc = make_reg(0,
 					    -1 + validate_arithmetic(READ_VAR(var_type,
-									     var_number)));
+									      var_number, s->r_acc)));
 			WRITE_VAR(var_type, var_number, s->r_acc);
 			break;
 
@@ -1541,7 +1545,7 @@ run_vm(state_t *s, int restoring)
 			var_number = opparams[0];
 			r_temp = make_reg(0,
 					  -1 + validate_arithmetic(READ_VAR(var_type,
-									   var_number)));
+									    var_number, s->r_acc)));
 			PUSH32(r_temp);
 			WRITE_VAR(var_type, var_number, r_temp);
 			break;
@@ -1554,7 +1558,8 @@ run_vm(state_t *s, int restoring)
 			var_number = opparams[0] + validate_arithmetic(s->r_acc);
 			s->r_acc = make_reg(0,
 					    -1 + validate_arithmetic(READ_VAR(var_type,
-									     var_number)));
+									      var_number,
+									      s->r_acc)));
 			WRITE_VAR(var_type, var_number, s->r_acc);
 			break;
 
@@ -1566,7 +1571,8 @@ run_vm(state_t *s, int restoring)
 			var_number = opparams[0] + validate_arithmetic(s->r_acc);
 			r_temp = make_reg(0,
 					  -1 + validate_arithmetic(READ_VAR(var_type,
-									   var_number)));
+									    var_number,
+									    s->r_acc)));
 			PUSH32(r_temp);
 			WRITE_VAR(var_type, var_number, r_temp);
 			break;
