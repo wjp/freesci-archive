@@ -1,21 +1,28 @@
-TODO for 0.6.2:
+TODO items:
 
-Primary goals:
- * Fix realtime song player detection of situations in which too much
-   time has passed
- * Remove all remaining uses of 'scripttable', including the ones that
-   refer to synonyms
+Scheduled for the next release:
+-------------------------------
+(none)
 
-Secondary goals:
-
- * if scaled images are turned off, drawing SCI1 (pixmap) backgrounds
-   is completely broken for scaled (-x2 etc.) sizes. Fix this!
- * Status bar: When removed, recover background (as opposed to just
-   drawing black)-- fixes Jones16 menu bar
-
-Bonus goals:
-
-
-*: Normal goal
-+: If not met for 0.6.2, the goal will rise up one class
+Not scheduled:
+--------------
+Architectural:
+- safer VM support for strings
+- gfx subsystem remodelling for proper palette emulation support
+- gfx widget subsystem remodelling to reduce fanciness and increase
+  similarity to classic SCI rendering
+- Config subsystem with in-game config changes
+- MT-32 -> GM mapping (investigate direct timidity support)
+- The sound subsystem doesn't use proper locking, which might
+  introduce race conditions -> introduce abstract locking API
+Testing:
+- test song iterator repetition, fix where neccessary (this one's not
+  neccessarily so long-term)
+Other:
+- Fix realtime song player detection of situations in which too much
+  time has passed
+- if scaled images are turned off, drawing SCI1 (pixmap) backgrounds
+  is completely broken for scaled (-x2 etc.) sizes. Fix this!
+- Status bar: When removed, recover background (as opposed to just
+  drawing black)-- fixes Jones16 menu bar
 

@@ -237,7 +237,6 @@ typedef struct _state
 
 	int classtable_size; /* Number of classes in the table- for debugging */
 	class_t *classtable; /* Table of all classes */
-	script_t scripttable[1000]; /* Table of all scripts */
 
 	seg_manager_t seg_manager;
 	int gc_countdown; /* Number of kernel calls until next gc */

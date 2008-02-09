@@ -1275,31 +1275,6 @@ c_stack(state_t *s)
 	return 0;
 }
 
-#ifdef __GNUC__
-#warning "Re-implement con:scriptinfo"
-#endif
-#if 0
-int
-c_scriptinfo(state_t *s)
-{
-  int i;
-
-  if (!s) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
-
-  sciprintf("Available scripts:\n");
-  for (i = 0; i < 1000; i++)
-    if (s->scripttable[i].heappos)
-      sciprintf("%03x at %04x, locals at %04x\n   exports at %04x, %d lockers\n",
-		i, s->scripttable[i].heappos, s->scripttable[i].localvar_offset,
-		s->scripttable[i].export_table_offset, s->scripttable[i].lockers);
-
-  return 0;
-}
-#endif
-
 const char *selector_name(state_t *s, int selector)
 {
 	if (selector >= 0 && selector < s->selector_names_nr)
@@ -3507,12 +3482,6 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  bwt  : Print byte/word tag\n"
 					 "  c<x> : Disassemble <x> bytes\n"
 					 "  bc   : Print bytecode\n\n");
-#ifdef __GNUC__
-#warning "Re-enable con:scriptinfo hook"
-#endif
-#if 0
-			con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
-#endif
 			con_hook_command(c_obj, "obj", "!", "Displays information about the\n  currently active object/class.\n"
 					 "\n\nSEE ALSO\n\n  vo.1, accobj.1");
 			con_hook_command(c_accobj, "accobj", "!", "Displays information about an\n  object or class at the\n"
