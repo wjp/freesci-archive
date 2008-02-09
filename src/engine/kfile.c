@@ -363,6 +363,42 @@ kGetCWD(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return argv[0];
 }
 
+/* Returns a dynamically allocated pointer to the name of the requested save dir */
+char *
+_k_get_savedir_name(int nr)
+{
+	char suffices[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+	char *savedir_name = (char*)sci_malloc(strlen(FREESCI_SAVEDIR_PREFIX) + 2);
+	assert(nr >= 0);
+	assert(nr < MAX_SAVEGAME_NR);
+	strcpy(savedir_name, FREESCI_SAVEDIR_PREFIX);
+	savedir_name[strlen(FREESCI_SAVEDIR_PREFIX)] = suffices[nr];
+	savedir_name[strlen(FREESCI_SAVEDIR_PREFIX) + 1] = 0;
+
+	return savedir_name;
+}
+
+void
+delete_savegame(state_t *s, int savedir_nr)
+{
+	char *workdir = _chdir_savedir(s);
+	char *savedir = _k_get_savedir_name(savedir_nr);
+	char buffer[256];
+
+	sciprintf("Deleting savegame '%s'\n", savedir);
+
+	sprintf(buffer, "%s/%s.id", savedir, s->game_name);
+	sci_unlink(buffer);
+
+	sprintf(buffer, "%s/state", savedir, s->game_name);
+	sci_unlink(buffer);
+
+	sci_rmdir(savedir);
+
+	free(savedir);
+	_chdir_restoredir(workdir);
+}
+	
 #define K_DEVICE_INFO_GET_DEVICE 0
 #define K_DEVICE_INFO_GET_CURRENT_DEVICE 1
 #define K_DEVICE_INFO_PATHS_EQUAL 2
@@ -594,22 +630,6 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 
 
-/* Returns a dynamically allocated pointer to the name of the requested save dir */
-char *
-_k_get_savedir_name(int nr)
-{
-	char suffices[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-	char *savedir_name = (char*)sci_malloc(strlen(FREESCI_SAVEDIR_PREFIX) + 2);
-	assert(nr >= 0);
-	assert(nr < MAX_SAVEGAME_NR);
-	strcpy(savedir_name, FREESCI_SAVEDIR_PREFIX);
-	savedir_name[strlen(FREESCI_SAVEDIR_PREFIX)] = suffices[nr];
-	savedir_name[strlen(FREESCI_SAVEDIR_PREFIX) + 1] = 0;
-
-	return savedir_name;
-}
-
-
 int
 _k_check_file(char *filename, int minfilesize)
      /* Returns 0 if the file exists and is big enough */
@@ -807,27 +827,6 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return s->r_acc;
 }
 
-void
-delete_savegame(state_t *s, int savedir_nr)
-{
-	char *workdir = _chdir_savedir(s);
-	char *savedir = _k_get_savedir_name(savedir_nr);
-	char buffer[256];
-
-	sciprintf("Deleting savegame '%s'\n", savedir);
-
-	sprintf(buffer, "%s/%s.id", savedir, s->game_name);
-	sci_unlink(buffer);
-
-	sprintf(buffer, "%s/state", savedir, s->game_name);
-	sci_unlink(buffer);
-
-	sci_rmdir(savedir);
-
-	free(savedir);
-	_chdir_restoredir(workdir);
-}
-	
 reg_t
 kSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
