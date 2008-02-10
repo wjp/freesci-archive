@@ -714,12 +714,13 @@ kTextSize(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
+int debug_sleeptime_factor = 1;
 
 reg_t
 kWait(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	GTimeVal time;
-	int SleepTime = UKPV(0);
+	int sleep_time = UKPV(0);
 
 	sci_get_current_time (&time);
 
@@ -732,7 +733,8 @@ kWait(state_t *s, int funct_nr, int argc, reg_t *argv)
 	s->kernel_opt_flags &= ~(KERNEL_OPT_FLAG_GOT_EVENT
 				 | KERNEL_OPT_FLAG_GOT_2NDEVENT);
 
-	GFX_ASSERT(gfxop_usleep(s->gfx_state, SleepTime * 1000000 / 60));
+	sleep_time *= debug_sleeptime_factor;
+	GFX_ASSERT(gfxop_usleep(s->gfx_state, sleep_time * 1000000 / 60));
 
 	return s->r_acc;
 }
@@ -956,6 +958,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 
 		while (node) { /* Check each object in the list against our bounding rectangle */
 			reg_t other_obj = node->value;
+			SCIkdebug(SCIkBRESEN, "  comparing against "PREG"\n", other_obj);
 
 			if (!is_object(s, other_obj)) {
 				SCIkdebug(SCIkWARNING, "CanBeHere() cliplist contains non-object %04x\n", other_obj);
@@ -1835,7 +1838,6 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, r
 				       view->color.priority);
 	}
 
-
 	if (!(view->signalp && (((reg_t *)view->signalp)->offset & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
 		gfxw_box_t *box;
 		gfx_color_t color;
@@ -1932,7 +1934,6 @@ _k_view_list_mark_free(state_t *s, reg_t off)
 			if (w->ID == off.segment
 			    && w->subID == off.offset) {
 				w->under_bitsp = NULL;
-				w->signalp = NULL;
 			}
 
 			w = (gfxw_dyn_view_t *) w->next;

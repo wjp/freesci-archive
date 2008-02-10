@@ -44,6 +44,7 @@
 #  include <signal.h>
 #endif
 
+extern int debug_sleeptime_factor;
 int _debugstate_valid = 0; /* Set to 1 while script_debug is running */
 int _debug_step_running = 0; /* Set to >0 to allow multiple stepping */
 int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? */
@@ -3733,6 +3734,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 				     "  into warnings\n");
 
 			con_hook_int(&script_gc_interval, "gc-interval", "Number of kernel calls in between gcs");
+			con_hook_int(&debug_sleeptime_factor, "sleep-factor", "Factor to multiply with wait times\n  Set to 0 to speed up games");
 
 			con_hook_page("codebugging",
 				      "Co-debugging allows to run two (sufficiently\n"

@@ -1,3 +1,10 @@
+2008-02-10  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/kgraphics.c (kWait): Added option for overriding
+	wait times (speed up for debugging)
+	(_k_view_list_mark_free): Don't null view->signalp so that later
+	code (most importantly draw_to_control_map) can still get it.
+
 2008-02-05  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/player/polled.c (pp_resume): Reset pause flag even when
