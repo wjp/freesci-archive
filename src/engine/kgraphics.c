@@ -2747,8 +2747,10 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	fgcolor.mask = GFX_MASK_VISUAL;
 	black.visual = *(get_pic_color(s, 0));
 	black.mask = GFX_MASK_VISUAL;
+	black.alpha = 0;
 	white.visual = *(get_pic_color(s, s->resmgr->sci_version < SCI_VERSION_01_VGA ? 15 : 255)),
 	white.mask = GFX_MASK_VISUAL;
+	white.alpha = 0;
 
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr,
 				 fgcolor, bgcolor, s->titlebar_port->font_nr,
