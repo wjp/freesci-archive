@@ -2741,10 +2741,12 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	bgcolor.priority = priority;
 	bgcolor.mask |= priority >= 0 ? GFX_MASK_PRIORITY : 0;
+	bgcolor.alpha = 0;
 	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", SKPV(0), SKPV(1), SKPV(2), SKPV(3));
 
 	fgcolor.visual = *(get_pic_color(s, SKPV_OR_ALT(7+argextra, 0)));
 	fgcolor.mask = GFX_MASK_VISUAL;
+	fgcolor.alpha = 0;
 	black.visual = *(get_pic_color(s, 0));
 	black.mask = GFX_MASK_VISUAL;
 	black.alpha = 0;
