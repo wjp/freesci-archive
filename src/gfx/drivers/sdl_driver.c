@@ -856,6 +856,12 @@ sdl_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t *
 static int
 sdl_set_palette(struct _gfx_driver *drv, int index, byte red, byte green, byte blue)
 {
+	if (index < 0 || index > 255)
+	{
+		SDLERROR("Attempt to set invalid palette entry %d\n", index);
+		return GFX_ERROR;
+	}
+
 	S->colors[index].r = red;
 	S->colors[index].g = green;
 	S->colors[index].b = blue;
