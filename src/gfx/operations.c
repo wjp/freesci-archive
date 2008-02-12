@@ -2195,7 +2195,7 @@ gfxop_get_text_params(gfx_state_t *state, int font_nr, const char *text,
 
 
 #define COL_XLATE(des,src) \
-  des = src.visual; /* The new gfx_color_t structure makes things a lot easier :-) */ \
+  des = src.visual; /* The new gfx_color_t structure makes things a lot easier :-) */ /* \
   if (gfxop_set_color(state, &src, \
 		      src.visual.r, \
 		      src.visual.g, \
@@ -2207,7 +2207,7 @@ gfxop_get_text_params(gfx_state_t *state, int font_nr, const char *text,
 	  GFXERROR("Unable to set up colors"); \
 	  return NULL; \
   }
-
+*/
 
 gfx_text_handle_t *
 gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
