@@ -19,6 +19,8 @@ Testing:
 - test song iterator repetition, fix where neccessary (this one's not
   neccessarily so long-term)
 Other:
+- Adjust MT-32 midiout to assume a max rate of 3125 bytes per second.
+  Ensure that we wait long enough after each sysex.
 - Fix realtime song player detection of situations in which too much
   time has passed
 - if scaled images are turned off, drawing SCI1 (pixmap) backgrounds

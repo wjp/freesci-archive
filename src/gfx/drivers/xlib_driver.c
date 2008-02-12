@@ -290,7 +290,6 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		 rect_t src, rect_t dest, gfx_buffer_t buffer);
 
 
-
 static int
 xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 {
@@ -364,16 +363,16 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	depth_mod = 0;
 
-	do {
-		while ((((bytespp > 1) && (vistype >= 4))
-			|| ((bytespp == 1) && (vistype == 3)))
-		       && (!(found_vistype = XMatchVisualInfo(S->display, default_screen,
-							     (bytespp << 3) - depth_mod, vistype, &xvisinfo))))
-			vistype--;
-		++depth_mod;
-	} while (!found_vistype
-		 && (bytespp == 1
-		     || (depth_mod <= 7)));
+	/* Try all bit size twiddling */
+	for (depth_mod = 0; depth_mod < 8; depth_mod++)
+		/* Try all viable depths */
+		for (; bytespp > 0; bytespp--)
+			/* Try all interesting visuals */
+			for (vistype = 4; vistype >= 3; vistype--)
+				if (XMatchVisualInfo(S->display, default_screen,
+						     (bytespp << 3) - depth_mod, vistype, &xvisinfo))
+					goto found_visual;
+ found_visual:
 
 	S->visinfo = xvisinfo;
 
