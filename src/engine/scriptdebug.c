@@ -608,6 +608,7 @@ static int
 c_vr(state_t *s)
 {
 	reg_t reg = cmd_params[0].reg;
+	reg_t reg_end = cmd_paramlength > 1 ? cmd_params[1].reg : NULL_REG;
 	int type_mask = determine_reg_type(s, reg, 1);
 	int filter;
 	int found = 0;
@@ -621,6 +622,12 @@ c_vr(state_t *s)
 	    && reg.offset == 0) {
 		sciprintf("Null.\n");
 		return 0;
+	}
+
+	if (reg_end.segment != reg.segment)
+	{
+		sciprintf("Ending segment different from starting segment. Assuming no bound on dump.\n");
+		reg_end = NULL_REG;
 	}
 
 	for (filter = 1; filter < 0xf000; filter <<= 1) {
@@ -664,7 +671,18 @@ c_vr(state_t *s)
 							      reg, &size);
 
 			sciprintf("raw data\n");
-			sciprintf("Block size less than or equal to %d\n", size);
+
+			if (reg_end.segment != 0 && size < reg_end.offset - reg.offset)
+			{
+				sciprintf("Block end out of bounds (size %d). Resetting.\n", size);
+				reg_end = NULL_REG;
+			}
+
+			if (reg_end.segment != 0 && (size >= reg_end.offset - reg.offset))
+				size = reg_end.offset - reg.offset;
+
+			if (reg_end.segment != 0)
+				sciprintf("Block size less than or equal to %d\n", size);
 
 			sci_hexdump(block, size, 0);
 		}
@@ -3653,7 +3671,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "Examines an object\n\n"
 					 "SEE ALSO\n\n"
 					 "  addresses.3, type.1");
-			con_hook_command(c_vr, "vr", "!a",
+			con_hook_command(c_vr, "vr", "!aa*",
 					 "Examines an arbitrary reference\n\n");
 			con_hook_command(c_sg, "sg", "!i",
 					 "Steps until the global variable with the\n"
