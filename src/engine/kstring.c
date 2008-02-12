@@ -425,25 +425,6 @@ kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-/* Simple heuristic to work around array handling peculiarity in SQ4:
-It uses StrAt() to read the individual elements, so we must determine
-whether a string is really a string or an array. */
-int is_print_str(char *str)
-{
-	int printable = 0;
-	int len = strlen(str);
-	
-	if (len == 0) return 1;
-
-	while (*str)
-	{
-		if (isprint(*str)) printable++;
-		str++;
-	}
-
-	return ((float) printable / (float) len >= 0.5);
-}
-
 reg_t
 kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
@@ -456,7 +437,7 @@ kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return NULL_REG;
 	}
 
-	if (
+	if ((argc == 2) &&
 /* Our pathfinder already works around the issue we're trying to fix */
 	    (strcmp(sm_get_description(&(s->seg_manager), argv[0]),
 		    AVOIDPATH_DYNMEM_STRING) != 0)  &&

@@ -720,3 +720,22 @@ sci_file_size(const char *fname)
 }
 
 #endif
+
+/* Simple heuristic to work around array handling peculiarity in SQ4:
+It uses StrAt() to read the individual elements, so we must determine
+whether a string is really a string or an array. */
+int is_print_str(char *str)
+{
+	int printable = 0;
+	int len = strlen(str);
+	
+	if (len == 0) return 1;
+
+	while (*str)
+	{
+		if (isprint(*str)) printable++;
+		str++;
+	}
+
+	return ((float) printable / (float) len >= 0.5);
+}
