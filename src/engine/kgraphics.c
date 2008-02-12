@@ -166,16 +166,17 @@ _find_view_priority(state_t *s, int y)
 	} else
 	{
 		if (s->version >= SCI_VERSION_FTU_PRIORITY_14_ZONES)
-			return SCI0_VIEW_PRIORITY_14_ZONES(y); else
-				return SCI0_VIEW_PRIORITY(y);
-		
+			return SCI0_VIEW_PRIORITY_14_ZONES(y);
+		else
+			return SCI0_VIEW_PRIORITY(y) == 15 ? 14 :
+				SCI0_VIEW_PRIORITY(y);
 	}
 }
 
 inline int
 _find_priority_band(state_t *s, int nr)
 {
-	if (nr < 0 || nr > 14) {
+	if (s->version >= SCI_VERSION_FTU_PRIORITY_14_ZONES && (nr < 0 || nr > 14)) {
 		if (nr == 15)
 			return 0xffff;
 		else {
@@ -183,6 +184,12 @@ _find_priority_band(state_t *s, int nr)
 		}
 		return 0;
 	}
+
+	if (s->version < SCI_VERSION_FTU_PRIORITY_14_ZONES && (nr < 0 || nr > 15)) {
+		SCIkwarn(SCIkWARNING, "Attempt to get priority band %d\n", nr);
+		return 0;
+	}
+
 	if (s->pic_priority_table) /* SCI01 priority table set? */
 		return s->pic_priority_table[nr];
 	else {
@@ -2208,7 +2215,7 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 
 		_k_set_now_seen(s, obj);
 		_priority = /*GET_SELECTOR(obj, y); */((view->pos.y));/**/
-		_priority = VIEW_PRIORITY(_priority - 1);
+		_priority = _find_view_priority(s, _priority - 1);
 
 		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) { /* Picview */
 			priority = GET_SEL32SV(obj, priority);
