@@ -501,6 +501,7 @@ read_song_tp(FILE *fh, song_t **foo, char *lastval, int *line, int *hiteof)
   (*foo)->delay = 0;
   (*foo)->it = NULL;
   (*foo)->next_playing = (*foo)->next_stopping = (*foo)->next = NULL;
+  return 0;
 }
 int
 read_int_hash_map_tp(FILE *fh, int_hash_map_t **foo, char *lastval, int *line, int *hiteof)
