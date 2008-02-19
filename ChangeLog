@@ -1,5 +1,12 @@
 2008-02-19  Christoph Reichenbach  <reichenb@colorado.edu>
 
+        * src/sfx/iterator.c (_parse_sci_midi_command): Loop channels
+        irrespectively of whether they have played notes or not.  The
+        previous behaviour appears to have been an unneccessary
+        optimisation that wound up breaking the cue iterators (since their
+        channel mask is 0, they don't play notes, so they were always
+        stopped, thereby causing the ``real'' song to be aborted also.)
+
         * src/engine/ksound.c (kDoSound_SCI0): Initialise songs with their
         own ID as handle (fixes SQ3 intro song breakage)
 

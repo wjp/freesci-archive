@@ -44,7 +44,7 @@ print_tabs_id(int nr, songit_id_t id)
 	while (nr-- > 0)
 		fprintf(stderr, "\t");
 
-	fprintf(stderr, "[%08x] ", id);
+	fprintf(stderr, "[%08lx] ", id);
 }
 
 #ifndef HAVE_MEMCHR
@@ -230,9 +230,8 @@ if (1) {
 	if (cmd == SCI_MIDI_EOT) {
 		/* End of track? */
 		_reset_synth_channels(self, channel);
-		fprintf(stderr, "eot; loops = %d, notesplayed=%d\n", self->loops, channel->notes_played);
-		if (self->loops > 1 && channel->notes_played) {
-
+/*		fprintf(stderr, "eot; loops = %d, notesplayed=%d\n", self->loops, channel->notes_played);*/
+		if (self->loops > 1 /* && channel->notes_played*/) {
 			/* If allowed, decrement the number of loops */
 			if (!(flags & PARSE_FLAG_LOOPS_UNLIMITED))
 				*result = --self->loops;
@@ -250,7 +249,7 @@ if (1) {
 			channel->notes_played = 0;
 			channel->state = SI_STATE_COMMAND;
 			channel->total_timepos = channel->loop_timepos;
-			fprintf(stderr, "Looping song iterator %08x.\n", self->ID);
+			fprintf(stderr, "Looping song iterator %08lx.\n", self->ID);
 			return SI_LOOP;
 		} else {
 			channel->state = SI_STATE_FINISHED;
@@ -267,6 +266,7 @@ if (1) {
 		if (buf[1] == SCI_MIDI_SET_SIGNAL_LOOP) {
 			channel->loop_offset = channel->offset - 1 - paramsleft;
 			channel->loop_timepos = channel->total_timepos;
+
 			return /* Execute next command */
 				self->next((song_iterator_t *) self, buf, result);
 		} else {
@@ -484,9 +484,8 @@ _sci0_read_next_command(sci0_song_iterator_t *self, unsigned char *buf,
 			int *result)
 {
 	return _sci_midi_process((base_song_iterator_t *) self, buf, result,
-				   &(self->channel),
-				   PARSE_FLAG_PARAMETRIC_CUE);
-
+				 &(self->channel),
+				 PARSE_FLAG_PARAMETRIC_CUE);
 }
 
 
@@ -606,7 +605,6 @@ _sci0_handle_message(sci0_song_iterator_t *self, song_iterator_message_t msg)
 			break;
 
 		case _SIMSG_BASEMSG_SET_LOOPS:
-fprintf(stderr, "Setting loops = %d\n", msg.args[0].i);
 			self->loops = msg.args[0].i;
 			break;
 
@@ -678,8 +676,6 @@ static void
 _base_init_channel(song_iterator_channel_t *channel, int id, int offset,
 		   int end)
 {
-	int i;
-
 	channel->playmask = PLAYMASK_NONE; /* Disable all channels */
 	channel->id = id;
 	channel->notes_played = 0;
