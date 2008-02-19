@@ -227,6 +227,7 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 								       handle),
 							0, handle, number));
 			PUT_SEL32V(obj, state, _K_SOUND_STATUS_INITIALIZED);
+			PUT_SEL32(obj, handle, obj); /* ``sound handle'': we use the object address */
 		}
 		break;
 
@@ -247,6 +248,7 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 		if (obj.segment) {
 			sfx_remove_song(&s->sound, handle);
 		}
+		PUT_SEL32V(obj, handle, 0x0000);
 		break;
 
 	case _K_SCI0_SOUND_STOP_HANDLE:

@@ -1,5 +1,8 @@
 2008-02-19  Christoph Reichenbach  <reichenb@colorado.edu>
 
+        * src/engine/ksound.c (kDoSound_SCI0): Initialise songs with their
+        own ID as handle (fixes SQ3 intro song breakage)
+
 	* src/gfx/drivers/xlib_driver.c: Cleaned up warnings
 
 2008-02-18  Lars Skovlund  <lskovlun@image.dk>
