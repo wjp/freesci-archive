@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-    Christoph Reichenbach (CR) <jameson@linuxgames.com>
+    Christoph Reichenbach (CR) <creichen@gmail.com>
 
 ***************************************************************************/
 
@@ -192,17 +192,6 @@ xlib_map_color(gfx_driver_t *drv, gfx_color_t color)
 	return retval;
 }
 
-static unsigned long
-xlib_map_pixmap_color(gfx_driver_t *drv, gfx_pixmap_color_t pc)
-{
-	gfx_color_t color;
-
-	color.mask = GFX_MASK_VISUAL;
-	memcpy(&(color.visual), &pc, sizeof(gfx_pixmap_color_t));
-
-	return xlib_map_color(drv, color);
-}
-
 
 static int
 xlib_error_handler(Display *display, XErrorEvent *error)
@@ -295,9 +284,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 {
 	XVisualInfo xvisinfo;
 	XSetWindowAttributes win_attr;
-	int default_screen, num_aux_buffers;
+	int default_screen;
 	int vistype = (bytespp == 1)? 3 /* PseudoColor */ : 4 /* TrueColor */;
-	int found_vistype = 0;
 	int red_shift, green_shift, blue_shift, alpha_shift;
 	int bytespp_physical;
 	int depth_mod; /* Number of bits to subtract from the depth while checking */
@@ -693,7 +681,7 @@ xlib_xdpy_info()
 		int visual_class = *((int *) (((byte *)(&(visual->depth))) + sizeof(unsigned int)));
 
 		printf("%d:\t%d bpp %s(%d)\n"
-		       "\tR:%08x G:%08x B:%08x\n"
+		       "\tR:%08lx G:%08lx B:%08lx\n"
 		       "\tbits_per_rgb=%d\n"
 		       "\tcolormap_size=%d\n\n",
 		       i,
@@ -1103,8 +1091,8 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 		XColor cols[2];
 		Pixmap visual, mask;
 		byte *mask_data, *visual_data;
-		int real_xl = (pointer->xl + 7 >> 3) << 3;
-		int i, j;
+		int real_xl = ((pointer->xl + 7) >> 3) << 3;
+		int i;
 
 		for (i = 0; i < 2; i++) {
 			cols[i].red = pointer->colors[i].r;
@@ -1156,7 +1144,7 @@ xlib_set_palette(struct _gfx_driver *drv, int index, byte red, byte green, byte 
 
 
   /*** Event management ***/
-
+/*
 int
 x_unmap_key(gfx_driver_t *drv, int keycode)
 {
@@ -1164,7 +1152,7 @@ x_unmap_key(gfx_driver_t *drv, int keycode)
 
 	return 0;
 }
-
+*/
 int
 x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 {
@@ -1290,7 +1278,6 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 
 	do {
 		int hasnext_event = 1;
-		int redraw_pointer_request = 0;
 
 		while (hasnext_event) {
 			if (sci_event) { /* Capable of handling any event? */

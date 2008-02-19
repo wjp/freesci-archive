@@ -1,3 +1,7 @@
+2008-02-19  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/drivers/xlib_driver.c: Cleaned up warnings
+
 2008-02-18  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/savegame.cfsml (read_songlib_tp): Return a result.
