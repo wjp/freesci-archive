@@ -1,5 +1,8 @@
 2008-02-20  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/scicore/resource_patch.c (sci0_read_resource_patches):
+	Properly initialised patches' alt_resources
+
 	* src/gfx/gfx_pixmap_scale.c (FUNCNAME): Avoid corrupting the
 	stack if there is no colour key
 
