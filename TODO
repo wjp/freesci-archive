@@ -1,17 +1,22 @@
 TODO items:
 
-Scheduled for the next release:
--------------------------------
+Scheduled for 0.6.3:
+--------------------
 (none)
+
+Scheduled for 0.6.4:
+--------------------
+- Clean up code duplication in resource patch management (SCI0 vs. SCI1)
+- Fix up bytespp distinction: drivers should take bitspp
+- Config subsystem with in-game config changes
+- safer VM support for strings
 
 Not scheduled:
 --------------
 Architectural:
-- safer VM support for strings
 - gfx subsystem remodelling for proper palette emulation support
 - gfx widget subsystem remodelling to reduce fanciness and increase
   similarity to classic SCI rendering
-- Config subsystem with in-game config changes
 - MT-32 -> GM mapping (investigate direct timidity support)
 - The sound subsystem doesn't use proper locking, which might
   introduce race conditions -> introduce abstract locking API
