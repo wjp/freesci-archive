@@ -1,5 +1,9 @@
 2008-02-19  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/gfx/gfx_support.c (gfx_crossblit_pixmap): Fix bug in
+	crossblitting that would break crossblitting with reverse alpha,
+	minor associated cleanups
+
         * src/sfx/iterator.c (_parse_sci_midi_command): Loop channels
         irrespectively of whether they have played notes or not.  The
         previous behaviour appears to have been an unneccessary
