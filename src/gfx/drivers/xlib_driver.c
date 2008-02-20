@@ -704,9 +704,13 @@ xlib_init(struct _gfx_driver *drv)
 {
 	int i;
 
-	for (i = 4; i > 0; i--)
+	/* Try 32-bit mode last due to compiz issue with bit depth 32. */
+	for (i = 3; i > 0; i--)
 		if (!xlib_init_specific(drv, -1, -1, i))
 			return GFX_OK;
+
+	if (!xlib_init_specific(drv, -1, -1, 4))
+		return GFX_OK;
 
 	fprintf(stderr, "Could not find supported mode!\n");
 	xlib_xdpy_info();
