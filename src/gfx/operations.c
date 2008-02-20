@@ -1043,7 +1043,7 @@ simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, point_t start, po
 	int *posvar;
 	int length;
 	int delta;
-	int length_left = length;
+	int length_left;
 
 	if (!xl) { /* xl = 0, so we move along yl */
 		posvar = &start.y;
