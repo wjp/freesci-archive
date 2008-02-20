@@ -1,5 +1,8 @@
 2008-02-20  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/gfx/gfx_support.c (gfx_crossblit_pixmap): Fixed alpha
+	blending on Alpha/MVI machines
+
 	* src/gfx/operations.c (simulate_stippled_line_draw): Proper
 	support for negative deltas.
 
