@@ -222,9 +222,7 @@ sci1_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 										  *resource_nr_p
 										  * sizeof(resource_t));
 							newrsc = (*resource_p-1) + *resource_nr_p;
-#ifdef SATISFY_PURIFY
-							memset(newrsc, 0, sizeof(resource_t));
-#endif
+							newrsc->alt_sources = NULL;
 						}
 
 						/* Overwrite everything, because we're patching */
