@@ -368,7 +368,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	if (!IS_VALID_FD(fd))
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 
-	memset(types, 0, sizeof(int) * sci1_last_resource);
+	memset(types, 0, sizeof(int) * (sci1_last_resource + 1));
 
 	if (!(sci1_parse_header(fd, types, &lastrt)))
 	{

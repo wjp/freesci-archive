@@ -1,5 +1,8 @@
 2008-02-20  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/scicore/resource_map.c (sci1_read_resource_map): More fully
+	initialise the types list
+
 	* src/scicore/resource_patch.c (sci0_read_resource_patches):
 	Properly initialised patches' alt_resources
 	(sci1_read_resource_patches): Properly initialise alt_sources for
