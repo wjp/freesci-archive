@@ -1,3 +1,8 @@
+2008-02-20  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/gfx_pixmap_scale.c (FUNCNAME): Avoid corrupting the
+	stack if there is no colour key
+
 2008-02-19  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/gfx_support.c (gfx_crossblit_pixmap): Fix bug in

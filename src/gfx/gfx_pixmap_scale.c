@@ -69,7 +69,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 		result_colors[i] = col;
 	}
 
-	if (!separate_alpha_map)
+	if (!separate_alpha_map && pxm->color_key != GFX_PIXMAP_COLOR_KEY_NONE)
 		result_colors[pxm->color_key] = alpha_color;
 
 	src = pxm->index_data; /* Workaround for gcc 4.2.3 bug on EMT64 */
