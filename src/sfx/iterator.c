@@ -1466,6 +1466,11 @@ _ff_init(fast_forward_song_iterator_t *self)
 	return;
 }
 
+static int
+_ff_get_timepos(fast_forward_song_iterator_t *self)
+{
+	return self->delegate->get_timepos(self->delegate);
+}
 
 song_iterator_t *
 new_fast_forward_iterator(song_iterator_t *capsit, int delta)
@@ -1491,7 +1496,7 @@ new_fast_forward_iterator(song_iterator_t *capsit, int delta)
 	it->handle_message = (song_iterator_t *(*)(song_iterator_t *,
 						   song_iterator_message_t))
 		_ff_handle_message;
-	it->get_timepos = NULL;
+	it->get_timepos = (int(*)(song_iterator_t *))_ff_get_timepos;
 	it->init = (void(*)(song_iterator_t *))
 		_ff_init;
 	it->cleanup = NULL;
