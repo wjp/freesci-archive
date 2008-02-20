@@ -1,9 +1,3 @@
-2008-02-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
-
-	* src/gfx/drivers/xlib_driver.c (xlib_init): Try 32-bit mode last
-	due to it giving a transparent window when compiz is used (possibly
-	only occurs with nvidia driver).
-
 2008-02-20  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/iterator.c (_ff_get_timepos): Implemented.

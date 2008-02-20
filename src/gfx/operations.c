@@ -1040,16 +1040,28 @@ simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, point_t start, po
 	int stepwidth = (xl)? driver->mode->xfact : driver->mode->yfact;
 	int dbl_stepwidth = 2*stepwidth;
 	int linelength = (line_mode == GFX_LINE_MODE_FINE)? stepwidth - 1 : 0;
-	int *posvar = (xl)? &start.x : &start.y;
-	int length = (xl)? xl : yl;
+	int *posvar;
+	int length;
+	int delta;
 	int length_left = length;
+
+	if (!xl) { /* xl = 0, so we move along yl */
+		posvar = &start.y;
+		length = yl;
+		delta = (yl < 0)? -dbl_stepwidth : dbl_stepwidth;
+	} else {
+		assert (!yl); /* We don't do diagonals; that's not needed ATM. */
+		posvar = &start.x;
+		length = xl;
+		delta = (xl < 0)? -dbl_stepwidth : dbl_stepwidth;
+	}
 
 	if (skipone) {
 		length_left -= stepwidth;
 		*posvar += stepwidth;
 	}
 
-	length /= dbl_stepwidth;
+	length /= delta;
 
 	length_left -= length * dbl_stepwidth;
 
@@ -1068,7 +1080,7 @@ simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, point_t start, po
 				 GFX_PRINT_POINT(start), GFX_PRINT_POINT(nextpos));
 			return retval;
 		}
-		*posvar += dbl_stepwidth;
+		*posvar += delta;
 	}
 
 	if (length_left) {
