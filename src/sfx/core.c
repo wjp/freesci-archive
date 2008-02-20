@@ -733,6 +733,7 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 
 	song = song_new(handle, it, priority);
 	song->resource_num = number;
+	song->hold = 0;
 	sci_get_current_time(&song->wakeup_time); /* No need to delay */
 	song_lib_add(self->songlib, song);
 	self->song = NULL; /* As above */

@@ -1,3 +1,7 @@
+2008-02-20  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/sfx/core.c (sfx_add_song): Initialize hold value (only, for now).
+
 2008-02-20  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/scicore/resource_map.c (sci1_read_resource_map): More fully
