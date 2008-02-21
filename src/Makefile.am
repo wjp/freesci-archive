@@ -20,6 +20,5 @@ LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	menu/libscimenu.a \
 	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ @LIB_M@ @SDL_LIBS@
 bin_PROGRAMS = freesci
-bin_SCRIPTS = sciv
 freesci_SOURCES = config.l main.c
 freesci_LDFLAGS = @SCIV_LDFLAGS@
