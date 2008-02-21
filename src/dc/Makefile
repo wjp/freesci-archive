@@ -64,6 +64,7 @@ OBJS = \
 	$(FSCI_BASE)/src/main.o \
 	$(FSCI_BASE)/src/menu/game_select_init.o \
 	$(FSCI_BASE)/src/menu/game_select_screen.o \
+	$(FSCI_BASE)/src/scicore/aatree.o \
 	$(FSCI_BASE)/src/scicore/console.o \
 	$(FSCI_BASE)/src/scicore/decompress0.o \
 	$(FSCI_BASE)/src/scicore/decompress01.o \
@@ -107,6 +108,7 @@ OBJS = \
 	$(FSCI_BASE)/src/sfx/seq/mt32.o \
 	$(FSCI_BASE)/src/sfx/softseq/softsequencers.o \
 	$(FSCI_BASE)/src/sfx/softseq/SN76496.o \
+	$(FSCI_BASE)/src/sfx/softseq/amiga.o \
 	$(FSCI_BASE)/src/sfx/softseq/fmopl.o \
 	$(FSCI_BASE)/src/sfx/softseq/opl2.o \
 	$(FSCI_BASE)/src/sfx/softseq/pcspeaker.o

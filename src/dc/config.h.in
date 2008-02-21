@@ -168,3 +168,6 @@
 /* Define as `__inline' if that's what the C compiler calls it, or to nothing
    if it is not supported. */
 /* #undef inline */
+
+#define HAVE_UNLINK 1
+#define HAVE_RMDIR 1

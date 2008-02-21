@@ -1,3 +1,7 @@
+2008-02-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/Makefile, src/dc/config.h.in: Build fix.
+
 2008-02-21  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/scriptdebug.c (c_restart_game): Port over fix from
