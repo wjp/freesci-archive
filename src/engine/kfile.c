@@ -670,56 +670,6 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
 	return 0;
 }
 
-
-int
-test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_name_length)
-{
-	FILE *f;
-	char buffer[80];
-	int version = -1;
-
-	chdir(savegame_id);
-	f = fopen("state", "r");
-
-	if (!f) return 0;
-	while (!feof(f))
-	{
-		char *seeker;
-		fgets(buffer, sizeof(buffer), f);
-		if ((seeker = strstr(buffer, "savegame_version = ")) != NULL)
-		{
-			seeker += strlen("savegame_version = ");
-			version = strtol(seeker, NULL, 10);
-			break;
-		}
-	}
-
-	fclose(f);
-	return (version >= 7) && (version <= 7);
-}
-
-reg_t
-kCheckSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
-{
-	int savedir_nr = UKPV(1);
-	char *buf = NULL;
-	char *workdir = _chdir_savedir(s);
-	TEST_DIR_OR_QUIT(workdir);
-
-	if (savedir_nr > MAX_SAVEGAME_NR-1) {
-		_chdir_restoredir(workdir);
-		return NULL_REG;
-	}
-
-	s->r_acc = make_reg(0, test_savegame(s, (buf = _k_get_savedir_name(savedir_nr)), NULL, 0));
-
-	_chdir_restoredir(workdir);
-	free(buf);
-
-	return s->r_acc;
-}
-
-
 #ifdef _DREAMCAST
 static long
 get_file_mtime(int fd)
@@ -786,6 +736,67 @@ update_savegame_indices(char *gfname)
 	qsort(_savegame_indices, _savegame_indices_nr, sizeof(struct _savegame_index_struct),
 	      _savegame_index_struct_compare);
 
+}
+
+int
+test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_name_length)
+{
+	FILE *f;
+	char buffer[80];
+	int version = -1;
+
+	chdir(savegame_id);
+	f = fopen("state", "r");
+
+	if (!f) return 0;
+	while (!feof(f))
+	{
+		char *seeker;
+		fgets(buffer, sizeof(buffer), f);
+		if ((seeker = strstr(buffer, "savegame_version = ")) != NULL)
+		{
+			seeker += strlen("savegame_version = ");
+			version = strtol(seeker, NULL, 10);
+			break;
+		}
+	}
+
+	fclose(f);
+	return (version >= 7) && (version <= 7);
+}
+
+reg_t
+kCheckSaveGame(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	char *game_id = kernel_dereference_char_pointer(s, argv[0], 0);
+	int savedir_nr = UKPV(1);
+	char *buf = NULL;
+	char *workdir = _chdir_savedir(s);
+	TEST_DIR_OR_QUIT(workdir);
+
+	if (_savegame_indices_nr < 0) {
+		char *game_id_file_name = (char*)sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+
+		strcpy(game_id_file_name, game_id);
+		strcat(game_id_file_name, FREESCI_ID_SUFFIX);
+		SCIkwarn(SCIkWARNING, "Savegame index list not initialized!\n");
+		update_savegame_indices(game_id_file_name);
+	}
+
+	savedir_nr = _savegame_indices[savedir_nr].id;
+
+
+	if (savedir_nr > MAX_SAVEGAME_NR-1) {
+		_chdir_restoredir(workdir);
+		return NULL_REG;
+	}
+
+	s->r_acc = make_reg(0, test_savegame(s, (buf = _k_get_savedir_name(savedir_nr)), NULL, 0));
+
+	_chdir_restoredir(workdir);
+	free(buf);
+
+	return s->r_acc;
 }
 
 
