@@ -1089,7 +1089,7 @@ gamestate_restore(state_t *s, char *dirname)
 		}
 	}
 */
-	sfx_exit(&s->sound);
+
 	retval = (state_t *) sci_malloc(sizeof(state_t));
 
 	memset(retval, 0, sizeof(state_t));
@@ -1117,9 +1117,9 @@ gamestate_restore(state_t *s, char *dirname)
 
 	fclose(fh);
 
-	if ((retval->savegame_version < 1) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
+	if ((retval->savegame_version < 7) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
 
-		if (retval->savegame_version < 3)
+		if (retval->savegame_version < 7)
 			sciprintf("Old savegame version detected- can't load\n");
 		else
 			sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_SAVEGAME_VERSION);
@@ -1129,6 +1129,7 @@ gamestate_restore(state_t *s, char *dirname)
 		return NULL;
 	}
 
+	sfx_exit(&s->sound);
 	_gamestate_unfrob(retval);
 
 	/* Set exec stack base to zero */

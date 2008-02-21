@@ -4,6 +4,13 @@
 
 2008-02-21  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/savegame.cfsml: Bump savegame version number.
+
+	* src/engine/kfile.c (test_savegame): Implement savegame version
+	test here, too.
+
+	* configure.ac: Also change version number here.
+
 	* src/engine/scriptdebug.c (c_restart_game): Port over fix from
 	kRestartGame (see 2007-08-03)
 

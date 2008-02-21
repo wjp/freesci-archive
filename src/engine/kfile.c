@@ -674,7 +674,26 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
 int
 test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_name_length)
 {
-	return 1;
+	FILE *f;
+	char buffer[80];
+	int version = -1;
+
+	chdir(savegame_id);
+	f = fopen("state", "r");
+	while (!feof(f))
+	{
+		char *seeker;
+		fgets(buffer, sizeof(buffer), f);
+		if ((seeker = strstr(buffer, "savegame_version = ")) != NULL)
+		{
+			seeker += strlen("savegame_version = ");
+			version = strtol(seeker, NULL, 10);
+			break;
+		}
+	}
+
+	fclose(f);
+	return (version >= 7) && (version <= 7);
 }
 
 reg_t
@@ -940,6 +959,7 @@ kRestoreGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 			s->execution_stack_pos = s->execution_stack_base;
 
 		} else {
+			s->r_acc = make_reg(0, 1);
 			sciprintf("Restoring failed (game_id = '%s').\n", game_id);
 		}
 
