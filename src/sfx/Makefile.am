@@ -18,7 +18,8 @@ LDADD = \
 	softseq/libscisoftseq.a \
 	libscisoundlib.a \
 	device/libscisounddevice.a \
-        ../scicore/libscicore.a
+        ../scicore/libscicore.a \
+	@LIB_M@
 
 
 TESTS = test-iterator

@@ -1,5 +1,8 @@
 2008-02-21  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/tools/Makefile.am (scimusicplayer_LDADD): Added missing
+	@LIB_M@, renamed musicplayer to scimusicplayer
+
 	* src/include/versions.h (SCI_VERSION_FTU_NEW_SCRIPT_HEADER):
 	Updated to 0.000.395 for one particular version of PQ2.
 
