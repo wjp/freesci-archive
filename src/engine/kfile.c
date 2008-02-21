@@ -680,6 +680,8 @@ test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_n
 
 	chdir(savegame_id);
 	f = fopen("state", "r");
+
+	if (!f) return 0;
 	while (!feof(f))
 	{
 		char *seeker;
