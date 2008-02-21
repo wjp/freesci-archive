@@ -1231,16 +1231,20 @@ c_restore_game(state_t *s)
 	}
 }
 
+extern char *old_save_dir; /* Ouch */
+
 int
 c_restart_game(state_t *s)
 {
   unsigned int i;
+  char *deref_save_dir = (char*)kernel_dereference_bulk_pointer(s, s->save_dir_copy, 1);
 
   if (!s) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
+  old_save_dir = strdup(deref_save_dir);
   for (i = 0; i < cmd_paramlength; i++) {
     if ((strcmp(cmd_params[0].str, "-r") == 0)
 	|| (strcmp(cmd_params[0].str, "--replay") == 0))
