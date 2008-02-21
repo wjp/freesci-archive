@@ -77,7 +77,7 @@ struct _state;
 */
 
 
-#define SCI_VERSION_FTU_NEW_SCRIPT_HEADER SCI_VERSION(0,000,397)
+#define SCI_VERSION_FTU_NEW_SCRIPT_HEADER SCI_VERSION(0,000,395)
 /* Last version known not to do this: 0.000.343
 ** Old SCI versions used two word header for script blocks (first word equal
 ** to 0x82, meaning of the second one unknown). New SCI versions used one

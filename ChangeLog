@@ -1,3 +1,8 @@
+2008-02-21  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/include/versions.h (SCI_VERSION_FTU_NEW_SCRIPT_HEADER):
+	Updated to 0.000.395 for one particular version of PQ2.
+
 2008-02-21  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/core.c (_update_multi_song): Fix non-playing sound
