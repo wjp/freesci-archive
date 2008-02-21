@@ -1,3 +1,9 @@
+2008-02-21  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/sfx/core.c (_update_multi_song): Fix non-playing sound
+	during some restores in SCI1 (analogous to my 2008-01-23 change
+	for SCI0).
+
 2008-02-20  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/operations.c (simulate_stippled_line_draw): Eliminated

@@ -327,6 +327,12 @@ _update_multi_song(sfx_state_t *self)
 /*	_dump_playing_list(self, "before");*/
 	_freeze_time(self); /* Store song delay time */
 
+	for (newseeker = newsong; newseeker;
+	     newseeker = newseeker->next_playing) {
+		if (!newseeker->it)
+			return; /* Restore in progress and not ready for this yet */
+	}
+
 	/* First, put all old songs into the 'stopping' list and
 	** mark their 'next-playing' as not_playing_anymore.  */
 	for (oldseeker = oldfirst; oldseeker;
