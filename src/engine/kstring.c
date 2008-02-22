@@ -754,4 +754,6 @@ kMessage(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return make_reg(0, strlen(DUMMY_MESSAGE) + 1); /* Length of indicated message */
 	}
 	}
+
+	return NULL_REG;
 }
