@@ -1,3 +1,13 @@
+2008-02-22  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kstring.c (kMessage): Return NULL_REG in unhandled
+	subfunctions. 
+
+	* src/engine/Makefile.am: Don't include line number directives in
+	savegame.c.
+
+	* src/sfx/core.c (sfx_add_song): Also reset loop value.
+
 2008-02-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/Makefile, src/dc/config.h.in: Build fix.
