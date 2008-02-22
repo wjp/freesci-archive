@@ -1,5 +1,8 @@
 2008-02-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* configure.ac: Explicit check for timeBeginPeriod to include
+	libwinmm
+
 	* src/scicore/tools.c: Proper condition around gettimeofday code
 
 	* src/gfx/drivers/ggi_driver.c (init_input_ggi): Elim gettimeofday
