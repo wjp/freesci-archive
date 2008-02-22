@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include
+INCLUDES = -I$(top_srcdir)/src/include @EXTRA_INCLUDES@
 LDADD = $(LDADD_ALL)
 EXTRA_DIST = sci_picfill.c
 

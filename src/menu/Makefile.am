@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include
+INCLUDES = -I$(top_srcdir)/src/include @EXTRA_INCLUDES@
 AM_CFLAGS = $(SDL_CFLAGS)
 LDADD = -lc
 noinst_LIBRARIES = libscimenu.a

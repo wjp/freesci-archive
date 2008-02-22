@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include @ac_png_includes@
+INCLUDES = -I$(top_srcdir)/src/include @ac_png_includes@ @EXTRA_INCLUDES@
 LDADD = ../scicore/libscicore.a
 EXTRA_DIST = sciunpack.h bdf.h bdfP.h
 bin_PROGRAMS = sciunpack scidisasm scipack bdftofont fonttoc scimusicplayer

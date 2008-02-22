@@ -1,5 +1,5 @@
 SUBDIRS = resource drivers
-INCLUDES = -I$(top_srcdir)/src/include
+INCLUDES = -I$(top_srcdir)/src/include @EXTRA_INCLUDES@
 EXTRA_DIST = gfx_line.c gfx_crossblit.c gfx_pixmap_scale.c alpha_mvi_crossblit.c
 
 noinst_LIBRARIES = libscigraphics.a

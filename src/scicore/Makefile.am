@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include
+INCLUDES = -I$(top_srcdir)/src/include @EXTRA_INCLUDES@
 EXTRA_DIST = sci_dos.c treedef.1 treedef.2 treedef.3 hufftree.1 \
 			 hufftree.2 hufftree.3 huffmake.pl      \
 			 hashmap.c

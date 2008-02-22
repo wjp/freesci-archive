@@ -5,7 +5,7 @@ EXTRA_DIST = README yywrap.c config.l sciv dc/3dutils.c dc/Makefile \
 	dc/selectgame.c dc/selectgame.h dc/sintab.h dc/texture.c dc/aica.h \
 	dc/aica_cmd_iface.h dc/aica_crt0.s dc/aica_main.c dc/aica_sup.c \
 	dc/snd_stream.c dc/stream.h
-INCLUDES = -I$(top_srcdir)/src/include
+INCLUDES = -I$(top_srcdir)/src/include @EXTRA_INCLUDES@
 AM_CFLAGS = $(SDL_CFLAGS)
 LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	gfx/resource/libsciresources.a gfx/drivers/libscidrivers.a \

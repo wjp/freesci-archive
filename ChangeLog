@@ -1,3 +1,9 @@
+2008-02-22  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* configure.ac: Added extra support for additional includes and
+	used this to include src/include/win32 on mingw, use host_os
+	instead of target_os
+
 2008-02-22  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kstring.c (kMessage): Return NULL_REG in unhandled

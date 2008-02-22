@@ -28,7 +28,7 @@ if test "$cross_compiling" != "yes"; then
 	AC_CHECK_SIZEOF(int)
 	AC_CHECK_SIZEOF(long)
 else
-	case "$target_cpu" in
+	case "$host_cpu" in
 	alpha*)
 		AC_DEFINE(SIZEOF_SHORT, 2)
 		AC_DEFINE(SIZEOF_INT, 4)
@@ -49,10 +49,10 @@ else
 
 
 	*)
-		echo "Your CPU type is $target_cpu."
+		echo "Your CPU type is $host_cpu."
 		AC_MSG_ERROR([
 			" There are no reliable default sizes for short,"
-			" int and long on your target processor known to us,"
+			" int and long on your host processor known to us,"
 			" so we we cannot support cross-compiling for it."
 			" Please contact the FreeSCI development mailing list,"
 			" so that we can work this out..."])
@@ -61,10 +61,16 @@ else
 	esac
 fi
 
-case "${target_os}" in
+EXTRA_INCLUDES=""
+
+case "${host_os}" in
 cygwin*)
 	AC_CHECK_LIB(cygwin, usleep)
 	LIBS="-lwinmm $LIBS"
+	;;
+
+mingw*)
+	EXTRA_INCLUDES='-I$(top_srcdir)/src/include/win32'
 	;;
 
 darwin*)
@@ -83,6 +89,7 @@ AC_PATH_DIRECTFB
 #AC_CHECK_FSCI_DLOPEN
 SCIV_LDFLAGS=""
 AC_SUBST(SCIV_LDFLAGS)
+AC_SUBST(EXTRA_INCLUDES)
 
 AC_CHECK_HEADERS(dmedia/midi.h)
 

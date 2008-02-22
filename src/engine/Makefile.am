@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include
+INCLUDES = -I$(top_srcdir)/src/include @EXTRA_INCLUDES@
 EXTRA_DIST = cfsml.pl savegame.cfsml
 noinst_LIBRARIES = libsciengine.a
 libsciengine_a_SOURCES = savegame.c kernel.c kscripts.c klists.c scriptconsole.c	\
