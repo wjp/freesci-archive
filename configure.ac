@@ -71,6 +71,7 @@ cygwin*)
 
 mingw*)
 	EXTRA_INCLUDES='-I$(top_srcdir)/src/include/win32'
+	LIBS="-lwinmm $LIBS"
 	;;
 
 darwin*)
