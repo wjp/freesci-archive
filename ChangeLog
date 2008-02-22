@@ -1,5 +1,8 @@
 2008-02-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/gfx/drivers/Makefile.am (EXTRA_DIST): Added missing
+	reference to DirectX driver
+
 	* configure.ac: Explicit check for timeBeginPeriod to include
 	libwinmm
 
