@@ -1,5 +1,10 @@
 2008-02-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/scicore/tools.c: Proper condition around gettimeofday code
+
+	* src/gfx/drivers/ggi_driver.c (init_input_ggi): Elim gettimeofday
+	dependence
+
 	* configure.ac: Added extra support for additional includes and
 	used this to include src/include/win32 on mingw, use host_os
 	instead of target_os

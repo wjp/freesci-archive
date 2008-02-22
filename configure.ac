@@ -81,7 +81,7 @@ darwin*)
 
 esac
 
-AC_CHECK_FUNCS(memchr fnmatch pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep setitimer unlink rmdir)
+AC_CHECK_FUNCS(memchr fnmatch pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep setitimer unlink rmdir gettimeofday)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE([HAVE_ALSA], [1], [Define to 1 if you have ALSA.])], [echo >/dev/null])
 AM_WITHOUT_SOUND
 AC_PATH_GGI

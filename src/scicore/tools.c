@@ -224,7 +224,7 @@ _SCIGNUkdebug(const char *funcname, state_t *s, const char *file, int line, int 
 }
 
 
-#if defined(HAVE_SYS_TIME_H)
+#if defined(HAVE_GETTIMEOFDAY)
 void
 sci_gettime(long *seconds, long *useconds)
 {

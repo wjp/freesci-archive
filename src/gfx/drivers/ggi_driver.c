@@ -961,7 +961,6 @@ ggi_get_event(gfx_driver_t *drv)
 static void
 init_input_ggi()
 {
-	gettimeofday(&_sci_ggi_redraw_loopt, NULL);
 	_sci_ggi_loopt = _sci_ggi_redraw_loopt;
 	buckybits = SCI_EVM_INSERT; /* Start up in "insert" mode */
 	/* reset timers, leave them at current time to send redraw events ASAP */
