@@ -1,5 +1,7 @@
 2008-02-23  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* TODO.GLUTTON: removed.
+
 	* src/gfx/operations.c (simulate_stippled_line_draw): initialise
 	length_left
 	
