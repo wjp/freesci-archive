@@ -21,7 +21,6 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/D VERSION=\&quot;0.6.2-devel\&quot;"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="1"
@@ -29,7 +28,7 @@
 				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..\..\SDL\include&quot;;&quot;$(SolutionDir)..\..\include&quot;;&quot;$(SolutionDir)..\..\include\win32&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;VERSION=\&quot;0.6.3-dev\&quot;;PACKAGE=\&quot;FreeSCI\&quot;;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;WANT_CONSOLE;HAVE_STRING_H"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;VERSION=\&quot;0.6.3-dev\&quot;;PACKAGE=\&quot;FreeSCI\&quot;;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_UNLINK;HAVE_RMDIR;WANT_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="FALSE"
@@ -88,7 +87,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..\..\SDL\include&quot;;&quot;$(SolutionDir)..\..\include&quot;;&quot;$(SolutionDir)..\..\include\win32&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;VERSION=__TIMESTAMP__;PACKAGE=\&quot;FreeSCI\&quot;;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;WANT_CONSOLE;HAVE_STRING_H"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;VERSION=__TIMESTAMP__;PACKAGE=\&quot;FreeSCI\&quot;;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_UNLINK;HAVE_RMDIR;WANT_CONSOLE"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="FALSE"
 				RuntimeTypeInfo="TRUE"

@@ -1,40 +1,107 @@
-Last updated 9 March 2002 by Alex Angas <wgd@internode.on.net>
+1 About the Win32 build of FreeSCI
+==================================
 
-ABOUT
------
-
-The Win32 version of freesci is now almost at the same level of
-functionality as the UNIX version. The major bugs are currently:
- * fullscreen support causes gfx corruption
- * scaling > 3 causes gfx corruption
- * 'slow' sound problems (see below)
+The Win32 version of FreeSCI is virtually at the same level of
+functionality as the UNIX version. See 'Known Problems' for the major bugs
+affecting this platform.
 
 
-BUILDING
---------
+2 Building FreeSCI for Win32
+============================
 
-You will need the following libraries and tools to build FreeSCI for Win32:
- * Visual C++ 6.0 with Service Pack 5 for Visual Studio installed.
- * The latest Win32 Platform SDK, both Core and DirectX components, from:
-   http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
-   (No need to download the 64-bit components.)
- * The SDL library from http://www.libsdl.org/ . You need to download the
-   development library for Win32 (e.g. SDL-devel-x.y.z-VC6.zip).
+2.1 Requirements
+----------------
 
-The project files assume the following directory structure:
+To start with, you need a copy of Visual Studio. Depending on the version you
+own, there are different requirements.
 
-  \src
+ * Visual C++ or Studio 6.0 with Service Pack 6:
+
+   - Windows (Platform) SDK from Microsoft Downloads:
+     http://www.microsoft.com/downloads/
+     Only the Core 32-bit component is required
+   
+   - DirectX SDK 8.0a (not other versions):
+     Available by performing an Internet search for DX8a_SDK.exe
+
+ * Visual C++ or Studio 2002 / 7.0: Not supported
+
+ * Visual C++ or Studio 2003 / 7.1: No extra requirements
+
+ * Visual C++ or Studio 2005 / 8.0 (including Express Edition) or higher:
+   
+   - DirectX SDK 8.0a (not other versions):
+     Available by performing an Internet search for DX8a_SDK.exe
+
+For all versions you need the SDL 1.2 development library for Win32 from
+http://www.libsdl.org/ (filename starts with 'SDL-devel'). Ensure you download
+the correct one for the version of your development environment.
+
+
+2.1.1 Visual C++ include/lib directories
+----------------------------------------
+
+Once you have installed the Windows / Platform and DirectX SDKs if required,
+the directories Visual C++ uses for its default include and lib files need to
+be set. Under Visual C++ 2005 go to the Tools / Options menu, then expand
+'Projects and Solutions' and select 'VC++ Directories'. Below are the
+directories you need to enter, assuming you have installed the SDKs to their
+default locations. Note the top and bottom ordering given - this is important!
+
+Visual C++ 6.0:
+
+   Include files  -> C:\Program Files\Microsoft Platform SDK\include  (top)
+                     c:\mssdk\include  (top)
+
+   Library files  -> C:\Program Files\Microsoft Platform SDK\lib  (top)
+                     c:\mssdk\lib  (top)
+
+Visual C++ 2003: Step not required, comes with adequate SDKs
+
+Visual C++ 2005 or higher:
+
+   Include files  -> c:\mssdk\include  (bottom)
+
+   Library files  -> c:\mssdk\lib  (bottom)
+
+
+2.1.2 Visual C++ Express Edition
+--------------------------------
+
+Users of Express Edition will receive the error 'Solution folders are not
+supported in this version of Visual Studio' when opening the solution. This
+can be safely ignored as this feature only provides easy access to FreeSCI
+README files. Changes to the freesci.sln file should only be committed to
+source control by non-users of Express Edition so that this feature is not
+inadvertantly removed.
+
+
+2.2 Directory structure
+-----------------------
+
+Download source code for current or development releases as described on the
+FreeSCI web site. Extract these files along with the SDL development files
+according to the following directory structure:
+
     \freesci
-      \bin
-      \src
-        \win32
+        \bin
+        \src
+            \win32
     \SDL
-      \include
-      \lib
+        \include
+        \lib
 
 
-1. Go into the src\win32 directory and load the freesci workspace (freesci.dsw) 
-   into Visual C++ 6.
+2.3 How to build
+----------------
+
+1. Go to the src\win32 directory and open the solution according to your
+version of Visual C++.
+
+   Visual C++/Studio 6:    msvc6\freesci.dsw
+   Visual C++/Studio 2003: msvc71-2003\freesci.sln
+   Visual C++/Studio 2005: msvc8-2005\freesci.sln
+   Visual C++/Studio 2008: msvc9-2008\freesci.sln
 
 2. Set the active project to "freesci - Win32 Release". Rebuild all.
 
@@ -43,110 +110,102 @@ The project files assume the following directory structure:
 
 4. You should be good to go! Go buy a Sierra collector's pack at your favorite
    software store for $15-20 and copy the game directory on the CD to the
-   FreeSCI bin directory.
+   FreeSCI bin directory, or use the -d command line option (see README).
 
 
-CONFIG
-------
-
-You'll probably be thinking that it doesn't look much prettier than the 
-original SCI. Try putting these options into your config file
-(%WINDIR%\.freesci\config):
-
-pic0_dither_mode = dither256
-pic0_dither_pattern = unscaled
-pic_buffer_size = 2
-view_filter = trilinear
-pic_filter = trilinear
-cursor_filter = trilinear
-text_filter = trilinear
-animation_delay = 5
-
-NOTE: When scaling beyond 3 times (-x3 or -y3), cursor redraws no longer 
-work properly. Also, fullscreen mode in SDL is currently not supported/working 
-on Win32. Hopefully, both of these bugs will be fixed in an upcoming release.
+IMPORTANT NOTE: If compiling in Visual C++ 6.0 you may discover what appears
+to be a bug in that product. If you find that the linking of sciv produces
+LNK2001 errors the first time you build, just build again (don't rebuild or
+clean first) and it should link OK.
 
 
-To change the MIDI out device, add this line to your FreeSCI config file:
+3 Config
+========
 
-midiout.win32mci.device = x
-
-where x is the number of the device you wish to use.
-
-
-SOUND PROBLEMS
---------------
-
-There are currently timing problems when playing sound in games. At the time
-of writing, the current sound implementation was soon to be overhauled and
-replaced with a song iterator. In the meantime, both the event and polled
-sound servers should be tested to see which one works best on your system.
-
-To use the event sound server, use the -Swin32e command line switch.
-To use the polled Win32 sound server, use the -Swin32p command line switch.
-To use the polled SDL sound server, use the -Ssdl command line switch.
-
-If you'd like a taste of the future, a sound server with accurate timing is
-available but is not yet ready for general game play. This can be used by
-specifying the -Swin32b -Owin32mci_stream command line switches.
-
-You can also alter the way this sound server behaves by changing the value for
-buffered_ticks in the midiout_win32mci_stream.c source file. This is the
-number of MIDI ticks to be buffered. Low values work better on fast computers
-and give better sound responsiveness. High values work better on slow
-computers but give lower sound responsiveness. The default value is 15. If you
-get choppy sound, use a higher value.
+The configuration options described below should be put into your config file,
+located at %USERPROFILE%\.freesci\config .
 
 
-CVS
----
-
-This is the best way to make sure you have the latest snapshot of FreeSCI. Info
-on CVS can be obtained from http://www.cvshome.org/ .
-
-Once you have a copy, I suggest copying it somewhere else to actually play with
-and work on, and then use the built-in diff command to submit diffs. :-)
-
-
-How to set up WinCVS:
-
-1. Download WinCVS from http://www.wincvs.org/ and install.
-2. Run it, and under Admin / Preferences... enter this for CVSROOT:
-   anonymous@square.a-eskwadraat.nl:/var/cvs/freesci
-3. Go to Admin / Login... and leave the password blank.
-4. Go to Create / Checkout module... and enter freesci as module name.
-5. Once it's downloaded, go to Admin / Logout.
-
-
-How to set up command-line CVS:
-
-1. Download the command-line tool from http://www.cvshome.org/ or their FTP
-   server ftp://ftp.cvshome.org/pub/win32/ .
-2. Unzip it somewhere, go to the DOS prompt (or make a shortcut) and enter
-   the command:
-   cvs -d :pserver:anonymous@cs.alfred.edu:/home/cvs -z3 co freesci
-
-
-DEBUGGING
----------
-
-Have a read of 'How Do I... Topics: Debugging' in the MSDN docs. Don't have
-the MSDN library? Either use http://msdn.microsoft.com/ , or subscribe to the
-MSDN Library (see the MS Web site), or buy a cheap copy of Visual Basic
-Learning Edition which comes with the MSDN CDs. :-)
-
-There are two configurations set up for FreeSCI debugging - 'Win32 - Debug'
-and 'Win32 - Purify'. The former is to allow you to use the VC++ debugger with
-all its features. The latter is for use with products such as Purify and
-Quantify, and provides these programs with the information they need to best
-run checks on FreeSCI.
-
-
-GET INVOLVED
+3.1 Graphics
 ------------
 
+This section only describes Win32 specific graphics settings. You can improve
+the display of your game by using the settings that apply to all platforms
+described in README. In particular, see the config example for LSL3 there.
+
+
+3.1.1 SDL
+---------
+
+This is the default driver used when running FreeSCI. It can be explicitly
+specified with the -gSDL command line switch. As this is a cross-platform
+driver, its options are described in README.
+
+
+3.1.2 DirectX
+-------------
+
+The DirectX driver will run with the -gdirectx command line switch on versions
+of DirectX 8.0a (for Windows 95) and higher. While the driver is only rendering
+2D images, significant performance gains may be achieved by using a 3D graphics
+card with the driver.
+
+To change the adapter, add this line to your FreeSCI config file:
+gfx.directx.adapterid = x
+Set x to the number associated with the adapter you want (these are listed
+on the console screen when you first start FreeSCI).
+
+
+3.2 Sound
+---------
+
+To change the MIDI out device, add this line to your FreeSCI config file:
+midiout.win32mci.device = x
+Set x to the number of the device you wish to use.
+
+There is also a choice of different sound servers which may improve sound
+performance. For the polled Win32 sound server use -Swin32p and for the
+threaded SDL sound server, use -Ssdl.
+
+
+4 Known Problems
+================
+
+4.1 Graphics
+------------
+
+4.1.1 SDL
+---------
+
+ * When scaling beyond 3 times (-x3 or -y3), cursor redraws no longer work
+   properly.
+
+ * Fullscreen mode does not work.
+
+
+4.1.2 DirectX
+-------------
+
+ * Cursor image corrupt in some resolutions.
+
+ * Fullscreen mode does not work.
+
+ * You are unable to move the FreeSCI window.
+
+
+5 Debugging
+===========
+
+Have a read of topics relating to debugging Visual C++ on
+http://msdn.microsoft.com/ or e-mail the mailing list for help with something
+specific.
+
+
+6 Get involved
+==============
+
 We'd love people to help out. You don't have to have much (or any) experience
-with C. Check out the Development page at the FreeSCI Web site for more
+with C/C++. Check out the Development page at the FreeSCI Web site for more
 details.
 
 Enjoy!

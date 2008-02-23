@@ -4,7 +4,7 @@
 #  define inline __inline
 #  define strcasecmp _stricmp
 #  define strncasecmp _strnicmp
-#  define vsnprintf _vsnprintf
+#  define snprintf _snprintf
 #endif
 
 #ifdef _WIN32

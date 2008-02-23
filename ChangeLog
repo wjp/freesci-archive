@@ -1,3 +1,25 @@
+2008-02-23  Alex Angas  <arangas@internode.on.net>
+
+	* README.Win32: Updated with current information.
+
+	* src/include/win32/sci_win32.h: Removed define for vsnprintf as already
+	defined by MS. Added define for snprintf to _snprintf.
+
+	* src/win32/freesci.def: Added missing functions and cleaned up.
+
+	* src/win32/msvc60/fsci_dll.dsp:
+	* src/win32/msvc60/sciv.dsp:
+	* src/win32/msvc71-2003/fsci_dll/fsci_dll.vcproj:
+	* src/win32/msvc71-2003/sciv/sciv.vcproj:
+	* src/win32/msvc80-2005/fsci_dll/fsci_dll.vcproj:
+	* src/win32/msvc80-2005/sciv/sciv.vcproj:
+	Defined HAVE_UNLINK and HAVE_RMDIR.
+
+	* src/win32/msvc90-2008/freesci.sln:
+	* src/win32/msvc90-2008/fsci_dll/fsci_dll.vcproj:
+	* src/win32/msvc90-2008/sciv/sciv.vcproj: Added Visual Studio 2008 project
+	files.
+	
 2008-02-23  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* TODO.GLUTTON: removed.

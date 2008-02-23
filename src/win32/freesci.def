@@ -1,129 +1,103 @@
 LIBRARY
-DESCRIPTION "FreeSCI"
 EXPORTS
 
-  script_set_gamestate_save_dir
-
-  usleep
-  vocabulary_get_classes
-  vocabulary_get_class_count
-  vocabulary_get_knames
-  vocabulary_free_knames
-  vocabulary_get_opcodes
-  vocabulary_free_opcodes
-  vocabulary_get_snames
-  vocabulary_free_snames
-  vocab_get_words
-  vocab_free_words
-  vocab_get_any_group_word
-  con_init
-;  con_init_gfx
-  con_parse
-  con_hook_command
-  con_passthrough DATA
-;  con_visible_rows DATA
-  sci_hexdump
-  sciprintf
-  open_console_file
-  close_console_file
-  formats DATA
-;  sci_color_mode DATA
-;  sci_version DATA
-;  makeMIDI0
-  script_dissect
-  set_debug_mode
-  _debug_get_input DATA
-  _debug_step_running DATA
-  _debug_seeking DATA
-  _debugstate_valid DATA
-  script_abort_flag DATA
-  script_debug_flag DATA
-;  alloc_empty_picture
-;  free_picture
-;  write_pic_png
-;  draw_pic0
-;  graph_get_default_driver
-;  gfx_drivers DATA
-;  sound_server_drivers DATA
-  sci_ffs
-  class_names DATA
-  version_parse
-  script_init_engine
-  script_free_engine
-  game_init
-  game_run
-  game_exit
-;  SCI_Error_Types DATA
-;  SCI_Version_Types DATA
-;  Resource_Types DATA
-;  resource_type_suffixes DATA
-  loadObjects
-  printObject
-  ;using_history DATA
-  ;add_history
-  script_set_gamestate_save_dir
-
-  gfxop_init
-  gfxop_exit
-  gfxop_init_default
-  game_init_graphics
-  con_hook_int
-
-  gfx_find_driver
-  gfx_get_driver_name
-  gfx_crossblit_alpha_threshold DATA
-  gfx_update_conf
-
-  test_savegame
-  sci_open
-  sci_find_first
-  sci_init_dir
-  sci_get_homedir
-  game_restore
-  sci_find_next
-  sci_sched_yield
-  sci_resource_type_suffixes
-  sci_resource_types
-  sci_version_types
-
-  sci0_read_resource_map
-  scir_new_resource_manager
-  scir_find_resource
-  scir_free_resource_manager
-  memtest
-  sci0_palette
-  _SCI_MALLOC
-  _SCI_CALLOC
-  _SCI_MEMDUP
-  _SCI_REALLOC
-  _SCI_STRDUP
-  _SCI_FREE
-  sci01_priority_table_flags
-  game_init_sound
-  script_adjust_opcode_formats
-  con_gfx_init
-  ;con_gfx_read
-  ;con_gfx_show
-  script_free_breakpoints
-  sci_getcwd
-  
-  gfx_pixmap_alloc_index_data
-  gfx_new_pixmap
-  gfxop_set_clip_zone
-  gfx_alloc_color
-  gfxr_interpreter_get_static_palette
-  sci_gettime
-  gfx_free_pixmap
-  gfx_xlate_pixmap
-  gfx_pixmap_alloc_data
-  gfxr_draw_font
-  gfxr_font_calculate_size
-  sci_finish_find
-  gfxr_get_font
-  gfxr_free_font
-  gfxr_read_font
-  sci_fd_size
-  
-  
-  
-  
+_debug_get_input DATA
+_debug_seeking DATA
+_debug_step_running DATA
+_debugstate_valid DATA
+_SCI_CALLOC
+_SCI_FREE
+_SCI_MALLOC
+_SCI_MEMDUP
+_SCI_REALLOC
+_SCI_STRDUP
+class_names DATA
+close_console_file
+con_gfx_init
+con_gfx_read
+con_gfx_show
+con_hook_command
+con_hook_int
+con_init
+con_parse
+con_passthrough DATA
+formats DATA
+game_exit
+game_init
+game_init_graphics
+game_init_sound
+game_restore
+game_run
+gfx_alloc_color
+gfx_crossblit_alpha_threshold DATA
+gfx_find_driver
+gfx_free_pixmap
+gfx_get_driver_name
+gfx_new_pixmap
+gfx_pixmap_alloc_data
+gfx_pixmap_alloc_index_data
+gfx_update_conf
+gfx_xlate_pixmap
+gfxop_exit
+gfxop_init
+gfxop_init_default
+gfxop_set_clip_zone
+gfxr_draw_font
+gfxr_font_calculate_size
+gfxr_free_font
+gfxr_get_font
+gfxr_interpreter_get_static_palette
+gfxr_read_font
+loadObjects
+memtest
+open_console_file
+printObject
+sci_error_types DATA
+sci_fd_size
+sci_ffs
+sci_find_first
+sci_find_next
+sci_finish_find
+sci_get_homedir
+sci_getcwd
+sci_gettime
+sci_hexdump
+sci_init_dir
+sci_open
+sci_resource_type_suffixes
+sci_resource_types
+sci_sched_yield
+sci_version_types DATA
+sci0_palette
+sci0_read_resource_map
+sci01_priority_table_flags
+sciprintf
+scir_find_resource
+scir_free_resource_manager
+scir_new_resource_manager
+script_abort_flag DATA
+script_adjust_opcode_formats
+script_debug_flag DATA
+script_dissect
+script_free_breakpoints
+script_free_engine
+script_init_engine
+script_set_gamestate_save_dir
+script_set_gamestate_save_dir
+set_debug_mode
+test_savegame
+usleep
+version_detect_from_executable
+version_guess_from_hashcode
+version_parse
+vocab_free_words
+vocab_get_any_group_word
+vocab_get_words
+vocabulary_free_knames
+vocabulary_free_opcodes
+vocabulary_free_snames
+vocabulary_get_class_count
+vocabulary_get_classes
+vocabulary_get_knames
+vocabulary_get_opcodes
+vocabulary_get_snames
