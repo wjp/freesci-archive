@@ -1,3 +1,10 @@
+2008-02-23  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/include/Makefile.am (EXTRA_DIST): Added missing
+	graphics_directx.h to EXTRA_DIST
+
+	* src/win32/Makefile.am (EXTRA_DIST): Dropped MSVC6 support
+
 2008-02-23  Alex Angas  <arangas@internode.on.net>
 
 	* README.Win32: Updated with current information.
