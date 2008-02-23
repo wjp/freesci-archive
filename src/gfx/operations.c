@@ -1061,6 +1061,8 @@ simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, point_t start, po
 		*posvar += stepwidth;
 	}
 
+	length_left = length;
+
 	length /= delta;
 
 	length_left -= length * dbl_stepwidth;

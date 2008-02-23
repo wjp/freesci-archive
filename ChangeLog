@@ -1,3 +1,8 @@
+2008-02-23  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/operations.c (simulate_stippled_line_draw): initialise
+	length_left
+	
 2008-02-23  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kscripts.c (kDisposeScript): Work around QfG1 bug.
