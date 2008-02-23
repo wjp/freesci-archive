@@ -307,6 +307,9 @@ kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int script = argv[0].offset;
 	
+	/* Work around QfG1 graveyard bug */
+	if (argv[0].segment) return s->r_acc;
+
 	if (sm_script_is_loaded(&(s->seg_manager), script, SCRIPT_ID))
         {
 	    int id = sm_seg_get(&(s->seg_manager), script);

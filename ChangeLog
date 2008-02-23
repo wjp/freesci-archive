@@ -1,3 +1,7 @@
+2008-02-23  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kscripts.c (kDisposeScript): Work around QfG1 bug.
+
 2008-02-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/drivers/Makefile.am (EXTRA_DIST): Added missing
