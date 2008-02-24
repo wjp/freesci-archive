@@ -149,24 +149,26 @@ static struct {
 	 "\n\n"
 	 "George Reid\nFreeBSD package management"
 	 "\n\n"
-	 "Hugues Valois\nGame selection menu"
+	 "Hubert Maier\nAmigaOS 4 port"
 	 ,0, 15},
 	{"Even more FreeSCI hackers & contributors",
+	 "Hugues Valois\nGame selection menu"
+	 "\n\n"
 	 "Johannes Manhave\nDocument format translation"
 	 "\n\n"
 	 "Jordi Vilalta\nNumerous code and website clean-up patches"
 	 "\n\n"
-	 "Lars Skovlund\nProject mainenance, most documentation, bugfixes, SCI1 support"
+	 "Lars Skovlund\nProject maintenance, most documentation, bugfixes, SCI1 support"
 	 "\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes"
 	 "\n\n"
 	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32"
 	 "\n\n"
 	 "Paul David Doherty\nGame version information"
-	 "\n\n"
-	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements"
 	 ,0, 15},
 	{"Still more of them",
+	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements"
+	 "\n\n"
 	 "Rainer Canavan\nIRIX MIDI driver and bug fixes"
 	 "\n\n"
 	 "Rainer De Temple\nSCI research"
@@ -178,10 +180,10 @@ static struct {
 	 "Rune Orsval\nConfiguration file editor"
 	 "\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research"
-	 "\n\n"
-	 "Rink Springer\nPort to the DOS platform, several bug fixes"
 	 ,0, 15},
 	{"Is there no end to these contributors?",
+	 "Rink Springer\nPort to the DOS platform, several bug fixes"
+	 "\n\n"
 	 "Robey Pointer\nBug tracking system hosting"
 	 "\n\n"
 	 "Sergey Lapin\nPort of Carl's type 2 decompression code"
