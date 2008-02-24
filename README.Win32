@@ -159,13 +159,8 @@ on the console screen when you first start FreeSCI).
 3.2 Sound
 ---------
 
-To change the MIDI out device, add this line to your FreeSCI config file:
-midiout.win32mci.device = x
-Set x to the number of the device you wish to use.
-
-There is also a choice of different sound servers which may improve sound
-performance. For the polled Win32 sound server use -Swin32p and for the
-threaded SDL sound server, use -Ssdl.
+Sound support is currently hardwired; future versions will again allow
+sound to be configured.
 
 
 4 Known Problems

@@ -24,7 +24,11 @@ This release has the following limitations (plus some bugs):
 - Only SCI0, SCI01 and SCI1 games are (partially) supported
 - The SCI debug functions aren't fully supported (and probably never will be,
   since we're using our own debug functions)
-- Savegames are disabled
+- SCI1 palette support is preliminary and known to be broken
+- The sound subsystem is hardwired to particular drivers on compile time
+- Several pieces of game-critical functionality are known not to
+  function properly; please refer to the bug tracker at
+  https://www-plan.cs.colorado.edu/cgi-bin/bugzilla/index.cgi for details.
 
 
 This is ALPHA sofware. That means that there still are lot of bugs.
