@@ -1,5 +1,7 @@
 2008-02-24  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/sfx/device/camd-midi.c (camd_write): Added CAMD driver
+
 	* README.Win32: Documentation updates: fixed discussion of sound
 	support to reflect current state
 

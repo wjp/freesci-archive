@@ -38,9 +38,16 @@ extern struct _midi_device sfx_device_midi_alsa;
 extern struct _midi_device sfx_device_midi_unixraw;
 #endif
 
+#ifdef HAVE_PROTO_CAMD_H
+extern struct _midi_device sfx_device_midi_camd;
+#endif
+
 #include <resource.h>
 
 static struct _midi_device *devices_midi[] = {
+#ifdef HAVE_PROTO_CAMD_H
+		&sfx_device_midi_camd,
+#endif
 #ifdef HAVE_ALSA
 		&sfx_device_midi_alsa,
 #endif

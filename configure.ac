@@ -21,6 +21,7 @@ AC_CHECK_HEADERS(dirent.h)
 AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(fnmatch.h)
 AC_CHECK_HEADERS(getopt.h setjmp.h)
+AC_CHECK_HEADERS(proto/camd.h)
 AC_C_INLINE
 
 if test "$cross_compiling" != "yes"; then
