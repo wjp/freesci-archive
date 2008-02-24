@@ -6,7 +6,7 @@ show-stopping bugs and, most importantly, restoring savegame
 functionality.  The biggest individual step forward in game support is
 a novel pathfinding mechanism, fixing collision detection (and, of
 course, path finding) in SCI01 and SCI1 games.  On the port side, we
-have restored in32 support and now provide a fully operational DirectX
+have restored Win32 support and now provide a fully operational DirectX
 driver-- thus, the graphics subsystem no longer depends on third-party
 libraries on this platform.  Furthermore, we now support AmigaOS 4,
 using the SDL graphics library, though our MIDI support on this
