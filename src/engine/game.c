@@ -546,6 +546,7 @@ script_init_engine(state_t *s, sci_version_t version)
 
 	s->r_acc = s->r_prev = NULL_REG;
 	s->r_amp_rest = 0;
+	s->acc_guard_bits = 0;
 
 	s->execution_stack = NULL;    /* Start without any execution stack */
 	s->execution_stack_base = -1; /* No vm is running yet */

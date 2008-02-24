@@ -126,6 +126,9 @@ typedef struct {
 
 #define IS_CLASS(obj) (obj->variables[SCRIPT_INFO_SELECTOR].offset & SCRIPT_INFO_CLASS)
 
+#define ACC_GUARD_BITS_READ_INVALID_PARAM 1
+#define ACC_GUARD_BITS_READ_PARAM_0 2
+
 /* This struct is used to buffer the list of send calls in send_selector() */
 typedef struct {
 	union {
@@ -399,6 +402,9 @@ typedef struct {
 	selector_t selector; /* The selector which was used to call or -1 if not applicable */
 	int origin;   /* The stack frame position the call was made from, or -1 if it
 		      ** was the initial call.  */
+
+	int did_read_param_0; /* Whether param_0 was read in this stack frame */
+
 	byte type; /* EXEC_STACK_TYPE* */
 
 } exec_stack_t;

@@ -778,6 +778,7 @@ c_debuginfo(state_t *s)
 	sciprintf("acc="PREG" prev="PREG" &rest=%x\n",
 		  PRINT_REG(s->r_acc),
 		  PRINT_REG(s->r_prev), *p_restadjust);
+	sciprintf("acc_guard_bits=%d\n", s->acc_guard_bits);
 	if (eframe)
 		sciprintf("pc="PREG" obj="PREG" fp="PSTK" sp="PSTK"\n",
 			  PRINT_REG(*p_pc),
