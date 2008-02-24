@@ -1,10 +1,14 @@
 #ifdef _MSC_VER
 // inline keyword only supported in C++
-#  undef inline /* just to be sure it is not defined */
-#  define inline __inline
-#  define strcasecmp _stricmp
-#  define strncasecmp _strnicmp
-#  define snprintf _snprintf
+#	undef inline /* just to be sure it is not defined */
+#	define inline __inline
+#	define strcasecmp _stricmp
+#	define strncasecmp _strnicmp
+#	define snprintf _snprintf
+
+#	if _MSC_VER < 1500
+#		define vsnprintf _vsnprintf
+#	endif
 #endif
 
 #ifdef _WIN32

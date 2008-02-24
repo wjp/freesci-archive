@@ -1,3 +1,8 @@
+2008-02-23  Alex Angas  <arangas@internode.on.net>
+
+	* src/include/win32/sci_win32.h: Fixed define for vsnprintf for VS 2005 and
+	lower only.
+
 2008-02-23  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/include/Makefile.am (EXTRA_DIST): Added missing
