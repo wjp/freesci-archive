@@ -295,3 +295,10 @@ main.c
 menu/
 	game_select_init.c
 	game_select_screen.c
+
+Hubert Maier:
+[AmigaOS 4 fixes]
+
+Jordi Vilalta:
+[Numerous fixes and cleanups]
+[Support for building with C++]
