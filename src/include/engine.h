@@ -196,8 +196,6 @@ typedef struct _state
 	reg_t r_acc; /* Accumulator */
 	unsigned int r_amp_rest; /* &rest register (only used for save games) */
 	reg_t r_prev; /* previous comparison result */
-	int acc_guard_bits; /* Accumulator guard bits */
-	int bad_param_var; /* The index of the bad parameter, if acc_guard_bits & 1 */
 
 	seg_id_t stack_segment; /* Heap area for the stack to use */
 	stack_ptr_t stack_base; /* Pointer to the least stack element */

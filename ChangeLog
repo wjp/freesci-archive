@@ -1,3 +1,10 @@
+2008-02-24  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* README.Win32: Documentation updates: fixed discussion of sound
+	support to reflect current state
+
+	* README: Documentation updates: limitations
+
 2008-02-23  Alex Angas  <arangas@internode.on.net>
 
 	* src/include/win32/sci_win32.h: Fixed define for vsnprintf for VS 2005 and

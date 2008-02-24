@@ -162,32 +162,6 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 		r[index] = value;
 }
 
-static inline void
-update_guard_bits(state_t *s, reg_t **variables, int var_type, int var_number)
-{
-	if (var_type == VAR_PARAM)
-	{
-		if (var_number == 0)
-			s->acc_guard_bits |= ACC_GUARD_BITS_READ_PARAM_0;
-		else
-			if (var_number > (variables[VAR_PARAM][0]).offset)
-			{
-				s->acc_guard_bits |= ACC_GUARD_BITS_READ_INVALID_PARAM;
-				s->bad_param_var = var_number;
-			}
-			else
-			{
-				s->acc_guard_bits &= ~ACC_GUARD_BITS_READ_INVALID_PARAM;
-				s->bad_param_var = 0;
-			}
-	} else 
-	{
-		s->acc_guard_bits &= ~ACC_GUARD_BITS_READ_INVALID_PARAM;
-		s->bad_param_var = 0;
-	}
-}
-
-
 #  define ASSERT_ARITHMETIC(v) validate_arithmetic(v)
 
 #else
@@ -594,7 +568,6 @@ add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
 	xstack->origin = origin;
 
 	xstack->type = EXEC_STACK_TYPE_CALL; /* Normal call */
-	xstack->did_read_param_0 = 0; /* Nope */
 
 	return xstack;
 }
@@ -1076,13 +1049,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x1b: /* push */
-			if (s->acc_guard_bits != ACC_GUARD_BITS_READ_INVALID_PARAM)
-				PUSH32(s->r_acc);
-			else
-			{
-				sciprintf("[VM] Pushing uninitialized variable value "PREG"\n", PRINT_REG(s->r_acc));
-				PUSH32(s->r_acc);
-			}
+			PUSH32(s->r_acc);
 			break;
 
 		case 0x1c: /* pushi */
@@ -1107,8 +1074,6 @@ run_vm(state_t *s, int restoring)
 				+ 1 + restadjust;
 			stack_ptr_t call_base = xs->sp - argc;
 
-			xs->did_read_param_0 = s->acc_guard_bits & ACC_GUARD_BITS_READ_PARAM_0;
-			s->acc_guard_bits = 0;
 			xs->sp[1].offset += restadjust;
 			xs_new = add_exec_stack_entry(s, make_reg(xs->addr.pc.segment,
 								  xs->addr.pc.offset
@@ -1176,8 +1141,6 @@ run_vm(state_t *s, int restoring)
 			s_temp = xs->sp;
 			xs->sp -= temp;
 
-			xs->did_read_param_0 = s->acc_guard_bits & ACC_GUARD_BITS_READ_PARAM_0;
-			s->acc_guard_bits = 0;
 
 			xs->sp[0].offset += restadjust;
 			xs_new = execute_method(s, 0, opparams[0], s_temp, xs->objp,
@@ -1191,9 +1154,6 @@ run_vm(state_t *s, int restoring)
 			temp = ((opparams[2] >> 1) + restadjust + 1);
 			s_temp = xs->sp;
 			xs->sp -= temp;
-
-			xs->did_read_param_0 = s->acc_guard_bits & ACC_GUARD_BITS_READ_PARAM_0;
-			s->acc_guard_bits = 0;
 
 			xs->sp[0].offset += restadjust;
 			xs_new = execute_method(s, opparams[0], opparams[1], s_temp, xs->objp,
@@ -1233,7 +1193,6 @@ run_vm(state_t *s, int restoring)
 				xs = old_xs - 1;
 				s->execution_stack_pos_changed = 1;
 				xs = s->execution_stack + s->execution_stack_pos;
-				s->acc_guard_bits = xs->did_read_param_0;
 
 				if (xs->sp == CALL_SP_CARRY /* Used in sends to 'carry' the stack pointer */
 				    || xs->type != EXEC_STACK_TYPE_CALL) {
@@ -1331,13 +1290,11 @@ run_vm(state_t *s, int restoring)
 			r_temp.offset *= sizeof(reg_t);
 			/* That's the immediate address now */
 			s->r_acc = r_temp;
-			s->acc_guard_bits &= ~1;
 			break;
 
 
 		case 0x2e: /* selfID */
 			s->r_acc = xs->objp;
-			s->acc_guard_bits &= ~1;
 			break;
 
 		case 0x30: /* pprev */
@@ -1346,19 +1303,10 @@ run_vm(state_t *s, int restoring)
 
 		case 0x31: /* pToa */
 			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1));
-			s->acc_guard_bits &= ~1;
 			break;
 
 		case 0x32: /* aTop */
-			if (s->acc_guard_bits != ACC_GUARD_BITS_READ_INVALID_PARAM)
-				OBJ_PROPERTY(obj, (opparams[0] >> 1)) = s->r_acc;
-			else
-			{
-				sciprintf("[VM] Not writing; bad read of variable param_%d (%d max) detected\n",
-					  s->bad_param_var,
-					  (variables[VAR_PARAM][0]).offset);
-			}
-				
+			OBJ_PROPERTY(obj, (opparams[0] >> 1)) = s->r_acc;
 			break;
 
 		case 0x33: /* pTos */
@@ -1373,14 +1321,12 @@ run_vm(state_t *s, int restoring)
 			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1));
 			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1)) =
 				ACC_ARITHMETIC_L( 1 + /*acc*/);
-			s->acc_guard_bits &= ~1;
 			break;
 
 		case 0x36: /* dpToa */
 			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1));
 			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1)) =
 				ACC_ARITHMETIC_L(-1 + /*acc*/);
-			s->acc_guard_bits &= ~1;
 			break;
 
 		case 0x37: /* ipTos */
@@ -1456,8 +1402,6 @@ run_vm(state_t *s, int restoring)
 		case 0x43: /* lap */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
 			var_number = opparams[0];
-
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
 			s->r_acc = READ_VAR(var_type, var_number, s->r_acc);
 			break;
 
@@ -1467,9 +1411,6 @@ run_vm(state_t *s, int restoring)
 		case 0x47: /* lsp */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
 			var_number = opparams[0];
-
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			PUSH32(READ_VAR(var_type, var_number, s->r_acc));
 			break;
 
@@ -1479,9 +1420,6 @@ run_vm(state_t *s, int restoring)
 		case 0x4b: /* lapi */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
 			var_number = opparams[0] + validate_arithmetic(s->r_acc);
-
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			s->r_acc = READ_VAR(var_type, var_number, s->r_acc);
 			break;
 
@@ -1491,9 +1429,6 @@ run_vm(state_t *s, int restoring)
 		case 0x4f: /* lspi */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
 			var_number = opparams[0] + validate_arithmetic(s->r_acc);
-
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			PUSH32(READ_VAR(var_type, var_number, s->r_acc));
 			break;
 
@@ -1503,16 +1438,7 @@ run_vm(state_t *s, int restoring)
 		case 0x53: /* sap */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
 			var_number = opparams[0];
-
-			if (s->acc_guard_bits != ACC_GUARD_BITS_READ_INVALID_PARAM)
-				WRITE_VAR(var_type, var_number, s->r_acc);
-			else
-			{
-				sciprintf("[VM] Not writing; bad read of variable param_%d (%d max) detected\n",
-					  s->bad_param_var,
-					  (variables[VAR_PARAM][0]).offset);
-			}
-
+			WRITE_VAR(var_type, var_number, s->r_acc);
 			break;
 
 		case 0x54: /* ssg */
@@ -1556,8 +1482,6 @@ run_vm(state_t *s, int restoring)
 									     var_number,
 									     s->r_acc)));
 			WRITE_VAR(var_type, var_number, s->r_acc);
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			break;
 
 		case 0x64: /* +sg */
@@ -1572,8 +1496,6 @@ run_vm(state_t *s, int restoring)
 									   s->r_acc)));
 			PUSH32(r_temp);
 			WRITE_VAR(var_type, var_number, r_temp);
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			break;
 
 		case 0x68: /* +agi */
@@ -1587,8 +1509,6 @@ run_vm(state_t *s, int restoring)
 									     var_number,
 									     s->r_acc)));
 			WRITE_VAR(var_type, var_number, s->r_acc);
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			break;
 
 		case 0x6c: /* +sgi */
@@ -1603,8 +1523,6 @@ run_vm(state_t *s, int restoring)
 									   s->r_acc)));
 			PUSH32(r_temp);
 			WRITE_VAR(var_type, var_number, r_temp);
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			break;
 
 		case 0x70: /* -ag */
@@ -1617,8 +1535,6 @@ run_vm(state_t *s, int restoring)
 					    -1 + validate_arithmetic(READ_VAR(var_type,
 									      var_number, s->r_acc)));
 			WRITE_VAR(var_type, var_number, s->r_acc);
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			break;
 
 		case 0x74: /* -sg */
@@ -1632,8 +1548,6 @@ run_vm(state_t *s, int restoring)
 									    var_number, s->r_acc)));
 			PUSH32(r_temp);
 			WRITE_VAR(var_type, var_number, r_temp);
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			break;
 
 		case 0x78: /* -agi */
@@ -1647,8 +1561,6 @@ run_vm(state_t *s, int restoring)
 									      var_number,
 									      s->r_acc)));
 			WRITE_VAR(var_type, var_number, s->r_acc);
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			break;
 
 		case 0x7c: /* -sgi */
@@ -1663,8 +1575,6 @@ run_vm(state_t *s, int restoring)
 									    s->r_acc)));
 			PUSH32(r_temp);
 			WRITE_VAR(var_type, var_number, r_temp);
-			update_guard_bits(s, (reg_t **) &variables, var_type, var_number);
-
 			break;
 
 		default:
