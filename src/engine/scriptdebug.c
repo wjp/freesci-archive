@@ -3556,13 +3556,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
 			con_hook_command(c_mousepos, "mousepos", "",
 					 "Reveal the location of a mouse click.\n\n");
-#ifdef __GNUC__
-#warning "Re-enable con:viewinfo"
-#endif
-#if 0
 			con_hook_command(c_viewinfo, "viewinfo", "ii", "Displays the number of loops\n  and cels of each loop"
 					 " for the\n  specified view resource and palette.");
-#endif
 			con_hook_command(c_list_sentence_fragments, "list_sentence_fragments", "", "Lists all sentence fragments (which\n"
 					 "  are used to build Parse trees).");
 			con_hook_command(c_parse, "parse", "s", "Parses a sequence of words and prints\n  the resulting parse tree.\n"

@@ -1929,7 +1929,7 @@ gfxop_lookup_view_get_cels(gfx_state_t *state, int nr, int loop)
 	view = gfxr_get_view(state->resstate, nr, &real_loop, &cel, 0);
 
 	if (!view) {
-		GFXWARN("Attempt to retreive number of cels from invalid view %d\n", nr);
+		GFXWARN("Attempt to retreive number of cels from invalid/broken view %d\n", nr);
 		return 0;
 	} else if (real_loop != loop) {
 		GFXWARN("Loop number was corrected from %d to %d in view %d\n", loop, real_loop, nr);

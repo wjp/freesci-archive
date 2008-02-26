@@ -583,6 +583,11 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel, int palette)
 		if (*cel >= loop_data->cels_nr)
 			*cel = loop_data->cels_nr - 1;
 
+	if (*cel < 0) {
+		GFXWARN("View %d loop %d has no cels\n", nr, *loop);
+		return NULL;
+	}
+
 	cel_data = loop_data->cels[*cel];
 	if (loop_data == NULL)
 	{
