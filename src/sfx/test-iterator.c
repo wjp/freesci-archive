@@ -283,12 +283,166 @@ test_fastforward()
 	puts("[TEST] Test OK.");
 }
 
+#define SIMPLE_SONG_SIZE 50
+
+static unsigned char simple_song[SIMPLE_SONG_SIZE] = {
+  0x00, /* Regular song */
+  /* Only use channel 0 for all devices */
+  0x02, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  /* Song begins here */
+  42, 0x90, 60, 0x7f,		/* Play C after 42 ticks */
+  02, 64, 0x42,			/* Play E after 2 more ticks, using running status mode */
+  0xf8, 10, 0x80, 60, 0x02,	/* Stop C after 250 ticks */
+  0, 64, 0x00,			/* Stop E immediately */
+  00, 0xfc	/* Stop song */
+};
+
+#define ASSERT_MIDI3(cmd, arg0, arg1) \
+	ASSERT(data[0] == cmd);		\
+	ASSERT(data[1] == arg0);	\
+	ASSERT(data[2] == arg1);
+
+void
+test_iterator_sci0()
+{
+	song_iterator_t *it = songit_new (simple_song, SIMPLE_SONG_SIZE, SCI_SONG_ITERATOR_TYPE_SCI0, 0l);
+	unsigned char data[4];
+	int result;
+	SIMSG_SEND(it, SIMSG_SET_PLAYMASK(0x0001)); /* Initialise song, enabling channel 0 */
+
+	puts("[TEST] SCI0-style song");
+	ASSERT_NEXT(42);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 60, 0x7f);
+	ASSERT_NEXT(2);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 64, 0x42);
+	ASSERT_NEXT(250);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 60, 0x02);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 64, 0x00);
+	ASSERT_NEXT(SI_FINISHED);
+	puts("[TEST] Test OK.");
+}
+
+
+
+void
+test_iterator_sci0_loop()
+{
+	song_iterator_t *it = songit_new (simple_song, SIMPLE_SONG_SIZE, SCI_SONG_ITERATOR_TYPE_SCI0, 0l);
+	unsigned char data[4];
+	int result;
+	SIMSG_SEND(it, SIMSG_SET_PLAYMASK(0x0001)); /* Initialise song, enabling channel 0 */
+	SIMSG_SEND(it, SIMSG_SET_LOOPS(2)); /* Loop one additional time */
+
+	puts("[TEST] SCI0-style song with looping");
+	ASSERT_NEXT(42);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 60, 0x7f);
+	ASSERT_NEXT(2);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 64, 0x42);
+	ASSERT_NEXT(250);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 60, 0x02);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 64, 0x00);
+	ASSERT_NEXT(SI_LOOP);
+	ASSERT_NEXT(42);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 60, 0x7f);
+	ASSERT_NEXT(2);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 64, 0x42);
+	ASSERT_NEXT(250);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 60, 0x02);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 64, 0x00);
+	ASSERT_NEXT(SI_FINISHED);
+	puts("[TEST] Test OK.");
+}
+
+
+
+#define LOOP_SONG_SIZE 54
+
+unsigned char loop_song[LOOP_SONG_SIZE] = {
+  0x00, /* Regular song song */
+  /* Only use channel 0 for all devices */
+  0x02, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  /* Song begins here */
+  42, 0x90, 60, 0x7f,	/* Play C after 42 ticks */
+  13, 0x80, 60, 0x00,	/* Stop C after 13 ticks */
+  00, 0xCF, 0x7f,	/* Set loop point */
+  02, 0x90, 64, 0x42,	/* Play E after 2 more ticks, using running status mode */
+  03, 0x80, 64, 0x00,	/* Stop E after 3 ticks */
+  00, 0xfc	/* Stop song/loop */
+};
+
+
+void
+test_iterator_sci0_mark_loop()
+{
+	song_iterator_t *it = songit_new (loop_song, LOOP_SONG_SIZE, SCI_SONG_ITERATOR_TYPE_SCI0, 0l);
+	unsigned char data[4];
+	int result;
+	SIMSG_SEND(it, SIMSG_SET_PLAYMASK(0x0001)); /* Initialise song, enabling channel 0 */
+	SIMSG_SEND(it, SIMSG_SET_LOOPS(3)); /* Loop once more */
+
+	puts("[TEST] SCI0-style song with loop mark, looping");
+	ASSERT_NEXT(42);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 60, 0x7f);
+	ASSERT_NEXT(13);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 60, 0x00);
+	/* Loop point here: we don't observe that in the iterator interface yet, though */
+	ASSERT_NEXT(2);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 64, 0x42);
+	ASSERT_NEXT(3);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 64, 0x00);
+	/* Now we loop back to the loop pont */
+	ASSERT_NEXT(SI_LOOP);
+	ASSERT_NEXT(2);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 64, 0x42);
+	ASSERT_NEXT(3);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 64, 0x00);
+	/* ...and one final time */
+	ASSERT_NEXT(SI_LOOP);
+	ASSERT_NEXT(2);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x90, 64, 0x42);
+	ASSERT_NEXT(3);
+	ASSERT_NEXT(0);
+	ASSERT_MIDI3(0x80, 64, 0x00);
+
+	ASSERT_NEXT(SI_FINISHED);
+	puts("[TEST] Test OK.");
+}
+
+
 
 int
 main(int argc, char **argv)
 {
 	test_simple_it();
 	test_fastforward();
+	test_iterator_sci0();
+	test_iterator_sci0_loop();
+	test_iterator_sci0_mark_loop();
 	if (errors != 0)
 		fprintf(stderr, "[ERROR] %d errors total.\n", errors);
 	return (errors != 0);

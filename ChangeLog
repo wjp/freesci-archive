@@ -1,5 +1,10 @@
 2008-02-26  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/sfx/test-iterator.c (simple_song): Added unit test for
+	running status and 0xf8 song length extension
+	(test_iterator_sci0_mark_loop): Added unit test for explicitly
+	specified loop points in songs
+
 	* src/sfx/iterator.c (_parse_sci_midi_command): Set loop point to
 	right after the loop signal
 	(_parse_sci_midi_command): reset state to SI_STATE_DELTA_TIME upon
