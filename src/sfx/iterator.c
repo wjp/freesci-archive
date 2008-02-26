@@ -247,8 +247,9 @@ if (1) {
 #endif
 			channel->offset = channel->loop_offset;
 			channel->notes_played = 0;
-			channel->state = SI_STATE_COMMAND;
+			channel->state = SI_STATE_DELTA_TIME;
 			channel->total_timepos = channel->loop_timepos;
+			channel->last_cmd = 0xfe;
 			fprintf(stderr, "Looping song iterator %08lx.\n", self->ID);
 			return SI_LOOP;
 		} else {
@@ -264,7 +265,7 @@ if (1) {
 
 	} else if (cmd == SCI_MIDI_SET_SIGNAL) {
 		if (buf[1] == SCI_MIDI_SET_SIGNAL_LOOP) {
-			channel->loop_offset = channel->offset - 1 - paramsleft;
+			channel->loop_offset = channel->offset;
 			channel->loop_timepos = channel->total_timepos;
 
 			return /* Execute next command */

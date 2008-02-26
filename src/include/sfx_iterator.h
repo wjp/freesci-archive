@@ -243,11 +243,11 @@ song_iterator_remove_death_listener(song_iterator_t *it,
 	/* MAY_CLEAN: May instantiate cleanup iterators
 	** (use for players; this closes open channels at the end of a song) */
 
-#define IT_READER_MASK_ALL (IT_READER_MASK_MIDI		\
+#define IT_READER_MASK_ALL (  IT_READER_MASK_MIDI	\
 			    | IT_READER_MASK_DELAY	\
 			    | IT_READER_MASK_LOOP	\
 			    | IT_READER_MASK_CUE	\
-			    | IT_READER_MASK_PCM)
+			    | IT_READER_MASK_PCM )
 
 int
 songit_next(song_iterator_t **it, unsigned char *buf, int *result, int mask);

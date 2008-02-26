@@ -1,3 +1,10 @@
+2008-02-26  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/iterator.c (_parse_sci_midi_command): Set loop point to
+	right after the loop signal
+	(_parse_sci_midi_command): reset state to SI_STATE_DELTA_TIME upon
+	looping
+
 2008-02-24  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/sfx/device/camd-midi.c (camd_write): Added CAMD driver
