@@ -1,3 +1,8 @@
+2008-02-26  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (kDisplay): Implement version difference
+	SCI_VERSION_FTU_DISPLAY_COORDS_FUZZY as described in versions.h
+
 2008-02-26  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/sfx/test-iterator.c (simple_song): Added unit test for

@@ -113,6 +113,13 @@ struct _state;
    instructions is absolute rather than relative.
 */
 
+#define SCI_VERSION_FTU_DISPLAY_COORDS_FUZZY SCI_VERSION(1,000,510)
+/* First version known to do this: ?
+   In later versions of SCI1 kDisplay(), if the text would not fit on
+   the screen, the text is moved to the left and upwards until it
+   fits.
+*/
+
 #define SCI_VERSION_FTU_DOSOUND_VARIANT_1 SCI_VERSION(1,000,000)
 #define SCI_VERSION_FTU_DOSOUND_VARIANT_2 SCI_VERSION(1,000,510)
 

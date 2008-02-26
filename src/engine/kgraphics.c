@@ -3432,7 +3432,8 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	gfx_color_t color0, *color1, bg_color;
 	gfx_alignment_t halign = ALIGN_LEFT;
-	rect_t area = gfx_rect(port->draw_pos.x, port->draw_pos.y, 320, 200);
+	rect_t area = gfx_rect(port->draw_pos.x, port->draw_pos.y, 
+			       320 - port->draw_pos.x, 200 - port->draw_pos.y);
 	int gray = port->gray_text;
 	int font_nr = port->font_nr;
 	gfxw_text_t *text_handle;
@@ -3553,6 +3554,22 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 		default:
 			SCIkdebug(SCIkGRAPHICS, "Unknown Display() command %x\n", UKPV(argpt-1));
 			return NULL_REG;
+		}
+	}
+
+	if (s->version >= SCI_VERSION_FTU_DISPLAY_COORDS_FUZZY) {
+		if (halign == ALIGN_LEFT)
+			GFX_ASSERT(gfxop_get_text_params(s->gfx_state, font_nr, text,
+							 area.xl, &area.xl, &area.yl, 0,
+							 NULL, NULL, NULL));
+
+		/* Make the text fit on the screen */
+		if (area.x + area.xl > 320)
+			area.x += 320 - area.x - area.xl; /* Plus negative number = subtraction */
+
+		if (area.y + area.yl > 200)
+		{
+			area.y += 200 - area.y - area.yl; /* Plus negative number = subtraction */
 		}
 	}
 
