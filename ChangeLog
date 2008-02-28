@@ -1,3 +1,9 @@
+2008-02-29  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/resource/sci_pic_0.c, src/gfx/resource/sci_picfill.c,
+	src/gfx/resource/sci_picfill_aux.c: Forward ported pic0
+	optimizations from stable.
+
 2008-02-26  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kDisplay): Implement version difference

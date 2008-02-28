@@ -54,10 +54,11 @@
 
 static void
 FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byte *bounds,
-			int legalcolor, int legalmask, int color, int priority, int drawenable)
+			int legalcolor, int legalmask, int color, int priority, int drawenable,
+			int sci_titlebar_size)
 {
 	int linewidth = pic->mode->xfact * 320;
-	int miny = pic->mode->yfact * SCI_TITLEBAR_SIZE;
+	int miny = pic->mode->yfact * sci_titlebar_size;
 	int maxy = pic->mode->yfact * 200;
 	int xl, xr;
 	int oldytotal = y * linewidth;
@@ -97,7 +98,7 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 			proj_x = old_xl / pic->mode->xfact;
 
 			proj_xl_bound = proj_x;
-			if (SCALED_CHECK(pic->aux_map[proj_ytotal + proj_xl_bound] & FRESH_PAINT)) {
+			if (SCALED_CHECK(pic->aux_map[proj_ytotal + proj_xl_bound] & FRESH_PAINT)){
 				while (proj_xl_bound
 				       && pic->aux_map[proj_ytotal + proj_xl_bound - 1] & FRESH_PAINT)
 					--proj_xl_bound;
@@ -207,7 +208,7 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 				PRINT_DEBUG4("rec BRANCH %d [%d,%d] l%d\n", dy, state, xcont, y - dy);
 
 				FILL_FUNCTION_RECURSIVE(pic, state, xcont, y - dy, dy, bounds, legalcolor,
-							legalmask, color, priority, drawenable);
+							legalmask, color, priority, drawenable, sci_titlebar_size);
 				state = 0;
 			}
 			++xcont;
@@ -225,7 +226,8 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 					PRINT_DEBUG4("rec BACK-LEFT %d [%d,%d] l%d\n", -dy, state, xcont, y);
 
 					FILL_FUNCTION_RECURSIVE(pic, xcont, state, y, -dy, bounds,
-								legalcolor, legalmask, color, priority, drawenable);
+								legalcolor, legalmask, color, priority, drawenable,
+								sci_titlebar_size);
 					state = 0;
 				}
 			}
@@ -242,7 +244,8 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 					PRINT_DEBUG4("rec BACK-RIGHT %d [%d,%d] l%d\n", -dy, state, xcont, y);
 
 					FILL_FUNCTION_RECURSIVE(pic, state, xcont, y, -dy, bounds,
-								legalcolor, legalmask, color, priority, drawenable);
+								legalcolor, legalmask, color, priority, drawenable,
+								sci_titlebar_size);
 					state = 0;
 				}
 			}
@@ -255,8 +258,10 @@ FILL_FUNCTION_RECURSIVE(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, 
 	} while (1);
 }
 
+
 static void
-FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int control, int drawenable)
+FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int control, int drawenable,
+	      int sci_titlebar_size)
 {
 	int linewidth = pic->mode->xfact * 320;
 	int x, y;
@@ -282,7 +287,8 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 	}
 
 	AUXBUF_FILL(pic, x_320, y_200, original_drawenable,
-		    (drawenable & GFX_MASK_CONTROL)? control : 0);
+		    (drawenable & GFX_MASK_CONTROL)? control : 0,
+		    sci_titlebar_size);
 
 #ifdef DRAW_SCALED
 	_gfxr_auxbuf_spread(pic, &min_x, &min_y, &max_x, &max_y);
@@ -328,7 +334,6 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 		legalcolor = 0;
 		legalmask = 0x0f0f;
 	} else {
-		bounds = NULL;
 		legalcolor = 0;
 		legalmask = 0x0f0f;
 	}
@@ -388,8 +393,10 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 		if (drawenable & GFX_MASK_PRIORITY)
 			memset(pic->priority_map->index_data + ytotal + xl, priority, xr - xl + 1);
 
-		FILL_FUNCTION_RECURSIVE(pic, xl, xr, y, -1, bounds, legalcolor, legalmask, color, priority, drawenable);
-		FILL_FUNCTION_RECURSIVE(pic, xl, xr, y, +1, bounds, legalcolor, legalmask, color, priority, drawenable);
+		FILL_FUNCTION_RECURSIVE(pic, xl, xr, y, -1, bounds, legalcolor, legalmask, color, priority, drawenable,
+					sci_titlebar_size);
+		FILL_FUNCTION_RECURSIVE(pic, xl, xr, y, +1, bounds, legalcolor, legalmask, color, priority, drawenable,
+					sci_titlebar_size);
 	}
 
 	/* Now finish the aux buffer */
@@ -407,7 +414,6 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 		_gfxr_auxbuf_propagate_changes(pic, bitmask);
 #endif
 }
-
 
 #undef SCALED_CHECK
 #undef IS_BOUNDARY
