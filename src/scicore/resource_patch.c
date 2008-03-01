@@ -105,7 +105,8 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 				else {
 
 					read(file, filehdr, 2);
-					if ((filehdr[0] & 0x7f) != restype) {
+					if ((filehdr[0] & 0x7f) != restype
+					    || filehdr[0] != 0x00) {
 						printf("Resource type mismatch\n");
 						close(file);
 					} else {
