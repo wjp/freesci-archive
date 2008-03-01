@@ -103,14 +103,23 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 				if (!IS_VALID_FD(file))
 					perror("""__FILE__"": (""__LINE__""): open()");
 				else {
+					int patch_data_offset;
 
 					read(file, filehdr, 2);
-					if ((filehdr[0] & 0x7f) != restype
-					    || filehdr[0] != 0x00) {
-						printf("Resource type mismatch\n");
+
+					patch_data_offset = filehdr[1];
+
+					if ((filehdr[0] & 0x7f) != restype) {
+						printf("Failed; resource type mismatch\n");
+						close(file);
+					} else if (patch_data_offset + 2 >= fsize) {
+						printf("Failed; patch starting at offset %d can't be in file of size %d\n", filehdr[1] + 2, fsize);
 						close(file);
 					} else {
+						/* Adjust for file offset */
+						fsize -= patch_data_offset;
 
+						/* Prepare destination, if neccessary */
 						if (!newrsc) {
 							/* Completely new resource! */
 							++(*resource_nr_p);
@@ -128,7 +137,7 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 						newrsc->status = SCI_STATUS_NOMALLOC;
 						newrsc->type = restype;
 						newrsc->file = SCI_RESOURCE_FILE_PATCH;
-						newrsc->file_offset = 2;
+						newrsc->file_offset = 2 + patch_data_offset;
 
 						_scir_add_altsource(newrsc, SCI_RESOURCE_FILE_PATCH, 2);
 

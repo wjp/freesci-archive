@@ -1,3 +1,9 @@
+2008-03-01  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/scicore/resource_patch.c (sci0_read_resource_patches):
+	Changed semantics of second byte in patch header to denote
+	relative file offset
+
 2008-02-29  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/resmgr.c (gfxr_get_view): Add sanity check for views
