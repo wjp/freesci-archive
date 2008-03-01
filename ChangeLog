@@ -1,5 +1,8 @@
 2008-02-29  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/gfx/resmgr.c (gfxr_get_view): Add sanity check for views
+	with zero loops
+
 	* src/scicore/resource_patch.c (sci0_read_resource_patches): Made
 	patch ID validity check more strict
 
