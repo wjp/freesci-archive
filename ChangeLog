@@ -1,3 +1,10 @@
+2008-03-02  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/softseq/mt32/synth.cpp: Changed tuning to 442Hz.
+
+	* src/sfx/softseq/mt32.cpp: (Temporarily?) lowered volume to reduce
+	clipping in MT-32 emulator.
+
 2008-03-01  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/scicore/resource_patch.c (sci0_read_resource_patches):

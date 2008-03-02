@@ -191,7 +191,7 @@ static void
 mt32_volume(sfx_softseq_t *self, int volume)
 {
 	if (mt32seq->volume)
-		mt32seq->volume(volume);
+		mt32seq->volume(volume / 2); /* High volume causes clipping. */
 }
 
 static int

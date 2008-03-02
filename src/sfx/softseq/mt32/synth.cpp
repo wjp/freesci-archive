@@ -467,7 +467,7 @@ bool Synth::open(SynthProperties &useProp) {
 
 	printDebug("Initialising System");
 	// The MT-32 manual claims that "Standard pitch" is 442Hz.
-	mt32ram.system.masterTune = 0x40; // Confirmed on CM-64 as 0x4A, but SCUMM games use 0x40 and we don't want to initialise twice
+	mt32ram.system.masterTune = 0x4A; // Confirmed on CM-64
 	mt32ram.system.reverbMode = 0; // Confirmed
 	mt32ram.system.reverbTime = 5; // Confirmed
 	mt32ram.system.reverbLevel = 3; // Confirmed
