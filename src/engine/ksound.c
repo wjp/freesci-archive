@@ -316,6 +316,7 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 			sfx_song_set_status(&s->sound,
 					    handle, SOUND_STATUS_STOPPED);
 			PUT_SEL32V(obj, state, SOUND_STATUS_STOPPED);
+			PUT_SEL32V(obj, signal, -1);
 		}
 		break;
 
