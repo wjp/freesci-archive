@@ -673,7 +673,7 @@ static void
 script_dump_exports(disasm_state_t *d, script_state_t *s,
                     unsigned char *data, int seeker, int objsize, int pass_no)
 {
-	word *pexport=(word *) (data+seeker);
+	byte *pexport=(byte *) (data+seeker);
 	word export_count=*pexport++;
 	int i;
 	char buf [256];
@@ -682,13 +682,13 @@ script_dump_exports(disasm_state_t *d, script_state_t *s,
 
 	for (i=0; i<export_count; i++) {
 		if (pass_no == 1) {
-			word offset=*pexport;
+			guint16 offset=getUInt16(pexport);
 			sprintf (buf, "exp_%02X", i);
 			script_add_name (s, offset, buf, -1);
 		}
 		else
 			sciprintf ("%02X: %04X\n", i, *pexport);
-		pexport++;
+		pexport+=2;
 	}
 }
 
