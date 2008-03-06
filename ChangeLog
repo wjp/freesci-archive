@@ -1,5 +1,9 @@
 2008-03-06  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/engine/vm.c (validate_variable): Allowed out of bounds reads
+	on the stack if compiled without STRICT_READ (which is now
+	disabled by default)
+
 	* src/engine/kfile.c: Eliminated some harmless warnings
 
 	* src/engine/kgraphics.c: Eliminated some harmless warnings

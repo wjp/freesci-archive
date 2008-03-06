@@ -46,6 +46,7 @@ reg_t NULL_REG = NULL_REG_INITIALIZER;
 
 /*#define VM_DEBUG_SEND*/
 #undef STRICT_SEND /* Disallows variable sends with more than one parameter */
+#undef STRICT_READ /* Disallows reading from out-of-bounds parameters and locals */
 
 
 int script_abort_flag = 0; /* Set to 1 to abort execution */
@@ -126,7 +127,7 @@ validate_arithmetic(reg_t reg)
 }
 
 static inline int
-validate_variable(reg_t *r, int type, int max, int index, int line)
+validate_variable(reg_t *r, reg_t *stack_base, int type, int max, int index, int line)
 {
 	const char *names[4] = {"global", "local", "temp", "param"};
 
@@ -140,25 +141,39 @@ validate_variable(reg_t *r, int type, int max, int index, int line)
 		if (!_weak_validations)
 			script_debug_flag = script_error_flag = 1;
 
+#ifdef STRICT_READ
 		return 1;
+#else /* !STRICT_READ */
+		if (type == VAR_LOCAL || type == VAR_TEMP) {
+			int total_offset = r - stack_base;
+			if (total_offset < 0 || total_offset >= VM_STACK_SIZE) {
+				sciprintf("[VM] Access would be outside even of the stack (%d); access denied\n",
+					  total_offset);
+				return 1;
+			} else {
+				sciprintf("[VM] Access within stack boundaries; access granted.\n");
+				return 0;
+			}
+		};
+#endif
 	}
 
 	return 0;
 }
 
 static inline reg_t
-validate_read_var(reg_t *r, int type, int max, int index, int line, reg_t default_value)
+validate_read_var(reg_t *r, reg_t *stack_base, int type, int max, int index, int line, reg_t default_value)
 {
-	if (!validate_variable(r, type, max, index, line))
+	if (!validate_variable(r, stack_base, type, max, index, line))
 		return r[index];
 	else
 		return default_value;
 }
 
 static inline void
-validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value)
+validate_write_var(reg_t *r, reg_t *stack_base, int type, int max, int index, int line, reg_t value)
 {
-	if (!validate_variable(r, type, max, index, line))
+	if (!validate_variable(r, stack_base, type, max, index, line))
 		r[index] = value;
 }
 
@@ -169,16 +184,16 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 
 #  define validate_stack_addr(s, sp) sp
 #  define validate_arithmetic(r) ((r).offset)
-#  define validate_variable(r, t, m, i, l)
-#  define validate_read_var(r, t, m, i, l) ((r)[i])
-#  define validate_write_var(r, t, m, i, l, v) ((r)[i] = (v))
+#  define validate_variable(r, sb, t, m, i, l)
+#  define validate_read_var(r, sb, t, m, i, l) ((r)[i])
+#  define validate_write_var(r, sb, t, m, i, l, v) ((r)[i] = (v))
 #  define validate_property(o, p) (&((o)->variables[p]))
 #  define ASSERT_ARITHMETIC(v) (v).offset
 
 #endif
 
-#define READ_VAR(type, index, def) validate_read_var(variables[type], type, variables_max[type], index, __LINE__, def)
-#define WRITE_VAR(type, index, value) validate_write_var(variables[type], type, variables_max[type], index, __LINE__, value)
+#define READ_VAR(type, index, def) validate_read_var(variables[type], s->stack_base, type, variables_max[type], index, __LINE__, def)
+#define WRITE_VAR(type, index, value) validate_write_var(variables[type], s->stack_base, type, variables_max[type], index, __LINE__, value)
 #define WRITE_VAR16(type, index, value) WRITE_VAR(type, index, make_reg(0, value));
 
 #define ACC_ARITHMETIC_L(op) make_reg(0, (op validate_arithmetic(s->r_acc)))
