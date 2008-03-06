@@ -59,17 +59,18 @@ typedef enum {
 	}
 
 
-#define MEM_OBJ_INVALID 0
-#define MEM_OBJ_SCRIPT 1
-#define MEM_OBJ_CLONES 2
-#define MEM_OBJ_LOCALS 3
-#define MEM_OBJ_STACK 4
-#define MEM_OBJ_SYS_STRINGS 5
-#define MEM_OBJ_LISTS 6
-#define MEM_OBJ_NODES 7
-#define MEM_OBJ_HUNK 8
-#define MEM_OBJ_DYNMEM 9
-#define MEM_OBJ_MAX MEM_OBJ_DYNMEM /* For sanity checking */
+#define MEM_OBJ_INVALID		0
+#define MEM_OBJ_SCRIPT		1
+#define MEM_OBJ_CLONES		2
+#define MEM_OBJ_LOCALS		3
+#define MEM_OBJ_STACK		4
+#define MEM_OBJ_SYS_STRINGS	5
+#define MEM_OBJ_LISTS		6
+#define MEM_OBJ_NODES		7
+#define MEM_OBJ_HUNK		8
+#define MEM_OBJ_DYNMEM		9
+#define MEM_OBJ_RESERVED	10
+#define MEM_OBJ_MAX		MEM_OBJ_RESERVED /* For sanity checking */
 typedef int mem_obj_enum;
 
 struct _mem_obj;
@@ -151,6 +152,7 @@ sm_allocate_script(struct _seg_manager_t* self, struct _state *s, int script_nr,
 **			      script data
 ** Returns   : (int) 0 on failure, 1 on success
 **	       (int) *seg_id: The segment ID of the newly allocated segment, on success
+
 ** The script must then be initialised; see section (1b.), below.
 */
 
@@ -515,6 +517,19 @@ sm_get_description(struct _seg_manager_t *self, reg_t addr);
 */
 
 /*==============================================================*/
+/* 10. Reserved segments					*/
+/*==============================================================*/
+
+seg_id_t
+sm_allocate_reserved_segment(struct _seg_manager_t *self, char *name);
+/* Reserves a special-purpose segment
+** Parameters: (char *) name: A string name identifying the segment (the string is cloned and retained)
+** Returns   : A fresh segment ID for the segment in question
+** Reserved segments are never used by the segment manager.  They can be used to tag special-purpose addresses.
+** Segment 0 is implicitly reserved for numbers.
+*/
+
+/*==============================================================*/
 /* Generic Operations on Segments and Addresses			*/
 /*==============================================================*/
 
@@ -528,7 +543,7 @@ sm_dereference(struct _seg_manager_t *self, reg_t reg, int *size);
 
 
 /*==============================================================*/
-/* 10. Segment interface, primarily for GC			*/
+/* 11. Segment interface, primarily for GC			*/
 /*==============================================================*/
 
 typedef struct _seg_interface {

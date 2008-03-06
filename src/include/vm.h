@@ -279,6 +279,7 @@ typedef struct _mem_obj {
 		node_table_t nodes;
 		hunk_table_t hunks;
 		dynmem_t dynmem;
+		char *reserved;
 	} data;
 } mem_obj_t;
 

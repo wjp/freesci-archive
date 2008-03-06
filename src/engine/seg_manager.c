@@ -379,6 +379,9 @@ _sm_deallocate (seg_manager_t* self, int seg, int recursive)
 		mobj->data.hunks.table = NULL;
 		mobj->data.hunks.entries_nr = mobj->data.hunks.max_entry = 0;
 		break;
+	case MEM_OBJ_RESERVED:
+		sci_free(mobj->data.reserved);
+		break;
 	default:
 		fprintf(stderr, "Deallocating segment type %d not supported!\n",
 			mobj->type);
@@ -1378,6 +1381,18 @@ sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid)
 	return retval;
 }
 
+seg_id_t
+sm_allocate_reserved_segment(seg_manager_t *self, char *src_name)
+{
+	seg_id_t segid;
+	mem_obj_t *memobj = alloc_nonscript_segment(self, MEM_OBJ_RESERVED, &segid);
+	char *name = sci_strdup(src_name);
+
+	memobj->data.reserved = name;
+
+	return segid;
+}
+
 guint16
 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int seg ) {
 	script_t* script; 
@@ -1541,6 +1556,12 @@ sm_dereference(seg_manager_t *self, reg_t pointer, int *size)
 				  PRINT_REG(pointer));
 			return NULL;
 		}
+
+	case MEM_OBJ_RESERVED:
+		sciprintf("Error: Trying to dereference pointer "PREG" to reserved segment `%s'!\n",
+			  mobj->data.reserved);
+		return NULL;
+		break;
 
 	default:
 		sciprintf("Error: Trying to dereference pointer "PREG" to inappropriate"
@@ -2012,6 +2033,21 @@ static seg_interface_t seg_interface_dynmem = {
 	/* deallocate_self = */			deallocate_self
 };
 
+/*-------------------- reserved --------------------*/
+static seg_interface_t seg_interface_reserved = {
+	/* segmgr = */	NULL,
+	/* mobj = */	NULL,
+	/* seg_id = */	0,
+	/* type_id = */	MEM_OBJ_RESERVED,
+	/* type = */	"reserved",
+	/* find_canonic_address = */		find_canonic_address_id,
+	/* free_at_address = */			free_at_address_nop,
+	/* list_all_deallocatable = */		list_all_deallocatable_nop,
+	/* list_all_outgoing_references = */	list_all_outgoing_references_nop,
+	/* deallocate_self = */			deallocate_self
+};
+
+
 static seg_interface_t* seg_interfaces[MEM_OBJ_MAX] = {
 	&seg_interface_script,
 	&seg_interface_clones,
@@ -2021,7 +2057,8 @@ static seg_interface_t* seg_interfaces[MEM_OBJ_MAX] = {
 	&seg_interface_lists,
 	&seg_interface_nodes,
 	&seg_interface_hunk,
-	&seg_interface_dynmem
+	&seg_interface_dynmem,
+	&seg_interface_reserved
 };
 
 
