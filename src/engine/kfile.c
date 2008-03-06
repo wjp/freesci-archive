@@ -390,7 +390,7 @@ delete_savegame(state_t *s, int savedir_nr)
 	sprintf(buffer, "%s/%s.id", savedir, s->game_name);
 	sci_unlink(buffer);
 
-	sprintf(buffer, "%s/state", savedir, s->game_name);
+	sprintf(buffer, "%s/state", savedir);
 	sci_unlink(buffer);
 
 	sci_rmdir(savedir);
@@ -538,7 +538,7 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, reg_t *argv)
 */
 	case K_DEVICE_INFO_GET_SAVECAT_NAME: {
 		char *output_buffer = kernel_dereference_char_pointer(s, argv[1], 0);
-		char *game_prefix = kernel_dereference_char_pointer(s, argv[2], 0);
+/*		char *game_prefix = kernel_dereference_char_pointer(s, argv[2], 0);*/
 
 		sprintf(output_buffer, "%s/__throwaway", s->work_dir);
 	}
@@ -546,7 +546,7 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 	case K_DEVICE_INFO_GET_SAVEFILE_NAME: {
 		char *output_buffer = kernel_dereference_char_pointer(s, argv[1], 0);
-		char *game_prefix = kernel_dereference_char_pointer(s, argv[2], 0);
+/*		char *game_prefix = kernel_dereference_char_pointer(s, argv[2], 0);*/
 		int savegame_id = UKPV(3);
 		sprintf(output_buffer, "%s/__throwaway", s->work_dir);
 		delete_savegame(s, savegame_id);
@@ -762,7 +762,7 @@ test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_n
 	}
 
 	fclose(f);
-	return (version >= 7) && (version <= 7);
+	return version == FREESCI_SAVEGAME_VERSION;
 }
 
 reg_t

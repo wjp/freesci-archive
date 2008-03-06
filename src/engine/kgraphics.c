@@ -56,16 +56,16 @@
 
 
 #define ADD_TO_CURRENT_PORT(widget) \
-  if (s->port) \
+  {if (s->port)				   \
        s->port->add(GFXWC(s->port), GFXW(widget)); \
   else \
-       s->picture_port->add(GFXWC(s->visual), GFXW(widget));
+       s->picture_port->add(GFXWC(s->visual), GFXW(widget));}
 
 #define ADD_TO_CURRENT_PICTURE_PORT(widget) \
-  if (s->port) \
+  {if (s->port)				   \
        s->port->add(GFXWC(s->port), GFXW(widget)); \
   else \
-       s->picture_port->add(GFXWC(s->picture_port), GFXW(widget));
+       s->picture_port->add(GFXWC(s->picture_port), GFXW(widget));}
 
 #define ADD_TO_WINDOW_PORT(widget) \
        s->wm_port->add(GFXWC(s->wm_port), GFXW(widget));
@@ -298,6 +298,7 @@ get_pic_color(state_t *s, int color)
 			SCIkwarn(SCIkERROR, "Color index %d out of bounds for pic %d (%d max)",
 				 color, s->gfx_state->pic_nr, KERNEL_COLORS_NR);
 			BREAKPOINT();
+			return NULL; /* Well, rather, not return.  But gcc gets scared here. */
 		}
 }
 
@@ -1465,9 +1466,9 @@ kPalette(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 	default :
 		SCIkdebug(SCIkWARNING, "Unimplemented subfunction: %d\n", UKPV(0));
-		return s->r_acc;
 	}
-}	
+	return s->r_acc;
+}
 
 static void
 _k_draw_control(state_t *s, reg_t obj, int inverse);
