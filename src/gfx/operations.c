@@ -1713,6 +1713,13 @@ gfxop_set_pointer_position(gfx_state_t *state, point_t pos)
 	BASIC_CHECKS(GFX_ERROR);
 
 	state->pointer_pos = pos;
+
+	if (pos.x > 320 || pos.y > 200)
+	{
+		GFXWARN("Attempt to place pointer at invalid coordinates (%d, %d)\n", pos.x, pos.y);
+		return 0; /* Not fatal */
+	}
+
 	state->driver->pointer_x = pos.x * state->driver->mode->xfact;
 	state->driver->pointer_y = pos.y * state->driver->mode->yfact;
 
