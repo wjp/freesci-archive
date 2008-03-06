@@ -253,7 +253,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*37*/	DEFUN("EmptyList", kEmptyList, "l"),
 /*38*/	DEFUN("NextNode", kNextNode, "n!"),
 /*39*/	DEFUN("PrevNode", kPrevNode, "n"),
-/*3a*/	DEFUN("NodeValue", kNodeValue, "n!"),
+/*3a*/	DEFUN("NodeValue", kNodeValue, "Zn!"),
 /*3b*/	DEFUN("AddAfter", kAddAfter, "lnn"),
 /*3c*/	DEFUN("AddToFront", kAddToFront, "ln"),
 /*3d*/	DEFUN("AddToEnd", kAddToEnd, "ln"),

@@ -1,3 +1,8 @@
+2008-03-06  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/klists.c (kNodeValue): Forward port relaxation of
+	call signature.
+
 2008-03-05  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/tools/ksound.c (kDoSound_SCI0): Generate a cue when fading.
