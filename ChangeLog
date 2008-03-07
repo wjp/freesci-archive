@@ -1,5 +1,8 @@
 2008-03-07  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/engine/scriptdebug.c (c_restore_game): Fixed command-line
+	`restore game' tool
+
 	* src/engine/savegame.cfsml (gamestate_restore): Retain sound
 	subsystem initialisation flags across restore
 

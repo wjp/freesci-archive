@@ -1214,15 +1214,15 @@ c_restore_game(state_t *s)
 		return 1;
 	}
 
-/* 	newstate = gamestate_restore(s, cmd_params[0].str); */
-	sciprintf("Savegames are not presently supported.");
+ 	newstate = gamestate_restore(s, cmd_params[0].str);
 
 	if (newstate) {
 
 		s->successor = newstate; /* Set successor */
 
-		script_abort_flag = 1; /* Abort game */
+		script_abort_flag = SCRIPT_ABORT_WITH_REPLAY; /* Abort current game */
 		_debugstate_valid = 0;
+		s->execution_stack_pos = s->execution_stack_base;
 
 		return 0;
 	} else {
