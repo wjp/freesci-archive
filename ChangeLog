@@ -1,5 +1,7 @@
 2008-03-07  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/vm.c (validate_variable): Fix !STRICT_READ case.
+
 	* src/engine/kfile.c (test_savegame): Bring back potential
 	backwards compatibility lost in yesterday's commit.
 

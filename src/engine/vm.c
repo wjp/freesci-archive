@@ -144,7 +144,7 @@ validate_variable(reg_t *r, reg_t *stack_base, int type, int max, int index, int
 #ifdef STRICT_READ
 		return 1;
 #else /* !STRICT_READ */
-		if (type == VAR_LOCAL || type == VAR_TEMP) {
+		if (type == VAR_PARAM || type == VAR_TEMP) {
 			int total_offset = r - stack_base;
 			if (total_offset < 0 || total_offset >= VM_STACK_SIZE) {
 				sciprintf("[VM] Access would be outside even of the stack (%d); access denied\n",
