@@ -283,7 +283,7 @@ if (1) {
 				self->ccc += buf[2];
 			else { /* No parameter to CC */
 				self->ccc++;
-				channel->offset--;
+/*				channel->offset--; */
 			}
 			*result = self->ccc;
 			return SI_RELATIVE_CUE;
