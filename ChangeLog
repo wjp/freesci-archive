@@ -1,5 +1,8 @@
 2008-03-07  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/include/resource.h (sci_rmdir): Win32 updates (suggested
+	by Matt)
+
 	* Numerous cleanups copied from or inspired by Matt's proposed
 	cleanup patch
 

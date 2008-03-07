@@ -429,7 +429,11 @@ int is_print_str(char *str);
 #ifdef HAVE_RMDIR
 #  define sci_rmdir rmdir
 #else  /* !HAVE_RMDIR */
-#  error "Please provide an int sci_rmdir(const char *) for removing directories"
+#  ifdef WIN32
+#    define sci_rmdir _rmdir
+#  else
+#    error "Please provide an int sci_rmdir(const char *) for removing directories"
+#  endif
 #endif /* !HAVE_RMDIR */
 
 #ifndef HAVE_FFS

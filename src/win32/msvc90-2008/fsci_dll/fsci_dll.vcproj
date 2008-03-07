@@ -150,6 +150,7 @@
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\..\..\SDL\include&quot;;&quot;$(SolutionDir)..\..\include&quot;;&quot;$(SolutionDir)..\..\include\win32&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;VERSION=__TIMESTAMP__;PACKAGE=\&quot;FreeSCI\&quot;;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_DIRECTX;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_UNLINK;HAVE_RMDIR;WANT_CONSOLE"
 				RuntimeLibrary="3"
+			        BasicRuntimeChecks="3"
 				BufferSecurityCheck="false"
 				RuntimeTypeInfo="true"
 				WarningLevel="3"
@@ -174,7 +175,8 @@
 				OutputFile="$(OutDir)/fsci.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\..\..\SDL\lib&quot;"
-				IgnoreDefaultLibraryNames=""
+			        GenerateManifest="true"
+			        IgnoreDefaultLibraryNames="libci.lib"
 				ModuleDefinitionFile="$(SolutionDir)..\freesci.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
@@ -189,6 +191,7 @@
 			<Tool
 				Name="VCManifestTool"
 				UseUnicodeResponseFiles="false"
+			        EmbedManifest="false"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
