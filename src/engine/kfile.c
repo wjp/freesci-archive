@@ -762,7 +762,8 @@ test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_n
 	}
 
 	fclose(f);
-	return version == FREESCI_SAVEGAME_VERSION;
+	return version >= FREESCI_MINIMUM_SAVEGAME_VERSION &&
+	       version <= FREESCI_CURRENT_SAVEGAME_VERSION;
 }
 
 reg_t

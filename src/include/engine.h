@@ -45,21 +45,17 @@
 #include <seg_manager.h>
 #include <sfx_engine.h>
 
-#define FREESCI_SAVEGAME_VERSION 7
+#define FREESCI_CURRENT_SAVEGAME_VERSION 7
+#define FREESCI_MINIMUM_SAVEGAME_VERSION 7
 
 #define FREESCI_GAMEDIR ".freesci"
 #define STRLEN_FREESCI_GAMEDIR 8
 #define FREESCI_CONFFILE "config"
 #define FREESCI_SAVEDIR_PREFIX "save_"
 #define FREESCI_CONFFILE_DOS "freesci.cfg"
-#define FREESCI_FILE_VISUAL_MAP "visual_map.png"
-#define FREESCI_FILE_PRIORITY_MAP "priority_map.png"
-#define FREESCI_FILE_CONTROL_MAP "control_map.png"
-#define FREESCI_FILE_AUXILIARY_MAP "auxiliary_map.png"
 #define FREESCI_GAMES_DIR "games"
 
 #define FREESCI_FILE_STATE "state"
-#define FREESCI_FILE_HEAP "heap"
 #define FREESCI_ID_SUFFIX ".id"
 /* Used for <gamename>.id files ("real" save games) */
 

@@ -729,7 +729,7 @@ gamestate_save(state_t *s, char *dirname)
 	int fd;
 
 	_global_save_state = s;
-	s->savegame_version = FREESCI_SAVEGAME_VERSION;
+	s->savegame_version = FREESCI_CURRENT_SAVEGAME_VERSION;
 	s->dyn_views_list_serial = (s->dyn_views)? s->dyn_views->serial : -2;
 	s->drop_views_list_serial = (s->drop_views)? s->drop_views->serial : -2;
 	s->port_serial = (s->port)? s->port->serial : -2;
@@ -1117,12 +1117,13 @@ gamestate_restore(state_t *s, char *dirname)
 
 	fclose(fh);
 
-	if ((retval->savegame_version < 7) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
+	if ((retval->savegame_version < FREESCI_MINIMUM_SAVEGAME_VERSION) || 
+	    (retval->savegame_version > FREESCI_CURRENT_SAVEGAME_VERSION)) {
 
-		if (retval->savegame_version < 7)
+		if (retval->savegame_version < FREESCI_MINIMUM_SAVEGAME_VERSION)
 			sciprintf("Old savegame version detected- can't load\n");
 		else
-			sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_SAVEGAME_VERSION);
+			sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_CURRENT_SAVEGAME_VERSION);
 
 		chdir("..");
 		free(retval);

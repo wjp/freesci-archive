@@ -45,8 +45,6 @@
 #  define class class_
 #endif /* __cplusplus */
 
-#define SAVE_GAME_VERSION 1
-
 #define VM_STACK_SIZE 0x1000
 /* Number of bytes to be allocated for the stack */
 
