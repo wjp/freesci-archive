@@ -1,3 +1,11 @@
+2008-03-07  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/sfx/iterator.c (_sci_parse_midi_command): Expect an argument
+	even when PARSE_FLAG_PARAMETRIC_CUE is set, but ignore it.
+
+	* src/engine/kstring.c (kFormat): Fix a segfault occurring with
+	the %-3d pattern.
+
 2008-03-06  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/vm.c (validate_variable): Allowed out of bounds reads

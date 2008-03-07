@@ -675,7 +675,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 				int written = target - writestart;
 				int padding = str_leng - written;
 
-				if (padding) {
+				if (padding > 0) {
 					if (align > 0) {
 						memmove(writestart + padding,
 							writestart, padding);
