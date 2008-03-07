@@ -1,5 +1,8 @@
 2008-03-07  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/engine/savegame.cfsml (gamestate_restore): Retain sound
+	subsystem initialisation flags across restore
+
 	* src/engine/sys_strings.c (sys_strings_restore): Properly
 	post-process system strings (fixes memory block bug and
 	(hopefully) incorrect savegame references)

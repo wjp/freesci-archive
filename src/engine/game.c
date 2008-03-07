@@ -306,6 +306,7 @@ game_init_sound(state_t *s, int sound_flags)
 	if (s->resmgr->sci_version >= SCI_VERSION_01)
 		sound_flags |= SFX_STATE_FLAG_MULTIPLAY;
 
+	s->sfx_init_flags = sound_flags;
 	sfx_init(&s->sound, s->resmgr, sound_flags);
 	return 0;
 }

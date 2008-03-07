@@ -1146,7 +1146,8 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->resmgr = s->resmgr;
 
 	temp = retval->sound.songlib;
-	sfx_init(&retval->sound, retval->resmgr, 0);
+	sfx_init(&retval->sound, retval->resmgr, s->sfx_init_flags);
+	retval->sfx_init_flags = s->sfx_init_flags;
 	song_lib_free(retval->sound.songlib);
 	retval->sound.songlib = temp;
 

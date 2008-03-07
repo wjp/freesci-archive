@@ -95,6 +95,7 @@ typedef struct _state
 	gfx_pixmap_t *old_screen; /* Old screen content: Stored during kDrawPic() for kAnimate() */
 
 	sfx_state_t sound; /* sound subsystem */
+	int sfx_init_flags; /* flags the sfx subsystem was initialised with */
 	unsigned int sound_volume; /* 0x0 -> 0xf Current volume of sound system */
 	unsigned int sound_mute; /* 0 = not, else == saved value */
 
