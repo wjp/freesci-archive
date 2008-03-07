@@ -1924,7 +1924,6 @@ script_instantiate_sci0(state_t *s, int script_nr)
 	int seg_id;
 	int relocation = -1;
 	int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
-	int seg;
 	resource_t *script;
 	int was_new;
 
@@ -2048,7 +2047,6 @@ script_instantiate_sci0(state_t *s, int script_nr)
 			object_t *obj = sm_script_obj_init(&s->seg_manager, s, addr);
 			object_t *base_obj;
 
-			reg_t oldpos = obj->variables[SCRIPT_SPECIES_SELECTOR];
 			/* Instantiate the superclass, if neccessary */
 			obj->variables[SCRIPT_SPECIES_SELECTOR] =
 				INST_LOOKUP_CLASS(obj->variables[SCRIPT_SPECIES_SELECTOR].offset);
@@ -2097,7 +2095,6 @@ script_instantiate_sci11(state_t *s, int script_nr)
 	int seg_id;
 	int heap_start;
 	reg_t reg;
-	int i;
 	int was_new;
 
 	seg_id = script_instantiate_common(s, script_nr, &script, &heap, &was_new);

@@ -1056,12 +1056,12 @@ simulate_stippled_line_draw(gfx_driver_t *driver, int skipone, point_t start, po
 		delta = (xl < 0)? -dbl_stepwidth : dbl_stepwidth;
 	}
 
+	length_left = length;
+
 	if (skipone) {
 		length_left -= stepwidth;
 		*posvar += stepwidth;
 	}
-
-	length_left = length;
 
 	length /= delta;
 
@@ -1194,7 +1194,6 @@ gfxop_draw_rectangle(gfx_state_t *state, rect_t rect, gfx_color_t color, gfx_lin
 	int retval = 0;
 	int xfact, yfact;
 	int xunit, yunit;
-	int ystart;
 	int x, y, xl, yl;
 	point_t upper_left_u, upper_right_u, lower_left_u, lower_right_u;
 	point_t upper_left, upper_right, lower_left, lower_right;

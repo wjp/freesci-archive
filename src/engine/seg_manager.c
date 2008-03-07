@@ -84,52 +84,6 @@ sm_check(seg_manager_t* self, int seg);
 **			1 if 'seg' is a valid segment
 */
 
-static void *
-sm_malloc(seg_manager_t *self, size_t size);
-/* Allocate memory managed by the segment manager
-** Parameters: (size_t) size: number of bytes of raw memory to allocate
-** Returns   : (void *) A memory block of at least the requested size
-** Effects   : Updates memory counts in 'self'
-*/
-
-static void *
-sm_calloc(seg_manager_t *self, size_t size);
-/* Allocate memory managed by the segment manager, initialised to 0
-** Parameters: (size_t) size: number of bytes of zeroed memory to allocate
-** Returns   : (void *) A zeroed memory block of at least the requested size
-** Effects   : Updates memory counts in 'self'
-*/
-
-static void
-sm_free(seg_manager_t *self, void *pointer);
-/* Free memory previously allocated by sm_malloc() or sm_calloc()
-** Parameters: (void *): The pointer to free
-** Effects   : Updates memory counts in 'self'
-*/
-
-static void *
-sm_get_canonic_address_memory(seg_manager_t *self, reg_t c_addr);
-/* Retrieves the canonic memory associated with a given address
-** Parameters: (reg_t) c_addr: The address whose canonic memory we desire
-*/
-
-
-static void
-sm_find_all_used_addresses(seg_manager_t *self, reg_t addr, void (*note_address)(reg_t addr));
-/* Iterates through all addresses referenced from within a given address
-** Parameters: (reg_t) addr: The base address whose memory we scan for addresses
-**	       (reg_t -> void) note_address: A callback, invoked for each address encountered
-*/
-
-
-/***--------------------------***/
-/** end of forward declarations */
-/***--------------------------***/
-
-#define sm_malloc(_, size) sci_malloc(size)
-#define sm_calloc(_, size) sci_calloc(1, size)
-#define sm_free(_, ref) sci_free(ref)
-
 /*******************************/
 /** End of Memory Management  **/
 /*******************************/
@@ -172,7 +126,7 @@ void sm_init(seg_manager_t* self, int sci1_1) {
 	self->reserved_id--;	/* reserved_id runs in the reversed direction to make sure no one will use it. */
 	
 	self->heap_size = DEFAULT_SCRIPTS;
-        self->heap = (mem_obj_t**) sm_calloc(self, self->heap_size * sizeof(mem_obj_t *));
+        self->heap = (mem_obj_t**) sci_calloc(self->heap_size, sizeof(mem_obj_t *));
 
 	self->clones_seg_id = 0;
 	self->lists_seg_id = 0;
@@ -432,7 +386,7 @@ mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum 
 
 	if (segid >= self->heap_size) {
 		void *temp;
-		int i, oldhs = self->heap_size;
+		int oldhs = self->heap_size;
 
 		if (segid >= self->heap_size * 2) {
 			sciprintf( "seg_manager.c: hash_map error or others??" );
@@ -685,7 +639,6 @@ void
 sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, id_flag flag)
 {
 	script_t *scr = &(self->heap[id]->data.script);
-	int i;
 
 	GET_SEGID();
 	if (offset) {
@@ -933,8 +886,6 @@ sm_heap_relocate(seg_manager_t *self, state_t *s, reg_t block)
 
 	for (i = 0; i < count; i++) {
 		int pos = getUInt16(scr->heap_start + block.offset + 2 + (i*2)) + scr->script_size;
-		int pos_absolute = 
-		  getUInt16(scr->heap_start + block.offset + 2 + (i*2));
 
 		if (!_relocate_local(self, scr, block.segment, pos)) {
 			int k, done = 0;
@@ -1255,7 +1206,6 @@ sm_script_initialise_objects_sci11(seg_manager_t *self, state_t *s, int seg)
 {
 	mem_obj_t *mobj = self->heap[seg];
 	script_t *scr;
-	int i;
 	byte *seeker;
 
 	VERIFY( !(seg >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
@@ -1293,7 +1243,6 @@ sm_script_initialise_objects_sci11(seg_manager_t *self, state_t *s, int seg)
 	{
 		reg_t reg;
 		object_t *obj;
-		object_t *base_obj;
 
 		reg.segment = seg;
 		reg.offset = seeker-scr->buf;
@@ -1374,7 +1323,6 @@ sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid)
 {
 	mem_obj_t *memobj = alloc_nonscript_segment(self, MEM_OBJ_SYS_STRINGS, segid);
 	sys_strings_t *retval = &(memobj->data.sys_strings);
-	int i;
 
 	memset(retval, 0, sizeof(sys_string_t)*SYS_STRINGS_MAX);
 
@@ -1601,7 +1549,6 @@ const char *
 sm_get_description(seg_manager_t *self, reg_t addr)
 { 
 	mem_obj_t *mobj = self->heap[addr.segment];
-	script_t *scr;
 
 	if (addr.segment >= self->heap_size)
 	  return "";
@@ -1766,7 +1713,6 @@ list_all_outgoing_references_clones (seg_interface_t *self, state_t *s, reg_t ad
 	clone_table_t *clone_table = &(mobj->data.clones);
 	clone_t *clone;
 	int i;
-	seg_id_t owner_segment;
 
 	assert (addr.segment == self->seg_id);
 	
@@ -1846,7 +1792,6 @@ find_canonic_address_locals (seg_interface_t *self, reg_t addr)
 static void
 list_all_outgoing_references_locals (seg_interface_t *self, state_t *s, reg_t addr, void *param, void (*note) (void*param, reg_t addr))
 {
-	mem_obj_t *mobj = self->mobj;
 	local_variables_t *locals = &(self->mobj->data.locals);
 	int i;
 

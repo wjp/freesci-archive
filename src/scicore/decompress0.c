@@ -237,7 +237,6 @@ int sci0_get_compression_method(int resh)
 	guint16 compressedLength;
 	guint16 compressionMethod;
 	guint16 result_size;
-	guint8 *buffer;
 
 	/* Dummy variable */
 	if (read(resh, &result_size, 2) != 2)

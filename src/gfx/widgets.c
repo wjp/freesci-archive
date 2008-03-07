@@ -760,8 +760,8 @@ _gfxw_new_simple_view(gfx_state_t *state, point_t pos, int view, int loop, int c
 	widget->widget_priority = priority;
 	widget->pos = pos;
 	widget->color.mask =
-		(priority < 0)? 0 : GFX_MASK_PRIORITY
-		| (control < 0)? 0 : GFX_MASK_CONTROL;
+		((priority < 0)? 0 : GFX_MASK_PRIORITY)
+		| ((control < 0)? 0 : GFX_MASK_CONTROL);
 	widget->color.priority = priority;
 	widget->color.control = control;
 	widget->view = view;

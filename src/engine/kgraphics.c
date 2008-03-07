@@ -2519,7 +2519,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 	} else {
 		list_t *list;
 
-		if (!list_ref.segment && !list_ref.segment) {
+		if (!list_ref.segment) {
 			SCIkdebug(SCIkWARNING, "Attempt to AddToPic single non-list: "PREG"\n",
 				  PRINT_REG(list_ref));
 			return s->r_acc;

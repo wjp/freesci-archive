@@ -270,7 +270,9 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 	int bitmask;
 	byte *bounds = NULL;
 	int legalcolor, legalmask;
+#ifdef DRAW_SCALED
 	int min_x, min_y, max_x, max_y;
+#endif
 	int original_drawenable = drawenable; /* Backup, since we need the unmodified value
 					      ** for filling the aux and control map  */
 

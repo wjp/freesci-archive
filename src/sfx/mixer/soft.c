@@ -410,7 +410,6 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
      ** skipping them.  */
 {
 	int free_frames;
-	int recommended_frames;
 	int played_frames = 0; /* since the last call */
 	long secs, usecs;
 	int frame_pos;

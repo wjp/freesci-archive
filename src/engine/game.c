@@ -347,7 +347,6 @@ create_class_table_sci11(state_t *s)
 	unsigned int seeker_offset;
 	char *seeker_ptr;
 	int classnr;
-	int size;
 
 	resource_t *vocab996 = scir_find_resource(s->resmgr, sci_vocab, 996, 1);
 
@@ -359,7 +358,6 @@ create_class_table_sci11(state_t *s)
 	s->classtable = (class_t*)sci_calloc(sizeof(class_t), s->classtable_size);
 
 	for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
-		int objtype = 0;
 		resource_t *heap = scir_find_resource(s->resmgr, sci_heap,
 						      scriptnr, 0);
 
@@ -408,7 +406,6 @@ create_class_table_sci0(state_t *s)
 	int scriptnr;
 	unsigned int seeker;
 	int classnr;
-	int size;
 	int magic_offset; /* For strange scripts in older SCI versions */
 
 	resource_t *vocab996 = scir_find_resource(s->resmgr, sci_vocab, 996, 1);
@@ -426,7 +423,6 @@ create_class_table_sci0(state_t *s)
 							scriptnr, 0);
 
 		if (script) {
-			size = getInt16(script->data);
 			if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
 				magic_offset = seeker = 2;
 			else

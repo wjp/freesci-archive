@@ -222,7 +222,7 @@ gfxr_clear_pic0(gfxr_pic_t *pic, int sci_titlebar_size)
    d = nonlinearstart-1;  \
    while (linearvar != (linearend)) { \
      buffer[linewidth * y + x] operation color; \
-/* color ^= color2; color2 ^= color; color ^= color2; /* Swap colors */ \
+/* color ^= color2; color2 ^= color; color ^= color2; */ /* Swap colors */ \
      linearvar += linearmod; \
      if ((d+=incrE) < 0) { \
        d += incrNE; \
@@ -400,7 +400,6 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 		int ivi = y & 1; /* InterVal Index: Current intervals; !ivi is the list of old ones */
 		int old_intervals_start_offset = 0;
 		int width = 0;
-		int j;
 
 		old_intervals_nr = intervals_nr;
 		intervals_nr = 0;
@@ -496,7 +495,7 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 #ifdef FILL_RECURSIVE_DEBUG
 		if (!fillmagc && intervals_nr) {
 			fprintf(stderr,"AI L#%03d:", y);
-			for (j = 0; j < intervals_nr; j++)
+			for (int j = 0; j < intervals_nr; j++)
 				fprintf(stderr, "%c[%03d,%03d]", intervals[ivi][j].tag? ' ':'-', intervals[ivi][j].xl, intervals[ivi][j].xr);
 			fprintf(stderr,"\n");
 		}
@@ -1273,82 +1272,6 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
   x = oldx + *((signed char *) resource + pos++);
 
 
-static void
-_gfxr_vismap_remove_artifacts_old(gfxr_pic_t *pic, int sci_titlebar_size)
-{
-	/* Check the visual map for things that look like artifacs and remove them,
-	** if that appears to be appropriate.
-	*/
-	int x,y;
-	int linewidth = 320 * pic->mode->xfact;
-	int maxx = 320 * pic->mode->xfact - 1;
-	int maxy = 200 * pic->mode->yfact - 1;
-	int miny = sci_titlebar_size * pic->mode->yfact;
-	int offset = linewidth * miny;
-	byte *vismap = pic->visual_map->index_data;
-	byte *primap = pic->priority_map->index_data;
-
-	if (pic->mode->xfact == 1 || pic->mode->yfact == 1)
-		return;
-
-	for (y = miny; y <= maxy; y++)
-		for (x = 0; x <= maxx; x++) {
-			if (vismap[offset] == 0xff) { /* Potential offender */
-				int horiz = 0, vertic = 0;
-
-				if ((x > 0 && vismap[offset-1] == 0xff)
-				    || (x < maxx && vismap[offset+1] == 0xff))
-					horiz = 1;
-
-				if ((y > miny && vismap[offset-linewidth] == 0xff)
-				    || (y < maxy && vismap[offset+linewidth] == 0xff))
-					vertic = 1;
-
-				if (!(horiz && vertic)) { /* otherwise, we're inside a white block */
-					if (horiz) {
-						if (y == miny) {
-							vismap[offset] = vismap[offset + linewidth];
-							primap[offset] = vismap[offset + linewidth];
-						} else if (y == maxy) {
-							vismap[offset] = vismap[offset - linewidth];
-							primap[offset] = vismap[offset - linewidth];
-						} else {
-							if ((primap[offset + linewidth] == primap[offset - linewidth])
-							    &&(vismap[offset - linewidth] == vismap[offset + linewidth])) {
-								vismap[offset] = vismap[offset + linewidth];
-								primap[offset] = primap[offset + linewidth];
-							} else {
-								vismap[offset] = (vismap[offset + linewidth] & 0x0f) | (vismap[offset - linewidth] & 0xf0);
-								primap[offset] = (primap[offset + linewidth] + primap[offset - linewidth]) >> 1;
-							}
-						}
-					} else { /* vertical or neither */
-						if (x == 0) {
-							vismap[offset] = vismap[offset + 1];
-							primap[offset] = vismap[offset + 1];
-						} else if (x == maxx) {
-							vismap[offset] = vismap[offset - 1];
-							primap[offset] = vismap[offset - 1];
-						} else {
-							if ((primap[offset + 1] == primap[offset - 1])
-							    &&(vismap[offset - 1] == vismap[offset + 1])) {
-								vismap[offset] = vismap[offset + 1];
-								primap[offset] = primap[offset + 1];
-							} else {
-								vismap[offset] = (vismap[offset + 1] & 0x0f) | (vismap[offset - 1] & 0xf0);
-								primap[offset] = (primap[offset + 1] + primap[offset - 1]) >> 1;
-							}
-						}
-					}
-				}
-			}
-
-			++offset;
-		}
-
-}
-
-
 inline static void
 check_and_remove_artifact(byte *dest, byte* srcp, int legalcolor, byte l, byte r, byte u, byte d)
 {
@@ -1832,15 +1755,11 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int flags, int default_palette, int size,
 			{
 				int posx, posy;
 				int bytesize;
-				byte *vismap = pic->visual_map->index_data;
-				int linewidth = 320;
+/*				byte *vismap = pic->visual_map->index_data; */
 				int nodraw = 0;
 
 				gfx_pixmap_t *view;
-				byte *data;
 				gfx_mode_t *mode;
-
-//				if (pos != 1300) nodraw = 1;
 
 				p0printf("Embedded view @%d\n", pos);
 

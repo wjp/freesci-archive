@@ -212,7 +212,6 @@ midi_hexdump(byte *data, int size, int notational_offset)
 static void
 sci01_song_header_dump(byte *data, int size)
 {
-	int last_time;
 	int offset = 0;
 	int smallest_start = 10000;
 
@@ -280,6 +279,7 @@ int c_sfx_01_header(state_t *s)
 	}
 
 	sci01_song_header_dump(song->data, song->size);
+	return 0;
 }
 
 int c_sfx_01_track(state_t *s)
@@ -297,6 +297,7 @@ int c_sfx_01_track(state_t *s)
 	}
 
 	midi_hexdump(song->data + offset, song->size, offset);
+	return 0;
 }
 
 
@@ -530,7 +531,6 @@ _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 	}
 
 	case MEM_OBJ_DYNMEM: {
-		int i;
 		sciprintf("dynmem (%s): %d bytes\n",
 			  mobj->data.dynmem.description?
 			  mobj->data.dynmem.description:"no description",
@@ -602,6 +602,7 @@ static int
 c_songlib_print(state_t *s)
 {
 	song_lib_dump(s->sound.songlib, __LINE__);
+	return 0;
 }
 
 static int
@@ -664,8 +665,6 @@ c_vr(state_t *s)
 			break;
 
 		case KSIG_REF: {
-			int evilchars = 0;
-			int i;
 			int size;
 			unsigned char *block = sm_dereference(&s->seg_manager,
 							      reg, &size);
@@ -710,13 +709,13 @@ c_vr(state_t *s)
 int
 c_segkill(state_t *s)
 {
-  int i = 0;
-  while (i < cmd_paramlength) {
-    int nr = cmd_params[i++].val;
+	int i = 0;
+	while (i < cmd_paramlength) {
+		int nr = cmd_params[i++].val;
 
-    sm_set_lockers(&(s->seg_manager), nr, 0, SEG_ID);
-//    _sm_deallocate(&(s->seg_manager), nr, 1);
-  }
+		sm_set_lockers(&(s->seg_manager), nr, 0, SEG_ID);
+	}
+	return 0;
 }
 
 static int
@@ -755,11 +754,12 @@ c_seginfo(state_t *s)
 			_c_single_seg_info(s, s->seg_manager.heap[nr]);
 		}
 	} else for (i = 0; i < s->seg_manager.heap_size; i++)
-		if (s->seg_manager.heap[i]) {
-			sciprintf("[%04x] ", i);
-			_c_single_seg_info(s, s->seg_manager.heap[i]);
-			sciprintf("\n");
-		}
+			if (s->seg_manager.heap[i]) {
+				sciprintf("[%04x] ", i);
+				_c_single_seg_info(s, s->seg_manager.heap[i]);
+				sciprintf("\n");
+			}
+	return 0;
 }
 
 int
@@ -2586,8 +2586,8 @@ c_resource_id(state_t *s)
 static int
 c_listclones(state_t *s)
 {
-	int i, j = 0;
 	/*
+	int i, j = 0;
 	sciprintf("Listing all logged clones:\n");
 
 	for (i = 0; i < SCRIPT_MAX_CLONES; i++)

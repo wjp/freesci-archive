@@ -1090,7 +1090,9 @@ c_man (state_t * s)
 	if (section < 0 || section >= CMD_MM_ENTRIES) {
 		sciprintf("Invalid section %d\n",
 			  section);
+		return 1;
 	}
+
 	sciprintf("section:%d\n", section);
 	if (section)
 		entry = cmd_mm_find(name, section - 1);

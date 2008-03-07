@@ -134,7 +134,7 @@ _dump_playing_list(sfx_state_t *self, char *msg)
 	fprintf(stderr, "[] Song list : [ ");
 	song = *(self->songlib.lib);
 	while (song) {
-		fprintf(stderr, "%08x:%d ", song->handle, song->status);
+		fprintf(stderr, "%08lx:%d ", song->handle, song->status);
 		song = song->next_playing;
 	}
 	fprintf(stderr, "]\n");
@@ -142,7 +142,7 @@ _dump_playing_list(sfx_state_t *self, char *msg)
 	fprintf(stderr, "[] Play list (%s) : [ " , msg);
 
 	while (song) {
-		fprintf(stderr, "%08x ", song->handle);
+		fprintf(stderr, "%08lx ", song->handle);
 		song = song->next_playing;
 	}
 
@@ -152,9 +152,9 @@ _dump_playing_list(sfx_state_t *self, char *msg)
 static void
 _dump_songs(sfx_state_t *self)
 {
+#if 0
 	song_t *song = self->song;
 
-#if 0
 	fprintf(stderr, "Cue iterators:\n");
 	song = *(self->songlib.lib);
 	while (song) {
@@ -648,7 +648,6 @@ sfx_poll_specific(sfx_state_t *self, song_handle_t handle, int *cue)
 	while (1) {
 		unsigned char buf[8];
 		int result;
-		int buf_size;
 
 		if (!time_le(song->wakeup_time, ctime))
 			return 0; /* Patience, young hacker! */
@@ -728,7 +727,7 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 		fprintf(stderr, "Overwriting old song (%08lx) ...\n", handle);
 		if (song->status == SOUND_STATUS_PLAYING
 		    || song->status == SOUND_STATUS_SUSPENDED) {
-			fprintf(stderr, "Unexpected (error): Song %d still playing/suspended (%d)\n",
+			fprintf(stderr, "Unexpected (error): Song %ld still playing/suspended (%d)\n",
 				handle, song->status);
 			songit_free(it);
 			return -1;
@@ -790,7 +789,9 @@ void
 sfx_song_set_fade(sfx_state_t *self, song_handle_t handle, 
 		  fade_params_t *params)
 {
+#ifdef DEBUG_SONG_API
 	static const char *stopmsg[] = {"??? Should not happen", "Do not stop afterwards","Stop afterwards"};
+#endif
 	song_t *song = song_lib_find(self->songlib, handle);
 
 	ASSERT_SONG(song);
@@ -876,7 +877,6 @@ sfx_send_midi(sfx_state_t *self, song_handle_t handle, int channel,
 {
 	byte buffer[5];
 	tell_synth_func *tell = sfx_get_player_tell_func();
-	song_t *song = song_lib_find(self->songlib, handle);
 
 	/* Yes, in that order. SCI channel mutes are actually done via
 	   a counting semaphore. 0 means to decrement the counter, 1

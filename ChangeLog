@@ -1,5 +1,8 @@
 2008-03-07  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* Numerous cleanups copied from or inspired by Matt's proposed
+	cleanup patch
+
 	* src/engine/scriptdebug.c (c_restore_game): Fixed command-line
 	`restore game' tool
 
