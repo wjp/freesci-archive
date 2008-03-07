@@ -64,10 +64,12 @@ sys_string_set(sys_strings_t *strings, int index, const char *value)
 		fprintf(stderr, "[SYSSTR] Error: Attempt to write to invalid/unused string #%d\n",
 			index);
 		BREAKPOINT();
+		return 1;
 	}
 
 	strncpy(str->value, value, str->max_size);
 	str->value[str->max_size] = 0; /* Make sure to terminate */
+	return 0;
 }
 
 void
@@ -95,4 +97,23 @@ sys_string_free_all(sys_strings_t *strings)
 			sys_string_free(strings, i);
 	}
 
+}
+
+void
+sys_strings_restore(sys_strings_t *new, sys_strings_t *old)
+{
+	int i;
+
+	/* First, pad memory */
+	for (i = 0; i < SYS_STRINGS_MAX; i++) {
+		sys_string_t *s = new->strings + i;
+		char *data = s->value;
+		if (data) {
+			s->value = (char *)sci_malloc(s->max_size + 1);
+			strcpy(s->value, data);
+			sci_free(data);
+		}
+	}
+
+	sys_string_set(new, SYS_STRING_SAVEDIR, old->strings[SYS_STRING_SAVEDIR].value);
 }

@@ -65,6 +65,13 @@ sys_string_set(sys_strings_t *strings, int index, const char *value);
 */
 
 void
+sys_strings_restore(sys_strings_t *new, sys_strings_t *old);
+/* Cleanup system strings after a gamestate restore
+** Parameters: (sys_strings_t *) The freshly loaded system strings to clean up
+**             (sys_strings_t *) The old system strings to clean up
+*/
+
+void
 sys_string_free_all(sys_strings_t *strings);
 /* Deallocates all allocated system strings
 ** Parameters: (sys_strings_t *) strings: The string table to deallocate

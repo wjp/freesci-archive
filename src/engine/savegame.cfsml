@@ -1160,6 +1160,9 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->save_dir_copy = make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
 	retval->save_dir_edit_offset = 0;
 	retval->sys_strings_segment = find_unique_seg_by_type(&retval->seg_manager, MEM_OBJ_SYS_STRINGS);
+	retval->sys_strings = &(((mem_obj_t *)(GET_SEGMENT(retval->seg_manager, retval->sys_strings_segment, MEM_OBJ_SYS_STRINGS)))->data.sys_strings);
+	sys_strings_restore(retval->sys_strings,
+			    s->sys_strings);
 
 	/* Time state: */
 	sci_get_current_time(&(retval->last_wait_time));
