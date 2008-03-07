@@ -123,7 +123,7 @@ clean first) and it should link OK.
 ========
 
 The configuration options described below should be put into your config file,
-located at %USERPROFILE%\.freesci\config .
+located at %USERPROFILE%\FreeSCI\config .
 
 
 3.1 Graphics

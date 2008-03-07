@@ -1,5 +1,11 @@
 2008-03-07  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* README.Win32 (IMPORTANT NOTE): Updated Docs to reflect the
+	directory rename
+
+	* src/include/engine.h (STRLEN_FREESCI_GAMEDIR): Renamed
+	savegame/config dir to FreeSCI on Win32
+
 	* src/include/resource.h (sci_rmdir): Win32 updates (suggested
 	by Matt)
 

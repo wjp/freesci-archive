@@ -48,8 +48,14 @@
 #define FREESCI_CURRENT_SAVEGAME_VERSION 7
 #define FREESCI_MINIMUM_SAVEGAME_VERSION 7
 
-#define FREESCI_GAMEDIR ".freesci"
-#define STRLEN_FREESCI_GAMEDIR 8
+#ifdef WIN32
+#  define FREESCI_GAMEDIR "FreeSCI"
+#  define STRLEN_FREESCI_GAMEDIR 7
+#else
+#  define FREESCI_GAMEDIR ".freesci"
+#  define STRLEN_FREESCI_GAMEDIR 8
+#endif
+
 #define FREESCI_CONFFILE "config"
 #define FREESCI_SAVEDIR_PREFIX "save_"
 #define FREESCI_CONFFILE_DOS "freesci.cfg"
