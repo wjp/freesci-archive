@@ -289,14 +289,18 @@ ggi_init(gfx_driver_t *drv)
 	DEBUG_BASIC("Attempting to create mode with %dx%d, graphtype=%08x, %d frames\n",
 		    mode.visible.x, mode.visible.y, mode.graphtype, mode.frames);
 
-	mode.virt.x = mode.size.x = mode.visible.x;
-	mode.virt.y = mode.size.y = mode.visible.y;
+	mode.virt.x = mode.visible.x;
+	mode.virt.y = mode.visible.y;
+	mode.size.x = GGI_AUTO;
+	mode.size.y = GGI_AUTO;
 
 	if (ggiSetMode(meta->vis, &mode)) {
 		sciprintf("GFXGGI: Could not set proposed graphics mode!\n");
 
-		mode.virt.x = mode.size.x = mode.visible.x += x_blank;
-		mode.virt.y = mode.size.y = mode.visible.y += y_blank;
+		mode.virt.x = mode.visible.x += x_blank;
+		mode.virt.y = mode.visible.y += y_blank;
+		mode.size.x = GGI_AUTO;
+		mode.size.y = GGI_AUTO;
 
 		DEBUG_BASIC("Attempting to create augmented mode with %dx%d, graphtype=%08x, %d frames\n",
 			    mode.visible.x, mode.visible.y, mode.graphtype, mode.frames);
