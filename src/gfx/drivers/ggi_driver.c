@@ -176,7 +176,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 		--frames;
 
 	if (!frames) {
-		DEBUG_BASIC("Initializing %dx%d at %d bpp failed\n", xres*320, yres*200, 1 << bpp);
+		DEBUG_BASIC("Initializing %dx%d at %d bpp failed\n", xres*320, yres*200, bpp << 3);
 		free(meta);
 		ggiExit();
 		return GFX_ERROR;
