@@ -654,7 +654,9 @@ int midi_adlibemu_event2(guint8 command, guint8 param, guint32 delta)
   oper = command & 0xf0;
   switch (oper) {
   case 0xc0:   /* change instrument */
+#ifdef DEBUG_ADLIB
     printf("ADLIB: Selecting instrument %d on channel %d\n", param, channel);
+#endif
     instr[channel] = param;
     return 0;
   default:
