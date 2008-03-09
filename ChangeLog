@@ -1,3 +1,8 @@
+2008-03-09  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/scriptdebug.c (c_backtrace): Include script numbers
+	in backtraces.
+
 2008-03-07  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* README.Win32 (IMPORTANT NOTE): Updated Docs to reflect the
