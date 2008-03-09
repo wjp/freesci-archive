@@ -1912,7 +1912,8 @@ c_backtrace(state_t *s)
 			sciprintf(" pc:none");
 
 		sciprintf(" argp:"PSTK, PRINT_STK(call->variables_argp));
-		sciprintf(" script: %d", s->seg_manager.heap[call->addr.pc.segment]->data.script.nr);
+		if (call->type == EXEC_STACK_TYPE_CALL)
+			sciprintf(" script: %d", s->seg_manager.heap[call->addr.pc.segment]->data.script.nr);
 		sciprintf("\n");
 	}
 	return 0;
