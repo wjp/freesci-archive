@@ -650,7 +650,7 @@ pointer_add(state_t *s, reg_t base, int offset)
 static inline void
 gc_countdown(state_t *s)
 {
-	if (!s->gc_countdown--) {
+	if (s->gc_countdown-- <= 0) {
 		s->gc_countdown = script_gc_interval;
 		run_gc(s);
 	}

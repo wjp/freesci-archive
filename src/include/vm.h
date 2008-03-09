@@ -435,7 +435,7 @@ extern DLLEXTERN int script_abort_flag;
 ** Set it to SCRIPT_ABORT_WITH_REPLAY to force a replay afterwards.
 */
 
-#define GC_DELAY 32768	/* Number of kernel calls in between gcs; should be < 50000 */
+#define GC_DELAY 0	/* Number of kernel calls in between gcs; should be < 50000 */
 
 extern int script_gc_interval;
 /* Initially GC_DELAY, can be set at runtime */
