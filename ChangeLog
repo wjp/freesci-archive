@@ -1,5 +1,8 @@
 2008-03-09  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/engine/vm.c (run_vm): Zero the stack when using `link' in
+	order not to confuse the gc
+
 	* src/include/vm.h (GC_DELAY): Set to 0 by default.  Very slow,
 	but better for debugging.
 

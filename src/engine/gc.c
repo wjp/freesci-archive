@@ -56,7 +56,7 @@ worklist_push(worklist_t **wlp, reg_t_hash_map_ptr hashmap, reg_t reg)
 		return;
 
 #ifdef DEBUG_GC_VERBOSE
-/*	fprintf(stderr, "[GC] Adding "PREG"\n", PRINT_REG(reg));  */
+	sciprintf("[GC] Adding "PREG"\n", PRINT_REG(reg));
 #endif
 
 	reg_t_hash_map_check_value(hashmap, reg, 1, &added);
@@ -187,6 +187,10 @@ find_all_used_references(state_t *s)
 		for (pos = s->stack_base; pos < xs->sp; pos++)
 			worklist_push(&worklist, nonnormal_map, *pos);
 	}
+#ifdef DEBUG_GC_VERBOSE
+	sciprintf("[GC] -- Finished adding value stack");
+#endif
+
 
 	/* Init: Execution Stack */
 	for (i = 0; i <= s->execution_stack_pos; i++) {
@@ -199,6 +203,9 @@ find_all_used_references(state_t *s)
 				worklist_push(&worklist, nonnormal_map, *(es->addr.varp));
 		}
 	}
+#ifdef DEBUG_GC_VERBOSE
+	sciprintf("[GC] -- Finished adding execution stack");
+#endif
 
 	/* Init: Explicitly loaded scripts */
 	for (i = 1; i < sm->heap_size; i++)
@@ -221,6 +228,9 @@ find_all_used_references(state_t *s)
 				}
 			}
 		}
+#ifdef DEBUG_GC_VERBOSE
+	sciprintf("[GC] -- Finished explicitly loaded scripts, done with root set");
+#endif
 
 
 	/* Run Worklist Algorithm */
@@ -228,7 +238,7 @@ find_all_used_references(state_t *s)
 		reg_t reg = worklist_pop(&worklist);
 		if (reg.segment != s->stack_segment) { /* No need to repeat this one */
 #ifdef DEBUG_GC_VERBOSE
-			fprintf(stderr, "[GC] Checking "PREG"\n", PRINT_REG(reg)); 
+			sciprintf("[GC] Checking "PREG"\n", PRINT_REG(reg)); 
 #endif
 			if (reg.segment < sm->heap_size
 			    && interfaces[reg.segment])
@@ -271,6 +281,7 @@ free_unless_used (void *pre_use_map, reg_t addr)
 		/* Not found -> we can free it */
 		deallocator->interfce->free_at_address(deallocator->interfce, addr);
 #ifdef DEBUG_GC
+		sciprintf("[GC] Deallocating "PREG"\n", PRINT_REG(addr));
 		deallocator->segcount[deallocator->interfce->type_id]++;
 #endif
 	}
@@ -285,7 +296,7 @@ run_gc(state_t *s)
 	seg_manager_t *sm = &(s->seg_manager);
 
 #ifdef DEBUG_GC
-//	c_segtable(s);
+	c_segtable(s);
 	sciprintf("[GC] Running...\n");
 	memset(&(deallocator.segcount), 0, sizeof(int) * (MEM_OBJ_MAX + 1));
 #endif
@@ -300,8 +311,8 @@ run_gc(state_t *s)
 #endif
 
 			deallocator.interfce->list_all_deallocatable(deallocator.interfce,
-								      &deallocator,
-								      free_unless_used);
+								     &deallocator,
+								     free_unless_used);
 
 			deallocator.interfce->deallocate_self(deallocator.interfce);
 		}

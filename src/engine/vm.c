@@ -1080,9 +1080,13 @@ run_vm(state_t *s, int restoring)
 			PUSH32(r_temp);
 			break;
 
-		case 0x1f: /* link */
+		case 0x1f: { /* link */
+			int i;
+			for (i = 0; i < opparams[0]; i++)
+				xs->sp[i] = NULL_REG;
 			xs->sp += opparams[0];
 			break;
+		}
 
 		case 0x20: { /* call */
 			int argc = (opparams[1] >> 1) /* Given as offset, but we need count */

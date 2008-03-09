@@ -31,7 +31,7 @@
 #include <engine.h>
 
 
-#define GC_DEBUG /* Debug garbage collection */
+/*#define GC_DEBUG*/ /* Debug garbage collection */
 /*#define GC_DEBUG_VERBOSE*/ /* Debug garbage verbosely */
 
 #define SM_MEMORY_POISON	/* Poison memory upon deallocation */
