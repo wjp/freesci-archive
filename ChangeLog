@@ -1,5 +1,7 @@
 2008-03-09  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kernel.c: Relax type signatures for CelHigh and CelWide.
+
 	* src/engine/scriptdebug.c (c_backtrace): Include script numbers
 	in backtraces.
 

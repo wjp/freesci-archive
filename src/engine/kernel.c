@@ -209,8 +209,8 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*0c*/	DEFUN("SetNowSeen", kSetNowSeen, "oi*"), /* The second parameter is ignored */
 /*0d*/	DEFUN("NumLoops", kNumLoops, "o"),
 /*0e*/	DEFUN("NumCels", kNumCels, "o"),
-/*0f*/	DEFUN("CelWide", kCelWide, "iii"),
-/*10*/	DEFUN("CelHigh", kCelHigh, "iii"),
+/*0f*/	DEFUN("CelWide", kCelWide, "iOiOi"),
+/*10*/	DEFUN("CelHigh", kCelHigh, "iOiOi"),
 /*11*/	DEFUN("DrawCel", kDrawCel, "iiiiii*"),
 /*12*/	DEFUN("AddToPic", kAddToPic, "Il*"),
 /*13*/	DEFUN("NewWindow", kNewWindow, "iiiiZRi*"),
