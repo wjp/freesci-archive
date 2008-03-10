@@ -913,10 +913,10 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 			abs_zone.xend - abs_zone.x, abs_zone.yend - abs_zone.y);
 
 	signal = GET_SEL32V(obj, signal);
-	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d) ([%d..%d]x[%d..%d]), obj="PREG", sig=%04x, cliplist=%04x\n",
+	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d) ([%d..%d]x[%d..%d]), obj="PREG", sig=%04x, cliplist="PREG"\n",
 		  GFX_PRINT_RECT(zone),
 		  abs_zone.x, abs_zone.xend, abs_zone.y, abs_zone.yend,
-		  PRINT_REG(obj), signal, cliplist);
+		  PRINT_REG(obj), signal, PRINT_REG(cliplist_ref));
 
 	illegal_bits = GET_SEL32V(obj, illegalBits);
 
@@ -966,7 +966,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 
 		while (node) { /* Check each object in the list against our bounding rectangle */
 			reg_t other_obj = node->value;
-			SCIkdebug(SCIkBRESEN, "  comparing against "PREG"\n", other_obj);
+			SCIkdebug(SCIkBRESEN, "  comparing against "PREG"\n", PRINT_REG(other_obj));
 
 			if (!is_object(s, other_obj)) {
 				SCIkdebug(SCIkWARNING, "CanBeHere() cliplist contains non-object %04x\n", other_obj);
@@ -1834,7 +1834,8 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, r
 	reg_t obj = make_reg(view->ID, view->subID);
 
 	if (!is_object(s, obj))
-		return;
+		SCIkwarn(SCIkWARNING, "View %d does not contain valid object reference "PREG"\n", view->ID, PRINT_REG(obj));
+
 /*	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;*/
 
 	if (view->ID > 0)
