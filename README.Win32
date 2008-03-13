@@ -6,74 +6,32 @@ functionality as the UNIX version. See 'Known Problems' for the major bugs
 affecting this platform.
 
 
-2 Building FreeSCI for Win32
-============================
+2 Building FreeSCI for Win32 on Windows
+=======================================
 
 2.1 Requirements
 ----------------
 
-To start with, you need a copy of Visual Studio. Depending on the version you
-own, there are different requirements.
+ * Visual C++ or Visual Studio 2003 or higher
 
- * Visual C++ or Studio 6.0 with Service Pack 6:
+ * DirectX SDK 8.0a, available by searching for DX8a_SDK.exe
+   (Not required for users of Visual C++ / Studio 2003)
 
-   - Windows (Platform) SDK from Microsoft Downloads:
-     http://www.microsoft.com/downloads/
-     Only the Core 32-bit component is required
-   
-   - DirectX SDK 8.0a (not other versions):
-     Available by performing an Internet search for DX8a_SDK.exe
-
- * Visual C++ or Studio 2002 / 7.0: Not supported
-
- * Visual C++ or Studio 2003 / 7.1: No extra requirements
-
- * Visual C++ or Studio 2005 / 8.0 (including Express Edition) or higher:
-   
-   - DirectX SDK 8.0a (not other versions):
-     Available by performing an Internet search for DX8a_SDK.exe
-
-For all versions you need the SDL 1.2 development library for Win32 from
-http://www.libsdl.org/ (filename starts with 'SDL-devel'). Ensure you download
-the correct one for the version of your development environment.
+ * SDL 1.2 development library for Win32, available from http://www.libsdl.org/
 
 
 2.1.1 Visual C++ include/lib directories
 ----------------------------------------
 
-Once you have installed the Windows / Platform and DirectX SDKs if required,
-the directories Visual C++ uses for its default include and lib files need to
-be set. Under Visual C++ 2005 go to the Tools / Options menu, then expand
-'Projects and Solutions' and select 'VC++ Directories'. Below are the
-directories you need to enter, assuming you have installed the SDKs to their
-default locations. Note the top and bottom ordering given - this is important!
+For users of Visual C++ or Visual Studio 2005 or higher, the default locations
+used for include and lib files need to be configured for the DirectX SDK.
+To do this go to the Tools / Options menu, then expand 'Projects and Solutions'
+and select 'VC++ Directories'. Below are the directories you need to enter,
+assuming the DirectX SDK has been installed to its default location. Make sure
+they are located at the bottom of the list.
 
-Visual C++ 6.0:
-
-   Include files  -> C:\Program Files\Microsoft Platform SDK\include  (top)
-                     c:\mssdk\include  (top)
-
-   Library files  -> C:\Program Files\Microsoft Platform SDK\lib  (top)
-                     c:\mssdk\lib  (top)
-
-Visual C++ 2003: Step not required, comes with adequate SDKs
-
-Visual C++ 2005 or higher:
-
-   Include files  -> c:\mssdk\include  (bottom)
-
-   Library files  -> c:\mssdk\lib  (bottom)
-
-
-2.1.2 Visual C++ Express Edition
---------------------------------
-
-Users of Express Edition will receive the error 'Solution folders are not
-supported in this version of Visual Studio' when opening the solution. This
-can be safely ignored as this feature only provides easy access to FreeSCI
-README files. Changes to the freesci.sln file should only be committed to
-source control by non-users of Express Edition so that this feature is not
-inadvertantly removed.
+   Include files  -> c:\mssdk\include
+   Library files  -> c:\mssdk\lib
 
 
 2.2 Directory structure
@@ -98,25 +56,19 @@ according to the following directory structure:
 1. Go to the src\win32 directory and open the solution according to your
 version of Visual C++.
 
-   Visual C++/Studio 6:    msvc6\freesci.dsw
    Visual C++/Studio 2003: msvc71-2003\freesci.sln
-   Visual C++/Studio 2005: msvc8-2005\freesci.sln
-   Visual C++/Studio 2008: msvc9-2008\freesci.sln
+   Visual C++/Studio 2005: msvc80-2005\freesci.sln
+   Visual C++/Studio 2008: msvc90-2008\freesci.sln
 
 2. Set the active project to "freesci - Win32 Release". Rebuild all.
 
-3. The fsci.dll and freesci.exe binaries should be in freesci\bin. 
-   NOTE: sdl.dll MUST be in your path or in the same directory as fsci.dll.
+3. The fsci.dll and freesci.exe binaries will build to the Release folder under
+   your solution directory. A post-build step will copy sdl.dll here as well.
 
-4. You should be good to go! Go buy a Sierra collector's pack at your favorite
-   software store for $15-20 and copy the game directory on the CD to the
-   FreeSCI bin directory, or use the -d command line option (see README).
+4. Copy the game directory on the CD to the same location as freesci.exe, or
+   use the -d command line option (see README).
 
-
-IMPORTANT NOTE: If compiling in Visual C++ 6.0 you may discover what appears
-to be a bug in that product. If you find that the linking of sciv produces
-LNK2001 errors the first time you build, just build again (don't rebuild or
-clean first) and it should link OK.
+5. Start playing FreeSCI!
 
 
 3 Config

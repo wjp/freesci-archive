@@ -1,8 +1,3 @@
-2008-03-14  Christoph Reichenbach  <reichenb@colorado.edu>
-
-	* src/engine/kscripts.c (is_heap_object): Treat objects inlined in
-	deallocated scripts as being dead
-
 2008-03-09  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/vm.c (run_vm): Zero the stack when using `link' in
