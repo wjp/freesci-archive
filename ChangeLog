@@ -1,5 +1,9 @@
 2008-03-14  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/engine/kgraphics.c (_k_view_list_dispose_loop): Fixed silly
+	bug that caused assignment to `signal' variable after applying a
+	bit mask, rather than before.
+
 	* src/engine/kscripts.c (is_heap_object): Treat objects inlined in
 	deallocated scripts as being dead
 

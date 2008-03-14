@@ -1972,7 +1972,8 @@ _k_view_list_dispose_loop(state_t *s, list_t *list, gfxw_dyn_view_t *widget,
 			return -1;
 
 		if (GFXW_IS_DYN_VIEW(widget) && (widget->ID != GFXW_NO_ID)) {
-			if ((signal = (((reg_t *)widget->signalp)->offset & _K_VIEW_SIG_FLAG_DISPOSE_ME))) {
+			signal = ((reg_t *)widget->signalp)->offset;
+			if (signal & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
 				reg_t obj = make_reg(widget->ID, widget->subID);
 				reg_t under_bits = NULL_REG;
 
