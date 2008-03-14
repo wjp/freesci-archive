@@ -674,9 +674,11 @@ script_dump_exports(disasm_state_t *d, script_state_t *s,
                     unsigned char *data, int seeker, int objsize, int pass_no)
 {
 	byte *pexport=(byte *) (data+seeker);
-	word export_count=*pexport++;
+	word export_count=getUInt16(pexport);
 	int i;
 	char buf [256];
+
+	pexport += 2;
 
 	if (pass_no == 2) sciprintf (".exports\n");
 
