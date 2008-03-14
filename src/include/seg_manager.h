@@ -349,6 +349,23 @@ sm_set_synonyms_nr (struct _seg_manager_t* self, int nr, int id, id_flag flag);
 ** A dynamic failure is issued if the specified ID does not reference a proper script.
 */
 
+void
+sm_mark_script_deleted(seg_manager_t* self, int script_nr);
+/* Marks the script identified by its script number as deleted
+** Parameters: (int) script_nr: Script number to mark as deleted
+** This will not actually delete the script.  If references remain present on the
+** heap or the stack, the script will stay in memory in a quasi-deleted state until
+** either unreachable (resulting in its eventual deletion) or reloaded (resulting
+** in its data being updated).
+*/
+
+int
+sm_script_is_marked_as_deleted(seg_manager_t* self, seg_id_t seg);
+/* Determines whether the script referenced by the indicated segment is marked as being deleted.
+** Parameters: (seg_id_t) Segment ID of the script to investigate
+** Returns   : (int) 1 iff seg points to a script and the segment is deleted, 0 otherwise
+** Will return 0 when applied to an invalid or non-script seg.
+*/
 
 
 

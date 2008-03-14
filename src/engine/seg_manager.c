@@ -368,6 +368,22 @@ void sm_mark_script_deleted(seg_manager_t* self, int script_nr)
 	scr->marked_as_deleted = 1;
 }
 
+int
+sm_script_is_marked_as_deleted(seg_manager_t* self, seg_id_t seg)
+{
+	script_t *scr;
+
+	if (!sm_check (self, seg))
+		return 0;
+
+	if (self->heap[seg]->type != MEM_OBJ_SCRIPT)
+		return 0;
+
+	scr = &(self->heap[seg]->data.script);
+	return scr->marked_as_deleted;
+}
+
+
 int sm_deallocate_script (seg_manager_t* self, int script_nr) {
 	int seg = sm_seg_get( self, script_nr );
 

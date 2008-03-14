@@ -327,7 +327,9 @@ int
 is_heap_object(state_t *s, reg_t pos)
 {
 	object_t *obj = obj_get(s, pos);
-	return (obj != NULL && (!(obj->flags & OBJECT_FLAG_FREED)));
+	return (obj != NULL
+		&& (!(obj->flags & OBJECT_FLAG_FREED))
+		&& (!sm_script_is_marked_as_deleted(&s->seg_manager, pos.segment)));
 }
 
 reg_t
