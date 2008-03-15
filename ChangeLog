@@ -1,3 +1,7 @@
+2008-03-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/drivers/sdl_driver.c: Fixed cursor handling.
+
 2008-03-14  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/kgraphics.c (_k_view_list_dispose_loop): Fixed silly

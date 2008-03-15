@@ -154,16 +154,6 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 	return GFX_ERROR;
 }
 
-
-static unsigned char _sdl_zero = 0;
-static void
-sdl_set_null_pointer(struct _gfx_driver *drv)
-{
-	SDL_FreeCursor(SDL_GetCursor());
-	SDL_SetCursor(SDL_CreateCursor(&_sdl_zero, &_sdl_zero, 1, 1, 0, 0));
-	SDL_ShowCursor(SDL_ENABLE);
-}
-
 static int
 sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 {
@@ -198,12 +188,6 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
 	}
-
-	/* If we are using mouse pointer emulation:
-	** Set a transparent 1x1 pixel pointer so that SDL believes
-	** that there actually is something to draw  */
-	if (!drv->capabilities & GFX_CAPABILITY_MOUSE_POINTER)
-		sdl_set_null_pointer(drv);
 
 	S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, i);
 
@@ -249,12 +233,10 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
 	SDL_EventState(SDL_VIDEORESIZE, SDL_IGNORE);
 	SDL_EventState(SDL_KEYUP, SDL_IGNORE);
-	if (drv->capabilities & GFX_CAPABILITY_MOUSE_POINTER)
-		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 
 	SDL_WM_SetCaption("FreeSCI", "freesci");
 
-	SDL_ShowCursor(SDL_ENABLE);
+	SDL_ShowCursor(SDL_DISABLE);
 	S->pointer_data[0] = NULL;
 	S->pointer_data[1] = NULL;
 
@@ -930,13 +912,16 @@ static int sdl_set_pointer (struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 	if (pointer == NULL)
 		SDL_ShowCursor(SDL_DISABLE);
 	else {
+		SDL_Cursor *cursor;
 		for (i = 0; i < 2; i++)
 			if (S->pointer_data[i]) {
 				free(S->pointer_data[i]);
 				S->pointer_data[i] = NULL;
 			}
-		SDL_FreeCursor(SDL_GetCursor());
+
+		cursor = SDL_GetCursor();
 		SDL_SetCursor(sdl_create_cursor_data(drv, pointer));
+		SDL_FreeCursor(cursor);
 		SDL_ShowCursor(SDL_ENABLE);
 	}
 
