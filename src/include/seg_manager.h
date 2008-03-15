@@ -359,6 +359,12 @@ sm_mark_script_deleted(seg_manager_t* self, int script_nr);
 ** in its data being updated).
 */
 
+void
+sm_unmark_script_deleted(seg_manager_t* self, int script_nr);
+/* Marks the script identified by its script number as not deleted
+** Parameters: (int) script_nr: Script number to mark as not deleted
+*/
+
 int
 sm_script_is_marked_as_deleted(seg_manager_t* self, seg_id_t seg);
 /* Determines whether the script referenced by the indicated segment is marked as being deleted.

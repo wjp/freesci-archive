@@ -1,3 +1,8 @@
+2008-03-15  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c (execute_method): Remove deletion mark from
+	scripts when call[be]ing them. 
+
 2008-03-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/sdl_driver.c: Fixed cursor handling.

@@ -368,6 +368,16 @@ void sm_mark_script_deleted(seg_manager_t* self, int script_nr)
 	scr->marked_as_deleted = 1;
 }
 
+void sm_unmark_script_deleted(seg_manager_t* self, int script_nr)
+{
+	script_t *scr;
+	int seg = sm_seg_get( self, script_nr );
+	VERIFY ( sm_check (self, seg), "invalid seg id" );
+
+	scr = &(self->heap[seg]->data.script);
+	scr->marked_as_deleted = 0;
+}
+
 int
 sm_script_is_marked_as_deleted(seg_manager_t* self, seg_id_t seg)
 {
@@ -634,7 +644,9 @@ void sm_decrement_lockers (seg_manager_t* self, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	VERIFY ( sm_check (self, id), "invalid seg id" );
-	self->heap[id]->data.script.lockers--;
+
+	if (self->heap[id]->data.script.lockers > 0)
+		self->heap[id]->data.script.lockers--;
 };
 
 int sm_get_lockers (seg_manager_t* self, int id, id_flag flag) {

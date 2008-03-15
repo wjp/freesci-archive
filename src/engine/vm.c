@@ -280,6 +280,9 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 
 	if (!sm_script_is_loaded (&s->seg_manager, script, SCRIPT_ID)) /* Script not present yet? */
 		script_instantiate(s, script);
+	else
+		sm_unmark_script_deleted(&s->seg_manager, script);
+
 	seg = sm_seg_get( &s->seg_manager, script );
 
 	temp = sm_validate_export_func( &s->seg_manager, pubfunct, seg );
