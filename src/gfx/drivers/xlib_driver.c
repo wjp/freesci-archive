@@ -1354,6 +1354,9 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 
 					    drv->pointer_x = event.xmotion.x;
 					    drv->pointer_y = event.xmotion.y;
+					    if (!sci_event)
+					    	    /* Wake up from sleep */
+					    	    return;
 				    }
 					    break;
 

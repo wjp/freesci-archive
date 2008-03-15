@@ -122,12 +122,6 @@ sdl_blit_surface(gfx_driver_t *drv,
 	return SDL_BlitSurface(src, srcrect, dst, dstrect);
 }
 
-static void
-sdlerror(gfx_driver_t *drv, int line)
-{
-	sdlprintf("Error in line %d\n", line);
-}
-
 static int
 sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
@@ -205,8 +199,8 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	S->used_bytespp = bytespp;
 
-	printf("Using primary SDL surface of %d,%d @%d bpp (%04x)\n",
-	       xsize, ysize, bytespp << 3, S->primary);
+	printf("Using primary SDL surface of %d,%d @%d bpp\n",
+	       xsize, ysize, bytespp << 3);
 
 	/*  if (S->primary->format->BytesPerPixel == 4) {
 		S->alpha_mask = 0xff000000;
@@ -1043,97 +1037,60 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 
 
 void
-sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
+sdl_fetch_event(gfx_driver_t *drv, sci_event_t *sci_event)
 {
 	SDL_Event event;
-	int x_button_xlate[] = {0, 1, 3, 2, 4, 5};
-	struct timeval ctime, timeout_time, sleep_time;
-	long usecs_to_sleep;
-	long time_sec, time_usec;
 
-	sci_gettime(&time_sec, &time_usec);
-	timeout_time.tv_sec = time_sec;
-	timeout_time.tv_usec = time_usec;
-	timeout_time.tv_usec += wait_usec;
+	while (SDL_PollEvent(&event)) {
 
-	/* Calculate wait time */
-	timeout_time.tv_sec += (timeout_time.tv_usec / 1000000);
-	timeout_time.tv_usec %= 1000000;
+		switch (event.type) {
+		case SDL_KEYDOWN: {
+			int modifiers = event.key.keysym.mod;
+			sci_event->type = SCI_EVT_KEYBOARD;
 
-	do {
-		int redraw_pointer_request = 0;
+			S->buckystate = (((modifiers & KMOD_CAPS)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
+					 | ((modifiers & KMOD_CTRL)? SCI_EVM_CTRL : 0)
+					 | ((modifiers & KMOD_ALT)? SCI_EVM_ALT : 0)
+					 | ((modifiers & KMOD_NUM) ? SCI_EVM_NUMLOCK : 0)
+					 | ((modifiers & KMOD_RSHIFT)? SCI_EVM_RSHIFT : 0)
+					 | ((modifiers & KMOD_LSHIFT)? SCI_EVM_LSHIFT : 0));
 
-		while (SDL_PollEvent(&event)) {
-
-			switch (event.type) {
-			case SDL_KEYDOWN: {
-				int modifiers = event.key.keysym.mod;
-				sci_event->type = SCI_EVT_KEYBOARD;
-
-				S->buckystate = (((modifiers & KMOD_CAPS)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
-						 | ((modifiers & KMOD_CTRL)? SCI_EVM_CTRL : 0)
-						 | ((modifiers & KMOD_ALT)? SCI_EVM_ALT : 0)
-						 | ((modifiers & KMOD_NUM) ? SCI_EVM_NUMLOCK : 0)
-						 | ((modifiers & KMOD_RSHIFT)? SCI_EVM_RSHIFT : 0)
-						 | ((modifiers & KMOD_LSHIFT)? SCI_EVM_LSHIFT : 0));
-
-				sci_event->buckybits = S->buckystate;
-				sci_event->data = sdl_map_key(drv, event.key.keysym);
-				if (sci_event->data)
-					return;
-				break;
-			}
-			case SDL_MOUSEBUTTONDOWN:
-				sci_event->type = SCI_EVT_MOUSE_PRESS;
-				sci_event->buckybits = S->buckystate;
-				sci_event->data = event.button.button - 1;
-				drv->pointer_x = event.button.x;
-				drv->pointer_y = event.button.y;
+			sci_event->buckybits = S->buckystate;
+			sci_event->data = sdl_map_key(drv, event.key.keysym);
+			if (sci_event->data)
 				return;
-			case SDL_MOUSEBUTTONUP:
-				sci_event->type = SCI_EVT_MOUSE_RELEASE;
-				sci_event->buckybits = S->buckystate;
-				sci_event->data = event.button.button - 1;
-				drv->pointer_x = event.button.x;
-				drv->pointer_y = event.button.y;
-				return;
-			case SDL_MOUSEMOTION:
-				drv->pointer_x = event.motion.x;
-				drv->pointer_y = event.motion.y;
-				break;
-			case SDL_QUIT:
-				sci_event->type = SCI_EVT_QUIT;
-				return;
-				break;
-			case SDL_VIDEOEXPOSE:
-				break;
-			default:
-				SDLERROR("Received unhandled SDL event %04x\n", event.type);
-			}
+			break;
 		}
-
-		sci_gettime(&time_sec, &time_usec);
-		ctime.tv_sec = time_sec;
-		ctime.tv_usec = time_usec;
-
-		usecs_to_sleep = (timeout_time.tv_sec > ctime.tv_sec)? 1000000 : 0;
-		usecs_to_sleep += timeout_time.tv_usec - ctime.tv_usec;
-		if (ctime.tv_sec > timeout_time.tv_sec) usecs_to_sleep = -1;
-
-		if (usecs_to_sleep > 0) {
-			if (usecs_to_sleep > 10000)
-				usecs_to_sleep = 10000; /* Sleep for a maximum of 10 ms */
-
-			sleep_time.tv_usec = usecs_to_sleep;
-			sleep_time.tv_sec = 0;
-
-			sdl_usec_sleep(drv, usecs_to_sleep);
+		case SDL_MOUSEBUTTONDOWN:
+			sci_event->type = SCI_EVT_MOUSE_PRESS;
+			sci_event->buckybits = S->buckystate;
+			sci_event->data = event.button.button - 1;
+			drv->pointer_x = event.button.x;
+			drv->pointer_y = event.button.y;
+			return;
+		case SDL_MOUSEBUTTONUP:
+			sci_event->type = SCI_EVT_MOUSE_RELEASE;
+			sci_event->buckybits = S->buckystate;
+			sci_event->data = event.button.button - 1;
+			drv->pointer_x = event.button.x;
+			drv->pointer_y = event.button.y;
+			return;
+		case SDL_MOUSEMOTION:
+			drv->pointer_x = event.motion.x;
+			drv->pointer_y = event.motion.y;
+			break;
+		case SDL_QUIT:
+			sci_event->type = SCI_EVT_QUIT;
+			return;
+			break;
+		case SDL_VIDEOEXPOSE:
+			break;
+		default:
+			SDLERROR("Received unhandled SDL event %04x\n", event.type);
 		}
+	}
 
-	} while (usecs_to_sleep >= 0);
-
-	if (sci_event)
-		sci_event->type = SCI_EVT_NONE; /* No event. */
+	sci_event->type = SCI_EVT_NONE; /* No event. */
 }
 
 static sci_event_t
@@ -1141,27 +1098,29 @@ sdl_get_event(struct _gfx_driver *drv)
 {
 	sci_event_t input;
 
-	sdl_fetch_event(drv, 0, &input);
+	sdl_fetch_event(drv, &input);
 	return input;
 }
-
 
 static int
 sdl_usec_sleep(struct _gfx_driver *drv, long usecs)
 {
-	struct timeval ctime;
-	if (usecs > 10000)
-		usecs = 10000;
+	int msecs;
+	SDL_Event event;
 
-	ctime.tv_sec = 0;
-	ctime.tv_usec = usecs;
+	/* Wait at most 10ms to keep mouse cursor responsive. */
+	msecs = usecs / 1000;
+	if (msecs > 10)
+		msecs = 10;
 
-#ifdef _MSC_VER
-	sci_sched_yield(); /* usleep on win32 doesn't really sleep, so let's give up the rest of the quantum to play nice with the sound thread */
-#else
-	usleep(usecs);  /* let's try this out instead, no? */
-	/*  select(0, NULL, NULL, NULL, &ctime); /* Sleep. */
-#endif
+	SDL_PumpEvents();
+	while (SDL_PeepEvents(&event, 1, SDL_GETEVENT,
+	    SDL_EVENTMASK(SDL_MOUSEMOTION)) == 1) {
+		drv->pointer_x = event.motion.x;
+		drv->pointer_y = event.motion.y;
+	}
+
+	SDL_Delay(msecs);
 
 	return GFX_OK;
 }
