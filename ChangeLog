@@ -1,3 +1,8 @@
+2008-03-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/drivers/sdl_driver.c: Lock surfaces when accessing pixels
+	directly.
+
 2008-03-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* doc/sci.tex: Added section on SCI1 MT-32 and GM patch file format.

@@ -518,8 +518,10 @@ sdl_draw_line(struct _gfx_driver *drv, point_t start, point_t end, gfx_color_t c
 					nstart.y, nend.x, nend.yl, scolor, xsize, ysize);
 #endif
 
+				SDL_LockSurface(S->visual[1]);
 				lineColor2(S->visual[1], (Sint16)nstart.x, (Sint16)nstart.y,
 					  (Sint16)nend.x, (Sint16)nend.y, scolor);
+				SDL_UnlockSurface(S->visual[1]);
 
 				if (color.mask & GFX_MASK_PRIORITY) {
 					gfx_draw_line_pixmap_i(S->priority[0], nstart, nend,
@@ -671,11 +673,13 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	if(sdl_blit_surface(drv, S->visual[bufnr], &srect, temp, &drect))
 		SDLERROR("blt failed");
 
+	SDL_LockSurface(temp);
 	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest,
 		       (byte *) temp->pixels, temp->pitch,
 		       S->priority[pribufnr]->index_data,
 		       S->priority[pribufnr]->index_xl, 1,
 		       GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
+	SDL_UnlockSurface(temp);
 
 	srect.x = 0;
 	srect.y = 0;
@@ -719,13 +723,16 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 				S->primary->format->Bmask,
 				S->alpha_mask);
 
-	if (ALPHASURFACE)
-			SDL_SetAlpha(temp, SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
-
 		if (!temp) {
 			SDLERROR("Failed to allocate SDL surface");
 			return GFX_ERROR;
 		}
+
+		if (SDL_MUSTLOCK(temp))
+			sciprintf("Warning: SDL surface for pixmap grabbing requires locking\n");
+
+		if (ALPHASURFACE)
+			SDL_SetAlpha(temp, SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
 
 		srect.x = src.x;
 		srect.y = src.y;
