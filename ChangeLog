@@ -1,5 +1,9 @@
 2008-03-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/gfx/resource/Makefile.am: Updated EXTRA_DIST.
+
+2008-03-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/gfx/drivers/sdl_driver.c: Lock surfaces when accessing pixels
 	directly.
 
