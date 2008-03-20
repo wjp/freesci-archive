@@ -1,3 +1,7 @@
+2008-03-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* doc/sci.tex: Added section on SCI1 MT-32 and GM patch file format.
+
 2008-03-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/sdl_driver.c, src/gfx/drivers/xlib_driver.c:
