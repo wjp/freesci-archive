@@ -235,7 +235,7 @@ reg_t kFPuts(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int handle = UKPV(0);
 	char *data = kernel_dereference_char_pointer(s, argv[1], 0);
 
-	fputs_wrapper(s, handle, strlen(data) + 1, data);
+	fputs_wrapper(s, handle, strlen(data), data);
 	return s->r_acc;
 }
 

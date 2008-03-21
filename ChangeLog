@@ -1,5 +1,9 @@
 2008-03-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/engine/kfile.c (kFPuts): Don't write trailing zero.
+
+2008-03-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/gfx/drivers/sdl_driver.c: Turned off SDL cursor for AmigaOS4.
 
 	* src/scicore/tools.c (sci_sched_yield): Changed fallback
