@@ -161,7 +161,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (xfact > 2 || yfact > 2)
 		drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif
-#ifdef __BEOS__ /* BeOS has been reported not to work well with the mouse pointer at all */
+#if defined(__BEOS__) || defined(__amigaos4__) /* BeOS has been reported not to work well with the mouse pointer at all */
 	drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif
 

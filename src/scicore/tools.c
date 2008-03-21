@@ -571,12 +571,19 @@ sci_sched_yield()
 	snooze(0);
 }
 
-#else
+#elif defined (_WIN32)
 
 void
 sci_sched_yield()
 {
 	sleep(1);
+}
+
+#else
+
+void
+sci_sched_yield()
+{
 }
 
 #endif /* !HAVE_SCHED_YIELD */

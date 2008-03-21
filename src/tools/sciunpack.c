@@ -62,7 +62,7 @@
 #  endif /* HAVE_LIBPNG */
 #endif /* DRAW_GRAPHICS */
 
-#if defined (_MSC_VER) || defined (__BEOS__) || defined(_DOS)
+#if defined (_MSC_VER) || defined (__BEOS__) || defined(_DOS) || defined(__amigaos4__)
 /* [DJ] fchmod is not in Visual C++ RTL - and probably not needed,anyway */
 /* [RS] (see comment above, but read MS-DOS instead of Visual C++ RTL) */
 #  define fchmod(file,mode)
