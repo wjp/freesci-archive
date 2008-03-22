@@ -1385,7 +1385,7 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 	opsize &= 1; /* byte if true, word if false */
 
   
-	sciprintf("%04x: ", pos.offset);
+	sciprintf(PREG": ", PRINT_REG(pos));
 
 	if (print_bytecode) {
 		while (formats[opcode][i]) {
@@ -1842,6 +1842,7 @@ c_codebug(state_t *s)
 		sleep(1); /* Yield to the scheduler, at least a bit */
 		atexit(_codebug_kill_children);
 	}
+	return 0;
 }
 #endif
 
@@ -2397,7 +2398,7 @@ c_gfx_update_zone(state_t *s)
 }
 
 static int
-c_disasm(state_t *s)
+c_disasm_addr(state_t *s)
 {
 	reg_t vpc = cmd_params[0].reg;
 	int op_count = 1;
@@ -2431,6 +2432,35 @@ c_disasm(state_t *s)
 	return 0;
 }
 
+
+static int
+c_disasm(state_t *s)
+{
+	object_t *obj = obj_get(s, cmd_params[0].reg);
+	int selector_id = script_find_selector(s, cmd_params[1].str);
+	reg_t addr;
+
+	if (!obj) {
+		sciprintf("Not an object.");
+		return 1;
+	}
+
+	if (selector_id < 0) {
+		sciprintf("Not a valid selector name.");
+		return 1;
+	}
+
+	if (lookup_selector(s, cmd_params[0].reg, selector_id, NULL, &addr) != SELECTOR_METHOD) {
+		sciprintf("Not a method.");
+		return 1;
+	}
+
+	do {
+		addr = disassemble(s, addr, 0, 0);
+	} while (addr.offset > 0);
+
+	return 0;
+}
 
 static int
 c_sg(state_t *s)
@@ -3500,12 +3530,13 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 #if 0
 			con_hook_command(c_stepover, "so", "", "Executes one operation skipping over sends");
 #endif
-			con_hook_command(c_disasm, "disasm", "!as*", "Disassembles one or more commands\n\n"
-					 "USAGE\n\n  disasm [startaddr] <options>\n\n"
+			con_hook_command(c_disasm_addr, "disasm-addr", "!as*", "Disassembles one or more commands\n\n"
+					 "USAGE\n\n  disasm-addr [startaddr] <options>\n\n"
 					 "  Valid options are:\n"
 					 "  bwt  : Print byte/word tag\n"
 					 "  c<x> : Disassemble <x> bytes\n"
 					 "  bc   : Print bytecode\n\n");
+			con_hook_command(c_disasm, "disasm", "!as", "Disassembles a method by name\n\nUSAGE\n\n  disasm <obj> <method>\n\n");
 			con_hook_command(c_obj, "obj", "!", "Displays information about the\n  currently active object/class.\n"
 					 "\n\nSEE ALSO\n\n  vo.1, accobj.1");
 			con_hook_command(c_accobj, "accobj", "!", "Displays information about an\n  object or class at the\n"

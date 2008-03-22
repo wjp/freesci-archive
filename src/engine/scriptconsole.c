@@ -658,13 +658,16 @@ con_parse (state_t *s, const char *command)
 							** unless they're strings, and store them in the global cmd_params[]
 							** structure  */
 
-						case 'a':
-							if (parse_reg_t(s, cmd_params[i].str,
+						case 'a': {
+							char *oldname = cmd_params[i].str;
+							if (parse_reg_t(s, oldname,
 									&(cmd_params[i].reg))) {
-								sciprintf("%s: '%s' is not an address or object\n", cmd, cmd_params[i].str);
+								sciprintf("%s: '%s' is not an address or object\n", cmd, oldname);
 								do_execute = 0;
 							}
 							break;
+						}
+
 						case 'i': {
 							char *orgstr = cmd_params[i].str;
 

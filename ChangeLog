@@ -1,5 +1,14 @@
 2008-03-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/engine/scriptdebug.c (disassemble): When disassembling,
+	print full address
+	(c_disasm_addr): Renamed `disasm' to `disasm-addr'
+	(c_disasm): Added new `disasm' that operates by object plus method
+	name
+
+	* src/engine/scriptconsole.c (con_parse): Fixed broken error
+	messages when object name parsing failed
+
 	* TODO: Updated, confirmed that Rune's patch fixes the colour
 	depth inconsistency
 
