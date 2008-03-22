@@ -65,7 +65,7 @@ sys_string_set(sys_strings_t *strings, int index, const char *value);
 */
 
 void
-sys_strings_restore(sys_strings_t *new, sys_strings_t *old);
+sys_strings_restore(sys_strings_t *new_strings, sys_strings_t *old_strings);
 /* Cleanup system strings after a gamestate restore
 ** Parameters: (sys_strings_t *) The freshly loaded system strings to clean up
 **             (sys_strings_t *) The old system strings to clean up

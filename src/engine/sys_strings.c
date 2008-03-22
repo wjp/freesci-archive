@@ -100,13 +100,13 @@ sys_string_free_all(sys_strings_t *strings)
 }
 
 void
-sys_strings_restore(sys_strings_t *new, sys_strings_t *old)
+sys_strings_restore(sys_strings_t *new_strings, sys_strings_t *old_strings)
 {
 	int i;
 
 	/* First, pad memory */
 	for (i = 0; i < SYS_STRINGS_MAX; i++) {
-		sys_string_t *s = new->strings + i;
+		sys_string_t *s = new_strings->strings + i;
 		char *data = s->value;
 		if (data) {
 			s->value = (char *)sci_malloc(s->max_size + 1);
@@ -115,5 +115,5 @@ sys_strings_restore(sys_strings_t *new, sys_strings_t *old)
 		}
 	}
 
-	sys_string_set(new, SYS_STRING_SAVEDIR, old->strings[SYS_STRING_SAVEDIR].value);
+	sys_string_set(new_strings, SYS_STRING_SAVEDIR, old_strings->strings[SYS_STRING_SAVEDIR].value);
 }
