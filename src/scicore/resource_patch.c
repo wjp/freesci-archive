@@ -42,6 +42,84 @@ sci1_sprintf_patch_file_name(char *string, resource_t *res)
 	sprintf(string, "%d.%s", res->number, sci_resource_type_suffixes[res->type]);
 }
 
+/* version-agnostic patch application */
+static void
+process_patch(char *entry, int restype, int resnumber, resource_t **resource_p, int *resource_nr_p)
+{
+	int fsize;
+
+	if (restype == sci_invalid_resource)
+		return;
+
+	printf("Patching \"%s\": ", entry);
+
+	if ((fsize = sci_file_size(entry)) < 0)
+		perror("""__FILE__"": (""__LINE__""): sci_file_size()");
+	else {
+		int file;
+		guint8 filehdr[2];
+		resource_t *newrsc = _scir_find_resource_unsorted(*resource_p,
+								  *resource_nr_p,
+								  restype,
+								  resnumber);
+
+		if (fsize < 3) {
+			printf("File too small\n");
+			return;
+		}
+
+		file = open(entry, O_RDONLY);
+		if (!IS_VALID_FD(file))
+			perror("""__FILE__"": (""__LINE__""): open()");
+		else {
+			int patch_data_offset;
+
+			read(file, filehdr, 2);
+
+			patch_data_offset = filehdr[1];
+
+			if ((filehdr[0] & 0x7f) != restype) {
+				printf("Failed; resource type mismatch\n");
+				close(file);
+			} else if (patch_data_offset + 2 >= fsize) {
+				printf("Failed; patch starting at offset %d can't be in file of size %d\n", filehdr[1] + 2, fsize);
+				close(file);
+			} else {
+				/* Adjust for file offset */
+				fsize -= patch_data_offset;
+
+				/* Prepare destination, if neccessary */
+				if (!newrsc) {
+					/* Completely new resource! */
+					++(*resource_nr_p);
+					*resource_p = (resource_t*)sci_realloc(*resource_p,
+									       *resource_nr_p
+									       * sizeof(resource_t));
+					newrsc = (*resource_p-1) + *resource_nr_p;
+					newrsc->alt_sources = NULL;
+				}
+
+				/* Overwrite everything, because we're patching */
+				newrsc->size = fsize - 2;
+				newrsc->id = restype << 11 | resnumber;
+				newrsc->number = resnumber;
+				newrsc->status = SCI_STATUS_NOMALLOC;
+				newrsc->type = restype;
+				newrsc->file = SCI_RESOURCE_FILE_PATCH;
+				newrsc->file_offset = 2 + patch_data_offset;
+
+				_scir_add_altsource(newrsc, SCI_RESOURCE_FILE_PATCH, 2);
+
+				close(file);
+
+				printf("OK\n");
+
+			}
+		}
+	}
+}
+
+
 int
 sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr_p)
 {
@@ -78,77 +156,8 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 			}
 		}
 
-		if (restype != sci_invalid_resource) {
-			int fsize;
+		process_patch (entry, restype, resnumber, resource_p, resource_nr_p);
 
-			printf("Patching \"%s\": ", entry);
-
-			if ((fsize = sci_file_size(entry)) < 0)
-				perror("""__FILE__"": (""__LINE__""): sci_file_size()");
-			else {
-				int file;
-				guint8 filehdr[2];
-				resource_t *newrsc = _scir_find_resource_unsorted(*resource_p,
-										  *resource_nr_p,
-										  restype,
-										  resnumber);
-
-				if (fsize < 3) {
-					printf("File too small\n");
-					entry = sci_find_next(&dir);
-					continue; /* next file */
-				}
-
-				file = open(entry, O_RDONLY);
-				if (!IS_VALID_FD(file))
-					perror("""__FILE__"": (""__LINE__""): open()");
-				else {
-					int patch_data_offset;
-
-					read(file, filehdr, 2);
-
-					patch_data_offset = filehdr[1];
-
-					if ((filehdr[0] & 0x7f) != restype) {
-						printf("Failed; resource type mismatch\n");
-						close(file);
-					} else if (patch_data_offset + 2 >= fsize) {
-						printf("Failed; patch starting at offset %d can't be in file of size %d\n", filehdr[1] + 2, fsize);
-						close(file);
-					} else {
-						/* Adjust for file offset */
-						fsize -= patch_data_offset;
-
-						/* Prepare destination, if neccessary */
-						if (!newrsc) {
-							/* Completely new resource! */
-							++(*resource_nr_p);
-							*resource_p = (resource_t*)sci_realloc(*resource_p,
-											       *resource_nr_p
-											       * sizeof(resource_t));
-							newrsc = (*resource_p-1) + *resource_nr_p;
-							newrsc->alt_sources = NULL;
-						}
-
-						/* Overwrite everything, because we're patching */
-						newrsc->size = fsize - 2;
-						newrsc->id = restype << 11 | resnumber;
-						newrsc->number = resnumber;
-						newrsc->status = SCI_STATUS_NOMALLOC;
-						newrsc->type = restype;
-						newrsc->file = SCI_RESOURCE_FILE_PATCH;
-						newrsc->file_offset = 2 + patch_data_offset;
-
-						_scir_add_altsource(newrsc, SCI_RESOURCE_FILE_PATCH, 2);
-
-						close(file);
-
-						printf("OK\n");
-
-					}
-				}
-			}
-		}
 		entry = sci_find_next(&dir);
 	}
 
@@ -193,67 +202,8 @@ sci1_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 			  restype = sci_invalid_resource;
 		}
 
-		if (restype != sci_invalid_resource) {
-			int fsize;
+		process_patch (entry, restype, resnumber, resource_p, resource_nr_p);
 
-			printf("Patching \"%s\": ", entry);
-
-			if ((fsize = sci_file_size(entry)) < 0)
-				perror("""__FILE__"": (""__LINE__""): sci_file_size()");
-			else {
-				int file;
-				guint8 filehdr[2];
-				resource_t *newrsc = _scir_find_resource_unsorted(*resource_p,
-										  *resource_nr_p,
-										  restype,
-										  resnumber);
-
-				if (fsize < 3) {
-					printf("File too small\n");
-					entry = sci_find_next(&dir);
-					continue; /* next file */
-				}
-
-				file = open(entry, O_RDONLY);
-				if (!IS_VALID_FD(file))
-					perror("""__FILE__"": (""__LINE__""): open()");
-				else {
-
-					read(file, filehdr, 2);
-					if ((filehdr[0] & 0x7f) != restype) {
-						printf("Resource type mismatch\n");
-						close(file);
-					} else {
-
-						if (!newrsc) {
-							/* Completely new resource! */
-							++(*resource_nr_p);
-							*resource_p = (resource_t*)sci_realloc(*resource_p,
-										  *resource_nr_p
-										  * sizeof(resource_t));
-							newrsc = (*resource_p-1) + *resource_nr_p;
-							newrsc->alt_sources = NULL;
-						}
-
-						/* Overwrite everything, because we're patching */
-						newrsc->size = fsize - 2;
-						newrsc->id = restype << 11 | resnumber;
-						newrsc->number = resnumber;
-						newrsc->status = SCI_STATUS_NOMALLOC;
-						newrsc->type = restype;
-						newrsc->file = SCI_RESOURCE_FILE_PATCH;
-						newrsc->file_offset = 2;
-
-						_scir_add_altsource(newrsc, SCI_RESOURCE_FILE_PATCH, 2);
-
-						close(file);
-
-						printf("OK\n");
-
-					}
-				}
-			}
-		}
 		entry = sci_find_next(&dir);
 	}
 

@@ -1,5 +1,14 @@
 2008-03-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* TODO: Updated, confirmed that Rune's patch fixes the colour
+	depth inconsistency
+
+	* src/scicore/resource_patch.c (process_patch): Refactoring:
+	extract function (process_patch) to eliminate duplicity between
+	SCI0 and SCI1 patch handling.  This also copies over the
+	offset-patch support from SCI0 to SCI1, in the assumption that
+	this facility was not removed.
+
 	* src/engine/kgraphics.c (draw_obj_to_control_map): Refactoring:
 	extract function (draw_rect_to_control_map) from
 	draw_obj_to_control_map, followed by some cleanup permitted by

@@ -2,8 +2,6 @@ TODO items:
 
 Scheduled for 0.6.4:
 --------------------
-- Clean up code duplication in resource patch management (SCI0 vs. SCI1)
-- Fix up bytespp distinction: drivers should take bitspp
 - Config subsystem with in-game config changes
 - safer VM support for strings
 
