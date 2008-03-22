@@ -1,3 +1,10 @@
+2008-03-22  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/kgraphics.c (draw_obj_to_control_map): Refactoring:
+	extract function (draw_rect_to_control_map) from
+	draw_obj_to_control_map, followed by some cleanup permitted by
+	this transformation.
+
 2008-03-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/kfile.c (kFPuts): Don't write trailing zero.

@@ -1827,44 +1827,39 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 }
 
 
-static inline void
-draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, reg_t *argp)
+static void
+draw_rect_to_control_map(state_t *s, abs_rect_t abs_zone)
 {
-	abs_rect_t abs_zone;
+	gfxw_box_t *box;
+	gfx_color_t color;
+
+	gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
+
+	SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n",
+		  abs_zone.x, abs_zone.y, abs_zone.xend, abs_zone.yend);
+
+	box = gfxw_new_box(s->gfx_state,
+			   gfx_rect(abs_zone.x, abs_zone.y,
+				    abs_zone.xend - abs_zone.x,
+				    abs_zone.yend - abs_zone.y),
+			   color, color, GFX_BOX_SHADE_FLAT);
+
+	assert_primary_widget_lists(s);
+
+	ADD_TO_CURRENT_PICTURE_PORT(box);
+}
+
+static inline void
+draw_obj_to_control_map(state_t *s, gfxw_dyn_view_t *view)
+{
 	reg_t obj = make_reg(view->ID, view->subID);
 
 	if (!is_object(s, obj))
 		SCIkwarn(SCIkWARNING, "View %d does not contain valid object reference "PREG"\n", view->ID, PRINT_REG(obj));
 
-/*	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;*/
-
-	if (view->ID > 0)
-		abs_zone = get_nsrect(s, make_reg(view->ID, view->subID), 1);
-	else {
-		abs_zone = nsrect_clip(s, view->pos.y,
-				       calculate_nsrect(s, view->pos.x, view->pos.y,
-							view->view, view->loop, view->cel),
-				       view->color.priority);
-	}
-
 	if (!(view->signalp && (((reg_t *)view->signalp)->offset & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
-		gfxw_box_t *box;
-		gfx_color_t color;
-
-		gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
-
-		SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n",
-			  abs_zone.x, abs_zone.y, abs_zone.xend, abs_zone.yend);
-
-		box = gfxw_new_box(s->gfx_state,
-				   gfx_rect(abs_zone.x, abs_zone.y,
-					    abs_zone.xend - abs_zone.x,
-					    abs_zone.yend - abs_zone.y),
-				   color, color, GFX_BOX_SHADE_FLAT);
-
-		assert_primary_widget_lists(s);
-
-		ADD_TO_CURRENT_PICTURE_PORT(box);
+		abs_rect_t abs_zone = get_nsrect(s, make_reg(view->ID, view->subID), 1);
+		draw_rect_to_control_map (s, abs_zone);
 	}
 }
 
@@ -2033,7 +2028,7 @@ _k_view_list_dispose_loop(state_t *s, list_t *list, gfxw_dyn_view_t *widget,
 
 						s->drop_views->add(GFXWC(s->drop_views), GFXW(gfxw_picviewize_dynview(widget)));
 
-						draw_to_control_map(s, widget, funct_nr, argc, argv);
+						draw_obj_to_control_map(s, widget);
 						widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
 						widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
 						dropped = 1;
@@ -2207,7 +2202,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, list_t *list, int optio
 
 
 static void
-_k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, int argc, reg_t *argv)
+_k_prepare_view_list(state_t *s, gfxw_list_t *list, int options)
 {
 	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) list->contents;
 	while (view) {
@@ -2253,7 +2248,7 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 		}
 
 		if ((options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP))
-			draw_to_control_map(s, view, funct_nr, argc, argv);
+			draw_obj_to_control_map(s, view);
 
 
 		/* Extreme Pattern Matching ugliness ahead... */
@@ -2502,19 +2497,25 @@ kAddToPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 		loop = KP_UINT(argv[1]);
 		cel = KP_UINT(argv[2]);
 		x = KP_SINT(argv[3]);
-		y = KP_SINT(argv[4]);
+		y = KP_SINT(argv[4]) + 1 /* magic + 1 */;
 		priority = KP_SINT(argv[5]);
 		control = KP_SINT(argv[6]);
 
-		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y+1 /* magic +1 */ ), 0, view, loop, cel, 0,
+		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x, y), 0, view, loop, cel, 0,
 						priority, -1 /* No priority */ , ALIGN_CENTER, ALIGN_BOTTOM, 0));
 
 		if (!widget) {
 			SCIkwarn(SCIkERROR, "Attempt to single-add invalid picview (%d/%d/%d)\n", view, loop, cel);
 		} else {
 			widget->ID = -1;
-			if (control >= 0)
-				draw_to_control_map(s, (gfxw_dyn_view_t *) widget, funct_nr, argc, argv);
+			if (control >= 0) {
+				abs_rect_t abs_zone = nsrect_clip(s, y,
+								  calculate_nsrect(s, x, y,
+										   view, loop, cel),
+								  priority);
+
+				draw_rect_to_control_map(s, abs_zone);
+			}
 			ADD_TO_CURRENT_PICTURE_PORT(gfxw_picviewize_dynview((gfxw_dyn_view_t *) widget));
 		}
 
@@ -2534,7 +2535,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		SCIkdebug(SCIkGRAPHICS, "Preparing picview list...\n");
 		_k_make_view_list(s, &pic_views, list, 0, funct_nr, argc, argv);
-		_k_prepare_view_list(s, pic_views, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argv);
+		_k_prepare_view_list(s, pic_views, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP);
 		/* Store pic views for later re-use */
 
 		SCIkdebug(SCIkGRAPHICS, "Drawing picview list...\n");
@@ -3306,7 +3307,7 @@ kAnimate(state_t *s, int funct_nr, int argc, reg_t *argv)
 		}
 
 		SCIkdebug(SCIkGRAPHICS, "Handling Dynviews (..step 9 inclusive):\n");
-		_k_prepare_view_list(s, templist, _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argv);
+		_k_prepare_view_list(s, templist, _K_MAKE_VIEW_LIST_CALC_PRIORITY);
 
 		if (s->pic_not_valid) {
 			SCIkdebug(SCIkGRAPHICS, "PicNotValid=%d -> Subalgorithm:\n");
