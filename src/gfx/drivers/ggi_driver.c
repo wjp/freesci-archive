@@ -468,7 +468,7 @@ ggi_draw_line(gfx_driver_t *drv, point_t start, point_t end, gfx_color_t color,
 	endx = end.x;
 	endy = end.y;
 
-	if ((rx = endx) && (ry = endy))
+	if ((rx == endx) && (ry == endy))
 		return ggi_draw_filled_rect(drv, gfx_rect(rx, ry, xw, yw), color, color, GFX_SHADE_FLAT);
 
 	if (color.mask & GFX_MASK_PRIORITY) {
