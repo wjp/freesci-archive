@@ -1370,13 +1370,14 @@ view_transparentize(gfx_pixmap_t *view, byte *pic_index_data,
 extern gfx_pixmap_t *
 gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t *view, int mirrored);
 extern gfx_pixmap_t *
-gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view);
+gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view, int amiga);
 extern void
 _gfx_crossblit_simple(byte *dest, byte *src, int dest_line_width, int src_line_width, int xl, int yl, int bpp);
 
 void
 gfxr_draw_pic01(gfxr_pic_t *pic, int flags, int default_palette, int size,
-	       byte *resource, gfxr_pic0_params_t *style, int resid, int sci1)
+		byte *resource, gfxr_pic0_params_t *style, int resid, int sci1,
+		gfx_pixmap_color_t *static_pal, int static_pal_nr)
 {
 	const int default_palette_table[GFXR_PIC0_PALETTE_SIZE] = {
 		0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -1777,7 +1778,8 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int flags, int default_palette, int size,
 				if (!sci1 && !nodraw) 
 					view = gfxr_draw_cel0(-1,-1,-1, resource + pos, bytesize, NULL, 0); 
 				else
-					view = gfxr_draw_cel1(-1,-1,-1, 0, resource + pos, bytesize, NULL);
+					view = gfxr_draw_cel1(-1,-1,-1, 0, resource + pos, bytesize, NULL,
+							      static_pal_nr == GFX_SCI1_AMIGA_COLORS_NR);
 				pos+=bytesize;
 				if (nodraw) continue;
 				p0printf("(%d, %d)-(%d, %d)\n", 
@@ -1798,6 +1800,12 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int flags, int default_palette, int size,
 				** nibble. 
 				*/
 				if (sci1) {
+					if (static_pal_nr == GFX_SCI1_AMIGA_COLORS_NR) {
+						/* Assume Amiga game */
+						pic->visual_map->colors = static_pal;
+						pic->visual_map->colors_nr = static_pal_nr;
+						pic->visual_map->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+					}
 					view->colors = pic->visual_map->colors;
 					view->colors_nr = pic->visual_map->colors_nr;
 				} else
@@ -1898,7 +1906,8 @@ end_op_loop:
 
 void
 gfxr_draw_pic11(gfxr_pic_t *pic, int flags, int default_palette, int size,
-	       byte *resource, gfxr_pic0_params_t *style, int resid)
+	       byte *resource, gfxr_pic0_params_t *style, int resid,
+	       gfx_pixmap_color_t *static_pal, int static_pal_nr)
 {
 	int has_bitmap = getUInt16(resource + 4);
 	int vector_data_ptr = getUInt16(resource + 16);
@@ -1950,7 +1959,8 @@ gfxr_draw_pic11(gfxr_pic_t *pic, int flags, int default_palette, int size,
 
 
 	gfxr_draw_pic01(pic, flags, default_palette, size - vector_data_ptr,
-			resource + vector_data_ptr, style, resid, 1);
+			resource + vector_data_ptr, style, resid, 1,
+			static_pal, static_pal_nr);
 }
 
 void

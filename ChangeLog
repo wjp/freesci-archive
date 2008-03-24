@@ -1,3 +1,18 @@
+2008-03-24  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/resource/sci_pal_1.c (gfxr_read_pal1_amiga): Added
+	function for loading Amiga palette file.
+	* src/engine/game.c (_reset_graphics_input): Load `spal' file for
+	Amiga games.
+	* src/gfx/resource/sci_resmgr.c: Pass static palette to view drawing
+	functions.
+	* src/gfx/resource/sci_view_1.c, src/gfx/resource/sci_pic_0.c,
+	src/include/gfx_resource.h: Added support for Amiga SCI1 views.
+
+	* src/sfx/iterator.c (_sci1_song_init): Swapped calls of
+	_base_init_channels and _reset_synth_channels on account of
+	Valgrind warning.
+
 2008-03-22  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/engine/scriptdebug.c (disassemble): When disassembling,

@@ -863,13 +863,13 @@ _sci1_song_init(sci1_song_iterator_t *self)
 					printf("Channel %d has mapping bits %02x\n", 
 					       channel_nr, self->data[track_offset] & 0xf0);
 
-				_reset_synth_channels((base_song_iterator_t *) self, 
-						      channel);
 				_base_init_channel(channel,
 						   channel_nr,
 						   /* Skip over header bytes: */
 						   track_offset + 2,
 						   track_offset + end);
+				_reset_synth_channels((base_song_iterator_t *) self, 
+						      channel);
 
 				self->polyphony[self->channels_nr - 1]
 					= SCI1_CHANDATA(-1);

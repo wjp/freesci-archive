@@ -169,22 +169,30 @@ _reset_graphics_input(state_t *s)
 		}
 	} else
 	{
-		resource = scir_find_resource(s->resmgr, sci_palette, 999, 1);
-		if (resource)
-		  {
-		    if (s->version < SCI_VERSION(1,001,000))
-			    s->gfx_state->resstate->static_palette = 
-				    gfxr_read_pal1(999, &s->gfx_state->resstate->static_palette_entries, 
-						   resource->data, resource->size); 
-		    else
-			    s->gfx_state->resstate->static_palette = 
-				    gfxr_read_pal11(999, &s->gfx_state->resstate->static_palette_entries, 
-						    resource->data, resource->size); 
-		    _sci1_alloc_system_colors(s);
-		    scir_unlock_resource(s->resmgr, resource, sci_palette, 999);
-		  } else
-		    sciprintf("Couldn't find the default palette!\n");
-	}						
+		/* Check for Amiga palette file. */
+		FILE *f = sci_fopen("spal", "rb");
+		if (f) {
+			s->gfx_state->resstate->static_palette = 
+			  gfxr_read_pal1_amiga(&s->gfx_state->resstate->static_palette_entries, f);
+			fclose(f);
+			_sci1_alloc_system_colors(s);
+		} else {
+			resource = scir_find_resource(s->resmgr, sci_palette, 999, 1);
+			if (resource) {
+				if (s->version < SCI_VERSION(1,001,000))
+					s->gfx_state->resstate->static_palette = 
+					  gfxr_read_pal1(999, &s->gfx_state->resstate->static_palette_entries, 
+							 resource->data, resource->size); 
+			    	else
+					s->gfx_state->resstate->static_palette = 
+					  gfxr_read_pal11(999, &s->gfx_state->resstate->static_palette_entries, 
+							    resource->data, resource->size); 
+				_sci1_alloc_system_colors(s);
+				scir_unlock_resource(s->resmgr, resource, sci_palette, 999);
+			} else
+				sciprintf("Couldn't find the default palette!\n");
+		}
+	}
 	transparent.mask = 0;
 
 	gfxop_fill_box(s->gfx_state, gfx_rect(0, 0, 320, 200), s->ega_colors[0]); /* Fill screen black */

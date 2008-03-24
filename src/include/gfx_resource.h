@@ -53,6 +53,8 @@
 #define GFX_SCI0_IMAGE_COLORS_NR 16
 #define GFX_SCI0_PIC_COLORS_NR 256
 
+#define GFX_SCI1_AMIGA_COLORS_NR 32
+
 extern int sci0_palette;
 
 /* (gfx_pic_0.c) The 16 EGA base colors */
@@ -263,7 +265,8 @@ gfxr_clear_pic0(gfxr_pic_t *pic, int sci_titlebar_size);
 
 void
 gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette,
-	       int size, byte *resource, gfxr_pic0_params_t *style, int resid, int sci1);
+	       int size, byte *resource, gfxr_pic0_params_t *style, int resid, int sci1,
+	       gfx_pixmap_color_t *static_pal, int static_pal_nr);
 /* Draws a pic resource (all formats prior to SCI1.1)
 ** Parameters: (gfxr_pic_t *) pic: The pic to draw to
 **             (int) fill_normally: If 1, the pic is drawn normally; if 0, all
@@ -274,6 +277,8 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette,
 **             (gfxr_pic0_params_t *) style: The drawing style
 **             (int) resid: The resource ID
 **             (int) sci1: Nonzero if SCI1
+**             (gfx_pixmap_color_t *) static_pal: The static palette
+**             (int) static_pal_nr: Number of entries in static palette
 ** Returns   : (void)
 ** The result is stored in gfxr_visual_map, gfxr_priority_map, and gfxr_control_map.
 ** The palette entry of gfxr_visual_map is never used.
@@ -282,7 +287,8 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int fill_normally, int default_palette,
 
 void
 gfxr_draw_pic11(gfxr_pic_t *pic, int fill_normally, int default_palette,
-	       int size, byte *resource, gfxr_pic0_params_t *style, int resid);
+	       int size, byte *resource, gfxr_pic0_params_t *style, int resid,
+	       gfx_pixmap_color_t *static_pal, int static_pal_nr);
 /* Draws a pic resource (SCI1.1)
 ** Parameters: (gfxr_pic_t *) pic: The pic to draw to
 **             (int) fill_normally: If 1, the pic is drawn normally; if 0, all
@@ -292,6 +298,8 @@ gfxr_draw_pic11(gfxr_pic_t *pic, int fill_normally, int default_palette,
 **             (byte *) resource: Pointer to the resource data
 **             (gfxr_pic0_params_t *) style: The drawing style
 **             (int) resid: The resource ID
+**             (gfx_pixmap_color_t *) static_pal: The static palette
+**             (int) static_pal_nr: Number of entries in static palette
 ** Returns   : (void)
 ** The result is stored in gfxr_visual_map, gfxr_priority_map, and gfxr_control_map.
 ** The palette entry of gfxr_visual_map is never used.
@@ -368,6 +376,15 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size);
 */
 
 gfx_pixmap_color_t *
+gfxr_read_pal1_amiga(int *colors_nr, FILE *f);
+/* Reads an SCI1 palette
+** Parameters: (int *) colors_nr: Pointer to the variable the number of colors
+**                                will be stored in
+**             (FILE *) f: Palette file
+** Returns   : (gfx_pixmap_color_t *) *colors_nr color_t entries with the colors
+*/
+
+gfx_pixmap_color_t *
 gfxr_read_pal11(int id, int *colors_nr, byte *resource, int size);
 /* Reads an SCI1.1 palette
 ** Parameters: (int) id: Resource ID for the palette (or the view it was found in)
@@ -379,11 +396,14 @@ gfxr_read_pal11(int id, int *colors_nr, byte *resource, int size);
 */
 
 gfxr_view_t *
-gfxr_draw_view1(int id, byte *resource, int size);
+gfxr_draw_view1(int id, byte *resource, int size, gfx_pixmap_color_t *static_pal,
+		int static_pal_nr);
 /* Calculates an SCI1 view
 ** Parameters: (int) id: Resource ID of the view
 **             (byte *) resource: Pointer to the resource to read
 **             (int) size: Size of the resource
+**             (gfx_pixmap_color_t *) static_pal: The static palette
+**             (int) static_pal_nr: Number of entries in static palette
 ** Returns   : (gfxr_view_t *) The resulting view
 */
 

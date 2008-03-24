@@ -186,8 +186,61 @@ decompress_sci_view(int id, int loop, int cel, byte *resource, byte *dest, int m
 	return 0;
 }
 
+static int
+decompress_sci_view_amiga(int id, int loop, int cel, byte *resource, byte *dest, int mirrored, int pixmap_size, int size, 
+		    int pos, int xl, int yl, int color_key)
+{
+	int writepos = mirrored? xl - 1 : 0;
+
+	while (writepos < pixmap_size && pos < size) {
+		int op = resource[pos++];
+		int bytes;
+		int color;
+
+		if (op & 0x07) {
+			bytes = op & 0x07;
+			color = op >> 3;
+		} else {
+			bytes = op >> 3;
+			color = color_key;
+		}
+
+		if (mirrored) {
+			while (bytes--) {
+				dest[writepos--] = color;
+				/* If we've just written the first pixel of a line... */
+				if (!((writepos + 1) % xl)) {
+					/* Then move to the end of next line */
+					writepos += 2 * xl;
+
+					if (writepos >= pixmap_size && bytes)
+					{
+						GFXWARN("View %02x:(%d/%d) writing out of bounds\n", id, loop, cel);
+						break;
+					}
+				}
+			}
+		} else {
+			if (writepos + bytes > pixmap_size) {
+				GFXWARN("View %02x:(%d/%d) describes more bytes than needed: %d/%d bytes at rel. offset 0x%04x\n",
+					id, loop, cel, writepos-bytes, pixmap_size, pos - 1);
+				bytes = pixmap_size - writepos;
+			}
+			memset(dest + writepos, color, bytes);
+			writepos += bytes;
+		}
+	}
+
+	if (writepos < pixmap_size) {
+			GFXWARN("View %02x:(%d/%d) not enough pixel data in view\n", id, loop, cel);
+			return 1;
+	}
+
+	return 0;
+}
+
 gfx_pixmap_t *
-gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view)
+gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view, int amiga)
 {
 	int xl = get_int_16(resource);
 	int yl = get_int_16(resource + 2);
@@ -216,8 +269,14 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 		return NULL;
 	}
 
-	decompress_failed = decompress_sci_view(id, loop, cel, resource, dest, mirrored, pixmap_size, size, pos, 
-						pos, xl, yl, retval->color_key);
+	if (amiga)
+		decompress_failed = decompress_sci_view_amiga(id, loop, cel,
+			resource, dest, mirrored, pixmap_size, size, pos, 
+			xl, yl, retval->color_key);
+	else
+		decompress_failed = decompress_sci_view(id, loop, cel,
+			resource, dest, mirrored, pixmap_size, size, pos, 
+			pos, xl, yl, retval->color_key);
 
 	if (decompress_failed) {
 		gfx_free_pixmap(NULL, retval);
@@ -228,7 +287,7 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 }
 
 static int
-gfxr_draw_loop1(gfxr_loop_t *dest, int id, int loop, int mirrored, byte *resource, int offset, int size, gfxr_view_t *view)
+gfxr_draw_loop1(gfxr_loop_t *dest, int id, int loop, int mirrored, byte *resource, int offset, int size, gfxr_view_t *view, int amiga)
 {
 	int i;
 	int cels_nr = get_int_16(resource + offset);
@@ -254,7 +313,7 @@ gfxr_draw_loop1(gfxr_loop_t *dest, int id, int loop, int mirrored, byte *resourc
 			GFXERROR("View %02x:(%d/%d) supposed to be at illegal offset 0x%04x\n", id, loop, i, cel_offset);
 			cel = NULL;
 		} else
-			cel = gfxr_draw_cel1(id, loop, i, mirrored, resource + cel_offset, size - cel_offset, view);
+			cel = gfxr_draw_cel1(id, loop, i, mirrored, resource + cel_offset, size - cel_offset, view, amiga);
 
 		if (!cel) {
 			dest->cels_nr = i;
@@ -275,12 +334,14 @@ gfxr_draw_loop1(gfxr_loop_t *dest, int id, int loop, int mirrored, byte *resourc
 /*static byte view_magics[V1_MAGICS_NR] = {0x80, 0x00, 0x00, 0x00, 0x00};*/
 
 gfxr_view_t *
-gfxr_draw_view1(int id, byte *resource, int size)
+gfxr_draw_view1(int id, byte *resource, int size, gfx_pixmap_color_t *static_pal,
+		int static_pal_nr)
 {
 	int i;
 	int palette_offset;
 	gfxr_view_t *view;
 	int mirror_mask;
+	int amiga = 0;
 
 	if (size < V1_FIRST_LOOP_OFFSET + 8) {
 		GFXERROR("Attempt to draw empty view %04x\n", id);
@@ -324,8 +385,13 @@ gfxr_draw_view1(int id, byte *resource, int size)
 		free(view);
 		return NULL;
 	    }
-	} else
-	{
+	} else if (static_pal_nr == GFX_SCI1_AMIGA_COLORS_NR) {
+		/* Assume we're running an amiga game. */
+		amiga = 1;
+		view->colors = static_pal;
+		view->colors_nr = static_pal_nr;
+		view->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+	} else {
 	    GFXWARN("view %04x: Doesn't have a palette. Can FreeSCI handle this?\n", view->ID);
 	    view->colors = NULL;
 	    view->colors_nr = 0;
@@ -343,7 +409,7 @@ gfxr_draw_view1(int id, byte *resource, int size)
 		}
 
 		if (error_token || gfxr_draw_loop1(view->loops + i, id, i, mirror_mask & (1<<i), 
-						   resource, loop_offset, size, view)) {
+						   resource, loop_offset, size, view, amiga)) {
 			/* An error occured */
 			view->loops_nr = i;
 			gfxr_free_view(NULL, view);

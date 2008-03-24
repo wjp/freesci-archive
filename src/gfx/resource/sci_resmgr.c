@@ -104,25 +104,31 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 		if (need_unscaled)
 		{
 			if (state->version == SCI_VERSION_1_1)
-				gfxr_draw_pic11(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id); 
+				gfxr_draw_pic11(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id,
+						state->static_palette, state->static_palette_entries); 
 			else
-				gfxr_draw_pic01(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id, 1); 
+				gfxr_draw_pic01(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id, 1,
+						state->static_palette, state->static_palette_entries);
 		}
 		if (scaled_pic && scaled_pic->undithered_buffer)
 			memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
 
 		if (state->version == SCI_VERSION_1_1)
-			gfxr_draw_pic11(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id);
+			gfxr_draw_pic11(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id,
+					state->static_palette, state->static_palette_entries);
 		else
-			gfxr_draw_pic01(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id, state->version);
+			gfxr_draw_pic01(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id, state->version,
+					state->static_palette, state->static_palette_entries);
 	} else {
 		if (need_unscaled)
-			gfxr_draw_pic01(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id, 0);
+			gfxr_draw_pic01(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id, 0,
+					state->static_palette, state->static_palette_entries);
 
 		if (scaled_pic && scaled_pic->undithered_buffer)
 			memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
 
-		gfxr_draw_pic01(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id, 0);
+		gfxr_draw_pic01(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id, 0,
+				state->static_palette, state->static_palette_entries);
 		if (need_unscaled)
 			gfxr_remove_artifacts_pic0(scaled_pic, unscaled_pic);
 
@@ -187,7 +193,7 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 	case SCI_VERSION_01_VGA_ODD:
 	case SCI_VERSION_1_EARLY:
 	case SCI_VERSION_1_LATE:
-		result=gfxr_draw_view1(resid, res->data, res->size); 
+		result=gfxr_draw_view1(resid, res->data, res->size, state->static_palette, state->static_palette_entries); 
 		break;
 	case SCI_VERSION_1_1:
 	case SCI_VERSION_32:

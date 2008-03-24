@@ -147,4 +147,32 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 	return retval;
 }
 
+gfx_pixmap_color_t *
+gfxr_read_pal1_amiga(int *colors_nr, FILE *f)
+{
+	int i;
+	gfx_pixmap_color_t *retval;
+
+	retval = (gfx_pixmap_color_t*)sci_malloc(sizeof(gfx_pixmap_color_t) * 32);
+
+	for (i = 0; i < 32; i++) {
+		int b1, b2;
+
+		b1 = fgetc(f);
+		b2 = fgetc(f);
+
+		if (b1 == EOF || b2 == EOF) {
+			GFXERROR("Palette file ends prematurely\n");
+			return NULL;
+		}
+
+		retval[i].global_index = GFX_COLOR_INDEX_UNMAPPED;
+		retval[i].r = (b1 & 0xf) * 0x11;
+		retval[i].g = (b2 & 0xf0) * 0x11;
+		retval[i].b = (b2 & 0xf) * 0x11;
+	}
+
+	*colors_nr = 32;
+	return retval;
+}
 
