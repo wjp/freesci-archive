@@ -168,7 +168,7 @@ gfxr_read_pal1_amiga(int *colors_nr, FILE *f)
 
 		retval[i].global_index = GFX_COLOR_INDEX_UNMAPPED;
 		retval[i].r = (b1 & 0xf) * 0x11;
-		retval[i].g = (b2 & 0xf0) * 0x11;
+		retval[i].g = ((b2 & 0xf0) >> 4) * 0x11;
 		retval[i].b = (b2 & 0xf) * 0x11;
 	}
 
