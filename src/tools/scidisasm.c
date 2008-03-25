@@ -460,7 +460,10 @@ script_dump_object(disasm_state_t *d, script_state_t *s,
 
 	seeker += 8;
 
-	sels=d->class_selectors [species];
+	if (species < d->class_count)
+		sels=d->class_selectors [species];
+	else
+		sels=NULL;
 
 	while (selectors--) {
 		if (pass_no == 2) {
