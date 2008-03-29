@@ -1,3 +1,9 @@
+2008-03-29  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kgraphics.c (_k_dirloop): Fixed angles for late SCI0.
+	* src/include/versions.h: Use 2nd version of DirLoop semantics
+	starting from 0.000.395.
+
 2008-03-25  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/tools/scidisasm.c: Fix decoding of classes when the species

@@ -784,11 +784,11 @@ _k_dirloop(reg_t obj, word angle, state_t *s, int funct_nr,
 	if (s->version >= SCI_VERSION_FTU_2ND_ANGLES) {
 		if (angle < 45)
 			loop = 3;
-		else if (angle < 135)
+		else if (angle < 136)
 			loop = 0;
 		else if (angle < 225)
 			loop = 2;
-		else if (angle < 314)
+		else if (angle < 316)
 			loop = 1;
 		else
 			loop = 3;
