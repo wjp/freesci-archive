@@ -62,6 +62,15 @@ get_angle(int xrel, int yrel)
 		int val = (int) (180.0/PI * atan2(xrel, -yrel));
 		if (val < 0)
 			val += 360;
+
+		/* Take care of OB1 differences between SSCI and
+		FSCI. SCI games sometimes check for equality with
+		"round" angles */
+		if (val % 45 == 44)
+			val++; 
+		else if (val % 45 == 1)
+			val--;
+
 		return val;
 	}
 }

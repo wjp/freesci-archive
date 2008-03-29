@@ -1,3 +1,10 @@
+2008-03-29  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/seg_manager.c: Make relocation failures non-fatal.
+
+	* src/engine/kmath.c (get_angle): Take care of OB1 differences
+	with SSCI when aiming for multiples of 45 degrees.
+
 2008-03-29  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/kgraphics.c (_k_dirloop): Fixed angles for late SCI0.
