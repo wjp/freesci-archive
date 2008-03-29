@@ -884,8 +884,10 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 						  k,
 						  scr->objects[k].pos.offset,
 						  scr->objects[k].variables_nr);
-				sciprintf("Triggering breakpoint...\n");
-				BREAKPOINT();
+// SQ3 script 71 has broken relocation entries.
+// Since this is mainstream, we can't break out as we used to do.
+				sciprintf("Trying to continue anyway...\n");
+//				BREAKPOINT(); 
 			}
 		}
 	}
