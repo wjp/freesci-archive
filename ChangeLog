@@ -1,3 +1,10 @@
+2008-04-02  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kstring.c (kFormat): Fixed an alignment bug.
+
+	* src/engine/kmath.c (kGetAngle): New implementation to match SSCI
+	semantics more closely.
+
 2008-04-02  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (_k_make_view_list): Be more resilient to

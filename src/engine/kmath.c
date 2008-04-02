@@ -78,10 +78,42 @@ get_angle(int xrel, int yrel)
 reg_t
 kGetAngle(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int xrel = SKPV(2) - SKPV(0);
-	int yrel = SKPV(3) - SKPV(1);
+	/* Based on behavior observed with a test program created with
+	** SCI Studio.
+	*/
+	int x1 = SKPV(0);
+	int y1 = SKPV(1);
+	int x2 = SKPV(2);
+	int y2 = SKPV(3);
+	int xrel = x2 - x1;
+	int yrel = y1 - y2; /* y-axis is mirrored. */
+	int angle;
 
-	return make_reg(0, get_angle(xrel, yrel));
+	/* Move (xrel, yrel) to first quadrant. */ 
+	if (y1 < y2)
+		yrel = -yrel;
+	if (x2 < x1)
+		xrel = -xrel;
+
+	/* Compute angle in grads. */
+	if (yrel == 0 && xrel == 0)
+		angle = 0;
+	else
+		angle = 100 * xrel / (xrel + yrel);
+
+	/* Fix up angle for actual quadrant of (xrel, yrel). */
+	if (y1 < y2)
+		angle = 200 - angle;
+	if (x2 < x1)
+		angle = 400 - angle;
+
+	/* Convert from grads to degrees by merging grad 0 with grad 1,
+	** grad 10 with grad 11, grad 20 with grad 21, etc. This leads to
+	** "degrees" that equal either one or two grads.
+	*/
+	angle -= (angle + 9) / 10;
+
+	return make_reg(0, angle);
 }
 
 

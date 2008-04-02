@@ -678,7 +678,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 				if (padding > 0) {
 					if (align > 0) {
 						memmove(writestart + padding,
-							writestart, padding);
+							writestart, written);
 						memset(writestart, fillchar, padding);
 					} else {
 						memset(target, ' ', padding);
