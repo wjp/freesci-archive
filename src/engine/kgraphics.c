@@ -2167,7 +2167,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, list_t *list, int optio
 	node = LOOKUP_NODE(list->first);
 	while (node) {
 		reg_t obj = node->value; /* The object we're using */
-		reg_t next_node = node->succ;
+		reg_t next_node;
 		gfxw_dyn_view_t *widget;
 
 		if (options & _K_MAKE_VIEW_LIST_CYCLE) {
@@ -2180,7 +2180,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, list_t *list, int optio
 			}
 		}
 
-
+		next_node = node->succ; /* In case the cast list was changed */
 		widget = _k_make_dynview_obj(s, obj, options, sequence_nr--,
 					     funct_nr, argc, argv);
 		if (widget) 
