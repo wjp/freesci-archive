@@ -1,3 +1,7 @@
+2008-04-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/gfx_console.c: Forward ported fixes from stable branch.
+
 2008-04-02  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/kstring.c (kFormat): Fixed an alignment bug.
