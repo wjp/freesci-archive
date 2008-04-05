@@ -525,8 +525,27 @@ kDeleteKey(state_t *s, int funct_nr, int argc, reg_t *argv)
 typedef struct
 {
 	reg_t key, value;
-	int order;
+	reg_t order;
 } sort_temp_t;
+
+int
+sort_temp_cmp(const void *p1, const void *p2)
+{
+	sort_temp_t *st1 = (sort_temp_t *) p1;
+	sort_temp_t *st2 = (sort_temp_t *) p2;
+
+	if (st1->order.segment < st1->order.segment ||
+	    (st1->order.segment == st1->order.segment &&
+	     st1->order.offset < st2->order.offset))
+		return -1;
+
+	if (st1->order.segment > st2->order.segment ||
+	    (st1->order.segment == st2->order.segment &&
+	     st1->order.offset > st2->order.offset))
+		return 1;
+
+	return 0;
+}
 
 reg_t
 kSort(state_t *s, int funct_nr, int argc, reg_t *argv)
@@ -537,9 +556,9 @@ kSort(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	int input_size = GET_SEL32SV(source, size);
 
-	int i = 0, j, ordval;
+	int i;
 
-	sort_temp_t *temparray = (sort_temp_t *) 
+	sort_temp_t *temp_array = (sort_temp_t *) 
 		malloc(sizeof(sort_temp_t)*input_size);
 
 	reg_t input_data = GET_SEL32(source, elements);
@@ -560,41 +579,30 @@ kSort(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	PUT_SEL32V(dest, size, input_size);
 
-	list = LOOKUP_NULL_LIST(input_data);
-
+	list = LOOKUP_LIST(input_data);
 	node = LOOKUP_NODE(list->first);
 
+	i = 0;
 	while (node)
 	{
 		invoke_selector(INV_SEL(order_func, doit, 0), 1, node->value);
-
-		ordval=s->r_acc.offset;
-
-		j=i-1;
-		while (j>=0)
-		{
-			if (ordval>temparray[j].order)
-				break;
-			j--;
-		}
-		j++;
-
-		memmove(&(temparray[j+1]),&(temparray[j]),(i-j)*sizeof(sort_temp_t));
-		temparray[j].key=node->key;
-		temparray[j].value=node->value;
-		temparray[j].order=ordval;
+		temp_array[i].key = node->key;
+		temp_array[i].value = node->value;
+		temp_array[i].order = s->r_acc;
 		i++;
-		node=LOOKUP_NODE(node->succ);
+		node = LOOKUP_NODE(node->succ);
 	}
+
+	qsort(temp_array, input_size, sizeof(sort_temp_t), sort_temp_cmp);
 
 	for (i=0;i<input_size;i++)
 	{
-		reg_t node = _k_new_node(s, temparray[i].key,
-					 temparray[i].value);
+		reg_t node = _k_new_node(s, temp_array[i].key,
+					 temp_array[i].value);
 		_k_add_to_end(s, output_data, node);
 	}
 
-	free(temparray);
+	free(temp_array);
 
 	return s->r_acc;
 }
