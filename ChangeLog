@@ -1,3 +1,7 @@
+2008-04-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	 * src/sfx/seq/mt32.c: Removed some unused tables.
+
 2008-04-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/gfx_console.c: Forward ported fixes from stable branch.
