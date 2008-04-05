@@ -1,3 +1,8 @@
+2008-04-05  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c:  Use signed math for array index calculation
+	and division/modulus.
+
 2008-04-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	 * src/sfx/seq/mt32.c: Removed some unused tables.

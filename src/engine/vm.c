@@ -127,6 +127,23 @@ validate_arithmetic(reg_t reg)
 }
 
 static inline int
+signed_validate_arithmetic(reg_t reg)
+{
+	if (reg.segment) {
+		if (!_weak_validations)
+			script_debug_flag = script_error_flag = 1;
+		if (sci_debug_flags & 4)
+			sciprintf("[VM] Attempt to read arithmetic value from non-zero segment [%04x]\n", reg.segment);
+		return 0;
+	}
+	
+	if (reg.offset&0x8000)
+		return (signed) (reg.offset)-65536;
+	else
+		return reg.offset;
+}
+
+static inline int
 validate_variable(reg_t *r, reg_t *stack_base, int type, int max, int index, int line)
 {
 	const char *names[4] = {"global", "local", "temp", "param"};
@@ -184,6 +201,7 @@ validate_write_var(reg_t *r, reg_t *stack_base, int type, int max, int index, in
 
 #  define validate_stack_addr(s, sp) sp
 #  define validate_arithmetic(r) ((r).offset)
+#  define signed_validate_arithmetic(r) ((int) ((r).offset)&0x8000 ? (signed) ((r).offset)-65536 : ((r).offset))
 #  define validate_variable(r, sb, t, m, i, l)
 #  define validate_read_var(r, sb, t, m, i, l) ((r)[i])
 #  define validate_write_var(r, sb, t, m, i, l, v) ((r)[i] = (v))
@@ -197,7 +215,7 @@ validate_write_var(reg_t *r, reg_t *stack_base, int type, int max, int index, in
 #define WRITE_VAR16(type, index, value) WRITE_VAR(type, index, make_reg(0, value));
 
 #define ACC_ARITHMETIC_L(op) make_reg(0, (op validate_arithmetic(s->r_acc)))
-#define ACC_AUX_LOAD() aux_acc = validate_arithmetic(s->r_acc)
+#define ACC_AUX_LOAD() aux_acc = signed_validate_arithmetic(s->r_acc)
 #define ACC_AUX_STORE() s->r_acc = make_reg(0, aux_acc)
 
 #define OBJ_PROPERTY(o, p) (*validate_property(o, p))
@@ -935,13 +953,13 @@ run_vm(state_t *s, int restoring)
 
 		case 0x04: /* div */
 			ACC_AUX_LOAD();
-			aux_acc = aux_acc? ((gint16)POP()) / aux_acc : 0;
+			aux_acc = aux_acc != 0 ? ((gint16)POP()) / aux_acc : 0;
 			ACC_AUX_STORE();
 			break;
 
 		case 0x05: /* mod */
 			ACC_AUX_LOAD();
-			aux_acc = (aux_acc > 0)? POP() % aux_acc : 0;
+			aux_acc = aux_acc != 0 ? ((gint16)POP()) % aux_acc : 0;
 			ACC_AUX_STORE();
 			break;
 
@@ -1306,7 +1324,7 @@ run_vm(state_t *s, int restoring)
 			r_temp.offset = variables[var_number] - variables_base[var_number];
 
 			if (temp & 0x08)  /* Add accumulator offset if requested */
-				r_temp.offset += validate_arithmetic(s->r_acc);
+				r_temp.offset += signed_validate_arithmetic(s->r_acc);
 
 			r_temp.offset += opparams[1];  /* Add index */
 			r_temp.offset *= sizeof(reg_t);
@@ -1441,7 +1459,7 @@ run_vm(state_t *s, int restoring)
 		case 0x4a: /* lati */
 		case 0x4b: /* lapi */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
-			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			var_number = opparams[0] + signed_validate_arithmetic(s->r_acc);
 			s->r_acc = READ_VAR(var_type, var_number, s->r_acc);
 			break;
 
@@ -1450,7 +1468,7 @@ run_vm(state_t *s, int restoring)
 		case 0x4e: /* lsti */
 		case 0x4f: /* lspi */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
-			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			var_number = opparams[0] + signed_validate_arithmetic(s->r_acc);
 			PUSH32(READ_VAR(var_type, var_number, s->r_acc));
 			break;
 
@@ -1480,7 +1498,7 @@ run_vm(state_t *s, int restoring)
 			** of sense otherwise, with acc being used for two things
 			** simultaneously... */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
-			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			var_number = opparams[0] + signed_validate_arithmetic(s->r_acc);
 			WRITE_VAR(var_type, var_number, s->r_acc = POP32());
 			break;
 
@@ -1489,7 +1507,7 @@ run_vm(state_t *s, int restoring)
 		case 0x5e: /* ssti */
 		case 0x5f: /* sspi */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
-			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			var_number = opparams[0] + signed_validate_arithmetic(s->r_acc);
 			WRITE_VAR(var_type, var_number, POP32());
 			break;
 
@@ -1525,7 +1543,7 @@ run_vm(state_t *s, int restoring)
 		case 0x6a: /* +ati */
 		case 0x6b: /* +api */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
-			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			var_number = opparams[0] + signed_validate_arithmetic(s->r_acc);
 			s->r_acc = make_reg(0,
 					    1 + validate_arithmetic(READ_VAR(var_type,
 									     var_number,
@@ -1538,7 +1556,7 @@ run_vm(state_t *s, int restoring)
 		case 0x6e: /* +sti */
 		case 0x6f: /* +spi */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
-			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			var_number = opparams[0] + signed_validate_arithmetic(s->r_acc);
 			r_temp = make_reg(0,
 					  1 + validate_arithmetic(READ_VAR(var_type,
 									   var_number,
@@ -1577,7 +1595,7 @@ run_vm(state_t *s, int restoring)
 		case 0x7a: /* -ati */
 		case 0x7b: /* -api */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
-			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			var_number = opparams[0] + signed_validate_arithmetic(s->r_acc);
 			s->r_acc = make_reg(0,
 					    -1 + validate_arithmetic(READ_VAR(var_type,
 									      var_number,
@@ -1590,7 +1608,7 @@ run_vm(state_t *s, int restoring)
 		case 0x7e: /* -sti */
 		case 0x7f: /* -spi */
 			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
-			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			var_number = opparams[0] + signed_validate_arithmetic(s->r_acc);
 			r_temp = make_reg(0,
 					  -1 + validate_arithmetic(READ_VAR(var_type,
 									    var_number,
