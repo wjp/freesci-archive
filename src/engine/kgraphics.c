@@ -2181,6 +2181,11 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, list_t *list, int optio
 		}
 
 		next_node = node->succ; /* In case the cast list was changed */
+
+		if (list->first.segment == 0 &&
+		    list->first.offset == 0) /* The cast list was completely emptied! */
+			break;
+
 		widget = _k_make_dynview_obj(s, obj, options, sequence_nr--,
 					     funct_nr, argc, argv);
 		if (widget) 

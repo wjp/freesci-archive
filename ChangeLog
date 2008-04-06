@@ -1,3 +1,8 @@
+2008-04-06  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (_k_make_view_list): Further resilience
+	fixes. 
+
 2008-04-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/pcm_device/alsa.c (pcmout_alsa_exit),
