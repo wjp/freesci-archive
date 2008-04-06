@@ -1,3 +1,9 @@
+2008-04-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/pcm_device/alsa.c (pcmout_alsa_exit),
+	src/sfx/pcm_device/sdl.c (pcmout_sdl_exit): Free audbuf after
+	stopping audio.
+
 2008-04-05  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/vm.c:  Use signed math for array index calculation

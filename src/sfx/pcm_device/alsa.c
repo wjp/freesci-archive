@@ -342,13 +342,13 @@ static void
 pcmout_alsa_exit(sfx_pcm_device_t *self)
 {
 	int err;
-	sfx_audbuf_free(&audio_buffer);
 	if ((err = snd_pcm_drop(handle)) < 0) {
 		sciprintf("[SND:ALSA] Can't stop PCM device: %s\n", snd_strerror(err));
 	}
 	if ((err = snd_pcm_close(handle)) < 0) {
 		sciprintf("[SND:ALSA] Can't close PCM device: %s\n", snd_strerror(err));
 	}
+	sfx_audbuf_free(&audio_buffer);
 }
 
 static int
