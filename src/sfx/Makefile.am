@@ -25,9 +25,3 @@ LDADD = \
 TESTS = test-iterator
 
 
-
-
-
-
-
-

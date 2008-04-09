@@ -1,3 +1,11 @@
+2008-04-09  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/instrument-map.c (sfx_instrument_map_load_sci): Added
+	SCI instrument map support
+
+	* src/sfx/seq/gm.c (midi_gm_reset_timer): Added General MIDI
+	driver
+
 2008-04-06  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (_k_make_view_list): Further resilience

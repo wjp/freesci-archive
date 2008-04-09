@@ -28,12 +28,14 @@
 #include <sfx_sequencer.h>
 #include <resource.h>
 
+extern sfx_sequencer_t sfx_sequencer_gm;
 extern sfx_sequencer_t sfx_sequencer_mt32;
 #ifdef HAVE_SYS_SOUNDCARD_H
 extern sfx_sequencer_t sfx_sequencer_oss_adlib;
 #endif
 
 sfx_sequencer_t *sfx_sequencers[] = {
+	&sfx_sequencer_gm,
 	&sfx_sequencer_mt32,
 #ifdef HAVE_SYS_SOUNDCARD_H
 	&sfx_sequencer_oss_adlib,
