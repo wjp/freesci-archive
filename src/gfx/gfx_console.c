@@ -28,6 +28,7 @@
 
 
 #include <console.h>
+#include <ctype.h>
 
 #ifdef WANT_CONSOLE
 #  define CON_MAX_CLUSTERS 16
@@ -188,7 +189,7 @@ con_gfx_show(gfx_state_t *state)
 	if (!con.input_prompt) {
 		con.input_prompt = _con_render_text(state, CON_GFX_PROMPT, -1,
 						    &con.color_input, NULL);
-		con.input_text = sci_malloc(con.input_bufsize = 64);
+		con.input_text = (char*)sci_malloc(con.input_bufsize = 64);
 		con.input_text[0] = 0;
 		con.input_history_pos = 0;
 		con.partial_write = 0;
@@ -247,7 +248,7 @@ con_gfx_hide(gfx_state_t *state)
 static inline con_buffer_t *
 _create_con_buffer(con_buffer_t *prev)
 {
-	con_buffer_t *buf = sci_malloc(sizeof (con_buffer_t));
+	con_buffer_t *buf = (con_buffer_t *)sci_malloc(sizeof (con_buffer_t));
 	int i;
 
 	for (i = 0; i < CON_CLUSTER_SIZE; i++)
@@ -297,7 +298,7 @@ _add_into_con_buffer(gfx_pixmap_t *pixmap, char *text)
 
 		needlen += strlen(target->text);
 		oldtext = target->text;
-		target->text = sci_malloc(needlen+1);
+		target->text = (char *)sci_malloc(needlen+1);
 		strcpy(target->text, oldtext);
 		strcat(target->text, text);
 		free(oldtext);
@@ -323,7 +324,7 @@ _add_into_con_buffer(gfx_pixmap_t *pixmap, char *text)
 		target->pixmaps = NULL;
 		target->pixmaps_nr = 0;
 	} else {
-		target->pixmaps = sci_malloc(sizeof(gfx_pixmap_t *));
+		target->pixmaps = (gfx_pixmap_t **)sci_malloc(sizeof(gfx_pixmap_t *));
 		target->pixmaps[0] = pixmap;
 		target->pixmaps_nr = 1;
 	}
@@ -463,7 +464,7 @@ _init_con_font()
 
 	con_font.ID = 0;
 	con_font.chars_nr = CON_BUILTIN_CHARS_NR;
-	con_font.widths = sci_malloc(sizeof(int) * CON_BUILTIN_CHARS_NR);
+	con_font.widths = (int *)sci_malloc(sizeof(int) * CON_BUILTIN_CHARS_NR);
 	for (i = 0; i < CON_BUILTIN_CHARS_NR; i++)
 		con_font.widths[i] = CON_BUILTIN_CHARS_WIDTH;
 	con_font.row_size = (CON_BUILTIN_CHARS_WIDTH + 7) >> 3;
@@ -478,8 +479,8 @@ static gfx_pixmap_t **
 _con_render_text_multiline(gfx_state_t *state, char *text, int maxchars, int *nr)
 {
 	int pixmaps_allocd = 1;
-	gfx_pixmap_t **retval = sci_malloc(sizeof(gfx_pixmap_t *) * pixmaps_allocd);
-	char *printbuf = sci_malloc(maxchars + 8);
+	gfx_pixmap_t **retval = (gfx_pixmap_t **)sci_malloc(sizeof(gfx_pixmap_t *) * pixmaps_allocd);
+	char *printbuf = (char *)sci_malloc(maxchars + 8);
 	int index = 0;
 	int overwrap = 0;
 
@@ -509,7 +510,7 @@ _con_render_text_multiline(gfx_state_t *state, char *text, int maxchars, int *nr
 			overwrap = 1;
 
 		if (index == pixmaps_allocd)
-			retval = sci_realloc(retval, sizeof(gfx_pixmap_t *) * (pixmaps_allocd+= 4));
+			retval = (gfx_pixmap_t **)sci_realloc(retval, sizeof(gfx_pixmap_t *) * (pixmaps_allocd+= 4));
 
 		retval[index++] = _con_render_text(state, printbuf, len,
 						   &con.color_text, NULL);
@@ -642,7 +643,7 @@ con_gfx_read(gfx_state_t *state)
 		int must_rewin = 0; /* Re-calculate window */
 		int must_redraw_text = 0; /* Redraw display field */
 		if (slen+1 >= con.input_bufsize)
-			con.input_text = sci_realloc(con.input_text, con.input_bufsize += 64); 
+			con.input_text = (char *)sci_realloc(con.input_text, con.input_bufsize += 64); 
 
 		evt.type = 0;
 		while (!evt.type)
@@ -870,7 +871,7 @@ con_gfx_read(gfx_state_t *state)
 	} while (!done);
 
 	retval = con.input_text;
-	con.input_text = sci_malloc(64);
+	con.input_text = (char *)sci_malloc(64);
 	con.input_text[0] = 0;
 	con.input_window = con.input_prompt_pos;
 	con.cursor_position = 0;

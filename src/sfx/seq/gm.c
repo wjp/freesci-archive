@@ -82,7 +82,7 @@ midi_gm_delay(int ticks)
 }
 
 static int
-midi_gm_reset_timer(void)
+midi_gm_reset_timer(GTimeVal ts)
 {
 	writer->reset_timer(writer);
 
