@@ -244,8 +244,8 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 {
 	int xl = get_int_16(resource);
 	int yl = get_int_16(resource + 2);
-	int xhot = (gint8) resource[4];
-	int yhot = (gint8) resource[5];
+	int xhot = (guint8) resource[4];
+	int yhot = (guint8) resource[5];
 	int pos = 8;
 	int pixmap_size = xl * yl;
 	gfx_pixmap_t *retval = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xl, yl, id, loop, cel));
