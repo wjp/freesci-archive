@@ -1,3 +1,12 @@
+2008-04-14  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/resource/sci_view_1.c (gfxr_draw_view1): Reverted previous
+	commit for x-coordinate. Renamed `amiga' variables due to name clash
+	on AmigaOS4.
+
+	* src/engine/kstring.c (kStrCpy): Fixed endianness bug in hack for
+	AvoidPath.
+
 2008-04-10  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/resource/sci_view_1.c (gfxr_draw_view1): Use signed
