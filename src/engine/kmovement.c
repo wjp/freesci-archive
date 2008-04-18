@@ -28,52 +28,138 @@
 #include <sciresource.h>
 #include <engine.h>
 
+/*
+Compute "velocity" vector (xStep,yStep)=(vx,vy) for a jump from (0,0) to (dx,dy), with gravity gy. 
+The gravity is assumed to be non-negative.
+
+If this was ordinary continuous physics, we would compute the desired (floating point!)
+velocity vector (vx,vy) as follows, under the assumption that vx and vy are linearly correlated
+by some constant factor c, i.e. vy = c * vx: 
+   dx = t * vx
+   dy = t * vy + gy * t^2 / 2
+=> dy = c * dx + gy * (dx/vx)^2 / 2
+=> |vx| = sqrt( gy * dx^2 / (2 * (dy - c * dx)) )
+Here, the sign of vx must be chosen equal to the sign of dx, obviously. 
+
+Clearly, this square root only makes sense in our context if the denominator is positive,
+or equivalently, (dy - c * dx) must be positive. For simplicity and by symmetry
+along the x-axis, we assume dx to be positive for all computations, and only adjust for
+its sign in the end. Switching the sign of c appropriately, we set tmp := (dy + c * dx)
+and compute c so that this term becomes positive.
+
+Remark #1: If the jump is straight up, i.e. dx == 0, then we should not assume the above
+linear correlation vy = c * vx of the velocities (as vx will be 0, but vy shouldn't be,
+unless we drop).
+
+
+Remark #2: We are actually in a discrete setup. The motion is computed iteratively: each iteration,
+we add vx and vy to the position, then add gy to vy. So the real formula is the following
+(where t is ideally close to an int):
+
+  dx = t * vx
+  dy = t * vy + gy * t*(t-1) / 2
+
+But the solution resulting from that is a lot more complicated, so we use the above approximation instead.
+
+Still, what we compute in the end is of course not a real velocity anymore, but an integer approximation,
+used in an iterative stepping algorithm
+*/
 reg_t
 kSetJump(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
+	// Input data
 	reg_t object = argv[0];
 	int dx = SKPV(1);
 	int dy = SKPV(2);
 	int gy = SKPV(3);
-	int t1 = 1;
-	int t2;
-	int x = 0;
-	int y = 0;
 
+	assert(gy >= 0);
 
-	if ((dx)&&(abs(dy)>dx)) t1=(2*abs(dy))/dx;
+	// Derived data
+	int c;
+	int tmp;
+	int vx = 0;  // x velocity
+	int vy = 0;  // y velocity
 
-	SCIkdebug(SCIkBRESEN, "t1: %d\n", t1);
+	int dxWasNegative = (dx < 0);
+	dx = abs(dx);
 
-	t1--;
+	if (dx == 0) {
+		// Upward jump. Value of c doesn't really matter
+		c = 1;
+	} else {
+		// Compute a suitable value for c respectively tmp.
+		// The important thing to consider here is that we want the resulting
+		// *discrete* x/y velocities to be not-too-big integers, for a smooth
+		// curve (i.e. we could just set vx=dx, vy=dy, and be done, but that
+		// is hardly what you would call a parabolic jump, would ya? ;-).
+		//
+		// So, we make sure that 2.0*tmp will be bigger than dx (that way,
+		// we ensure vx will be less than sqrt(gy * dx)).
+		if (dx + dy < 0) {
+			// dy is negative and |dy| > |dx|
+			c = (2*abs(dy)) / dx;
+			//tmp = abs(dy);  // ALMOST the resulting value, except for obvious rounding issues
+		} else {
+			// dy is either positive, or |dy| <= |dx|
+			c = (dx*3/2 - dy) / dx;
 
-	do {
-		t1++;
-		t2 = t1 * abs(dx) + dy;
-	} while (abs(2 * t2) < abs(dx));
+			// We force c to be strictly positive
+			if (c < 1)
+				c = 1;
 
-	SCIkdebug(SCIkBRESEN, "t1: %d, t2: %d\n", t1, t2);
-
-	if (t2) {
-		x = (int)sqrt(abs((gy * dx * dx) / (2 * t2)));
-		if (t2 *dx < 0)
-			x = -x;
+			//tmp = dx*3/2;  // ALMOST the resulting value, except for obvious rounding issues
+			
+			// FIXME: Where is the 3 coming from? Maybe they hard/coded, by "accident", that usually gy=3 ?
+			//  Then this choice of will make t equal to roughly sqrt(dx)
+		}
 	}
-	y = abs(t1 * y);
-	if (dx >= 0)
-		y=-y;
-	if ((dy < 0) && (!y))
-		y = -(int)sqrt(-2 * gy * dy);
+	// POST: c >= 1
+	tmp = c * dx + dy;
+	// POST: (dx != 0)  ==>  abs(tmp) > abs(dx)
+	// POST: (dx != 0)  ==>  abs(tmp) ~>=~ abs(dy)
+
+
+	SCIkdebug(SCIkBRESEN, "c: %d, tmp: %d\n", c, tmp);
+	
+	// Compute x step
+	if (tmp != 0)
+		vx = (int)(dx * sqrt(gy / (2.0 * tmp)));
+	else
+		vx = 0;
+
+	// Restore the left/right direction: dx and vx should have the same sign.
+	if (dxWasNegative)
+		vx = -vx;
+	
+	if ((dy < 0) && (vx == 0)) {
+		// Special case: If this was a jump (almost) straight upward, i.e. dy < 0 (upward),
+		// and vx == 0 (i.e. no horizontal movement, at least not after rounding), then we
+		// compute vy directly.
+		// For this, we drop the assumption on the linear correlation of vx and vy (obviously).
+
+		// FIXME: This choice of vy makes t roughly (2+sqrt(2))/gy * sqrt(dy);
+		// so if gy==3, then t is roughly sqrt(dy)...
+		vy = (int)sqrt(gy * abs(2 * dy)) + 1;
+	} else {
+		// As stated above, the vertical direction is correlated to the horizontal by the
+		// (non-zero) factor c.
+		// Strictly speaking, we should probably be using the value of vx *before* rounding
+		// it to an integer... Ah well
+		vy = c * vx;
+	}
+
+	// Always force vy to be upwards
+	vy = -abs(vy);
 
 	SCIkdebug(SCIkBRESEN, "SetJump for object at "PREG"\n", PRINT_REG(object));
-	SCIkdebug(SCIkBRESEN, "xStep: %d, yStep: %d\n", x, y);
-
-	PUT_SEL32V(object, xStep, x);
-	PUT_SEL32V(object, yStep, y);
-
+	SCIkdebug(SCIkBRESEN, "xStep: %d, yStep: %d\n", vx, vy);
+	
+	PUT_SEL32V(object, xStep, vx);
+	PUT_SEL32V(object, yStep, vy);
+	
 	return s->r_acc;
 }
-
 
 #define _K_BRESEN_AXIS_X 0
 #define _K_BRESEN_AXIS_Y 1

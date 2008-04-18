@@ -1,3 +1,8 @@
+2008-04-18  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kmovement.c (kSetJump): New SetJump() implementation
+	by Max Horn.
+
 2008-04-14  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/resource/sci_view_1.c (gfxr_draw_view1): Reverted previous
