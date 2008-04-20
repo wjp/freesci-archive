@@ -549,12 +549,12 @@ _sci0_get_pcm_data(sci0_song_iterator_t *self,
 
 	pcm_data = self->data + offset;
 
-	size = getInt16(pcm_data + SCI0_PCM_SIZE_OFFSET);
+	size = getUInt16(pcm_data + SCI0_PCM_SIZE_OFFSET);
 
 	/* Two of the format parameters are fixed by design: */
 	format->format = SFX_PCM_FORMAT_U8;
 	format->stereo = SFX_PCM_MONO;
-	format->rate = getInt16(pcm_data + SCI0_PCM_SAMPLE_RATE_OFFSET);
+	format->rate = getUint16(pcm_data + SCI0_PCM_SAMPLE_RATE_OFFSET);
 
 	if (offset + SCI0_PCM_DATA_OFFSET + size != self->size) {
 		int d = offset + SCI0_PCM_DATA_OFFSET + size - self->size;
