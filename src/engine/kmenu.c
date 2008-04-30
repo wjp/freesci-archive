@@ -164,9 +164,11 @@ static struct {
 	 "\n\n"
 	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32"
 	 "\n\n"
-	 "Paul David Doherty\nGame version information"
+	 "Max Horn\nSetJump implementation"
 	 ,0, 15},
 	{"Still more of them",
+	 "Paul David Doherty\nGame version information"
+	 "\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements"
 	 "\n\n"
 	 "Rainer Canavan\nIRIX MIDI driver and bug fixes"
@@ -178,10 +180,10 @@ static struct {
 	 "Ruediger Hanke\nPort to the MorphOS platform"
 	 "\n\n"
 	 "Rune Orsval\nConfiguration file editor"
-	 "\n\n"
-	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research"
 	 ,0, 15},
 	{"Is there no end to these contributors?",
+	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research"
+	 "\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes"
 	 "\n\n"
 	 "Robey Pointer\nBug tracking system hosting"

@@ -302,3 +302,7 @@ Hubert Maier:
 Jordi Vilalta:
 [Numerous fixes and cleanups]
 [Support for building with C++]
+
+Max Horn:
+engine/
+	kmovement.c

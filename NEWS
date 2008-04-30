@@ -1,3 +1,14 @@
+FreeSCI 0.6.4 is largely a bugfix release, addressing many constraints
+that prevented SCI0 games from being beatable.  We also added audio
+support for MIDI devices on newer versions of AmigaOS, and for General
+MIDI on all systems.  Finally, we replaced some code of unknown origin
+in our SetJump routine by a definitive clean-room re-implementation.
+
+
+
+
+-- 0.6.3 --
+
 The unstable release series continues, perhaps not quickly, but
 relentlessly.  While we have not yet achieved the stability of the
 stable release series, this release makes many SCI0 games largely

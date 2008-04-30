@@ -1,5 +1,10 @@
 2008-04-30  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* NEWS: Updated for 0.6.4
+
+	* src/engine/kmenu.c (_about_freesci_pages): Listed Max Horn as
+	contributor
+
 	* src/engine/gc.c (find_all_used_references): Fixed memory leak on
 	interfaces table
 
