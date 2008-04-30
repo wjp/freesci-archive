@@ -139,6 +139,16 @@ amwrite(midi_writer_t *self, unsigned char *buf, int len)
 {
 	snd_seq_event_t evt;
 
+#if 0
+	{
+		int i;
+		fprintf(stderr, "[MID] ");
+		for (i = 0; i < len; i++)
+			fprintf(stderr, " %02x", buf[i]);
+		fprintf(stderr, "\n");
+	}
+#endif
+
 	snd_seq_ev_clear(&evt);
 	snd_seq_ev_set_source(&evt, port_out);
 	snd_seq_ev_set_subs(&evt); /* Broadcast to all subscribers */

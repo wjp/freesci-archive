@@ -1,3 +1,8 @@
+2008-04-30  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/seq/instrument-map.c: Several bugfixes to the instrument
+	map
+
 2008-04-21  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/iterator.c (_sci0_get_pcm_data): Fix signedness bug in

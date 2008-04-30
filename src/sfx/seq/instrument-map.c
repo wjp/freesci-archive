@@ -47,18 +47,18 @@ sfx_instrument_map_new(int velocity_maps_nr)
 					  ** warnings that certain memory tools seem to find appropriate. */
 	else {
 		map->velocity_map = (byte **)sci_malloc(sizeof (byte *) * velocity_maps_nr);
-		for (i = 0; i < velocity_maps_nr; i++)
+		for (i = 0; i < velocity_maps_nr; ++i)
 			map->velocity_map[i] = (byte *)sci_malloc(SFX_VELOCITIES_NR);
 	}
-	for (i = 0; i < SFX_INSTRUMENTS_NR; i++)
+	for (i = 0; i < SFX_INSTRUMENTS_NR; ++i)
 		map->velocity_map_index[i] = SFX_NO_VELOCITY_MAP;
 
 	map->percussion_volume_adjust = 0;
-	for (i = 0; i < SFX_RHYTHM_NR; i++)
+	for (i = 0; i < SFX_RHYTHM_NR; ++i)
 		     map->percussion_map[i] = i;
 
 
-	for (i = 0; i < SFX_INSTRUMENTS_NR; i++) {
+	for (i = 0; i < SFX_INSTRUMENTS_NR; ++i) {
 		map->patch_map[i] = i;
 		map->patch_key_shift[i] = 0;
 		map->patch_volume_adjust[i] = 0;
@@ -133,7 +133,7 @@ sfx_instrument_map_load_sci(byte *data, size_t size)
 		if (size > PATCH_MIN_SIZE + map->initialisation_block_size)
 			fprintf(stderr, "[instrument-map] Instrument larger than required by initialisation block:  %d of %d\n", (int) size, PATCH_MIN_SIZE);
 
-		if (map->initialisation_block != 0) {
+		if (map->initialisation_block_size != 0) {
 			map->initialisation_block = (byte *)sci_malloc(map->initialisation_block_size);
 			memcpy(map->initialisation_block, data + PATCH_INIT_DATA, map->initialisation_block_size);
 		}
@@ -202,7 +202,8 @@ static void
 flush_decorated(struct _midi_writer *self_)
 {
 	decorated_midi_writer_t *self = (decorated_midi_writer_t *) self_;
-	self->writer->flush(self->writer);
+	if (self->writer->flush)
+		self->writer->flush(self->writer);
 }
 
 static void
@@ -230,7 +231,7 @@ static int
 bound_hard_127(int i, char *descr)
 {
 	int r = BOUND_127(i);
-	if (r != 1)
+	if (r != i)
 		fprintf(stderr, "[instrument-map] Hard-clipping %02x to %02x in %s\n", i, r, descr);
 	return r;
 }
@@ -266,7 +267,7 @@ write_decorated(decorated_midi_writer_t *self, byte *buf, int len)
 			assert (len >= 3);
 
 			if (velocity_map_index != SFX_NO_VELOCITY_MAP)
-				velocity += BOUND_127(map->velocity_map[map->velocity_map_index[patch]][velocity]);
+				velocity = BOUND_127(velocity + map->velocity_map[map->velocity_map_index[patch]][velocity]);
 
 			buf[1] = instrument;
 			buf[2] = velocity;
@@ -302,7 +303,7 @@ write_decorated(decorated_midi_writer_t *self, byte *buf, int len)
 				note -= 12;
 
 			if (velocity_map_index != SFX_NO_VELOCITY_MAP)
-				velocity += BOUND_127(map->velocity_map[map->velocity_map_index[patch]][velocity]);
+				velocity = BOUND_127(velocity + map->velocity_map[map->velocity_map_index[patch]][velocity]);
 
 			buf[1] = note;
 			buf[2] = velocity;
@@ -335,7 +336,8 @@ init(midi_writer_t *writer, byte *data, size_t len)
 		int to_write = MIN(MAX_PER_TICK, left);
 
 		writer->write(writer, data + offset, to_write);
-		writer->flush(writer);
+		if (writer->flush)
+			writer->flush(writer);
 		writer->delay(writer, 1);
 
 		offset += to_write;
@@ -365,6 +367,8 @@ sfx_mapped_writer(midi_writer_t *writer, sfx_instrument_map_t *map)
 	retval->flush = (void (*)(midi_writer_t *)) flush_decorated;
 	retval->reset_timer = (void (*)(midi_writer_t *)) reset_timer_decorated;
 	retval->close = (void (*)(midi_writer_t *)) close_decorated;
+
+	retval->map = map;
 
 	init(writer, map->initialisation_block, map->initialisation_block_size);
 	memset(retval->patches, 0, MIDI_CHANNELS_NR);
