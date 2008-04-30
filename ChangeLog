@@ -1,5 +1,8 @@
 2008-04-30  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/engine/gc.c (find_all_used_references): Fixed memory leak on
+	interfaces table
+
 	* src/sfx/seq/instrument-map.c: Several bugfixes to the instrument
 	map
 

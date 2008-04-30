@@ -257,6 +257,7 @@ find_all_used_references(state_t *s)
 	for (i = 1; i < sm->heap_size; i++)
 		if (interfaces[i])
 			interfaces[i]->deallocate_self(interfaces[i]);
+	sci_free(interfaces);
 	free_reg_t_hash_map(nonnormal_map);
 	return normal_map;
 }
