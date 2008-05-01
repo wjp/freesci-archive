@@ -27,10 +27,10 @@ to have superuser privileges to do this, unless you specified a different
 installation prefix while running 'configure'.
 
 
-Bulding from CVS
-----------------
-If you are using a CVS snapshot instead of an official release, you will
-require the following utilities:
+Bulding from Darcs
+------------------
+If you are using a development snapshot instead of an official release, you
+will require the following utilities:
 
 * A C compiler (such as gcc)
 * lex or flex
@@ -40,9 +40,9 @@ require the following utilities:
 
 Instructions:
 
-0. Get the source tarball and unpack it.
+0. Checkout the repository or get the source tarball and unpack it.
 
-1. Go into the freesci directory and run the reconf script. (./reconf) 
+1. Go into the freesci directory and run autoreconf. (autoreconf -i)
 
 2. Run the configure script. (./configure)
 
