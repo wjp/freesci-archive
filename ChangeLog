@@ -1,5 +1,10 @@
 2008-05-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/gfx/resource/sci_pic_0.c Renamed `amiga' variable due to name
+	clash on AmigaOS4.
+
+2008-05-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/sfx/softseq/amiga.c: Use file streams.
 
 2008-04-30  Christoph Reichenbach  <reichenb@colorado.edu>

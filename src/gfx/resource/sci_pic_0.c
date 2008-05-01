@@ -1370,7 +1370,7 @@ view_transparentize(gfx_pixmap_t *view, byte *pic_index_data,
 extern gfx_pixmap_t *
 gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t *view, int mirrored);
 extern gfx_pixmap_t *
-gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view, int amiga);
+gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view, int amiga_game);
 extern void
 _gfx_crossblit_simple(byte *dest, byte *src, int dest_line_width, int src_line_width, int xl, int yl, int bpp);
 
