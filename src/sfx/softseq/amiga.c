@@ -378,7 +378,7 @@ static gint32 read_int32(byte *data)
 	return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
 }
 
-static instrument_t *read_instrument(int file, int *id)
+static instrument_t *read_instrument(FILE *file, int *id)
 {
 	instrument_t *instrument;
 	byte header[61];
@@ -387,7 +387,7 @@ static instrument_t *read_instrument(int file, int *id)
 	int loop_offset;
 	int i;
 
-	if (read(file, header, 61) < 61) {
+	if (fread(header, 1, 61, file) < 61) {
 		sciprintf("[sfx:seq:amiga] Error: failed to read instrument header\n");
 		return NULL;
 	}
@@ -430,7 +430,7 @@ static instrument_t *read_instrument(int file, int *id)
 	sciprintf("                Segment offsets: 0 %i %i\n", loop_offset, read_int32(header + 43));
 #endif
 	instrument->samples = (sbyte *) sci_malloc(size + 1);
-	if (read(file, instrument->samples, size) < size) {
+	if (fread(instrument->samples, 1, size, file) < size) {
 		sciprintf("[sfx:seq:amiga] Error: failed to read instrument samples\n");
 		return NULL;
 	}
@@ -474,20 +474,20 @@ ami_set_option(sfx_softseq_t *self, char *name, char *value)
 static int
 ami_init(sfx_softseq_t *self, byte *patch, int patch_len)
 {
-	int file;
+	FILE *file;
 	byte header[40];
 	int i;
 
-	file = sci_open("bank.001", O_RDONLY);
+	file = sci_fopen("bank.001", "rb");
 
-	if (file == SCI_INVALID_FD) {
+	if (!file) {
 		sciprintf("[sfx:seq:amiga] Error: file bank.001 not found\n");
 		return SFX_ERROR;
 	}
 
-	if (read(file, header, 40) < 40) {
+	if (fread(header, 1, 40, file) < 40) {
 		sciprintf("[sfx:seq:amiga] Error: failed to read header of file bank.001\n");
-		close(file);
+		fclose(file);
 		return SFX_ERROR;
 	}
 
@@ -517,7 +517,7 @@ ami_init(sfx_softseq_t *self, byte *patch, int patch_len)
 
 		if (!instrument) {
 			sciprintf("[sfx:seq:amiga] Error: failed to read bank.001\n");
-			close(file);
+			fclose(file);
 			return SFX_ERROR;
 		}
 
@@ -529,7 +529,7 @@ ami_init(sfx_softseq_t *self, byte *patch, int patch_len)
 		bank.instruments[id] = instrument;
 	}
 
-	close(file);
+	fclose(file);
 
 	return SFX_OK;
 }

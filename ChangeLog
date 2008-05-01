@@ -1,3 +1,7 @@
+2008-05-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/softseq/amiga.c: Use file streams.
+
 2008-04-30  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* NEWS: Updated for 0.6.4
