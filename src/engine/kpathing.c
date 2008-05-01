@@ -849,6 +849,8 @@ visible_vertices(pf_state_t *s, vertex_t *vert)
 		}
 	}
 
+	sci_free(vert_sorted);
+
 	/* Free tree */
 	aatree_free(tree);
 }
@@ -1228,6 +1230,9 @@ free_pf_state(pf_state_t *p)
 {
 	if (p->vertex_index)
 		sci_free(p->vertex_index);
+
+	if (p->vis_matrix)
+		sci_free(p->vis_matrix);
 
 	while (!LIST_EMPTY(&p->polygons)) {
 		polygon_t *polygon = LIST_FIRST(&p->polygons);

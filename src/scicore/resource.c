@@ -231,6 +231,8 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res, int protect)
 		res->data = NULL;
 		res->status = SCI_STATUS_NOMALLOC;
 		res->size = 0;
+		chdir(cwd);
+		free(cwd);
 		return;
 	}
 
@@ -260,6 +262,8 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res, int protect)
 			res->data = NULL;
 			res->status = SCI_STATUS_NOMALLOC;
 			res->size = 0;
+			chdir(cwd);
+			free(cwd);
 			return;
 		}
 	}

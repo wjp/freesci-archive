@@ -1727,6 +1727,7 @@ gfxr_draw_pic01(gfxr_pic_t *pic, int flags, int default_palette, int size,
 
 			case PIC_SCI1_OPX_SET_PALETTE:
 				p0printf("Set palette @%d\n", pos);
+				pic->visual_map->flags &= ~GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 				pic->visual_map->colors = gfxr_read_pal1(resid, &pic->visual_map->colors_nr,
 									 resource+pos, SCI1_PALETTE_SIZE);
 				pos += SCI1_PALETTE_SIZE;

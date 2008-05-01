@@ -764,6 +764,12 @@ config_free(config_entry_t **conf, int entries)
 	if ((*conf)->console_log)
 		sci_free((*conf)->console_log);
 
+	if ((*conf)->module_path)
+		sci_free((*conf)->module_path);
+
+	if ((*conf)->menu_dir)
+		sci_free((*conf)->menu_dir);
+
 	for (i = 0; i < entries; i++) {
 		int j;
 
