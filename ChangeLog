@@ -1,3 +1,8 @@
+2008-05-02  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/include/vm.h (GC_INTERVAL): Re-named GC_DELAY to
+	GC_INTERVAL, set back to a `sane' value
+
 2008-05-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/resource/sci_pic_0.c Renamed `amiga' variable due to name

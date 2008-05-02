@@ -53,7 +53,7 @@ int script_abort_flag = 0; /* Set to 1 to abort execution */
 int script_error_flag = 0; /* Set to 1 if an error occured, reset each round by the VM */
 int script_checkloads_flag = 0; /* Print info when scripts get (un)loaded */
 int script_step_counter = 0; /* Counts the number of steps executed */
-int script_gc_interval = GC_DELAY; /* Number of steps in between gcs */
+int script_gc_interval = GC_INTERVAL; /* Number of steps in between gcs */
 
 extern int _debug_step_running; /* scriptdebug.c */
 extern int _debug_seeking; /* scriptdebug.c */

@@ -523,7 +523,7 @@ script_init_engine(state_t *s, sci_version_t version)
 		result = create_class_table_sci0(s);
 	
 	sm_init(&s->seg_manager, s->version >= SCI_VERSION(1,001,000));
-	s->gc_countdown = GC_DELAY - 1;
+	s->gc_countdown = GC_INTERVAL - 1;
 
 	if (result)
 	{
