@@ -1,5 +1,8 @@
 2008-05-02  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/sfx/core.c (sfx_send_midi): Bail out on unexpected MIDI
+	commands such as 0xff
+
 	* src/include/vm.h (GC_INTERVAL): Re-named GC_DELAY to
 	GC_INTERVAL, set back to a `sane' value
 

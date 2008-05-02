@@ -911,6 +911,9 @@ sfx_send_midi(sfx_state_t *self, song_handle_t handle, int channel,
 		buffer[1] = (arg1&0x7f) | 0x80;
 		buffer[2] = (arg1&0xff00) >> 7;
 		break;
+	default:
+		sciprintf("Unexpected explicit MIDI command %02x\n", command);
+		return;
 	}
 
 	if (tell)
