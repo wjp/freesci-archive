@@ -52,7 +52,7 @@ midi_gm_open(int patchlen, byte *data, void *device)
 	if (!writer)
 		return SFX_ERROR;
 
-	if (writer->reste_timer)
+	if (writer->reset_timer)
 		writer->reset_timer(writer);
 
 	return SFX_OK;
