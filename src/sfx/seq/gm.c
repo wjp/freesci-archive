@@ -48,7 +48,12 @@ midi_gm_open(int patchlen, byte *data, void *device)
 		fprintf(stderr, "[GM]  Found no instrument map, using defaults\n");
 
 	writer = sfx_mapped_writer((midi_writer_t *) device, instrument_map);
-	writer->reset_timer(writer);
+
+	if (!writer)
+		return SFX_ERROR;
+
+	if (writer->reste_timer)
+		writer->reset_timer(writer);
 
 	return SFX_OK;
 }

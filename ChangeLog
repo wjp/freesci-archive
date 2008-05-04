@@ -1,3 +1,8 @@
+2008-05-04  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/seq/gm.c (midi_gm_open): Jonathan Gray's patch for
+	dealing with a lack of MIDI output devices
+
 2008-05-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/config.h.in, src/dc/Makefile: Build fix.
