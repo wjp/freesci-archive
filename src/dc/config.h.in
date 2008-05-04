@@ -171,3 +171,4 @@
 
 #define HAVE_UNLINK 1
 #define HAVE_RMDIR 1
+#define HAVE_GETTIMEOFDAY 1

@@ -1,3 +1,7 @@
+2008-05-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/config.h.in, src/dc/Makefile: Build fix.
+
 2008-05-02  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/sfx/core.c (sfx_send_midi): Bail out on unexpected MIDI
