@@ -1876,7 +1876,7 @@ songit_next(song_iterator_t **it, unsigned char *buf, int *result, int mask)
 			fprintf(stderr, "  Morphing %p (stored at %p)\n", *it, it);
 			if (!SIMSG_SEND((*it), SIMSG_ACK_MORPH)) {
 				BREAKPOINT();
-			} else fprintf(stderr, "SI_MORPH successful");
+			} else fprintf(stderr, "SI_MORPH successful\n");
 		}
 
 		if (retval == SI_FINISHED)
