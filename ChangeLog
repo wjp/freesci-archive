@@ -1,3 +1,10 @@
+2008-05-05  Alex Angas  <arangas@internode.on.net>
+
+	* src/engine/kmovement.c (kSetJump):
+	* src/win32/msvc71-2003/fsci_dll/fsci_dll.vcproj:
+	* src/win32/msvc80-2005/fsci_dll/fsci_dll.vcproj:
+	* src/win32/msvc90-2008/fsci_dll/fsci_dll.vcproj: Win32 build fixes.
+
 2008-05-04  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/sfx/seq/gm.c (midi_gm_open): Jonathan Gray's patch for

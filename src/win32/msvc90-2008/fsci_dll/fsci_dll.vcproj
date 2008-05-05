@@ -630,6 +630,14 @@
 					Name="seq"
 					>
 					<File
+						RelativePath="..\..\..\sfx\seq\gm.c"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\sfx\seq\instrument-map.c"
+						>
+					</File>
+					<File
 						RelativePath="..\..\..\sfx\seq\mt32.c"
 						>
 					</File>
@@ -711,6 +719,10 @@
 					</File>
 					<File
 						RelativePath="..\..\..\sfx\softseq\fmopl.c"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\sfx\softseq\mt32.cpp"
 						>
 					</File>
 					<File
@@ -942,6 +954,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\include\seg_manager.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\sfx-instrument-map.h"
 				>
 			</File>
 			<File

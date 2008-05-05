@@ -471,6 +471,14 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 					Name="seq"
 					Filter="">
 					<File
+						RelativePath="..\..\..\sfx\seq\gm.c"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\sfx\seq\instrument-map.c"
+						>
+					</File>
+					<File
 						RelativePath="..\..\..\sfx\seq\mt32.c">
 					</File>
 					<File
@@ -538,6 +546,10 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 					</File>
 					<File
 						RelativePath="..\..\..\sfx\softseq\fmopl.c">
+					</File>
+					<File
+						RelativePath="..\..\..\sfx\softseq\mt32.cpp"
+						>
 					</File>
 					<File
 						RelativePath="..\..\..\sfx\softseq\opl2.c">
@@ -713,6 +725,10 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 			</File>
 			<File
 				RelativePath="..\..\..\include\seg_manager.h">
+			</File>
+			<File
+				RelativePath="..\..\..\include\sfx-instrument-map.h"
+				>
 			</File>
 			<File
 				RelativePath="..\..\..\include\sfx_adlib.h">

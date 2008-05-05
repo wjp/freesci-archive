@@ -73,8 +73,6 @@ kSetJump(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int dy = SKPV(2);
 	int gy = SKPV(3);
 
-	assert(gy >= 0);
-
 	// Derived data
 	int c;
 	int tmp;
@@ -83,6 +81,8 @@ kSetJump(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	int dxWasNegative = (dx < 0);
 	dx = abs(dx);
+
+	assert(gy >= 0);
 
 	if (dx == 0) {
 		// Upward jump. Value of c doesn't really matter
