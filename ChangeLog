@@ -1,3 +1,10 @@
+2008-05-08  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/operations.c: Eliminated some warnings
+	(_gfxop_set_pic): Defer scaling of index data until after the
+	index data has been copied over to the unscaled auxiliary buffers
+	(cf. #2848)
+
 2008-05-05  Alex Angas  <arangas@internode.on.net>
 
 	* src/engine/kmovement.c (kSetJump):

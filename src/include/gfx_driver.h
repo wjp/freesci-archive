@@ -315,7 +315,7 @@ typedef struct _gfx_driver { /* Graphics driver */
 	*/
 
 	int (*set_static_buffer) (struct _gfx_driver *drv, gfx_pixmap_t *pic,
-			    gfx_pixmap_t *priority);
+				  gfx_pixmap_t *priority);
 	/* Sets the contents of the static visual and priority buffers
 	** Parameters: (gfx_driver_t *) drv: The affected driver
 	**             (gfx_pixmap_t *) pic: The image defining the new content

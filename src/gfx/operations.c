@@ -1262,7 +1262,7 @@ gfxop_draw_box(gfx_state_t *state, rect_t box, gfx_color_t color1, gfx_color_t c
 	float mod_offset = 0.0, mod_breadth = 1.0; /* 0.0 to 1.0: Color adjustment */
 	gfx_rectangle_fill_t driver_shade_type;
 	rect_t new_box;
-	gfx_color_t draw_color1, draw_color2	= {0};
+	gfx_color_t draw_color1, draw_color2	= {{0, 0, 0}, 0, 0, 0, 0};
 
 	BASIC_CHECKS(GFX_FATAL);
 	REMOVE_POINTER;
@@ -1805,6 +1805,8 @@ _gfxop_shiftify(int c)
 	case SCI_K_F9 : return SCI_K_SHIFT_F9;
 	case SCI_K_F10 : return SCI_K_SHIFT_F10;
 	}
+
+	return c;
 }
 
 static int
@@ -2083,12 +2085,14 @@ gfxop_draw_cel_static_clipped(gfx_state_t *state, int nr, int loop, int cel,
 static int
 _gfxop_set_pic(gfx_state_t *state)
 {
-	byte unscaled = (state->options->pic0_unscaled);
 	gfx_copy_pixmap_box_i(state->control_map, state->pic->control_map, gfx_rect(0, 0, 320, 200));
-	gfx_copy_pixmap_box_i(state->priority_map, state->pic_unscaled->priority_map, gfx_rect(0, 0, 320, 200));
+	gfx_copy_pixmap_box_i(state->priority_map, state->pic_unscaled->priority_map, gfx_rect(0, 0, 320, 200)); 
 	gfx_copy_pixmap_box_i(state->static_priority_map, state->pic_unscaled->priority_map, gfx_rect(0, 0, 320, 200));
 
 	_gfxop_install_pixmap(state->driver, state->pic->visual_map);
+
+	if (state->options->pic0_unscaled)
+		state->pic->priority_map = gfx_pixmap_scale_index_data(state->pic->priority_map, state->driver->mode);
 	return state->driver->set_static_buffer(state->driver, state->pic->visual_map, state->pic->priority_map);
 }
 

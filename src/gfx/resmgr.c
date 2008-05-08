@@ -349,9 +349,6 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 		}
 #endif
 
-		if (state->options->pic0_unscaled)
-			pic->priority_map = gfx_pixmap_scale_index_data(pic->priority_map, state->driver->mode);
-
 		if (!res) {
 			res = (gfx_resource_t*)sci_malloc(sizeof(gfx_resource_t));
 			res->ID = GFXR_RES_ID(restype, nr);
