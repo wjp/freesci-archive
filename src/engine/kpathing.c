@@ -163,12 +163,27 @@ typedef struct pf_state
 static vertex_t *vertex_cur;
 
 /* Temporary hack to deal with points in reg_ts */
+static int
+polygon_is_reg_t(unsigned char *list, int size)
+{
+	int i;
+
+	/* Check the first three reg_ts */
+	for (i = 0; i < (size < 3 ? size : 3); i++)
+		if ((((reg_t *) list) + i)->segment)
+			/* Non-zero segment, cannot be reg_ts */
+			return 0;
+
+	/* First three segments were zero, assume reg_ts */
+	return 1;
+}
+
 static point_t
-read_point(unsigned char *list, int segtype, int offset)
+read_point(unsigned char *list, int is_reg_t, int offset)
 {
 	point_t point;
 
-	if ((segtype == MEM_OBJ_DYNMEM) || (segtype == MEM_OBJ_SCRIPT)) {
+	if (!is_reg_t) {
 		POLY_GET_POINT(list, offset, point.x, point.y);
 	} else {
 		POLY_GET_POINT_REG_T((reg_t *) list, offset, point.x, point.y);
@@ -241,15 +256,15 @@ draw_polygon(state_t *s, reg_t polygon)
 	reg_t points = GET_SEL32(polygon, points);
 	int size = KP_UINT(GET_SEL32(polygon, size));
 	int type = KP_UINT(GET_SEL32(polygon, type));
-	int segtype = s->seg_manager.heap[points.segment]->type;
 	point_t first, prev;
 	unsigned char *list = kernel_dereference_bulk_pointer(s, points, size * POLY_POINT_SIZE);
+	int is_reg_t = polygon_is_reg_t(list, size);
 	int i;
 
-	prev = first = read_point(list, segtype, 0);
+	prev = first = read_point(list, is_reg_t, 0);
 
 	for (i = 1; i < size; i++) {
-		point_t point = read_point(list, segtype, i);
+		point_t point = read_point(list, is_reg_t, i);
 		draw_line(s, prev, point, type);
 		prev = point;
 	}
@@ -290,19 +305,19 @@ print_polygon(state_t *s, reg_t polygon)
 	reg_t points = GET_SEL32(polygon, points);
 	int size = KP_UINT(GET_SEL32(polygon, size));
 	int type = KP_UINT(GET_SEL32(polygon, type));
-	int segtype = s->seg_manager.heap[points.segment]->type;
 	int i;
 	unsigned char *point_array = kernel_dereference_bulk_pointer(s, points, size * POLY_POINT_SIZE);
+	int is_reg_t = polygon_is_reg_t(point_array, size);
 	point_t point;
 
 	sciprintf("%i:", type);
 
 	for (i = 0; i < size; i++) {
-		point = read_point(point_array, segtype, i);
+		point = read_point(point_array, is_reg_t, i);
 		sciprintf(" (%i, %i)", point.x, point.y);
 	}
 
-	point = read_point(point_array, segtype, 0);
+	point = read_point(point_array, is_reg_t, 0);
 	sciprintf(" (%i, %i);\n", point.x, point.y);
 }
 
@@ -1192,11 +1207,11 @@ convert_polygon(state_t *s, reg_t polygon)
 	reg_t points = GET_SEL32(polygon, points);
 	int size = KP_UINT(GET_SEL32(polygon, size));
 	unsigned char *list = kernel_dereference_bulk_pointer(s, points, size * POLY_POINT_SIZE);
-	int segtype = s->seg_manager.heap[points.segment]->type;
 	polygon_t *poly = polygon_new(KP_UINT(GET_SEL32(polygon, type)));
+	int is_reg_t = polygon_is_reg_t(list, size);
 
 	for (i = 0; i < size; i++) {
-		vertex_t *vertex = vertex_new(read_point(list, segtype, i));
+		vertex_t *vertex = vertex_new(read_point(list, is_reg_t, i));
 		CLIST_INSERT_HEAD(&poly->vertices, vertex, entries);
 	}
 

@@ -1,3 +1,7 @@
+2008-05-09  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kpathing.c: Use heuristic to detect reg_ts.
+
 2008-05-08  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/operations.c: Eliminated some warnings
