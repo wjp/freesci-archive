@@ -1,3 +1,8 @@
+2008-05-16  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/engine/vm.c (run_vm): Eliminated special-case VM hacks for
+	unsigned ops that treated numbers of 1000 specially
+
 2008-05-09  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/kpathing.c: Use heuristic to detect reg_ts.
