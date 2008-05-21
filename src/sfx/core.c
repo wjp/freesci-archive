@@ -340,9 +340,7 @@ _update_multi_song(sfx_state_t *self)
 		oldseeker->next_stopping = oldseeker->next_playing;
 		oldseeker->next_playing = &not_playing_anymore;
 
-		if (oldseeker == oldseeker->next_playing) {
-			BREAKPOINT();
-		}
+		if (oldseeker == oldseeker->next_playing) { BREAKPOINT(); }
 	}
 
 	/* Second, re-generate the new song queue. */
@@ -352,11 +350,8 @@ _update_multi_song(sfx_state_t *self)
 			= song_lib_find_next_active(self->songlib,
 						    newseeker);
 
-		if (newseeker == newseeker->next_playing) {
-			BREAKPOINT();
-		}
+		if (newseeker == newseeker->next_playing) { BREAKPOINT(); }
 	}
-
 	/* We now need to update the currently playing song list, because we're
 	** going to use some functions that require this list to be in a sane
 	** state (particularly is_playing(), indirectly */
@@ -374,17 +369,14 @@ _update_multi_song(sfx_state_t *self)
 			if (player && oldseeker->it)
 				player->iterator_message
 					(songit_make_message(oldseeker->it->ID, SIMSG_STOP));
+			oldseeker->next_playing = NULL; /* Clear this pointer; we don't need the tag anymore */
 		}
-
 
 	for (newseeker = newsong; newseeker;
 	     newseeker = newseeker->next_playing) {
 		if (newseeker->status != SOUND_STATUS_PLAYING && player) {
-			if (self->debug & SFX_DEBUG_SONGS) {
+			if (self->debug & SFX_DEBUG_SONGS)
 				sciprintf("[SFX] Adding song %lx\n", newseeker->it->ID);
-			}
-
-
 
 			player->add_iterator(songit_clone(newseeker->it,
 							  newseeker->delay),

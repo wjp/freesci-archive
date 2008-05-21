@@ -72,8 +72,8 @@ typedef struct _song {
 	struct _song *next; /* Next song or NULL if this is the last one */
 	struct _song *next_playing; /* Next playing song; used by the
 				    ** core song system */
-	struct _song *next_stopping; /* Next song pending stopping; used by
-				     ** the core song system */
+	struct _song *next_stopping; /* Next song pending stopping; used exclusively by
+				     ** the core song system's _update_multi_song() */
 } song_t;
 
 
