@@ -44,8 +44,8 @@
 #define POLY_SET_POINT(p, i, x, y) do { putInt16((p) + (i) * POLY_POINT_SIZE, x); \
 					putInt16((p) + 2 + (i) * POLY_POINT_SIZE, y); \
 } while (0)
-#define POLY_GET_POINT_REG_T(p, i, x, y) do { x = KP_UINT((p)[(i) * 2]); \
-					      y = KP_UINT((p)[(i) * 2 + 1]); \
+#define POLY_GET_POINT_REG_T(p, i, x, y) do { x = KP_SINT((p)[(i) * 2]); \
+					      y = KP_SINT((p)[(i) * 2 + 1]); \
 } while (0)
 
 /* SCI-defined polygon types */
