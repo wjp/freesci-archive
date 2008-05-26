@@ -884,14 +884,28 @@ distance(pointf_t a, pointf_t b)
 }
 
 static int
-on_screen_edge(point_t p)
-/* Determines if a point is on the edge of the screen
+point_on_screen_border(point_t p)
+/* Determines if a point lies on the screen border
 ** Parameters: (point_t) p: The point
-** Returns   : (int) 1 if p is on the edge of the screen, 0 otherwise
+** Returns   : (int) 1 if p lies on the screen border, 0 otherwise
 */
 {
 	/* FIXME get dimensions from somewhere? */
 	return (p.x == 0) || (p.x == 319) || (p.y == 0) || (p.y == 189);
+}
+
+static int
+edge_on_screen_border(point_t p, point_t q)
+/* Determines if an edge lies on the screen border
+** Parameters: (point_t) p, q: The edge (p, q)
+** Returns   : (int) 1 if (p, q) lies on the screen border, 0 otherwise
+*/
+{
+	/* FIXME get dimensions from somewhere? */
+	return ((p.x == 0 && q.x == 0)
+	    || (p.x == 319 && q.x == 319)
+	    || (p.y == 0 && q.y == 0)
+	    || (p.y == 189 && q.y == 189));
 }
 
 static int
@@ -955,7 +969,7 @@ near_point(point_t p, polygon_t *polygon, point_t *ret)
 		float new_dist;
 
 		/* Ignore edges on the screen border */
-		if (on_screen_edge(p1) && on_screen_edge(p2))
+		if (edge_on_screen_border(p1, p2))
 			continue;
 
 		/* Compute near point */
@@ -1469,7 +1483,7 @@ dijkstra(pf_state_t *s)
 				float new_dist;
 
 				/* Avoid plotting path along screen edge */
-				if ((s->vertex_index[i] != s->vertex_end) && on_screen_edge(s->vertex_index[i]->v))
+				if ((s->vertex_index[i] != s->vertex_end) && point_on_screen_border(s->vertex_index[i]->v))
 					continue;
 
 				new_dist = vertex_min->dist + distance(to_pointf(vertex_min->v),

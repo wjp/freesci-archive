@@ -1,5 +1,9 @@
 2008-05-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/engine/kpathing.c: Fixed detection of edges on screen border.
+
+2008-05-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/engine/kpathing.c: Read polygon data as signed from reg_ts.
 
 2008-05-16  Christoph Reichenbach  <reichenb@colorado.edu>
