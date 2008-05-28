@@ -1,3 +1,7 @@
+2008-05-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kpathing.c: Detect `illegal' input and print error.
+
 2008-05-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/kpathing.c: Fixed detection of edges on screen border.

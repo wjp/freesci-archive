@@ -415,6 +415,37 @@ between(point_t a, point_t b, point_t c)
 		return ((a.y <= c.y) && (c.y <= b.y)) || ((a.y >= c.y) && (c.y >= b.y));
 }
 
+static int
+intersect_proper(point_t a, point_t b, point_t c, point_t d)
+/* Determines whether or not two line segments properly intersect
+** Parameters: (point_t) a, b: The line segment (a, b)
+**             (point_t) c, d: The line segment (c, d)
+** Returns   : (int) 1 if (a, b) properly intersects (c, d), 0 otherwise
+*/
+{
+	int ab = (left(a, b, c) && left(b, a, d))
+		  || (left(a, b, d) && left(b, a, c));
+	int cd = (left(c, d, a) && left(d, c, b))
+		  || (left(c, d, b) && left(d, c, a));
+
+	return ab && cd;
+}
+
+static int
+intersect(point_t a, point_t b, point_t c, point_t d)
+/* Determines whether or not two line segments intersect
+** Parameters: (point_t) a, b: The line segment (a, b)
+**             (point_t) c, d: The line segment (c, d)
+** Returns   : (int) 1 if (a, b) intersects (c, d), 0 otherwise
+*/
+{
+	if (intersect_proper(a, b, c, d))
+		return 1;
+
+	return between(a, b, c) || between(a, b, d)
+	       || between (c, d, a) || between(c, d, b);
+}
+
 
   /*** Pathfinding ***/
 
@@ -1421,6 +1452,38 @@ visibility_graph(pf_state_t *s)
 	}
 }
 
+static int
+intersecting_polygons(pf_state_t *s)
+/* Detects (self-)intersecting polygons
+** Parameters: (pf_state_t *) s: The pathfinding state
+** Returns   : (int) 1 if s contains (self-)intersecting polygons, 0 otherwise
+*/
+{
+	int i, j;
+
+	for (i = 0; i < s->vertices; i++) {
+		vertex_t *v1 = s->vertex_index[i];
+		if (!VERTEX_HAS_EDGES(v1))
+			continue;
+		for (j = i + 1; j < s->vertices; j++) {
+			vertex_t *v2 = s->vertex_index[j];
+			if (!VERTEX_HAS_EDGES(v2))
+				continue;
+
+			/* Skip neighbouring edges */
+			if ((CLIST_NEXT(v1, entries) == v2)
+			    || CLIST_PREV(v1, entries) == v2)
+				continue;
+
+			if (intersect(v1->v, CLIST_NEXT(v1, entries)->v,
+				      v2->v, CLIST_NEXT(v2, entries)->v))
+				return 1;
+		}
+	}
+
+	return 0;
+}
+
 static void
 dijkstra(pf_state_t *s)
 /* Computes a shortest path from vertex_start to vertex_end. The caller can
@@ -1630,6 +1693,12 @@ kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 		}
 
 		p = convert_polygon_set(s, poly_list, start, end, opt);
+
+		if (intersecting_polygons(p)) {
+			sciprintf("[avoidpath] Error: input set contains (self-)intersecting polygons\n");
+			free_pf_state(p);
+			p = NULL;
+		}
 
 		if (!p) {
 			byte *oref;
