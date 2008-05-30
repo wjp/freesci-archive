@@ -55,7 +55,7 @@ void dbg_print( const char* msg, void *i ) {
 	sprintf( buf, "%s = [0x%x], dec:[%d]", msg, i, i);
 	perror( buf );
 #endif
-};
+}
 
 /*--------------------------*/
 /*-- forward declarations --*/
@@ -143,7 +143,7 @@ void sm_init(seg_manager_t* self, int sci1_1) {
 
 	/* gc initialisation */
 	self->gc_mark_bits = 0;
-};
+}
 
 /* destroy the object, free the memorys if allocated before */
 void sm_destroy (seg_manager_t* self) {
@@ -158,7 +158,7 @@ void sm_destroy (seg_manager_t* self) {
 
 	sci_free (self->heap);
 	self->heap = NULL;
-};
+}
 
 /* allocate a memory for script from heap
 ** Parameters: (state_t *) s: The state to operate on
@@ -274,7 +274,7 @@ int sm_initialise_script(mem_obj_t *mem, struct _state *s, int script_nr)
 		scr->heap_start = scr->buf;
 
 	return 1;
-};
+}
 
 int
 _sm_deallocate (seg_manager_t* self, int seg, int recursive)
@@ -399,7 +399,7 @@ int sm_deallocate_script (seg_manager_t* self, int script_nr) {
 
 	_sm_deallocate(self, seg, 1);
 	return 1;
-};
+}
 
 mem_obj_t*
 mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum type)
@@ -436,7 +436,7 @@ mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum 
 	/* hook it to the heap */
 	self->heap[segid] = mem;
 	return mem;
-};
+}
 
 /* No longer in use? */
 /* void sm_object_init (object_t* object) { */
@@ -473,7 +473,7 @@ sm_free_script ( mem_obj_t* mem )
 	if (NULL != mem->data.script.code) {
 		sci_free(mem->data.script.code);
 	}
-};
+}
 
 /* memory operations */
 static void
@@ -494,7 +494,7 @@ sm_mset (seg_manager_t* self, int offset, int c, size_t n, int id, int flag) {
 		sciprintf( "unknown mem obj type\n" );
 		break;
 	}
-};
+}
 
 static void
 sm_mcpy_in_in (seg_manager_t* self, int dst, const int src, size_t n, int id, int flag) {
@@ -514,7 +514,7 @@ sm_mcpy_in_in (seg_manager_t* self, int dst, const int src, size_t n, int id, in
 		sciprintf( "unknown mem obj type\n" );
 		break;
 	}
-};
+}
 
 void
 sm_mcpy_in_out (seg_manager_t* self, int dst, const void* src, size_t n, int id, int flag) {
@@ -554,7 +554,7 @@ sm_mcpy_out_in (seg_manager_t* self, void* dst, const int src, size_t n, int id,
 		sciprintf( "unknown mem obj type\n" );
 		break;
 	}
-};
+}
 
 gint16
 sm_get_heap (seg_manager_t* self, reg_t reg)
@@ -602,13 +602,13 @@ void sm_put_heap (seg_manager_t* self, reg_t reg, gint16 value ) {
 		sciprintf( "unknown mem obj type\n" );
 		break;
 	}
-};
+}
 
 /* return the seg if script_id is valid and in the map, else -1 */
 int sm_seg_get (seg_manager_t* self, int script_id)
 {
 	return int_hash_map_check_value (self->id_seg_map, script_id, 0, NULL);
-};
+}
 
 /* validate the seg
 ** return:
@@ -625,20 +625,20 @@ sm_check (seg_manager_t* self, int seg) {
 		return 0;
 	}
 	return 1;
-};
+}
 
 int sm_script_is_loaded (seg_manager_t* self, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	return sm_check (self, id);
-};
+}
 
 void sm_increment_lockers (seg_manager_t* self, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	VERIFY ( sm_check (self, id), "invalid seg id" );
 	self->heap[id]->data.script.lockers++;
-};
+}
 
 void sm_decrement_lockers (seg_manager_t* self, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
@@ -647,21 +647,21 @@ void sm_decrement_lockers (seg_manager_t* self, int id, id_flag flag) {
 
 	if (self->heap[id]->data.script.lockers > 0)
 		self->heap[id]->data.script.lockers--;
-};
+}
 
 int sm_get_lockers (seg_manager_t* self, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	VERIFY ( sm_check (self, id), "invalid seg id" );
 	return self->heap[id]->data.script.lockers;
-};
+}
 
 void sm_set_lockers (seg_manager_t* self, int lockers, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	VERIFY ( sm_check (self, id), "invalid seg id" );
 	self->heap[id]->data.script.lockers = lockers;
-};
+}
 
 void
 sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, id_flag flag)
@@ -676,7 +676,7 @@ sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, id_
 		scr->export_table = NULL;
 		scr->exports_nr = 0;
 	}
-};
+}
 
 int
 sm_hash_segment_data(struct _seg_manager_t* self, int id)
@@ -708,27 +708,27 @@ sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag, int *
 	if (max)
 		*max = self->heap[id]->data.script.exports_nr;
 	return self->heap[id]->data.script.export_table;
-};
+}
 
 void
 sm_set_synonyms_offset (struct _seg_manager_t* self, int offset, int id, id_flag flag) {
 	GET_SEGID();
 	self->heap[id]->data.script.synonyms = 
 		self->heap[id]->data.script.buf + offset;
-};
+}
 
 byte *
 sm_get_synonyms(seg_manager_t *self, int id, id_flag flag)
 {
 	GET_SEGID();
 	return self->heap[id]->data.script.synonyms;
-};
+}
 
 void
 sm_set_synonyms_nr (struct _seg_manager_t* self, int nr, int id, id_flag flag) {
 	GET_SEGID();
 	self->heap[id]->data.script.synonyms_nr = nr;
-};
+}
 
 int
 sm_get_synonyms_nr (struct _seg_manager_t* self, int id, id_flag flag)
@@ -759,7 +759,7 @@ sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t v
 		"Attempt to write to invalid variable number" );
 
 	script->objects[obj_index].variables[variable_index] = variable_reg;
-};
+}
 
 
 static inline int
@@ -1288,7 +1288,7 @@ sm_script_initialise_objects_sci11(seg_manager_t *self, state_t *s, int seg)
 			base_obj = obj_get(s, obj->variables[5]);
 			obj->variable_names_nr = base_obj->variables_nr;
 			obj->base_obj = base_obj->base_obj;
-		};
+		}
 #endif
 
 		/* Copy base from species class, as we need its selector IDs */ 
@@ -1389,7 +1389,7 @@ sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int seg ) {
 	VERIFY ( offset < script->buf_size, "invalid export function pointer" );
 
 	return offset;
-};
+}
 
 
 void
