@@ -1428,10 +1428,10 @@ _hunk_cleanup(hunk_t *hunk)
 		free (hunk->mem);
 }
 
-DEFINE_HEAPENTRY(list, 8, 4);
-DEFINE_HEAPENTRY(node, 32, 16);
-DEFINE_HEAPENTRY_WITH_CLEANUP(clone, 16, 4, _clone_cleanup);
-DEFINE_HEAPENTRY_WITH_CLEANUP(hunk, 4, 4, _hunk_cleanup);
+DEFINE_HEAPENTRY(list, 8, 4)
+DEFINE_HEAPENTRY(node, 32, 16)
+DEFINE_HEAPENTRY_WITH_CLEANUP(clone, 16, 4, _clone_cleanup)
+DEFINE_HEAPENTRY_WITH_CLEANUP(hunk, 4, 4, _hunk_cleanup)
 
 #define DEFINE_ALLOC_DEALLOC(STATIC, TYPE, SEGTYPE, PLURAL) \
 STATIC TYPE##_t *										  \
@@ -1469,10 +1469,10 @@ sm_free_##TYPE(seg_manager_t *self, reg_t addr)							  \
 	free_##TYPE##_entry(&(mobj->data.PLURAL), addr.offset);					  \
 }
 
-DEFINE_ALLOC_DEALLOC(, clone, MEM_OBJ_CLONES, clones);
-DEFINE_ALLOC_DEALLOC(, list, MEM_OBJ_LISTS, lists);
-DEFINE_ALLOC_DEALLOC(, node, MEM_OBJ_NODES, nodes);
-DEFINE_ALLOC_DEALLOC(static, hunk, MEM_OBJ_HUNK, hunks);
+DEFINE_ALLOC_DEALLOC(, clone, MEM_OBJ_CLONES, clones)
+DEFINE_ALLOC_DEALLOC(, list, MEM_OBJ_LISTS, lists)
+DEFINE_ALLOC_DEALLOC(, node, MEM_OBJ_NODES, nodes)
+DEFINE_ALLOC_DEALLOC(static, hunk, MEM_OBJ_HUNK, hunks)
 
 
 
