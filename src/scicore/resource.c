@@ -138,7 +138,7 @@ int resourcecmp (const void *first, const void *second)
 void
 _scir_add_altsource(resource_t *res, int file, unsigned int file_offset)
 {
-	resource_source_t *rsrc = (resource_source_t*)sci_malloc(sizeof(resource_source_t));
+	resource_altsource_t *rsrc = (resource_altsource_t*)sci_malloc(sizeof(resource_altsource_t));
 
 	rsrc->next = res->alt_sources;
 	rsrc->file = file;
@@ -563,7 +563,7 @@ scir_new_resource_manager(char *dir, int version,
 }
 
 static void
-_scir_free_resource_sources(resource_source_t *rss)
+_scir_free_resource_sources(resource_altsource_t *rss)
 {
 	if (rss) {
 		_scir_free_resource_sources(rss->next);
@@ -572,7 +572,7 @@ _scir_free_resource_sources(resource_source_t *rss)
 }
 
 static void
-_scir_free_altsources(resource_source_t *dynressrc)
+_scir_free_altsources(resource_altsource_t *dynressrc)
 {
 	if (dynressrc) {
 		_scir_free_altsources(dynressrc->next);

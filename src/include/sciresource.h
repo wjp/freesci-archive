@@ -126,12 +126,12 @@ struct resource_index_struct {
 typedef struct resource_index_struct resource_index_t;
 
 
-typedef struct _resource_source_struct {
+typedef struct _resource_altsource_struct {
 	unsigned int file_offset;
 	char file; /* Signed because -1 is used for patches */
 
 	struct _resource_source_struct *next;
-} resource_source_t;
+} resource_altsource_t;
 
 
 typedef struct _resource_struct {
@@ -152,7 +152,7 @@ typedef struct _resource_struct {
 	struct _resource_struct *next; /* Position marker for the LRU queue */
 	struct _resource_struct *prev;
 
-	resource_source_t *alt_sources; /* SLL of alternative resource data sources */
+	resource_altsource_t *alt_sources; /* SLL of alternative resource data sources */
 } resource_t; /* for storing resources in memory */
 
 
