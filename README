@@ -310,7 +310,8 @@ Determines whether to swap the meanings of the CapsLock and the left Ctrl
 key (relative to a PC-style keyboard layout). The resulting layout resembles
 a Sun keyboard. Default is 'false'.
 - fullscreen = true | false
-kinda self-explanatory, eh?  :)
+Turns fullscreen mode on or off. Default is 'false'. The key combination
+Alt-Enter can be used to toggle fullscreen mode while FreeSCI is runnnig.
 
 2.1.1.4 Dreamcast driver:
 -------------------------

@@ -70,7 +70,6 @@
 static int
 sdl_usec_sleep(struct _gfx_driver *drv, long usecs);
 
-extern int string_truep(char *value);
 static int flags = 0;
 
 struct _sdl_state {
@@ -96,6 +95,7 @@ struct _sdl_state {
 #define DEBUGPXM if (drv->debug_flags & GFX_DEBUG_PIXMAPS && ((debugline = __LINE__))) sdlprintf
 #define DEBUGPTR if (drv->debug_flags & GFX_DEBUG_POINTER && ((debugline = __LINE__))) sdlprintf
 #define SDLERROR if ((debugline = __LINE__)) sdlprintf
+#define SDLPRINTF if ((debugline = __LINE__)) sdlprintf
 
 #define ALPHASURFACE (S->used_bytespp == 4)
 
@@ -109,6 +109,50 @@ sdlprintf(const char *fmt, ...)
 	va_start(argp, fmt);
 	vfprintf(stderr, fmt, argp);
 	va_end(argp);
+}
+
+static int
+sdl_init_libsdl(struct _gfx_driver *drv)
+{
+	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)) {
+		DEBUGB("Failed to init SDL\n");
+		return -1;
+	}
+
+	SDL_EnableUNICODE(SDL_ENABLE);
+
+	return 0;
+}
+
+static int
+sdl_alloc_primary(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
+{
+	int i = SDL_HWSURFACE | SDL_HWPALETTE;
+
+	if (flags & SCI_SDL_FULLSCREEN) {
+		i |= SDL_FULLSCREEN;
+	}
+
+	S->primary = SDL_SetVideoMode(xfact * 320, yfact * 200, bytespp << 3, i);
+
+	if (!S->primary) {
+		SDLERROR("Could not set up a primary SDL surface!\n");
+		return -1;
+	}
+
+	if (S->primary->format->BytesPerPixel != bytespp) {
+		SDLERROR("Could not set up a primary SDL surface of depth %d bpp!\n",bytespp);
+		S->primary = NULL;
+		return -1;
+	}
+
+	/* Set windowed flag */
+	if (S->primary->flags & SDL_FULLSCREEN)
+		drv->capabilities &= ~GFX_CAPABILITY_WINDOWED;
+	else
+		drv->capabilities |= GFX_CAPABILITY_WINDOWED;
+
+	return 0;
 }
 
 static int
@@ -165,6 +209,9 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif
 
+	if (sdl_init_libsdl(drv))
+		return GFX_FATAL;
+
 	if (!drv->state /* = S */)
 		drv->state = sci_malloc(sizeof(struct _sdl_state));
 	if (!drv->state)
@@ -175,27 +222,8 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		 xfact, yfact, bytespp);
 	}
 
-	S->primary = NULL;
-
-	i = SDL_HWSURFACE | SDL_HWPALETTE;
-
-	if (flags & SCI_SDL_FULLSCREEN) {
-		i |= SDL_FULLSCREEN;
-	}
-
-	S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, i);
-
-	if (!S->primary) {
-		SDLERROR("Could not set up a primary SDL surface!\n");
+	if (sdl_alloc_primary(drv, xfact, yfact, bytespp))
 		return GFX_FATAL;
-	}
-
-	if (S->primary->format->BytesPerPixel != bytespp) {
-		SDLERROR("Could not set up a primary SDL surface of depth %d bpp!\n",bytespp);
-		SDL_FreeSurface(S->primary);
-		S->primary = NULL;
-		return GFX_FATAL;
-	}
 
 	S->used_bytespp = bytespp;
 
@@ -277,7 +305,6 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	/* create the visual buffers */
 	for (i = 0; i < 3; i++) {
-		S->visual[i] = NULL;
 		S->visual[i] = SDL_CreateRGBSurface(SDL_SRCALPHA,
 					/* SDL_HWSURFACE | SDL_SWSURFACE, */
 					xsize, ysize,
@@ -317,11 +344,8 @@ sdl_init(struct _gfx_driver *drv)
 	int depth = 0;
 	int i;
 
-	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)) {
-		DEBUGB("Failed to init SDL\n");
+	if (sdl_init_libsdl(drv))
 		return GFX_FATAL;
-	}
-	SDL_EnableUNICODE(SDL_ENABLE);
 
 	i = SDL_HWSURFACE | SDL_HWPALETTE;
 	if (flags & SCI_SDL_FULLSCREEN) {
@@ -360,9 +384,43 @@ sdl_exit(struct _gfx_driver *drv)
 			}
 
 	}
-	SDL_Quit();
+
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+	if (!SDL_WasInit(SDL_INIT_EVERYTHING)) {
+		SDLPRINTF("No active SDL subsystems found.. shutting down SDL\n");
+		SDL_Quit();
+	}
 }
 
+static void
+toggle_fullscreen(struct _gfx_driver *drv)
+{
+	rect_t src;
+	point_t dest;
+
+	flags ^= SCI_SDL_FULLSCREEN;
+	if (sdl_alloc_primary(drv, XFACT, YFACT, drv->mode->bytespp)) {
+		SDLERROR("failed to switch to full-screen mode\n");
+		/* Failed to set mode, revert to previous */
+		flags ^= SCI_SDL_FULLSCREEN;
+
+		if (sdl_alloc_primary(drv, XFACT, YFACT, drv->mode->bytespp)) {
+			/* This shouldn't happen... */
+			SDLERROR("failed to revert to previous display mode\n");
+			exit(-1);
+		}
+	}
+
+	src.x = 0;
+	src.y = 0;
+	src.xl = XFACT * 320;
+	src.yl = YFACT * 200;
+	dest.x = 0;
+	dest.y = 0;
+
+	drv->update(drv, src, dest, GFX_BUFFER_FRONT);
+}
 
 /*** Drawing operations ***/
 
@@ -957,7 +1015,12 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 	case SDLK_TAB: return 9;
 	case SDLK_ESCAPE: return SCI_K_ESC;
 	case SDLK_RETURN:
-	case SDLK_KP_ENTER: return SCI_K_ENTER;
+	case SDLK_KP_ENTER:
+		if (SDL_GetModState() & KMOD_ALT) {
+			toggle_fullscreen(drv);
+			return 0;
+		}
+		return SCI_K_ENTER;
 	case SDLK_KP_PERIOD: return SCI_K_DELETE;
 	case SDLK_KP0:
 	case SDLK_INSERT: return SCI_K_INSERT;

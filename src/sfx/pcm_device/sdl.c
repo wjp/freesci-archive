@@ -190,6 +190,13 @@ pcmout_sdl_exit(sfx_pcm_device_t *self)
 	SDL_PauseAudio (1);
 	SDL_CloseAudio();
 	sfx_audbuf_free(&audio_buffer);
+
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
+
+	if (!SDL_WasInit(SDL_INIT_EVERYTHING)) {
+		sciprintf("[SND:SDL] No active SDL subsystems found.. shutting down SDL\n");
+		SDL_Quit();
+	}
 }
 
 
