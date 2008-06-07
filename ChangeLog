@@ -1,3 +1,7 @@
+2008-06-07  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/scriptdebug.c (script_debug): Added check for tty.
+
 2008-06-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/sdl_driver.c: Added fullscreen toggling with

@@ -38,8 +38,10 @@
 #ifdef _WIN32
 #	include <win32/sci_win32.h>
 #	include <windows.h>
+#	include <io.h>
 #endif
 #ifdef HAVE_UNISTD_H
+#  include <unistd.h>
 /* Assume this is a sufficient precondition */
 #  include <signal.h>
 #endif
@@ -3398,9 +3400,17 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 	/* Do we support a separate console? */
 
 #ifndef WANT_CONSOLE
-	if (!have_windowed) {
+	int missing_tty = !isatty(0) || !isatty(1);
+
+	if (!have_windowed || missing_tty) {
 		script_debug_flag = sci_debug_flags = 0;
-		fprintf(stderr, "On-screen console disabled and driver claims not to support windowed mode.\n");
+
+		fprintf(stderr, "On-screen console disabled and ");
+		if (!have_windowed)
+			fprintf(stderr, "driver claims to be running fullscreen.\n");
+		else
+			fprintf(stderr, "no terminal found.\n");
+
 		if (last_step == script_step_counter)
 			fprintf(stderr, "This error seems to be unrecoverable.\n");
 		if (script_error_flag || script_step_counter == last_step) {
