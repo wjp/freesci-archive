@@ -130,7 +130,7 @@ typedef struct _resource_altsource_struct {
 	unsigned int file_offset;
 	char file; /* Signed because -1 is used for patches */
 
-	struct _resource_source_struct *next;
+	struct _resource_altsource_struct *next;
 } resource_altsource_t;
 
 
