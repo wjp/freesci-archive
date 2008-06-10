@@ -21,6 +21,9 @@
 #include <resource.h>
 
 #ifndef NO_PCMOUT
+#ifdef SCUMMVM
+extern sfx_pcm_device_t sfx_pcm_driver_scummvm;
+#else // SCUMMVM
 #	ifdef HAVE_SDL
 extern sfx_pcm_device_t sfx_pcm_driver_sdl;
 #	endif
@@ -30,10 +33,14 @@ extern sfx_pcm_device_t sfx_pcm_driver_alsa;
 #	ifdef _DREAMCAST
 extern sfx_pcm_device_t sfx_pcm_driver_dc;
 #	endif
+#endif // SCUMMVM
 #endif
 
 sfx_pcm_device_t *pcmout_drivers[] = {
 #ifndef NO_PCMOUT
+#ifdef SCUMMVM
+		&sfx_pcm_driver_scummvm,
+#else // SCUMMVM
 #	ifdef HAVE_SDL
 		&sfx_pcm_driver_sdl,
 #	endif
@@ -43,6 +50,7 @@ sfx_pcm_device_t *pcmout_drivers[] = {
 #	ifdef _DREAMCAST
 		&sfx_pcm_driver_dc,
 #	endif
+#endif // SCUMMVM
 #endif
 	NULL
 };

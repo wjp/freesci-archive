@@ -57,6 +57,20 @@
 #  define SCI_SAFE_ALLOC /* Undefine for debugging */
 #endif
 
+#ifdef SCUMMVM
+//TODO: Remove these defines by replacing their functionality by their ScummVM counterparts
+#define HAVE_ISBLANK
+#define HAVE_UNISTD_H
+#define HAVE_FCNTL_H
+#define HAVE_UNLINK
+#define HAVE_RMDIR
+#define HAVE_MEMCHR
+#define HAVE_FNMATCH_H
+#define HAVE_SYS_TIME_H
+#define HAVE_GETTIMEOFDAY
+#define VERSION "0.6.4"
+#endif // SCUMMVM
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

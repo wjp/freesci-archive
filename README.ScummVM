@@ -1,0 +1,23 @@
+To build FreeSCI inside ScummVM follow these instructions:
+
+1) Extract FreeSCI to a directory called "engines/sci" inside ScummVM
+2) Apply the patch in "engines/sci/src/scummvm/scummvm.patch"
+3) Configure ScummVM by using "./configure --enable-sci"
+4) Run "make"
+
+If you want to build FreeSCI as a dynamic plugin change steps 3 and 4:
+
+3) Configure ScummVM using "./configure --enable-plugins --enable-sci=dynamic"
+4) Run "make plugins/libsci.so"
+
+
+This is the current status of this port:
+
+- Input: keyboard and mouse work correctly
+- Graphics
+  - Games using 16 colors (SCI0 and SCI01) are shown correctly
+  - Games using 256 colors show major graphical glitches
+  - The mouse pointer doesn't use the right colors
+- Sound
+  - Digitalized sound effects play correctly
+  - Music is played using FreeSCI's soft-sequencers (currently broken)

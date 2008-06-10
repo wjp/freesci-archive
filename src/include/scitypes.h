@@ -27,6 +27,27 @@
 #ifndef SCI_TYPES
 #define SCI_TYPES
 
+#ifdef SCUMMVM
+
+#include "common/scummsys.h"
+
+// TODO: rework sci_dir_t to use common/fs.h and remove these includes
+#include <sys/types.h>
+#include <dirent.h>
+
+typedef int8 gint8;
+typedef uint8 guint8;
+
+typedef int16 gint16;
+typedef uint16 guint16;
+
+typedef int32 gint32;
+typedef uint32 guint32;
+
+#undef byte
+
+#else // SCUMMVM
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -85,6 +106,8 @@ typedef unsigned TYPE_32 guint32;
 #undef TYPE_16
 #undef TYPE_32
 
+#endif // SCUMMVM
+
 typedef gint8 sbyte;
 typedef guint8 byte;
 typedef guint16 word;
@@ -115,7 +138,7 @@ enum {
 	FRAC_HI_MASK = (((1L << (32 - FRAC_BITS)) - 1) << FRAC_BITS),
  
 	FRAC_ONE = (1L << FRAC_BITS),		// 1.0
-	FRAC_HALF = (1L << (FRAC_BITS-1)),	// 0.5
+	FRAC_HALF = (1L << (FRAC_BITS-1))	// 0.5
 };
 
 /*
