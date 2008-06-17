@@ -139,8 +139,10 @@
 
 #if _MSC_VER || _DOS
 #  define G_DIR_SEPARATOR_S "\\"
+#  define G_DIR_SEPARATOR '\\'
 #else
 #  define G_DIR_SEPARATOR_S "/"
+#  define G_DIR_SEPARATOR '/'
 #endif
 
 #if defined(__MORPHOS__) || defined(_MSC_VER) || defined(ARM_WINCE) || defined(__amigaos4__)
@@ -414,6 +416,9 @@ sci_file_size(const char *fname);
 ** Parameters: (const char *) fname: Name of file to get filesize of
 ** Returns   : (int) filesize of the file, -1 on error
 */
+
+char *
+_fcaseseek(const char *fname, sci_dir_t *dir);
 
 /* Simple heuristic to work around array handling peculiarity in SQ4:
 It uses StrAt() to read the individual elements, so we must determine

@@ -43,7 +43,6 @@
 #undef SCI_REQUIRE_RESOURCE_FILES
 /* #define SCI_VERBOSE_RESMGR 1 */
 
-
 const char* sci_version_types[] = {
 	"SCI version undetermined (Autodetect failed / not run)",
 	"SCI version 0.xxx",
@@ -136,12 +135,12 @@ int resourcecmp (const void *first, const void *second)
 /*-----------------------------*/
 
 void
-_scir_add_altsource(resource_t *res, int file, unsigned int file_offset)
+_scir_add_altsource(resource_t *res, resource_source_t *source, unsigned int file_offset)
 {
 	resource_altsource_t *rsrc = (resource_altsource_t*)sci_malloc(sizeof(resource_altsource_t));
 
 	rsrc->next = res->alt_sources;
-	rsrc->file = file;
+	rsrc->source = source;
 	rsrc->file_offset = file_offset;
 	res->alt_sources = rsrc;
 }
@@ -156,7 +155,77 @@ _scir_find_resource_unsorted(resource_t *res, int res_nr, int type, int number)
 	return NULL;
 }
 
+/*-----------------------------------*/
+/** Resource source list management **/
+/*-----------------------------------*/
 
+resource_source_t *
+scir_add_external_map(resource_mgr_t *mgr, char *file_name)
+{
+	resource_source_t *newsrc = (resource_source_t *) 
+		malloc(sizeof(resource_source_t));
+
+	/* Add the new source to the SLL of sources */
+	newsrc->next = mgr->sources;
+	mgr->sources = newsrc;
+
+	newsrc->source_type = RESSOURCE_TYPE_EXTERNAL_MAP;
+	newsrc->location.file.name = strdup(file_name);
+	newsrc->scanned = 0;
+	newsrc->associated_map = NULL;
+
+	return newsrc;
+}
+
+resource_source_t *
+scir_add_volume(resource_mgr_t *mgr, resource_source_t *map, char *filename,
+		int number, int extended_addressing)
+{
+	resource_source_t *newsrc = (resource_source_t *) 
+		malloc(sizeof(resource_source_t));
+
+	/* Add the new source to the SLL of sources */
+	newsrc->next = mgr->sources;
+	mgr->sources = newsrc;
+
+	newsrc->source_type = RESSOURCE_TYPE_VOLUME;
+	newsrc->scanned = 0;
+	newsrc->location.file.name = strdup(filename);
+	newsrc->location.file.volume_number = number;
+	newsrc->associated_map = map;
+}
+
+resource_source_t *
+scir_add_patch_dir(resource_mgr_t *mgr, int type, char *dirname)
+{
+	resource_source_t *newsrc = (resource_source_t *) 
+		malloc(sizeof(resource_source_t));
+
+	/* Add the new source to the SLL of sources */
+	newsrc->next = mgr->sources;
+	mgr->sources = newsrc;
+
+	newsrc->source_type = RESSOURCE_TYPE_DIRECTORY;
+	newsrc->scanned = 0;
+	newsrc->location.dir.name = strdup(dirname);
+}
+
+resource_source_t *
+scir_get_volume(resource_mgr_t *mgr, resource_source_t *map, int volume_nr)
+{
+	resource_source_t *seeker = mgr->sources;
+
+	while (seeker)
+	{
+		if (seeker->source_type == RESSOURCE_TYPE_VOLUME &&
+		    seeker->associated_map == map &&
+		    seeker->location.file.volume_number == volume_nr)
+			return seeker;
+		seeker = seeker->next;
+	}
+
+	return NULL;
+}
 
 /*------------------------------------------------*/
 /** Resource manager constructors and operations **/
@@ -190,17 +259,15 @@ _scir_load_from_patch_file(int fh, resource_t *res, char *filename)
 static void
 _scir_load_resource(resource_mgr_t *mgr, resource_t *res, int protect)
 {
-	char *cwd = sci_getcwd();
-	char filename[14];
+	char filename[PATH_MAX];
 	int fh;
 	resource_t backup;
+	char *save_cwd = sci_getcwd();
 
 	memcpy(&backup, res, sizeof(resource_t));
-	/* Enter resource directory */
-	chdir(mgr->resource_path);
 
 	/* First try lower-case name */
-	if (res->file == SCI_RESOURCE_FILE_PATCH) {
+	if (res->source->source_type == RESSOURCE_TYPE_DIRECTORY) {
 
 		if (!patch_sprintfers[mgr->sci_version]) {
 			sciprintf("Resource manager's SCI version (%d) has no patch file name printers -> internal error!\n",
@@ -210,8 +277,9 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res, int protect)
 
 		/* Get patch file name */
 		patch_sprintfers[mgr->sci_version](filename, res);
+		chdir(res->source->location.dir.name);
 	} else
-		sprintf(filename, "resource.%03i", res->file);
+		strcpy(filename, res->source->location.file.name);
 
 	fh = open(filename, O_RDONLY | O_BINARY);
 
@@ -226,20 +294,20 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res, int protect)
 	}    /* Try case-insensitively name */
 
 	if (!IS_VALID_FD(fh)) {
-		sciprintf("Failed to open %s/%s!\n",
-			  mgr->resource_path, filename);
+		sciprintf("Failed to open %s!\n", filename);
 		res->data = NULL;
 		res->status = SCI_STATUS_NOMALLOC;
 		res->size = 0;
-		chdir(cwd);
-		free(cwd);
+		chdir(save_cwd);
+		free(save_cwd);
 		return;
 	}
 
 
 	lseek(fh, res->file_offset, SEEK_SET);
 
-	if (res->file == SCI_RESOURCE_FILE_PATCH)
+	if (res->source->source_type == RESSOURCE_TYPE_DIRECTORY ||
+	    res->source->source_type == RESSOURCE_TYPE_AUDIO_DIRECTORY)
 		_scir_load_from_patch_file(fh, res, filename);
 	else if (!decompressors[mgr->sci_version]) {
 		/* Check whether we support this at all */
@@ -262,15 +330,13 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res, int protect)
 			res->data = NULL;
 			res->status = SCI_STATUS_NOMALLOC;
 			res->size = 0;
-			chdir(cwd);
-			free(cwd);
+			chdir(save_cwd);
+			free(save_cwd);
 			return;
 		}
 	}
 
 	close(fh);
-	chdir(cwd);
-	free(cwd);
 }
 
 resource_t *
@@ -290,7 +356,7 @@ int
 sci_test_view_type(resource_mgr_t *mgr)
 {
 	int fh;
-	char filename[14];
+	char filename[PATH_MAX];
 	int compression;
 	resource_t *res;
 	int i;
@@ -303,12 +369,12 @@ sci_test_view_type(resource_mgr_t *mgr)
 
 		if (!res) continue;
 
-		if (res->file == SCI_RESOURCE_FILE_PATCH)
+		if (res->source->source_type == RESSOURCE_TYPE_DIRECTORY ||
+		    res->source->source_type == RESSOURCE_TYPE_AUDIO_DIRECTORY)
 			continue;
 
-		sprintf(filename, "resource.%03i", res->file);
+		strcpy(filename, res->source->location.file.name);
 		fh = open(filename, O_RDONLY | O_BINARY);
-
 
 		if (!IS_VALID_FD(fh)) {
 			char *raiser = filename;
@@ -336,10 +402,11 @@ sci_test_view_type(resource_mgr_t *mgr)
 
 		if (!res) continue;
 
-		if (res->file == SCI_RESOURCE_FILE_PATCH)
+		if (res->source->source_type == RESSOURCE_TYPE_DIRECTORY ||
+		    res->source->source_type == RESSOURCE_TYPE_AUDIO_DIRECTORY)
 			continue;
 
-		sprintf(filename, "resource.%03i", res->file);
+		strcpy(filename, res->source->location.file.name);
 		fh = open(filename, O_RDONLY | O_BINARY);
 
 
@@ -364,8 +431,170 @@ sci_test_view_type(resource_mgr_t *mgr)
 
 	return mgr->sci_version;
 }
-			
+	
+
 		
+int
+scir_add_appropriate_sources(resource_mgr_t *mgr,
+			     int allow_patches,
+			     char *dir)
+{
+	char *trailing_slash = "";
+	char path_separator;
+	sci_dir_t dirent;
+	char *name;
+	resource_source_t *map;
+	int fd;
+	char fullname[PATH_MAX];
+
+	if (dir[strlen(dir)-1] != '\\' && dir[strlen(dir)-1] != '/')
+	{
+		trailing_slash = "/"; /* FIXME: Win32? */
+	}
+
+	name = malloc(strlen(dir) + 1 +
+		      strlen("RESOURCE.MAP") + 1);
+	
+	sprintf(fullname, "%s%s%s", dir, trailing_slash, "RESOURCE.MAP");
+	fd = sci_open("RESOURCE.MAP", O_RDONLY | O_BINARY);
+	if (!IS_VALID_FD(fd)) return 0;
+	close(fd);
+	map = scir_add_external_map(mgr, fullname);
+	free(name);
+	sci_init_dir(&dirent);
+	name = sci_find_first(&dirent, "RESOURCE.0??");
+	while (name != NULL)
+	{
+		char *dot = strrchr(name, '.');
+		int number = atoi(dot + 1);
+
+		sprintf(fullname, "%s%s%s", dir, G_DIR_SEPARATOR_S, name);
+		scir_add_volume(mgr, map, fullname, number, 0);
+		name = sci_find_next(&dirent);
+	}
+	sci_finish_find(&dirent);
+
+	sci_finish_find(&dirent);
+	sprintf(fullname, "%s%s", dir, G_DIR_SEPARATOR_S);
+	scir_add_patch_dir(mgr, RESSOURCE_TYPE_DIRECTORY, fullname);
+
+	return 1;
+}
+
+static int
+_scir_scan_new_sources(resource_mgr_t *mgr, int *detected_version, resource_source_t *source)
+{
+	int preset_version = mgr->sci_version;
+	int resource_error = 0;
+	int dummy = mgr->sci_version;
+	resource_t **concat_ptr = &(mgr->resources[mgr->resources_nr-1].next);
+
+	if (detected_version == NULL)
+		detected_version = &dummy;
+
+	*detected_version = mgr->sci_version;
+	if (source->next)
+		_scir_scan_new_sources(mgr, detected_version, source->next);
+
+	if (!source->scanned)
+	{
+		source->scanned = 1;
+		switch (source->source_type)
+		{
+		case RESSOURCE_TYPE_DIRECTORY:
+			if (mgr->sci_version <= SCI_VERSION_01)
+				sci0_read_resource_patches(source,
+							   &mgr->resources,
+							   &mgr->resources_nr);
+			else
+				sci1_read_resource_patches(source,
+							   &mgr->resources,
+							   &mgr->resources_nr);
+			break;
+		case RESSOURCE_TYPE_EXTERNAL_MAP:
+			if (preset_version <= SCI_VERSION_01_VGA_ODD
+			    /* || preset_version == SCI_VERSION_AUTODETECT -- subsumed by the above line */) {
+				resource_error =
+					sci0_read_resource_map(mgr, 
+							       source,
+							       &mgr->resources,
+							       &mgr->resources_nr,
+							       detected_version);
+				
+#if 0
+				if (resource_error >= SCI_ERROR_CRITICAL) {
+					sciprintf("Resmgr: Error while loading resource map: %s\n",
+						  sci_error_types[resource_error]);
+					if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND)
+						sciprintf("Running SCI games without a resource map is not supported ATM\n");
+					sci_free(mgr);
+					chdir(caller_cwd);
+					free(caller_cwd);
+					return NULL;
+				}
+				if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND) {
+					/* fixme: Try reading w/o resource.map */
+					resource_error = SCI_ERROR_NO_RESOURCE_FILES_FOUND;
+				}
+
+				if (resource_error == SCI_ERROR_NO_RESOURCE_FILES_FOUND) {
+					/* Initialize empty resource manager */
+					_scir_init_trivial(mgr);
+					resource_error = 0;
+				}
+#endif
+			}
+			
+			if ((preset_version == SCI_VERSION_1_EARLY)||
+			    (preset_version == SCI_VERSION_1_LATE)||
+			    (preset_version == SCI_VERSION_1_1)||
+			    ((*detected_version == SCI_VERSION_AUTODETECT)&&(preset_version == SCI_VERSION_AUTODETECT)))
+			{
+				resource_error =
+					sci1_read_resource_map(mgr,
+							       source,
+							       scir_get_volume(mgr, source, 0),
+							       &mgr->resources,
+							       &mgr->resources_nr,
+							       detected_version);
+					
+				if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND) {
+					/* fixme: Try reading w/o resource.map */
+					resource_error = SCI_ERROR_NO_RESOURCE_FILES_FOUND;
+				}
+				
+				if (resource_error == SCI_ERROR_NO_RESOURCE_FILES_FOUND) {
+					/* Initialize empty resource manager */
+					_scir_init_trivial(mgr);
+					resource_error = 0;
+				}
+				
+				*detected_version = SCI_VERSION_1;
+			}
+			
+			mgr->sci_version = *detected_version;
+			break;
+		}
+		qsort(mgr->resources, mgr->resources_nr, sizeof(resource_t),
+		      resourcecmp); /* Sort resources */
+	}
+	return resource_error;
+}
+
+int
+scir_scan_new_sources(resource_mgr_t *mgr, int *detected_version)
+{
+	_scir_scan_new_sources(mgr, detected_version, mgr->sources);
+}
+
+static void
+_scir_free_resource_sources(resource_source_t *rss)
+{
+	if (rss) {
+		_scir_free_resource_sources(rss->next);
+		free(rss);
+	}
+}
 
 resource_mgr_t *
 scir_new_resource_manager(char *dir, int version,
@@ -390,81 +619,20 @@ scir_new_resource_manager(char *dir, int version,
 	mgr->resource_path = dir;
 
 	mgr->resources = NULL;
+	mgr->resources_nr = 0;
+	mgr->sources = NULL;
+	mgr->sci_version = version;
 
-	if (version <= SCI_VERSION_01_VGA_ODD
-	    /* || version == SCI_VERSION_AUTODETECT -- subsumed by the above line */) {
-		resource_error =
-			sci0_read_resource_map(dir,
-					       &mgr->resources,
-					       &mgr->resources_nr,
-					       &resmap_version);
+	scir_add_appropriate_sources(mgr, allow_patches, dir);
+	scir_scan_new_sources(mgr, &resmap_version);
 
-		if (resource_error >= SCI_ERROR_CRITICAL) {
-			sciprintf("Resmgr: Error while loading resource map: %s\n",
-				  sci_error_types[resource_error]);
-			if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND)
-				sciprintf("Running SCI games without a resource map is not supported ATM\n");
-			sci_free(mgr);
-			chdir(caller_cwd);
-			free(caller_cwd);
-			return NULL;
-		}
-
-		if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND) {
-			/* fixme: Try reading w/o resource.map */
-			resource_error = SCI_ERROR_NO_RESOURCE_FILES_FOUND;
-		}
-
-		if (resource_error == SCI_ERROR_NO_RESOURCE_FILES_FOUND) {
-			/* Initialize empty resource manager */
-			_scir_init_trivial(mgr);
-			resource_error = 0;
-		}
-
-	}
-
-	if ((version == SCI_VERSION_1_EARLY)||
-	    (version == SCI_VERSION_1_LATE)||
-	    (version == SCI_VERSION_1_1)||
-	    ((resmap_version == SCI_VERSION_AUTODETECT)&&(version == SCI_VERSION_AUTODETECT)))
-	{
-		resource_error =
-			sci1_read_resource_map(dir,
-					       &mgr->resources,
-					       &mgr->resources_nr,
-					       &resmap_version);
-
-		if (resource_error >= SCI_ERROR_CRITICAL) {
-			sciprintf("Resmgr: Error while loading resource map: %s\n",
-				  sci_error_types[resource_error]);
-			if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND)
-				sciprintf("Running SCI games without a resource map is not supported ATM\n");
-			sci_free(mgr);
-			chdir(caller_cwd);
-			free(caller_cwd);
-			return NULL;
-		}
-
-		if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND) {
-			/* fixme: Try reading w/o resource.map */
-			resource_error = SCI_ERROR_NO_RESOURCE_FILES_FOUND;
-		}
-
-		if (resource_error == SCI_ERROR_NO_RESOURCE_FILES_FOUND) {
-			/* Initialize empty resource manager */
-			_scir_init_trivial(mgr);
-			resource_error = 0;
-		}
-
-		resmap_version = SCI_VERSION_1;
-	}
-		
 	if (!mgr->resources || !mgr->resources_nr) {
 		if (mgr->resources) {
 			free(mgr->resources);
 			mgr->resources = NULL;
 		}
 		sciprintf("Resmgr: Could not retreive a resource list!\n");
+		_scir_free_resource_sources(mgr->sources);
 		sci_free(mgr);
 		chdir(caller_cwd);
 		free(caller_cwd);
@@ -541,6 +709,7 @@ scir_new_resource_manager(char *dir, int version,
 
 	if (!resource_error)
 	{
+#if 0
 		if (version <= SCI_VERSION_01)
 			sci0_read_resource_patches(dir,
 						   &mgr->resources,
@@ -549,6 +718,7 @@ scir_new_resource_manager(char *dir, int version,
 			sci1_read_resource_patches(dir,
 						   &mgr->resources,
 						   &mgr->resources_nr);
+#endif
 
 		qsort(mgr->resources, mgr->resources_nr, sizeof(resource_t),
 		      resourcecmp); /* Sort resources */
@@ -560,15 +730,6 @@ scir_new_resource_manager(char *dir, int version,
 	free(caller_cwd);
 
 	return mgr;
-}
-
-static void
-_scir_free_resource_sources(resource_altsource_t *rss)
-{
-	if (rss) {
-		_scir_free_resource_sources(rss->next);
-		free(rss);
-	}
 }
 
 static void
@@ -601,7 +762,7 @@ void
 scir_free_resource_manager(resource_mgr_t *mgr)
 {
 	_scir_free_resources(mgr->resources, mgr->resources_nr);
-
+	_scir_free_resource_sources(mgr->sources);
 	mgr->resources = NULL;
 
 	sci_free(mgr);

@@ -1,3 +1,7 @@
+2008-06-17  Lars Skovlund  <lskovlun@image.dk>
+
+	* Resource manager extensions for multiple sources
+
 2008-06-07  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/scriptdebug.c (script_debug): Added check for tty.

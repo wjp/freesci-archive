@@ -44,16 +44,20 @@ sci1_sprintf_patch_file_name(char *string, resource_t *res)
 
 /* version-agnostic patch application */
 static void
-process_patch(char *entry, int restype, int resnumber, resource_t **resource_p, int *resource_nr_p)
+process_patch(resource_source_t *source,
+	      char *entry, int restype, int resnumber, resource_t **resource_p, int *resource_nr_p)
 {
 	int fsize;
+	char filename[PATH_MAX];
 
 	if (restype == sci_invalid_resource)
 		return;
 
 	printf("Patching \"%s\": ", entry);
 
-	if ((fsize = sci_file_size(entry)) < 0)
+	sprintf(filename, "%s%s", source->location.dir.name, entry);
+	fsize = sci_file_size(filename);
+	if (fsize < 0)
 		perror("""__FILE__"": (""__LINE__""): sci_file_size()");
 	else {
 		int file;
@@ -105,10 +109,10 @@ process_patch(char *entry, int restype, int resnumber, resource_t **resource_p, 
 				newrsc->number = resnumber;
 				newrsc->status = SCI_STATUS_NOMALLOC;
 				newrsc->type = restype;
-				newrsc->file = SCI_RESOURCE_FILE_PATCH;
+				newrsc->source = source;
 				newrsc->file_offset = 2 + patch_data_offset;
 
-				_scir_add_altsource(newrsc, SCI_RESOURCE_FILE_PATCH, 2);
+				_scir_add_altsource(newrsc, source, 2);
 
 				close(file);
 
@@ -121,11 +125,13 @@ process_patch(char *entry, int restype, int resnumber, resource_t **resource_p, 
 
 
 int
-sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr_p)
+sci0_read_resource_patches(resource_source_t *source, resource_t **resource_p, int *resource_nr_p)
 {
 	sci_dir_t dir;
 	char *entry;
+	char *caller_cwd = sci_getcwd();
 
+	chdir(source->location.dir.name);
 	sci_init_dir(&dir);
 	entry = sci_find_first(&dir, "*.???");
 	while (entry) {
@@ -156,20 +162,24 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 			}
 		}
 
-		process_patch (entry, restype, resnumber, resource_p, resource_nr_p);
+		process_patch (source, entry, restype, resnumber, resource_p, resource_nr_p);
 
 		entry = sci_find_next(&dir);
 	}
 
+	chdir(caller_cwd);
+	free(caller_cwd);
 	return 0;
 }
 
 int
-sci1_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr_p)
+sci1_read_resource_patches(resource_source_t *source, resource_t **resource_p, int *resource_nr_p)
 {
 	sci_dir_t dir;
 	char *entry;
+	char *caller_cwd = sci_getcwd();
 
+	chdir(source->location.dir.name);
 	sci_init_dir(&dir);
 	entry = sci_find_first(&dir, "*.*");
 	while (entry) {
@@ -202,11 +212,13 @@ sci1_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 			  restype = sci_invalid_resource;
 		}
 
-		process_patch (entry, restype, resnumber, resource_p, resource_nr_p);
+		process_patch (source, entry, restype, resnumber, resource_p, resource_nr_p);
 
 		entry = sci_find_next(&dir);
 	}
 
+	chdir(caller_cwd);
+	free(caller_cwd);
 	return 0;
 }
 

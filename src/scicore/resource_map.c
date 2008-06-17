@@ -46,7 +46,8 @@ detect_odd_sci01(int fh)
     int fsize, resources_nr, tempfh, read_ok;
     char filename[14];
         
-    if ((fsize = sci_fd_size(fh)) < 0) {
+    fsize = sci_fd_size(fh);
+    if (fsize < 0) {
 	perror("Error occured while trying to get filesize of resource.map");
 	return SCI_ERROR_RESMAP_NOT_FOUND;
     }
@@ -77,7 +78,8 @@ detect_odd_sci01(int fh)
 }
 		
 static int
-sci_res_read_entry(byte *buf, resource_t *res, int sci_version)
+sci_res_read_entry(resource_mgr_t *mgr, resource_source_t *map, 
+		   byte *buf, resource_t *res, int sci_version)
 {
 	res->id = buf[0] | (buf[1] << 8);
 	res->type = SCI0_RESID_GET_TYPE(buf);
@@ -85,7 +87,7 @@ sci_res_read_entry(byte *buf, resource_t *res, int sci_version)
 	res->status = SCI_STATUS_NOMALLOC;
 
 	if (sci_version == SCI_VERSION_01_VGA_ODD) {
-		res->file = SCI01V_RESFILE_GET_FILE(buf + 2);
+		res->source = scir_get_volume(mgr, map, SCI01V_RESFILE_GET_FILE(buf + 2));
 		res->file_offset = SCI01V_RESFILE_GET_OFFSET(buf + 2);
 
 #if 0
@@ -93,7 +95,7 @@ sci_res_read_entry(byte *buf, resource_t *res, int sci_version)
 			return 1;
 #endif
 	} else {
-		res->file = SCI0_RESFILE_GET_FILE(buf + 2);
+		res->source = scir_get_volume(mgr, map, SCI0_RESFILE_GET_FILE(buf + 2));
 		res->file_offset = SCI0_RESFILE_GET_OFFSET(buf + 2);
 
 #if 0
@@ -109,6 +111,7 @@ sci_res_read_entry(byte *buf, resource_t *res, int sci_version)
 		res->file, res->file_offset);
 #endif
 
+	if (res->source == NULL) return 1;
 	return 0;
 }
 
@@ -155,8 +158,9 @@ int sci1_parse_header(int fd, int *types, int *lastrt)
 }
 
 
+
 int
-sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, int *sci_version)
+sci0_read_resource_map(resource_mgr_t *mgr, resource_source_t *map, resource_t **resource_p, int *resource_nr_p, int *sci_version)
 {
 	int fsize;
 	int fd;
@@ -168,7 +172,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	int max_resfile_nr = 0;
 	
 	byte buf[SCI0_RESMAP_ENTRIES_SIZE];
-	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY | O_BINARY);
+	fd = sci_open(map->location.file.name, O_RDONLY | O_BINARY);
 
 	if (!IS_VALID_FD(fd))
 		return SCI_ERROR_RESMAP_NOT_FOUND;
@@ -186,7 +190,10 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	   Is the second resource type 'pic'?
 	   
 	   This requires that a given game has both views and pics, 
-	   a safe assumption usually. */
+	   a safe assumption usually, except in message.map and room-specific
+	   (audio) map files, neither of which SCI0 has.
+	   
+	   */
 	   
 	if ((buf[0] == 0x80) &&
 	    (buf[1] % 3 == 0) &&
@@ -227,7 +234,8 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 		next_entry = 1;
 
 		if (read_ok < 0 ) {
-			perror("While reading from resource.map");
+			sciprintf("Error while reading %s: ", map->location.file.name);
+			perror("");
 			next_entry = 0;
 		} else if (read_ok != SCI0_RESMAP_ENTRIES_SIZE) {
 			next_entry = 0;
@@ -239,15 +247,11 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 			int addto = resource_index;
 			int i;
 
-			if (sci_res_read_entry(buf, resources + resource_index, *sci_version)) {
+			if (sci_res_read_entry(mgr, map, buf, resources + resource_index, *sci_version)) {
 				sci_free(resources);
 				close(fd);
 				return SCI_ERROR_RESMAP_NOT_FOUND;
 			}
-
-			if (resources[resource_index].file > max_resfile_nr)
-				max_resfile_nr =
-					resources[resource_index].file;
 
 			for (i = 0; i < resource_index; i++)
 				if (resources[resource_index].id ==
@@ -257,7 +261,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 				}
 
 			_scir_add_altsource(resources + addto,
-					    resources[resource_index].file,
+					    resources[resource_index].source,
 					    resources[resource_index].file_offset);
 
 			if (fresh)
@@ -347,14 +351,14 @@ static int sci10_or_11(int *types)
 }
 
 int
-sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, int *sci_version)
+sci1_read_resource_map(resource_mgr_t *mgr, resource_source_t *map, resource_source_t *vol,
+		       resource_t **resource_p, int *resource_nr_p, int *sci_version)
 {
 	int fsize;
 	int fd;
-	resource_t *resources;
+	resource_t *resources, *resource_start;
 	int resources_nr;
 	int resource_index = 0;
-	int max_resfile_nr = 0;
 	int ofs, header_size;
 	int *types = (int*)sci_malloc(sizeof(int) * (sci1_last_resource+1));
 	int i;
@@ -363,7 +367,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	int entrysize;
 	int entry_size_selector;
 
-	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY | O_BINARY);
+	fd = sci_open(map->location.file.name, O_RDONLY | O_BINARY);
 
 	if (!IS_VALID_FD(fd))
 		return SCI_ERROR_RESMAP_NOT_FOUND;
@@ -398,10 +402,13 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	}
 
 	resources_nr = (fsize - types[0]) / entrysize;
+	resource_start = resources = (resource_t*)sci_realloc(mgr->resources, (mgr->resources_nr + resources_nr)*sizeof(resource_t));
+	resources += mgr->resources_nr;
 
-	resources = (resource_t*)sci_calloc(resources_nr, sizeof(resource_t));
+	i = 0;
+	while (types[i] == 0) i++;
+	header_size = ofs = types[i];
 
-	header_size = ofs = types[0];
 	lseek(fd, ofs, SEEK_SET);
 
 	for (i=0; i<resources_nr; i++)
@@ -414,8 +421,14 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 
 		if (read_ok < entrysize)
 		{
-			perror("While reading from resource.map");
+#if 0
+			if (!eof(fd))
+			{
+				sciprintf("Error while reading %s: ", map->location.file.name);
+				perror("");
+			} else read_ok = 1;
 			break;
+#endif
 		}
 
 		res = &(resources[resource_index]);
@@ -423,27 +436,18 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 		res->number= SCI1_RESFILE_GET_NUMBER(buf);
 		res->status = SCI_STATUS_NOMALLOC;
 
-		if ((res->type == sci_heap) &&
-		    (res->number == 0))
-		  {
-		    printf("%d: %02x %02x %02x %02x %02x %02x\n", i, buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
-		  }
 		if (entry_size_selector < SCI_VERSION_1_1)
 		{
-		    res->file = SCI1_RESFILE_GET_FILE(buf);
-		    res->file_offset = SCI1_RESFILE_GET_OFFSET(buf);
+			res->source = scir_get_volume(mgr, map, SCI1_RESFILE_GET_FILE(buf));
+			res->file_offset = SCI1_RESFILE_GET_OFFSET(buf);
 		} else
 		{
-		    res->file = 0;
-		    res->file_offset = SCI11_RESFILE_GET_OFFSET(buf);
+			res->source = vol; 
+			res->file_offset = SCI11_RESFILE_GET_OFFSET(buf);
 		};
 		
 		res->id = res->number | (res->type << 16);
 
-		if (resources[resource_index].file > max_resfile_nr)
-			max_resfile_nr =
-				resources[resource_index].file;
-		
 		for (j = 0; i < resource_index; i++)
 			if (resources[resource_index].id ==
 			    resources[i].id) {
@@ -459,7 +463,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 #endif
 
 		_scir_add_altsource(resources + addto,
-				    resources[resource_index].file,
+				    resources[resource_index].source,
 				    resources[resource_index].file_offset);
 		
 		if (fresh)
@@ -471,8 +475,8 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	close(fd);
 	free(types);
 
-	*resource_p = resources;
-	*resource_nr_p = resource_index;
+	*resource_p = resource_start;
+	*resource_nr_p += resource_index;
 	return 0;
 		
 }

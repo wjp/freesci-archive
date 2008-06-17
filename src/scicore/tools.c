@@ -24,8 +24,11 @@
 
 ***************************************************************************/
 
+#define _GNU_SOURCE /* For FNM_CASEFOLD in fnmatch.h */
+
 #include <stdlib.h>
 #include <engine.h>
+
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
 #endif
@@ -395,6 +398,11 @@ sci_find_first(sci_dir_t *dir, const char *mask)
 	return sci_find_next(dir);
 }
 
+#ifndef FNM_CASEFOLD
+#define FNM_CASEFOLD 0
+#warning "File searches will not be case-insensitive!"
+#endif
+
 char *
 sci_find_next(sci_dir_t *dir)
 {
@@ -404,7 +412,7 @@ sci_find_next(sci_dir_t *dir)
 		if (match->d_name[0] == '.')
 			continue;
 
-		if (!fnmatch(dir->mask_copy, match->d_name, 0))
+		if (!fnmatch(dir->mask_copy, match->d_name, FNM_CASEFOLD))
 			return match->d_name;
 	}
 
@@ -589,7 +597,7 @@ sci_sched_yield()
 #endif /* !HAVE_SCHED_YIELD */
 
 
-static char *
+char *
 _fcaseseek(const char *fname, sci_dir_t *dir)
 		 /* Expects *dir to be uninitialized and the caller to
 		 ** free it afterwards  */
@@ -656,13 +664,30 @@ int
 sci_open(const char *fname, int flags)
 {
 	sci_dir_t dir;
-	char *name = _fcaseseek(fname, &dir);
+	char *name;
 	int file = SCI_INVALID_FD;
+	char *slash = strrchr(fname, G_DIR_SEPARATOR);
+	char *path;
+	char *caller_cwd = sci_getcwd();
 
+	sci_init_dir(&dir);
+	if (slash)
+	{
+		path = (char *) malloc(slash-fname+1);
+		path[slash-fname] = 0;
+		strncpy(path, fname, slash-fname);
+		chdir(path);
+		free(path);
+	}
+
+	name = _fcaseseek(slash ? slash + 1 : fname, &dir);
 	if (name)
 		file = open(name, flags);
 
 	sci_finish_find(&dir); /* Free memory */
+
+	chdir(caller_cwd);
+	free(caller_cwd);
 
 	return file;
 }

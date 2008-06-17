@@ -1102,7 +1102,7 @@ main(int argc, char** argv)
 	sciprintf("Loading resources...\n");
 
 	resmgr = scir_new_resource_manager(resource_dir, res_version, 1, 256*1024);
-
+	
 	if (!resmgr) {
 		printf("No resources found in '%s'.\nAborting...\n",
 		       resource_dir);

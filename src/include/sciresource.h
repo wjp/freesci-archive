@@ -98,6 +98,16 @@
 
 #define SCI_VERSION_1 SCI_VERSION_1_EARLY
 
+#define RESSOURCE_TYPE_DIRECTORY 0
+#define RESSOURCE_TYPE_AUDIO_DIRECTORY 1
+#define RESSOURCE_TYPE_VOLUME 2
+#define RESSOURCE_TYPE_EXTERNAL_MAP 3
+#define RESSOURCE_TYPE_INTERNAL_MAP 4
+#define RESSOURCE_TYPE_MASK 127
+#define RESSOURCE_ADDRESSING_BASIC 0
+#define RESSOURCE_ADDRESSING_EXTENDED 128
+#define RESSOURCE_ADDRESSING_MASK 128
+
 extern DLLEXTERN const char* sci_error_types[];
 extern DLLEXTERN const char* sci_version_types[];
 extern DLLEXTERN const char* sci_resource_types[];
@@ -125,11 +135,28 @@ struct resource_index_struct {
 
 typedef struct resource_index_struct resource_index_t;
 
+typedef struct resource_source_struct {
+	int source_type;
+	int scanned;
+	union {
+		struct {
+			char *name;
+			int volume_number;
+		} file;
+		struct {
+			char *name;
+		} dir;
+		struct {
+			struct _resource_struct *resource;
+		} internal_map;
+	} location;
+	struct resource_source_struct *associated_map;
+	struct resource_source_struct *next;
+} resource_source_t;
 
 typedef struct _resource_altsource_struct {
+	resource_source_t *source;
 	unsigned int file_offset;
-	char file; /* Signed because -1 is used for patches */
-
 	struct _resource_altsource_struct *next;
 } resource_altsource_t;
 
@@ -144,7 +171,7 @@ typedef struct _resource_struct {
 	unsigned int size;
 
 	unsigned int file_offset; /* Offset in file */
-	signed char file; /* Number of the resource file this resource is stored in */
+	resource_source_t *source;
 
 	unsigned char status;
 	unsigned short lockers; /* Number of places where this resource was locked */
@@ -161,6 +188,7 @@ typedef struct {
 	int sci_version; /* SCI resource version to use */
 
 	int resources_nr;
+	resource_source_t *sources;
 	resource_t *resources;
 
 	int memory_locked; /* Amount of resource bytes in locked memory */ 
@@ -192,6 +220,56 @@ scir_new_resource_manager(char *dir, int version, char allow_patches, int max_me
 ** max_memory will not be interpreted as a hard limit, only as a restriction for resources
 ** which are not explicitly locked. However, a warning will be issued whenever this limit
 ** is exceeded.
+*/
+
+resource_source_t *
+scir_add_patch_dir(resource_mgr_t *mgr, int type, char *path);
+/* Add a path to the resource manager's list of sources.
+** Parameters: (resource_mgr_t *) mgr: The resource manager to look up in
+**             (int) dirtype: The type of patch directory to add, 
+**             either RESSOURCE_TYPE_DIRECTORY or RESSOURCE_TYPE_AUDIO_DIRECTORY
+**             (char *) path: The path to add
+** Returns: A pointer to the added source structure, or NULL if an error occurred.
+*/
+
+resource_source_t *
+scir_get_volume(resource_mgr_t *mgr, resource_source_t *map, int volume_nr);
+
+resource_source_t *
+scir_add_volume(resource_mgr_t *mgr, resource_source_t *map, char *filename,
+	        int number, int extended_addressing);
+/* Add a volume to the resource manager's list of sources.
+** Parameters: (resource_mgr_t *) mgr: The resource manager to look up in
+**             (resource_source_t *) map: The map associated with this volume
+**             (char *) filename: The name of the volume to add
+**             (int) extended_addressing: 1 if this volume uses extended addressing,
+**                                        0 otherwise.
+** Returns: A pointer to the added source structure, or NULL if an error occurred.
+*/
+
+resource_source_t *
+scir_add_external_map(resource_mgr_t *mgr, char *file_name);
+/* Add an external (i.e. separate file) map resource to the resource manager's list of sources.
+** Parameters: (resource_mgr_t *) mgr: The resource manager to look up in
+**             (char *) file_name: The name of the volume to add
+** Returns: A pointer to the added source structure, or NULL if an error occurred.
+*/
+
+resource_source_t *
+scir_add_internal_map(resource_mgr_t *mgr, resource_t *map);
+/* Add an internal (i.e. a resource) map resource to the resource manager's list of sources.
+** Parameters: (resource_mgr_t *) mgr: The resource manager to look up in
+**             (char *) file_name: The name of the volume to add
+** Returns: A pointer to the added source structure, or NULL if an error occurred.
+*/
+
+int
+scir_scan_new_sources(resource_mgr_t *mgr, int *detected_version);
+/* Scans newly registered resource sources for resources, earliest addition first. 
+** Parameters: (resource_mgr_t *) mgr: The resource manager to look up in
+**             (int *) detected_version: Pointer to the detected version number,
+**					 used during startup. May be NULL.
+** Returns: One of SCI_ERROR_*. 
 */
 
 resource_t *
@@ -240,7 +318,7 @@ scir_free_resource_manager(resource_mgr_t *mgr);
 /**--- Resource map decoding functions ---*/
 
 int
-sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int *sci_version);
+sci0_read_resource_map(resource_mgr_t *mgr, resource_source_t *map, resource_t **resources, int *resource_nr_p, int *sci_version);
 /* Reads the SCI0 resource.map file from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
@@ -254,7 +332,8 @@ sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, i
 */
 
 int
-sci1_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int *sci_version);
+sci1_read_resource_map(resource_mgr_t *mgr, resource_source_t *map, resource_source_t *vol,
+		       resource_t **resource_p, int *resource_nr_p, int *sci_version);
 /* Reads the SCI1 resource.map file from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
@@ -288,7 +367,7 @@ sci1_sprintf_patch_file_name(char *string, resource_t *res);
 */
 
 int
-sci0_read_resource_patches(char *path, resource_t **resources, int *resource_nr_p);
+sci0_read_resource_patches(resource_source_t *source, resource_t **resources, int *resource_nr_p);
 /* Reads SCI0 patch files from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
@@ -301,7 +380,7 @@ sci0_read_resource_patches(char *path, resource_t **resources, int *resource_nr_
 */
 
 int
-sci1_read_resource_patches(char *path, resource_t **resources, int *resource_nr_p);
+sci1_read_resource_patches(resource_source_t *source, resource_t **resources, int *resource_nr_p);
 /* Reads SCI1 patch files from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
@@ -382,6 +461,8 @@ _scir_free_resources(resource_t *resources, int resources_nr);
 resource_t *
 _scir_find_resource_unsorted(resource_t *res, int res_nr, int type, int number);
 /* Finds a resource matching type.number in an unsorted resource_t block
+** To be used during initial resource loading, when the resource list
+** may not have been sorted yet. 
 ** Parameters: (resource_t *) res: Pointer to the block to search in
 **             (int) res_nr: Number of resource_t structs allocated and defined
 **                           in the block pointed to by res
@@ -391,11 +472,10 @@ _scir_find_resource_unsorted(resource_t *res, int res_nr, int type, int number);
 */
 
 void
-_scir_add_altsource(resource_t *res, int file, unsigned int file_offset);
+_scir_add_altsource(resource_t *res, resource_source_t *source, unsigned int file_offset);
 /* Adds an alternative source to a resource
 ** Parameters: (resource_t *) res: The resource to add to
-**             (int) file: file the resource is stored in, or SCI_RESOURCE_FILE_PATCH
-**                         if it's in a patch file
+**             (resource_source_t *) source: The source of the resource
 **             (unsigned int) file_offset: Offset in the file the resource
 **                            is stored at
 ** Retruns   : (void)
