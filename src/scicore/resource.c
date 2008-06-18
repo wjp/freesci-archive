@@ -452,7 +452,7 @@ scir_add_appropriate_sources(resource_mgr_t *mgr,
 		trailing_slash = "/"; /* FIXME: Win32? */
 	}
 
-	name = malloc(strlen(dir) + 1 +
+	name = (char *)malloc(strlen(dir) + 1 +
 		      strlen("RESOURCE.MAP") + 1);
 	
 	sprintf(fullname, "%s%s%s", dir, trailing_slash, "RESOURCE.MAP");
