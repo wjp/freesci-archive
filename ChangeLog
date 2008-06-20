@@ -1,3 +1,11 @@
+2008-06-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/softseq/fluidsynth.c: Added FluidSynth driver.
+	* src/sfx/softseq/Makefile.am, src/sfx/softseq/softsequencers.c,
+	configure.ac: Updated.
+
+	* src/sfx/seq/gm.c (midi_gm_allstop, midi_gm_reverb): Bug fix.
+
 2008-06-17  Lars Skovlund  <lskovlun@image.dk>
 
 	* Resource manager extensions for multiple sources

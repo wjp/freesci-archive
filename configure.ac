@@ -114,7 +114,11 @@ if test "${ac_cv_header_dmedia_audio_h}" = "yes"; then
 	esac
 fi
 
+AC_CHECK_HEADERS(fluidsynth.h)
 
+if test "${ac_cv_header_fluidsynth_h}" = "yes"; then
+	LIBS="-lfluidsynth $LIBS"
+fi
 
 AC_ARG_WITH(sdl, [  --without-sdl           Do not build the SDL driver])
 if test x"$with_sdl" != xno; then

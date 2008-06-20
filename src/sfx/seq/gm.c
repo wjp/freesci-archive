@@ -119,14 +119,14 @@ midi_gm_volume(guint8 volume)
 static int
 midi_gm_allstop(void)
 {
-	byte data[3] = { 0xc0,
+	byte data[3] = { 0xb0,
 			 0x78, /* all sound off */
 			 0 };
 	int i;
 
-	/* Set reverb on all channels */
+	/* All sound off on all channels */
 	for (i = 0; i < 16; i++) {
-		data[0] = 0xc0 | i;
+		data[0] = 0xb0 | i;
 		writer->write(writer, data, 3);
 	}
 	if (writer->flush)
@@ -138,7 +138,7 @@ midi_gm_allstop(void)
 static int
 midi_gm_reverb(int reverb)
 {
-	byte data[3] = { 0xc0,
+	byte data[3] = { 0xb0,
 			 91, /* set reverb */
 			 reverb };
 	int i;
@@ -146,7 +146,7 @@ midi_gm_reverb(int reverb)
 	/* Set reverb on all channels */
 	for (i = 0; i < 16; i++)
 		if (i != 9) {
-			data[0] = 0xc0 | i;
+			data[0] = 0xb0 | i;
 			writer->write(writer, data, 3);
 		}
 	if (writer->flush)

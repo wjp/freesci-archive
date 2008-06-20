@@ -27,6 +27,10 @@
 
 ***************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <sfx_softseq.h>
 
 extern sfx_softseq_t sfx_softseq_opl2;
@@ -34,6 +38,7 @@ extern sfx_softseq_t sfx_softseq_SN76496;
 extern sfx_softseq_t sfx_softseq_pcspeaker;
 extern sfx_softseq_t sfx_softseq_amiga;
 extern sfx_softseq_t sfx_softseq_mt32;
+extern sfx_softseq_t sfx_softseq_fluidsynth;
 
 static sfx_softseq_t *sw_sequencers[] = {
 	&sfx_softseq_opl2,
@@ -41,6 +46,9 @@ static sfx_softseq_t *sw_sequencers[] = {
 	&sfx_softseq_SN76496,
 	&sfx_softseq_pcspeaker,
 	&sfx_softseq_amiga,
+#ifdef HAVE_FLUIDSYNTH_H
+	&sfx_softseq_fluidsynth,
+#endif
 	NULL
 };
 
