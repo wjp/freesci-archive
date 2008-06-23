@@ -23,6 +23,7 @@
 #  include <unistd.h>
 #endif
 #include <sfx_sequencer.h>
+#include <sfx-instrument-map.h>
 #include <resource.h>
 
 #ifdef _WIN32
@@ -45,9 +46,6 @@ static int midi_mt32_poke(guint32 address, guint8 *data, unsigned int n);
 static int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
 			  guint8 *data2, unsigned int count2);
 static int midi_mt32_write_block(guint8 *data, unsigned int count);
-static int midi_mt32_patch001_type(guint8 *data, unsigned int length);
-static int midi_mt32_patch001_type0_length(guint8 *data, unsigned int length);
-static int midi_mt32_patch001_type1_length(guint8 *data, unsigned int length);
 static int midi_mt32_sysex_delay(void);
 static int midi_mt32_volume(guint8 volume);
 static int midi_mt32_reverb(int param);
@@ -62,13 +60,6 @@ static char shutdown_msg[20];
 static long mt32_init_sec, mt32_init_usec; /* Time at initialisation */
 static int mt32_init_delay = 0; /* Used to count the number of ticks (1/60s of a second) we should
 				** wait before initialisation has been completed  */
-
-static gint8 patch_map[128];
-static gint8 keyshift[128];
-static gint8 volume_adjust[128];
-static guint8 velocity_map_index[128];
-static guint8 velocity_map[4][128];
-static gint8 rhythmkey_map[128];
 
 /* timbre, volume, panpot, reverb.  keys 24-87 (64 keys)*/
 static guint8 default_rhythm_keymap[256] = { /* MT-32 default */
@@ -169,10 +160,18 @@ int midi_mt32_open(int length, byte *data, int length2, byte *data2, void *dev)
 
 	midi_mt32_allstop();
 
-	type = midi_mt32_patch001_type(data, length);
-	printf("MT-32: Programming Roland MT-32 with patch.001 (v%i) %d bytes\n", type, length);
+	if (!data) {
+		type = SFX_MAP_UNKNOWN;
+		sciprintf("MT-32: No patch.001 found, using defaults\n");
+	} else {
+		type = sfx_instrument_map_detect(data, length);
+		if (type == SFX_MAP_UNKNOWN)
+			sciprintf("MT-32: Unknown patch.001 format, using defaults\n");
+		else
+			sciprintf("MT-32: Programming Roland MT-32 with patch.001 (v%i) %d bytes\n", type, length);
+	}
 
-	if (type == 0) {
+	if (type == SFX_MAP_SCI0_MT32) {
 		/* Display MT-32 initialization message */
 		printf("MT-32: Displaying Text: \"%.20s\"\n", data + 20);
 		midi_mt32_poke(0x200000, data + 20, 20);
@@ -228,23 +227,11 @@ int midi_mt32_open(int length, byte *data, int length2, byte *data2, void *dev)
 		printf("MT-32: Setting default volume (%d)\n", data[0x3c]);
 		midi_mt32_volume(data[0x3c]);
 		return 0;
-	} else if (type == 1) {
-		printf("MT-32: Displaying Text: \"%.20s\"\n", data + 20);
-		midi_mt32_poke(0x200000, data + 20, 20);
+	} else if (type == SFX_MAP_SCI1) {
 		printf("MT-32: Loading SysEx bank\n");
 		midi_mt32_write_block(data + 1155, (data[1154] << 8) + data[1153]);
-		memcpy(patch_map, data, 128);
-		memcpy(keyshift, data + 128, 128);
-		memcpy(volume_adjust, data + 256, 128);
-		memcpy(velocity_map_index, data + 513, 128);
-		for (i = 0; i < 4; i++)
-			memcpy(velocity_map[i], data + 641 + i * 128, 128);
-		memcpy(rhythmkey_map, data + 384, 128);
-
-		printf("MT-32: Displaying Text: \"%.20s\"\n", data);
-		midi_mt32_poke(0x200000, data, 20);
 		return 0;
-	} else if (type == 2) {
+	} else {
 		midi_mt32_poke(0x200000, (guint8 *)"   FreeSCI Rocks!  ", 20);
 		return midi_mt32_defaults(0x0c,1);  /* send defaults in absence of patch data */
 	}
@@ -389,64 +376,6 @@ midi_mt32_write_block(guint8 *data, unsigned int count)
 		}
 	}
 
-	return 0;
-}
-
-
-static int
-midi_mt32_patch001_type(guint8 *data, unsigned int length)
-{
-	if (data == NULL)  /* kq4 doesn't have a patch */
-		return 2;
-
-	/* length test */
-	if (length < 1155)
-		return 0;
-	if (length > 16889)
-		return 1;
-	if (midi_mt32_patch001_type0_length(data, length) &&
-	    !midi_mt32_patch001_type1_length(data, length))
-		return 0;
-	if (midi_mt32_patch001_type1_length(data, length) &&
-	    !midi_mt32_patch001_type0_length(data, length))
-		return 1;
-	return -1;
-}
-
-
-static int
-midi_mt32_patch001_type0_length(guint8 *data, unsigned int length)
-{
-	unsigned int pos = 492 + 246 * data[491];
-
-	if (NULL == data) {
-		fprintf(stderr, "midi_mt32_patch001_type0_length(): NULL passed for data\n");
-		return 1;
-	}
-
-/*  printf("timbres %d (post = %04x)\n",data[491], pos);*/
-
-	if ((length >= (pos + 386)) && (data[pos] == 0xAB) && (data[pos + 1] == 0xCD))
-		pos += 386;
-
-/*  printf("pos = %04x (%02x %02x)\n", pos, data[pos], data[pos + 1]); */
-
-	if ((length >= (pos + 267)) && (data[pos] == 0xDC) && (data[pos + 1] == 0xBA))
-		pos += 267;
-
-/*  printf("pos = %04x %04x (%d)\n", pos, length, pos-length); */
-
-
-	if (pos == length)
-		return 1;
-	return 0;
-}
-
-static int
-midi_mt32_patch001_type1_length(guint8 *data, unsigned int length)
-{
-	if ((length >= 1155) && (((data[1154] << 8) + data[1153] + 1155) == length))
-		return 1;
 	return 0;
 }
 

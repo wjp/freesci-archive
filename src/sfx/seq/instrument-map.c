@@ -104,6 +104,53 @@ sfx_instrument_map_free(sfx_instrument_map_t *map)
 #define PATCH_MIN_SIZE PATCH_INIT_DATA
 
 
+static int
+patch001_type0_length(byte *data, size_t length)
+{
+	unsigned int pos = 492 + 246 * data[491];
+
+/*  printf("timbres %d (post = %04x)\n",data[491], pos);*/
+
+	if ((length >= (pos + 386)) && (data[pos] == 0xAB) && (data[pos + 1] == 0xCD))
+		pos += 386;
+
+/*  printf("pos = %04x (%02x %02x)\n", pos, data[pos], data[pos + 1]); */
+
+	if ((length >= (pos + 267)) && (data[pos] == 0xDC) && (data[pos + 1] == 0xBA))
+		pos += 267;
+
+/*  printf("pos = %04x %04x (%d)\n", pos, length, pos-length); */
+
+
+	if (pos == length)
+		return 1;
+	return 0;
+}
+
+static int
+patch001_type1_length(byte *data, size_t length)
+{
+	if ((length >= 1155) && (((data[1154] << 8) + data[1153] + 1155) == length))
+		return 1;
+	return 0;
+}
+
+int
+sfx_instrument_map_detect(byte *data, size_t length)
+{
+	/* length test */
+	if (length < 1155)
+		return SFX_MAP_SCI0_MT32;
+	if (length > 16889)
+		return SFX_MAP_SCI1;
+	if (patch001_type0_length(data, length) &&
+	    !patch001_type1_length(data, length))
+		return SFX_MAP_SCI0_MT32;
+	if (patch001_type1_length(data, length) &&
+	    !patch001_type0_length(data, length))
+		return SFX_MAP_SCI1;
+	return SFX_MAP_UNKNOWN;
+}
 
 
 sfx_instrument_map_t *

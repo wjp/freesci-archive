@@ -1,5 +1,14 @@
 2008-06-23  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/include/sfx-instrument-map.h, src/sfx/seq/instrument-map.c,
+	src/sfx/seq/mt32.c: Moved instrument map detection from mt32.c to
+	instrument-map.c.
+
+	* src/sfx/seq/map-mt32-to-gm.c: Added file.
+	* src/sfx/seq/Makefile.am: Updated.
+
+2008-06-23  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/include/sfx_sequencer.h, src/include/sfx_softseq.h,
 	src/sfx/player/polled.c, src/sfx/player/realtime.c,
 	src/sfx/seq/gm.c, src/sfx/seq/mt32.c, src/sfx/seq/oss-adlib.c,

@@ -44,8 +44,10 @@ midi_gm_open(int patch_len, byte *data, int patch2_len, byte *data2, void *devic
 {
 	sfx_instrument_map_t *instrument_map = sfx_instrument_map_load_sci(data, patch_len);
 
-	if (!instrument_map)
-		fprintf(stderr, "[GM]  Found no instrument map, using defaults\n");
+	if (!instrument_map) {
+		fprintf(stderr, "[GM]  No GM instrument map found, trying MT-32 instrument map..\n");
+		instrument_map = sfx_instrument_map_mt32_to_gm(data2, patch2_len);
+	}
 
 	writer = sfx_mapped_writer((midi_writer_t *) device, instrument_map);
 
