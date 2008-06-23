@@ -170,13 +170,13 @@ pp_set_option(char *name, char *value)
 static int
 pp_init(resource_mgr_t *resmgr, int expected_latency)
 {
-	resource_t *res = NULL;
+	resource_t *res = NULL, *res2 = NULL;
 	int fd;
 
 	if (!mixer)
 		return SFX_ERROR;
 
-	/* Temporary hack to detect Amiga games. */
+	/* FIXME Temporary hack to detect Amiga games. */
 	fd = sci_open("bank.001", O_RDONLY);
 
 	if (fd == SCI_INVALID_FD)
@@ -195,9 +195,15 @@ pp_init(resource_mgr_t *resmgr, int expected_latency)
 		res = scir_find_resource(resmgr, sci_patch, seq->patch_nr, 0);
 	}
 
+	if (seq->patch2_nr != SFX_SEQ_PATCHFILE_NONE) {
+		res2 = scir_find_resource(resmgr, sci_patch, seq->patch2_nr, 0);
+	}
+
 	if (seq->init(seq,
 		      (res)? res->data : NULL,
-		      (res)? res->size : 0)) {
+		      (res)? res->size : 0,
+		      (res2)? res2->data : NULL,
+		      (res2)? res2->size : 0)) {
 		sciprintf("[sfx:seq:polled] Initialisation failed: Sequencer '%s', v%s failed to initialise\n",
 			  seq->name, seq->version);
 		return SFX_ERROR;

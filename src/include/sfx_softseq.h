@@ -51,11 +51,14 @@ typedef struct sfx_softseq {
 	*/
 
 	int
-	(*init)(struct sfx_softseq *self, byte *res_data, int res_size);
+	(*init)(struct sfx_softseq *self, byte *res_data, int res_size,
+		byte *res2_data, int res2_size);
 	/* Initialises the sequencer
 	** Parameters: (sfx_softseq_t *) self: Self reference
 	**             (byte *) res_data: Resource data for 'patch_nr' (see below)
 	**             (int) res_size: Number of bytes in 'res_data'
+	**             (byte *) res2_data: Resource data for 'patch2_nr' (see below)
+	**             (int) res2_size: Number of bytes in 'res2_data'
 	** Returns   : (int) SFX_OK on success, SFX_ERROR otherwise
 	** Note that 'res_data' is only a valid pointer for this call. If the
 	** data is needed later during execution, it should be backed up internally.
@@ -101,7 +104,9 @@ typedef struct sfx_softseq {
 
 	void *internal; /* Internal data, may be used by sfx_softseq_t inmplementors */
 
-	int patch_nr; /* Number of the patch file associated with this sequencer,
+	int patch_nr; /* Number of the first patch file associated with this sequencer,
+		      ** or SFX_SEQ_PATCHFILE_NONE  */
+	int patch2_nr; /* Number of the second patch file associated with this sequencer,
 		      ** or SFX_SEQ_PATCHFILE_NONE  */
 	int playmask; /* playflag identifying the device emulated */
 	/* 0x01	-- MT-32

@@ -1,5 +1,20 @@
 2008-06-23  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/include/sfx_sequencer.h, src/include/sfx_softseq.h,
+	src/sfx/player/polled.c, src/sfx/player/realtime.c,
+	src/sfx/seq/gm.c, src/sfx/seq/mt32.c, src/sfx/seq/oss-adlib.c,
+	src/sfx/softseq/amiga.c, src/sfx/softseq/fluidsynth.c,
+	src/sfx/softseq/mt32.cpp, src/sfx/softseq/opl2.c,
+	src/sfx/softseq/pcspeaker.c, src/sfx/softseq/SN76496.c:
+	(Soft-)sequencers can now request two patch files.
+
+	* src/sfx/pcm_device/alsa.c (pcmout_alsa_exit): Stop thread before
+	closing PCM device.
+
+	* src/sfx/seq/dc-amiga.c: Removed.
+
+2008-06-23  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/sfx/pcm_device/alsa.c: Use blocking I/O instead of async
 	callbacks.
 	* configure.ac: Check for pthread.

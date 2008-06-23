@@ -40,9 +40,9 @@
 static midi_writer_t *writer = NULL;
 
 static int
-midi_gm_open(int patchlen, byte *data, void *device)
+midi_gm_open(int patch_len, byte *data, int patch2_len, byte *data2, void *device)
 {
-	sfx_instrument_map_t *instrument_map = sfx_instrument_map_load_sci(data, patchlen);
+	sfx_instrument_map_t *instrument_map = sfx_instrument_map_load_sci(data, patch_len);
 
 	if (!instrument_map)
 		fprintf(stderr, "[GM]  Found no instrument map, using defaults\n");
@@ -175,6 +175,7 @@ sfx_sequencer_t sfx_sequencer_gm = {
 	&midi_gm_volume,
 	&midi_gm_reverb,
 	004,	/* patch.004 */
+	001,	/* patch.001 */
 	0x01,	/* playflag */
 	1,	/* do play rhythm */
 	64,	/* max polyphony */

@@ -54,7 +54,8 @@ SN76496_set_option(sfx_softseq_t *self, char *name, char *value)
 }
 
 static int
-SN76496_init(sfx_softseq_t *self, byte *patch, int patch_len)
+SN76496_init(sfx_softseq_t *self, byte *patch, int patch_len, byte *patch2,
+	     int patch2_len)
 {
 	return SFX_OK;
 }
@@ -238,6 +239,7 @@ sfx_softseq_t sfx_softseq_SN76496 = {
 	SN76496_poll,
 	SN76496_allstop,
 	NULL,
+	SFX_SEQ_PATCHFILE_NONE,
 	SFX_SEQ_PATCHFILE_NONE,
 	0x10,  /* Tandy/PCJr channels */
 	0, /* No rhythm channel */

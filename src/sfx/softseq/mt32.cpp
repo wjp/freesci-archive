@@ -123,7 +123,8 @@ mt32_poll(sfx_softseq_t *self, byte *dest, int count)
 }
 
 static int
-mt32_init(sfx_softseq_t *self, byte *data_ptr, int data_length)
+mt32_init(sfx_softseq_t *self, byte *data_ptr, int data_length, byte *data2_ptr,
+	  int data2_length)
 {
 	MT32Emu::SynthProperties prop;
 	char *home = sci_get_homedir();
@@ -164,7 +165,8 @@ mt32_init(sfx_softseq_t *self, byte *data_ptr, int data_length)
 		return SFX_ERROR;
 	initializing = 0;
 
-	mt32seq->open(data_length, data_ptr, &midi_writer_mt32);
+	mt32seq->open(data_length, data_ptr, data2_length, data2_ptr,
+		      &midi_writer_mt32);
 
 	free(romdir);
 
@@ -218,6 +220,7 @@ sfx_softseq_t sfx_softseq_mt32 = {
 	mt32_allstop,
 	NULL,
 	001,	/* patch.001 */
+	SFX_SEQ_PATCHFILE_NONE,
 	0x01,	/* playflag */
 	1,	/* do play channel 9 */
 	32, /* Max polypgony */

@@ -158,6 +158,22 @@ rt_timer_callback(void)
 	}
 }
 
+static resource_t *
+find_patch(resource_mgr_t *resmgr, char *seq, int patchfile)
+{
+	resource_t *res = NULL;
+
+	if (patchfile != SFX_SEQ_PATCHFILE_NONE) {
+		res = scir_find_resource(resmgr, sci_patch, patchfile, 0);
+		if (!res) {
+			fprintf(stderr, "[SFX] " __FILE__": patch.%03d requested by sequencer (%s), but not found\n",
+				patchfile, seq);
+		}
+	}
+
+	return res;
+}
+
 /* API implementation */
 
 static int
@@ -169,7 +185,7 @@ rt_set_option(char *name, char *value)
 static int
 rt_init(resource_mgr_t *resmgr, int expected_latency)
 {
-	resource_t *res = NULL;
+	resource_t *res = NULL, *res2 = NULL;
 	void *seq_dev = NULL;
 	GTimeVal foo = {0,0};
 
@@ -182,19 +198,16 @@ rt_init(resource_mgr_t *resmgr, int expected_latency)
 
 	sfx_player_realtime.polyphony = seq->polyphony;
 
-	if (seq->patchfile != SFX_SEQ_PATCHFILE_NONE) {
-		res = scir_find_resource(resmgr, sci_patch, seq->patchfile, 0);
-		if (!res) {
-			fprintf(stderr, "[SFX] " __FILE__": patch.%03d requested by sequencer (%s), but not found\n",
-				seq->patchfile, seq->name);
-		}
-	}
+	res = find_patch(resmgr, seq->name, seq->patchfile);
+	res2 = find_patch(resmgr, seq->name, seq->patchfile2);
 
 	if (seq->device)
 		seq_dev = sfx_find_device(seq->device, NULL);
 
 	if (seq->open(res? res->size : 0,
 		      res? res->data : NULL,
+		      res2? res2->size : 0,
+		      res2? res2->data : NULL,
 		      seq_dev)) {
 		fprintf(stderr, "[SFX] " __FILE__": Sequencer failed to initialize\n");
 		return SFX_ERROR;

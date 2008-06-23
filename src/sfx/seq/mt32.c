@@ -152,7 +152,7 @@ int midi_mt32_defaults(guint8 volume, guint8 reverb) {
 	return SFX_OK;
 }
 
-int midi_mt32_open(int length, byte *data, void *dev)
+int midi_mt32_open(int length, byte *data, int length2, byte *data2, void *dev)
 {
 	guint8 unknown_sysex[6] = {0x16, 0x16, 0x16, 0x16, 0x16, 0x16};
 	guint8 i, memtimbres;
@@ -547,6 +547,7 @@ sfx_sequencer_t sfx_sequencer_mt32 = {
 	&midi_mt32_volume,
 	&midi_mt32_reverb,
 	001,		/* patch.001 */
+	SFX_SEQ_PATCHFILE_NONE,
 	0x01,		/* playflag */
 	1, 		/* do play channel 9 */
 	32,  /* Max polyphony */

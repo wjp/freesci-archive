@@ -472,7 +472,7 @@ ami_set_option(sfx_softseq_t *self, char *name, char *value)
 }
 
 static int
-ami_init(sfx_softseq_t *self, byte *patch, int patch_len)
+ami_init(sfx_softseq_t *self, byte *patch, int patch_len, byte *patch2, int patch2_len)
 {
 	FILE *file;
 	byte header[40];
@@ -649,6 +649,7 @@ sfx_softseq_t sfx_softseq_amiga = {
 	ami_poll,
 	ami_allstop,
 	NULL,
+	SFX_SEQ_PATCHFILE_NONE,
 	SFX_SEQ_PATCHFILE_NONE,
 	0x40,
 	0, /* No rhythm channel (9) */

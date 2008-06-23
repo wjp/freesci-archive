@@ -523,7 +523,8 @@ opl2_poll (sfx_softseq_t *self, byte *dest, int count)
 }
 
 static int
-opl2_init(sfx_softseq_t *self, byte *data_ptr, int data_length)
+opl2_init(sfx_softseq_t *self, byte *data_ptr, int data_length, byte *data2_ptr,
+	  int data2_length)
 {
 	int i;
 
@@ -709,6 +710,7 @@ sfx_softseq_t sfx_softseq_opl2 = {
 	opl2_allstop,
 	NULL,
 	3,	/* use patch.003 */
+	SFX_SEQ_PATCHFILE_NONE,
 	0x4,	/* Play flags */
 	0,	/* No rhythm channel (9) */
 	ADLIB_VOICES, /* # of voices */

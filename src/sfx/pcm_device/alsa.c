@@ -271,18 +271,20 @@ static void
 pcmout_alsa_exit(sfx_pcm_device_t *self)
 {
 	int err;
-	if ((err = snd_pcm_drop(handle)) < 0) {
-		sciprintf("[SND:ALSA] Can't stop PCM device: %s\n", snd_strerror(err));
-	}
-	if ((err = snd_pcm_close(handle)) < 0) {
-		sciprintf("[SND:ALSA] Can't close PCM device: %s\n", snd_strerror(err));
-	}
+
 	run_thread = 0;
 	sciprintf("[SND:ALSA] Waiting for PCM thread to exit... ");
 	if (!pthread_join(thread, NULL))
 		sciprintf("OK\n");
 	else
 		sciprintf("Failed\n");
+
+	if ((err = snd_pcm_drop(handle)) < 0) {
+		sciprintf("[SND:ALSA] Can't stop PCM device: %s\n", snd_strerror(err));
+	}
+	if ((err = snd_pcm_close(handle)) < 0) {
+		sciprintf("[SND:ALSA] Can't close PCM device: %s\n", snd_strerror(err));
+	}
 
 	sfx_audbuf_free(&audio_buffer);
 }

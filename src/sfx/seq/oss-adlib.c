@@ -175,7 +175,8 @@ adlib_start_note(int chn, int note, int velocity)
 }
 
 static int
-midi_adlib_open(int data_length, byte *data_ptr, void *seq)
+midi_adlib_open(int data_length, byte *data_ptr, int data2_length,
+		byte *data2_ptr, void *seq)
 {
 	int nrdevs, i, n;
 	struct synth_info info;
@@ -363,6 +364,7 @@ sfx_sequencer_t sfx_sequencer_oss_adlib = {
 	NULL,
 	&midi_adlib_reverb,
 	003,		/* patch.003 */
+	SFX_SEQ_PATCHFILE_NONE,
 	0x04,		/* playflag */
 	0, 		/* do not play channel 9 */
 	ADLIB_VOICES,  /* Max polyphony */

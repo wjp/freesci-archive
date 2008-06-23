@@ -143,7 +143,8 @@ fluidsynth_poll(sfx_softseq_t *self, byte *dest, int count)
 }
 
 static int
-fluidsynth_init(sfx_softseq_t *self, byte *data_ptr, int data_length)
+fluidsynth_init(sfx_softseq_t *self, byte *data_ptr, int data_length,
+		byte *data2_ptr, int data2_length)
 {
 	int sfont_id;
 	double min, max;
@@ -180,7 +181,8 @@ fluidsynth_init(sfx_softseq_t *self, byte *data_ptr, int data_length)
 		return SFX_ERROR;
 	}
 
-	gmseq->open(data_length, data_ptr, &midi_writer_fluidsynth);
+	gmseq->open(data_length, data_ptr, data2_length, data2_ptr,
+		    &midi_writer_fluidsynth);
 
 	return SFX_OK;
 }
@@ -230,6 +232,7 @@ sfx_softseq_t sfx_softseq_fluidsynth = {
 	fluidsynth_allstop,
 	NULL,
 	004,	/* patch.004 */
+	001,	/* patch.001 */
 	0x01,	/* playflag */
 	1,	/* do play channel 9 */
 	32, /* Max polypgony */

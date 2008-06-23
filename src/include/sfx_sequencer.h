@@ -47,10 +47,10 @@ typedef struct _sfx_sequencer {
 	*/
 
 	int
-	(*open)(int patch_len, byte *patch, void *device);
+	(*open)(int patch_len, byte *patch, int patch2_len, byte *patch2, void *device);
 	/* Opens the sequencer for writing
-	** Parameters: (int) patch_len: Length of the patch data
-	**             (byte *) patch: Bulk patch data
+	** Parameters: (int) patch_len, patch2_len: Length of the patch data
+	**             (byte *) patch, patch2: Bulk patch data
 	**             (void *) device: A device matching the 'device' property, or NULL
 	**                              if the property is null.
 	** Returns   : (int) SFX_OK on success, SFX_ERROR otherwise
@@ -109,8 +109,8 @@ typedef struct _sfx_sequencer {
 	** Returns   : SFX_OK on success, SFX_ERROR otherwise
 	*/
 
-	int patchfile; /* Patch resource to pass into the call to open(), if present, or
-		       ** SFX_SEQ_PATCHFILE_NONE  */
+	int patchfile, patchfile2; /* Patch resources to pass into the call to open(),
+		       ** if present, or SFX_SEQ_PATCHFILE_NONE  */
 	guint8 playmask; /* SCI 'playflag' mask to determine which SCI song channels
 			 ** this sequencer should play */
 	/* 0x01	-- MT-32
