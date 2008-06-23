@@ -85,7 +85,15 @@ esac
 
 AC_CHECK_FUNCS(memchr fnmatch pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep setitimer unlink rmdir gettimeofday)
 AC_CHECK_LIB(winmm, timeBeginPeriod)
-AM_PATH_ALSA(0.5.0, [AC_DEFINE([HAVE_ALSA], [1], [Define to 1 if you have ALSA.])], [echo >/dev/null])
+
+AC_CHECK_LIB([pthread], pthread_create,[AC_CHECK_HEADERS(pthread.h, have_pthread=yes, have_pthread=no)], have_pthread=no)
+if test "$have_pthread" = "yes"; then
+	AM_PATH_ALSA(0.5.0, 	[
+					AC_DEFINE([HAVE_ALSA], [1], [Define to 1 if you have ALSA.])
+					LIBS="$LIBS -lpthread"
+				], [echo >/dev/null])
+fi
+
 AM_WITHOUT_SOUND
 AC_PATH_GGI
 AC_PATH_DIRECTFB

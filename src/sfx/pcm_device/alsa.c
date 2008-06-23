@@ -36,20 +36,20 @@
 #define ALSA_PCM_NEW_SW_PARAMS_API
 
 #include <alsa/asoundlib.h>
+#include <pthread.h>
 
-static const char *device = "hw:0,0"; /* FIXME: Try "default" first */ /* Or "plughw:0,0" */
+static const char *device = "default"; /* FIXME */
 static snd_pcm_format_t format = SND_PCM_FORMAT_S16;
 static unsigned int rate = 44100; /* FIXME */
 static unsigned int channels = 2; /* FIXME */
-static unsigned int buffer_time = 500000; /* FIXME */
-static unsigned int period_time = 100000; /* FIXME */
+static unsigned int buffer_time = 100000; /* FIXME */
+static unsigned int period_time = 20000; /* FIXME */
 
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
 
 static int frame_size;
 static long last_callback_secs, last_callback_usecs;
-static int last_callback_len;
 
 static sfx_audio_buf_t audio_buffer;
 static void (*alsa_sfx_timer_callback)(void *data);
@@ -57,7 +57,8 @@ static void *alsa_sfx_timer_data;
 
 static snd_pcm_t *handle;
 
-static snd_async_handler_t *ahandler;
+static pthread_t thread;
+static volatile byte run_thread;
 
 static int
 xrun_recovery(snd_pcm_t *handle, int err)
@@ -65,7 +66,7 @@ xrun_recovery(snd_pcm_t *handle, int err)
 	if (err == -EPIPE) {	/* under-run */
 		err = snd_pcm_prepare(handle);
 		if (err < 0)
-			printf("Can't recovery from underrun, prepare failed: %s\n", snd_strerror(err));
+			fprintf(stderr, "Can't recovery from underrun, prepare failed: %s\n", snd_strerror(err));
 		return 0;
 	} else if (err == -ESTRPIPE) {
 		while ((err = snd_pcm_resume(handle)) == -EAGAIN)
@@ -73,18 +74,58 @@ xrun_recovery(snd_pcm_t *handle, int err)
 		if (err < 0) {
 			err = snd_pcm_prepare(handle);
 			if (err < 0)
-				printf("Can't recovery from suspend, prepare failed: %s\n", snd_strerror(err));
+				fprintf(stderr, "Can't recovery from suspend, prepare failed: %s\n", snd_strerror(err));
 		}
 		return 0;
 	}
 	return err;
 }
 
+static void *
+alsa_thread(void *no_args)
+{
+	gint16 *ptr;
+	int err, cptr;
+	guint8 *buf;
+
+	buf = (guint8 *) malloc(period_size * frame_size);
+
+	while (run_thread) {
+		ptr = (gint16 *) buf;
+		cptr = period_size;
+
+		sci_gettime(&last_callback_secs, &last_callback_usecs);
+
+		if (alsa_sfx_timer_callback)
+			alsa_sfx_timer_callback(alsa_sfx_timer_data);
+
+		sfx_audbuf_read(&audio_buffer, buf, period_size);
+
+		while (cptr > 0) {
+			err = snd_pcm_writei(handle, ptr, cptr);
+			if (err == -EAGAIN)
+				continue;
+			if (err < 0) {
+				if (xrun_recovery(handle, err) < 0) {
+					fprintf(stderr, "[SND:ALSA] Write error: %s\n", snd_strerror(err));
+					run_thread = 0;
+				}
+				break;  /* skip one period */
+			}
+			ptr += err * channels;
+			cptr -= err;
+		}
+	}
+
+	free(buf);
+	return NULL;
+}
+
 static sfx_timestamp_t
 pcmout_alsa_output_timestamp(sfx_pcm_device_t *self)
 {
 	/* Number of frames enqueued in the output device: */
-	int delta = (buffer_size - last_callback_len) / frame_size
+	int delta = (buffer_size - period_size) / frame_size
 		/* Number of frames enqueued in the internal audio buffer: */
 		+ audio_buffer.frames_nr;
 
@@ -94,90 +135,13 @@ pcmout_alsa_output_timestamp(sfx_pcm_device_t *self)
 				 delta);
 }
 
-static void
-async_direct_callback(snd_async_handler_t *ahandler)
-{
-	const snd_pcm_channel_area_t *my_areas;
-	snd_pcm_uframes_t offset, frames, size;
-	snd_pcm_sframes_t avail, commitres;
-	snd_pcm_state_t state;
-	int first = 0, err;
-
-	sci_gettime(&last_callback_secs, &last_callback_usecs);
-
-	while (1) {
-		state = snd_pcm_state(handle);
-		if (state == SND_PCM_STATE_XRUN) {
-			err = xrun_recovery(handle, -EPIPE);
-			if (err < 0) {
-				sciprintf("[SND:ALSA] XRUN recovery failed: %s\n", snd_strerror(err));
-			}
-			first = 1;
-		} else if (state == SND_PCM_STATE_SUSPENDED) {
-			err = xrun_recovery(handle, -ESTRPIPE);
-			if (err < 0) {
-				sciprintf("[SND:ALSA] SUSPEND recovery failed: %s\n", snd_strerror(err));
-			}
-		}
-
-		avail = snd_pcm_avail_update(handle);
-
-		last_callback_len = avail;
-
-		if (alsa_sfx_timer_callback)
-			alsa_sfx_timer_callback(alsa_sfx_timer_data);
-
-		if (avail < 0) {
-			err = xrun_recovery(handle, avail);
-			if (err < 0) {
-				sciprintf("[SND:ALSA] avail update failed: %s\n", snd_strerror(err));
-			}
-			first = 1;
-			continue;
-		}
-		if (avail < period_size) {
-			if (first) {
-				first = 0;
-				err = snd_pcm_start(handle);
-				if (err < 0) {
-					sciprintf("[SND:ALSA] Start error: %s\n", snd_strerror(err));
-				}
-			} else {
-				break;
-			}
-			continue;
-		}
-		size = period_size;
-		while (size > 0) {
-			frames = size;
-			err = snd_pcm_mmap_begin(handle, &my_areas, &offset, &frames);
-			if (err < 0) {
-				if ((err = xrun_recovery(handle, err)) < 0) {
-					sciprintf("[SND:ALSA] MMAP begin avail error: %s\n", snd_strerror(err));
-				}
-				first = 1;
-			}
-			sfx_audbuf_read(&audio_buffer, ((byte *)my_areas->addr) + offset*frame_size, frames);
-			commitres = snd_pcm_mmap_commit(handle, offset, frames);
-			if (commitres < 0 || commitres != frames) {
-				if ((err = xrun_recovery(handle, commitres >= 0 ? -EPIPE : commitres)) < 0) {
-					sciprintf("[SND:ALSA] MMAP commit error: %s\n", snd_strerror(err));
-				}
-				first = 1;
-			}
-			size -= frames;
-		}
-	}
-}
-
 static int
 pcmout_alsa_init(sfx_pcm_device_t *self)
 {
 	unsigned int rrate;
-	int err, count, dir;
+	int err, dir;
 	snd_pcm_hw_params_t *hwparams;
 	snd_pcm_sw_params_t *swparams;
-
 
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
@@ -192,7 +156,7 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 		sciprintf("[SND:ALSA] Broken configuration for playback: no configurations available: %s\n", snd_strerror(err));
 		return SFX_ERROR;
 	}
-	err = snd_pcm_hw_params_set_access(handle, hwparams, SND_PCM_ACCESS_MMAP_INTERLEAVED);
+	err = snd_pcm_hw_params_set_access(handle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED);
 	if (err < 0) {
 		sciprintf("[SND:ALSA] Access type not available for playback: %s\n", snd_strerror(err));
 		return SFX_ERROR;
@@ -281,43 +245,8 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 
 	sfx_audbuf_init(&audio_buffer, self->conf);
 
-	err = snd_async_add_pcm_handler(&ahandler, handle, async_direct_callback, NULL);
-	if (err < 0) {
-		sciprintf("[SND:ALSA] Unable to register async handler\n");
-		return SFX_ERROR;
-	}
-
-	for (count = 0; count < 2; count++) {
-		const snd_pcm_channel_area_t *my_areas;
-		snd_pcm_uframes_t offset, frames, size;
-		size = period_size;
-		snd_pcm_sframes_t commitres;
-		while (size > 0) {
-			frames = size;
-			err = snd_pcm_mmap_begin(handle, &my_areas, &offset, &frames);
-			if (err < 0) {
-				if ((err = xrun_recovery(handle, err)) < 0) {
-					sciprintf("[SND:ALSA] MMAP begin avail error: %s\n", snd_strerror(err));
-					return SFX_ERROR;
-				}
-			}
-			sfx_audbuf_read(&audio_buffer, ((byte *)my_areas->addr) + offset*frame_size, frames);
-			commitres = snd_pcm_mmap_commit(handle, offset, frames);
-			if (commitres < 0 || commitres != frames) {
-				if ((err = xrun_recovery(handle, commitres >= 0 ? -EPIPE : commitres)) < 0) {
-					sciprintf("[SND:ALSA] MMAP commit error: %s\n", snd_strerror(err));
-					return SFX_ERROR;
-				}
-			}
-			size -= frames;
-		}
-	}
-
-	err = snd_pcm_start(handle);
-	if (err < 0) {
-		sciprintf("[SND:ALSA] Start error: %s\n", snd_strerror(err));
-		return SFX_ERROR;
-	}
+	run_thread = 1;
+	pthread_create(&thread, NULL, alsa_thread, NULL);
 
 	return SFX_OK;
 }
@@ -348,6 +277,13 @@ pcmout_alsa_exit(sfx_pcm_device_t *self)
 	if ((err = snd_pcm_close(handle)) < 0) {
 		sciprintf("[SND:ALSA] Can't close PCM device: %s\n", snd_strerror(err));
 	}
+	run_thread = 0;
+	sciprintf("[SND:ALSA] Waiting for PCM thread to exit... ");
+	if (!pthread_join(thread, NULL))
+		sciprintf("OK\n");
+	else
+		sciprintf("Failed\n");
+
 	sfx_audbuf_free(&audio_buffer);
 }
 
@@ -375,7 +311,7 @@ timer_alsa_stop(void)
 	return SFX_OK;
 }
 
-#define ALSA_PCM_VERSION "0.1"
+#define ALSA_PCM_VERSION "0.2"
 
 sfx_timer_t pcmout_alsa_timer = {
 	"alsa-pcm-timer",

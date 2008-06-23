@@ -1,3 +1,9 @@
+2008-06-23  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/pcm_device/alsa.c: Use blocking I/O instead of async
+	callbacks.
+	* configure.ac: Check for pthread.
+
 2008-06-20  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/softseq/fluidsynth.c: Added FluidSynth driver.
