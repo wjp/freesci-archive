@@ -44,18 +44,28 @@
 #define SFX_MAP_SCI0_MT32 1
 #define SFX_MAP_SCI1 2
 
+#define SFX_UNMAPPED -1
+#define SFX_MAPPED_TO_RHYTHM -2
+
 typedef struct {
-	byte patch_map[SFX_INSTRUMENTS_NR]; /* Map patch nr to which native instrument */
+	int patch; /* Native instrument, SFX_UNMAPPED or SFX_MAPPED_TO_RHYTHM */
+	int rhythm; /* Rhythm key when patch == SFX_MAPPED_TO_RHYTHM */
+} sfx_patch_map_t;
+
+typedef struct {
+	sfx_patch_map_t patch_map[SFX_INSTRUMENTS_NR]; /* Map patch nr to which native instrument or rhythm key */
 	int patch_key_shift[SFX_INSTRUMENTS_NR]; /* Shift patch key by how much? */
 	int patch_volume_adjust[SFX_INSTRUMENTS_NR]; /* Adjust controller 7 by how much? */
+	int patch_bend_range[SFX_INSTRUMENTS_NR]; /* Bend range in semitones or SFX_UNMAPPED for default */
 
-	byte percussion_map[SFX_RHYTHM_NR]; /* Map percussion instrument (RHYTH_CHANNEL) to what native 'key'? */
+	int percussion_map[SFX_RHYTHM_NR]; /* Map percussion instrument (RHYTH_CHANNEL) to what native 'key'? */
 	int percussion_volume_adjust; /* unused in SCI patches */
 
-	int velocity_map_index[SFX_INSTRUMENTS_NR]; /* Velocity translation map to use for that instrumet */
+	int velocity_map_index[SFX_INSTRUMENTS_NR]; /* Velocity translation map to use for that instrument */
 	int velocity_maps_nr; /* How many velocity translation maps do we have? */
-	byte **velocity_map; /* velocity_maps_nr entries, each of siez SFX_VELOCITIES_NR */
+	byte **velocity_map; /* velocity_maps_nr entries, each of size SFX_VELOCITIES_NR */
 	int percussion_velocity_map_index; /* Special index for the percussion map */
+	int percussion_velocity_scale[SFX_INSTRUMENTS_NR]; /* Velocity scale factor (times 1/128) */
 
 	size_t initialisation_block_size;
 	byte *initialisation_block; /* Initial MIDI commands to set up the device */

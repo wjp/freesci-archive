@@ -29,6 +29,7 @@
 #include "sci_midi.h"
 #include "sci_memory.h"
 #include "sfx-instrument-map.h"
+#include "sfx_engine.h"
 
 sfx_instrument_map_t *
 sfx_instrument_map_new(int velocity_maps_nr)
@@ -59,7 +60,7 @@ sfx_instrument_map_new(int velocity_maps_nr)
 
 
 	for (i = 0; i < SFX_INSTRUMENTS_NR; ++i) {
-		map->patch_map[i] = i;
+		map->patch_map[i].patch = i;
 		map->patch_key_shift[i] = 0;
 		map->patch_volume_adjust[i] = 0;
 	}
@@ -188,16 +189,19 @@ sfx_instrument_map_load_sci(byte *data, size_t size)
 
 	/* Set up basic instrument info */
 	for (i = 0; i < SFX_INSTRUMENTS_NR; i++) {
-		map->patch_map[i] = data[PATCH_MAP_OFFSET + i];
+		map->patch_map[i].patch = (char)data[PATCH_MAP_OFFSET + i];
 		map->patch_key_shift[i] = (char)data[PATCH_KEY_SHIFT_OFFSET + i];
 		map->patch_volume_adjust[i] = (char)data[PATCH_VOLUME_ADJUST_OFFSET + i];
+		map->patch_bend_range[i] = SFX_UNMAPPED;
 		map->velocity_map_index[i] = data[PATCH_VELOCITY_MAP_INDEX + i];
 	}
 
 	/* Set up percussion maps */
 	map->percussion_volume_adjust = data[PATCH_PERCUSSION_VOLUME_ADJUST];
-	for (i = 0; i < SFX_RHYTHM_NR; i++)
+	for (i = 0; i < SFX_RHYTHM_NR; i++) {
 		map->percussion_map[i] = data[PATCH_PERCUSSION_MAP_OFFSET + i];
+		map->percussion_velocity_scale[i] = 128;
+	}
 
 	/* Set up velocity maps */
 	for (m = 0; m < PATCH_INSTRUMENT_MAPS_NR; m++) {
@@ -219,7 +223,7 @@ typedef struct decorated_midi_writer {
 	MIDI_WRITER_BODY
 
 	midi_writer_t *writer;
-	byte patches[MIDI_CHANNELS_NR];
+	sfx_patch_map_t patches[MIDI_CHANNELS_NR];
 	sfx_instrument_map_t *map;
 } decorated_midi_writer_t;
 
@@ -284,40 +288,97 @@ bound_hard_127(int i, char *descr)
 }
 
 static int
+set_bend_range(midi_writer_t *writer, int channel, int range)
+{
+	byte buf[3] = {0xb0, 0x65, 0x00};
+
+	buf[0] |= channel & 0xf;
+	if (writer->write(writer, buf, 3) != SFX_OK)
+		return SFX_ERROR;
+
+	buf[1] = 0x64;
+	if (writer->write(writer, buf, 3) != SFX_OK)
+		return SFX_ERROR;
+
+	buf[1] = 0x06;
+	buf[2] = BOUND_127(range);
+	if (writer->write(writer, buf, 3) != SFX_OK)
+		return SFX_ERROR;
+
+	buf[1] = 0x26;
+	buf[2] = 0;
+	if (writer->write(writer, buf, 3) != SFX_OK)
+		return SFX_ERROR;
+
+	return SFX_OK;
+}
+
+static int
 write_decorated(decorated_midi_writer_t *self, byte *buf, int len)
 {
 	sfx_instrument_map_t *map = self->map;
 	int op = *buf & 0xf0;
 	int chan = *buf & 0x0f;
-	int patch = self->patches[chan];
+	int patch = self->patches[chan].patch;
+	int rhythm = self->patches[chan].rhythm;
 
 	assert (len >= 1);
 
-	if (op == 0xC0) { /* Program change */
+	if (op == 0xC0 && chan != MIDI_RHYTHM_CHANNEL) { /* Program change */
 		int patch = bound_hard_127(buf[1], "program change");
-		int instrument = bound_hard_127(map->patch_map[patch], "patch lookup");
+		int instrument = map->patch_map[patch].patch;
+		int bend_range = map->patch_bend_range[patch];
+
+		self->patches[chan] = map->patch_map[patch];
+
+		if (instrument == SFX_UNMAPPED || instrument == SFX_MAPPED_TO_RHYTHM)
+			return SFX_OK;
+
 		assert (len >= 2);
-		buf[1] = instrument;
-		self->patches[chan] = patch;
+		buf[1] = bound_hard_127(instrument, "patch lookup");
+
+		if (self->writer->write(self->writer, buf, len) != SFX_OK)
+			return SFX_ERROR;
+
+		if (bend_range != SFX_UNMAPPED)
+			return set_bend_range(self->writer, chan, bend_range);
+
+		return SFX_OK;
 	}
 
-
-	if (chan == MIDI_RHYTHM_CHANNEL) {
+	if (chan == MIDI_RHYTHM_CHANNEL || patch == SFX_MAPPED_TO_RHYTHM) {
 		/* Rhythm channel handling */
 		switch (op) {
 		case 0x80:
 		case 0x90: { /* Note off / note on */
-			int instrument_index = bound_hard_127(buf[1], "rhythm instrument index");
-			int velocity = bound_hard_127(buf[2], "rhythm velocity");
-			int instrument = bound_hard_127(map->percussion_map[instrument_index], "rhythm instrument");
-			int velocity_map_index = map->percussion_velocity_map_index;
+			int instrument_index, velocity, instrument, velocity_map_index, velocity_scale;
+
+			if (patch == SFX_MAPPED_TO_RHYTHM) {
+				buf[0] = (buf[0] & ~0x0f) | MIDI_RHYTHM_CHANNEL;
+				instrument = rhythm;
+				velocity_scale = 128;
+			} else {
+				instrument_index = bound_hard_127(buf[1], "rhythm instrument index");
+				instrument = map->percussion_map[instrument_index];
+				velocity_scale = map->percussion_velocity_scale[instrument_index];
+			}
+
+			if (instrument == SFX_UNMAPPED)
+				return SFX_OK;
+
 			assert (len >= 3);
 
-			if (velocity_map_index != SFX_NO_VELOCITY_MAP)
-				velocity = BOUND_127(velocity + map->velocity_map[map->velocity_map_index[patch]][velocity]);
+			velocity = bound_hard_127(buf[2], "rhythm velocity");
+			velocity_map_index = map->percussion_velocity_map_index;
 
-			buf[1] = instrument;
+			if (velocity_map_index != SFX_NO_VELOCITY_MAP)
+				velocity = BOUND_127(velocity + map->velocity_map[velocity_map_index][velocity]);
+
+			velocity = BOUND_127((velocity * velocity_scale) >> 7);
+
+			buf[1] = bound_hard_127(instrument, "rhythm instrument");
 			buf[2] = velocity;
+
 			break;
 		}
 
@@ -333,6 +394,9 @@ write_decorated(decorated_midi_writer_t *self, byte *buf, int len)
 
 	} else {
 		/* Instrument channel handling */
+
+		if (patch == SFX_UNMAPPED)
+			return SFX_OK;
 
 		switch (op) {
 		case 0x80:
@@ -350,7 +414,7 @@ write_decorated(decorated_midi_writer_t *self, byte *buf, int len)
 				note -= 12;
 
 			if (velocity_map_index != SFX_NO_VELOCITY_MAP)
-				velocity = BOUND_127(velocity + map->velocity_map[map->velocity_map_index[patch]][velocity]);
+				velocity = BOUND_127(velocity + map->velocity_map[velocity_map_index][velocity]);
 
 			buf[1] = note;
 			buf[2] = velocity;
@@ -377,17 +441,63 @@ static void
 init(midi_writer_t *writer, byte *data, size_t len)
 {
 	int offset = 0;
+	byte status = 0;
 
 	while (offset < len) {
-		int left = len - offset;
-		int to_write = MIN(MAX_PER_TICK, left);
+		int args;
+		byte op = data[offset];
+		byte msg[3];
+		int i;
 
-		writer->write(writer, data + offset, to_write);
+		if (op == 0xf0) {
+			int msg_len;
+			byte *find = (byte *) memchr(data + offset, 0xf7, len - offset);
+
+			if (!find) {
+				fprintf(stderr, "[instrument-map] Failed to find end of sysex message\n");
+				return;
+			}
+
+			msg_len = find - data - offset + 1;
+			writer->write(writer, data + offset, msg_len);
+
+			/* Wait at least 40ms after sysex */
+			writer->delay(writer, 3);
+			offset += msg_len;
+			continue;
+		}
+
+		if (op < 0x80)
+			op = status;
+		else {
+			status = op;
+			offset++;
+		}
+
+		msg[0] = op;
+
+		switch (op & 0xf0) {
+			case 0xc0:
+			case 0xd0:
+				args = 1;
+				break;
+			default:
+				args = 2;
+			}
+
+		if (args > len - offset) {
+			fprintf(stderr, "[instrument-map] Insufficient bytes remaining for MIDI command %02x\n", op);
+			return;
+		}
+
+		for (i = 0; i < args; i++)
+			msg[i + 1] = data[offset + i];
+
+		writer->write(writer, msg, args + 1);
+		offset += args;
+
 		if (writer->flush)
 			writer->flush(writer);
-		writer->delay(writer, 1);
-
-		offset += to_write;
 	}
 }
 
@@ -396,6 +506,7 @@ init(midi_writer_t *writer, byte *data, size_t len)
 midi_writer_t *
 sfx_mapped_writer(midi_writer_t *writer, sfx_instrument_map_t *map)
 {
+	int i;
 	decorated_midi_writer_t *retval;
 
 	if (map == NULL)
@@ -418,8 +529,9 @@ sfx_mapped_writer(midi_writer_t *writer, sfx_instrument_map_t *map)
 	retval->map = map;
 
 	init(writer, map->initialisation_block, map->initialisation_block_size);
-	memset(retval->patches, 0, MIDI_CHANNELS_NR);
 
+	for (i = 0; i < MIDI_CHANNELS_NR; i++)
+		retval->patches[i].patch = SFX_UNMAPPED;
 
 	return (midi_writer_t *) retval;
 }

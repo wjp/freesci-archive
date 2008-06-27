@@ -3339,7 +3339,7 @@ The SCI1 MT-32 driver uses patch file 1, and the GM driver uses patch file 4. Th
 \item patchKeyShift[$i$]: Key shift value for patch $i$. This value should be added to every non-rhythm key that is played. If the key goes out of bounds [0,127], it should be clipped by a multiple of 12 semitones.
 \item patchVolumeAdjust[$i$]: Volume adjust value for patch $i$. This value should be added to the volume (when setting controller 07h) \emph{before} scaling it by the master volume.
 \item percMap[$i$]: Native key for key $i$ of the percussion channel, or $-1$ for unused entries.
-\item percVolumeAdjust: Not used.
+\item percVolumeAdjust: Volume adjust value for percussion.
 \item velocityMapIndex[$i$]: Specifies which velocityMap to use for patch $i$.
 \item velocityMap[$i$]: Native velocity for velocity $i$.
 \item MIDI data: MIDI data to initialize the device. Note that this data can contain sysex commands, after which an appropriate delay should be executed.

@@ -42,6 +42,7 @@ static fluid_settings_t* settings;
 static fluid_synth_t* synth;
 static guint8 status;
 static char *soundfont = "/etc/midi/8MBGMSFX.SF2";
+static int rpn[16];
 
 #define SAMPLE_RATE 44100
 #define CHANNELS SFX_PCM_STEREO_LR
@@ -72,14 +73,11 @@ fluidsynth_midi_write(struct _midi_writer *self, unsigned char *buf, int len)
 		channel = buf[0] & 0x0f;
 
 		switch(command) {
-		case 0x80:
-			fluid_synth_noteoff(synth, channel, buf[1]);
-			break;
 		case 0xc0:
 			fluid_synth_program_change(synth, channel, buf[1]);
 			break;
 		default:
-			sciprintf("FluidSynth: MIDI command 0x%02x of length 2 not supported\n", command);
+			printf("FluidSynth: MIDI command [%02x %02x] not supported\n", buf[0], buf[1]);
 		}
 	}
 	else if (len == 3) {
@@ -89,17 +87,39 @@ fluidsynth_midi_write(struct _midi_writer *self, unsigned char *buf, int len)
 		channel = buf[0] & 0x0f;
 
 		switch(command) {
+		case 0x80:
+			fluid_synth_noteoff(synth, channel, buf[1]);
+			break;
 		case 0x90:
 			fluid_synth_noteon(synth, channel, buf[1], buf[2]);
 			break;
 		case 0xb0:
-			fluid_synth_cc(synth, channel, buf[1], buf[2]);
+			switch (buf[1]) {
+			case 0x06:
+				/* Data Entry Slider - course */
+				if (rpn[channel] == 0)
+					fluid_synth_pitch_wheel_sens(synth, channel, buf[2]);
+				else
+					sciprintf("FluidSynth: RPN %i not supported\n", rpn[channel]);
+			case 0x64:
+				/* Registered Parameter Number (RPN) - fine */
+				rpn[channel] &= ~0x7f;
+				rpn[channel] |= buf[2] & 0x7f;
+				break;
+			case 0x65:
+				/* Registered Parameter Number (RPN) - course */
+				rpn[channel] &= ~0x3f80;
+				rpn[channel] |= (buf[2] & 0x7f) << 7;
+				break;
+			default:
+				fluid_synth_cc(synth, channel, buf[1], buf[2]);
+			}
 			break;
 		case 0xe0:
 			fluid_synth_pitch_bend(synth, channel, (buf[2] << 7) | buf[1]);
 			break;
 		default:
-			sciprintf("FluidSynth: MIDI command 0x%02x of length 3 not supported\n", command);
+			sciprintf("FluidSynth: MIDI command [%02x %02x %02x] not supported\n", buf[0], buf[1], buf[2]);
 		}
 	}
 	else
