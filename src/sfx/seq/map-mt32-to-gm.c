@@ -37,7 +37,8 @@
 
 #define DEBUG_MT32_TO_GM
 
-char *GM_Instrument_Names[] = {
+static char
+*GM_Instrument_Names[] = {
 	/*000*/  "Acoustic Grand Piano",
 	/*001*/  "Bright Acoustic Piano",
 	/*002*/  "Electric Grand Piano",
@@ -169,7 +170,8 @@ char *GM_Instrument_Names[] = {
 };
 
 /* The GM Percussion map is downwards compatible to the MT32 map, which is used in SCI */
-char *GM_Percussion_Names[] = {
+static char
+*GM_Percussion_Names[] = {
 	/*00*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	/*10*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	/*20*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -401,7 +403,8 @@ static struct {
 	/*29*/  {"OpenHiHat2", SFX_MAPPED_TO_RHYTHM, 43}
 };
 
-static gint8 MT32_PresetRhythmKeymap[] = {
+static gint8
+MT32_PresetRhythmKeymap[] = {
 	SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED,
 	SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED,
 	SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED, SFX_UNMAPPED,
@@ -706,22 +709,22 @@ sfx_instrument_map_mt32_to_gm(byte *data, size_t size)
 
 	for (i = 0; i < SFX_RHYTHM_NR; i++) {
 		map->percussion_map[i] = MT32_PresetRhythmKeymap[i];
-		map->percussion_velocity_scale[i] = 128;
+		map->percussion_velocity_scale[i] = SFX_MAX_VELOCITY;
 	}
 
 	if (!data) {
-		sciprintf("No MT-32 patch data supplied, using default mapping\n");
+		sciprintf("[MT32-to-GM] No MT-32 patch data supplied, using default mapping\n");
 		return map;
 	}
 
 	type = sfx_instrument_map_detect(data, size);
 
 	if (type == SFX_MAP_UNKNOWN) {
-		sciprintf("Patch data format unknown, using default mapping\n");
+		sciprintf("[MT32-to-GM] Patch data format unknown, using default mapping\n");
 		return map;
 	}
-	if (type == SFX_MAP_SCI1) {
-		sciprintf("SCI1 MT-32 patch data is currently not supported, using default mapping\n");
+	if (type == SFX_MAP_MT32_GM) {
+		sciprintf("[MT32-to-GM] Patch data format not supported, using default mapping\n");
 		return map;
 	}
 
@@ -742,21 +745,16 @@ sfx_instrument_map_mt32_to_gm(byte *data, size_t size)
 	for (i = 0; i < patches; i++) {
 		char *name;
 
-		if (i < 48) {
-			group = *(data + 0x6B + 8 * i);
-			number = *(data + 0x6B + 8 * i + 1);
-			keyshift = *(data + 0x6B + 8 * i + 2);
-			finetune = *(data + 0x6B + 8 * i + 3);
-			bender_range = *(data + 0x6B + 8 * i + 4);
+		if (i < 48)
 			patchpointer = data + 0x6B + 8 * i;
-		} else {
-			group = *(data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2);
-			number = *(data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 1);
-			keyshift = *(data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 2);
-			finetune = *(data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 3);
-			bender_range = *(data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 4);
+		else
 			patchpointer = data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2;
-		}
+
+		group = *patchpointer;
+		number = *(patchpointer + 1);
+		keyshift = *(patchpointer + 2);
+		finetune = *(patchpointer + 3);
+		bender_range = *(patchpointer + 4);
 
 		switch (group) {
 		case 0:
@@ -806,7 +804,7 @@ sfx_instrument_map_mt32_to_gm(byte *data, size_t size)
 					map->percussion_map[i + 23] = SFX_UNMAPPED;
 			}
 
-			map->percussion_velocity_scale[i + 23] = *(data + pos + 4 * i + 3) * 128 / 100;
+			map->percussion_velocity_scale[i + 23] = *(data + pos + 4 * i + 3) * SFX_MAX_VELOCITY / 100;
 		}
 	}
 

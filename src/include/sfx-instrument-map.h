@@ -41,11 +41,16 @@
 
 /* Instrument map types */
 #define SFX_MAP_UNKNOWN 0
-#define SFX_MAP_SCI0_MT32 1
-#define SFX_MAP_SCI1 2
+#define SFX_MAP_MT32 1 /* Original MT-32 map format */
+#define SFX_MAP_MT32_GM 2 /* More recent map format used for both MT-32 and GM */
 
+/* Patch not mapped */
 #define SFX_UNMAPPED -1
+/* Patch mapped to rhythm key */
 #define SFX_MAPPED_TO_RHYTHM -2
+
+/* Maximum velocity (used for scaling) */
+#define SFX_MAX_VELOCITY 128
 
 typedef struct {
 	int patch; /* Native instrument, SFX_UNMAPPED or SFX_MAPPED_TO_RHYTHM */
@@ -65,7 +70,7 @@ typedef struct {
 	int velocity_maps_nr; /* How many velocity translation maps do we have? */
 	byte **velocity_map; /* velocity_maps_nr entries, each of size SFX_VELOCITIES_NR */
 	int percussion_velocity_map_index; /* Special index for the percussion map */
-	int percussion_velocity_scale[SFX_INSTRUMENTS_NR]; /* Velocity scale factor (times 1/128) */
+	int percussion_velocity_scale[SFX_INSTRUMENTS_NR]; /* Velocity scale (0 - SFX_PERC_MAX_VOL) */
 
 	size_t initialisation_block_size;
 	byte *initialisation_block; /* Initial MIDI commands to set up the device */

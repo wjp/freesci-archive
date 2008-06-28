@@ -171,7 +171,7 @@ int midi_mt32_open(int length, byte *data, int length2, byte *data2, void *dev)
 			sciprintf("MT-32: Programming Roland MT-32 with patch.001 (v%i) %d bytes\n", type, length);
 	}
 
-	if (type == SFX_MAP_SCI0_MT32) {
+	if (type == SFX_MAP_MT32) {
 		/* Display MT-32 initialization message */
 		printf("MT-32: Displaying Text: \"%.20s\"\n", data + 20);
 		midi_mt32_poke(0x200000, data + 20, 20);
@@ -227,7 +227,7 @@ int midi_mt32_open(int length, byte *data, int length2, byte *data2, void *dev)
 		printf("MT-32: Setting default volume (%d)\n", data[0x3c]);
 		midi_mt32_volume(data[0x3c]);
 		return 0;
-	} else if (type == SFX_MAP_SCI1) {
+	} else if (type == SFX_MAP_MT32_GM) {
 		printf("MT-32: Loading SysEx bank\n");
 		midi_mt32_write_block(data + 1155, (data[1154] << 8) + data[1153]);
 		return 0;

@@ -141,15 +141,15 @@ sfx_instrument_map_detect(byte *data, size_t length)
 {
 	/* length test */
 	if (length < 1155)
-		return SFX_MAP_SCI0_MT32;
+		return SFX_MAP_MT32;
 	if (length > 16889)
-		return SFX_MAP_SCI1;
+		return SFX_MAP_MT32_GM;
 	if (patch001_type0_length(data, length) &&
 	    !patch001_type1_length(data, length))
-		return SFX_MAP_SCI0_MT32;
+		return SFX_MAP_MT32;
 	if (patch001_type1_length(data, length) &&
 	    !patch001_type0_length(data, length))
-		return SFX_MAP_SCI1;
+		return SFX_MAP_MT32_GM;
 	return SFX_MAP_UNKNOWN;
 }
 
@@ -200,7 +200,7 @@ sfx_instrument_map_load_sci(byte *data, size_t size)
 	map->percussion_volume_adjust = data[PATCH_PERCUSSION_VOLUME_ADJUST];
 	for (i = 0; i < SFX_RHYTHM_NR; i++) {
 		map->percussion_map[i] = data[PATCH_PERCUSSION_MAP_OFFSET + i];
-		map->percussion_velocity_scale[i] = 128;
+		map->percussion_velocity_scale[i] = SFX_MAX_VELOCITY;
 	}
 
 	/* Set up velocity maps */
@@ -351,14 +351,14 @@ write_decorated(decorated_midi_writer_t *self, byte *buf, int len)
 		switch (op) {
 		case 0x80:
 		case 0x90: { /* Note off / note on */
-			int instrument_index, velocity, instrument, velocity_map_index, velocity_scale;
+			int velocity, instrument, velocity_map_index, velocity_scale;
 
 			if (patch == SFX_MAPPED_TO_RHYTHM) {
 				buf[0] = (buf[0] & ~0x0f) | MIDI_RHYTHM_CHANNEL;
 				instrument = rhythm;
-				velocity_scale = 128;
+				velocity_scale = SFX_MAX_VELOCITY;
 			} else {
-				instrument_index = bound_hard_127(buf[1], "rhythm instrument index");
+				int instrument_index = bound_hard_127(buf[1], "rhythm instrument index");
 				instrument = map->percussion_map[instrument_index];
 				velocity_scale = map->percussion_velocity_scale[instrument_index];
 			}
@@ -374,7 +374,7 @@ write_decorated(decorated_midi_writer_t *self, byte *buf, int len)
 			if (velocity_map_index != SFX_NO_VELOCITY_MAP)
 				velocity = BOUND_127(velocity + map->velocity_map[velocity_map_index][velocity]);
 
-			velocity = BOUND_127((velocity * velocity_scale) >> 7);
+			velocity = BOUND_127(velocity * velocity_scale / SFX_MAX_VELOCITY);
 
 			buf[1] = bound_hard_127(instrument, "rhythm instrument");
 			buf[2] = velocity;
@@ -443,6 +443,7 @@ init(midi_writer_t *writer, byte *data, size_t len)
 	int offset = 0;
 	byte status = 0;
 
+	/* Send init data as separate MIDI commands */
 	while (offset < len) {
 		int args;
 		byte op = data[offset];

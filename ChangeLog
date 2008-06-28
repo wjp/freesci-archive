@@ -1,5 +1,11 @@
 2008-06-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/sfx/seq/mt32.c, src/sfx/seq/map-mt32-to-gm.c,
+	  src/sfx/seq/instrument-map.c, src/include/sfx-instrument-map.h:
+	Minor code cleanup.
+
+2008-06-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/sfx/softseq/fluidsynth.c: Fixed pitch bend and 0x80 command.
 
 	* src/sfx/seq/map-mt32-to-gm.c, src/sfx/seq/instrument-map.c,
