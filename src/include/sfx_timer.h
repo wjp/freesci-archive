@@ -65,6 +65,22 @@ typedef struct {
 	** of this.
 	*/
 
+	int
+	(*block)(void);
+	/* Blocks the timer
+	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
+	** When this function returns it is guaranteed that no timer callback is
+	** currently being executed and that no new timer callback will occur
+	** until unblock() is called.
+	*/
+
+	int
+	(*unblock)(void);
+	/* Unblocks the timer
+	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
+	** Any callbacks that were blocked should be executed immediately when
+	** possible.
+	*/
 } sfx_timer_t;
 
 extern sfx_timer_t *

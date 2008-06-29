@@ -31,6 +31,7 @@
 #include <sfx_audiobuf.h>
 
 #ifdef HAVE_ALSA
+#ifdef HAVE_PTHREAD
 
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ALSA_PCM_NEW_SW_PARAMS_API
@@ -43,7 +44,7 @@ static snd_pcm_format_t format = SND_PCM_FORMAT_S16;
 static unsigned int rate = 44100; /* FIXME */
 static unsigned int channels = 2; /* FIXME */
 static unsigned int buffer_time = 100000; /* FIXME */
-static unsigned int period_time = 20000; /* FIXME */
+static unsigned int period_time = 1000000/60; /* 60Hz */ /* FIXME */
 
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
@@ -59,6 +60,8 @@ static snd_pcm_t *handle;
 
 static pthread_t thread;
 static volatile byte run_thread;
+
+static pthread_mutex_t mutex;
 
 static int
 xrun_recovery(snd_pcm_t *handle, int err)
@@ -82,11 +85,12 @@ xrun_recovery(snd_pcm_t *handle, int err)
 }
 
 static void *
-alsa_thread(void *no_args)
+alsa_thread(void *arg)
 {
 	gint16 *ptr;
 	int err, cptr;
 	guint8 *buf;
+	sfx_pcm_device_t *self = (sfx_pcm_device_t *) arg;
 
 	buf = (guint8 *) malloc(period_size * frame_size);
 
@@ -96,8 +100,12 @@ alsa_thread(void *no_args)
 
 		sci_gettime(&last_callback_secs, &last_callback_usecs);
 
+		self->timer->block();
+
 		if (alsa_sfx_timer_callback)
 			alsa_sfx_timer_callback(alsa_sfx_timer_data);
+
+		self->timer->unblock();
 
 		sfx_audbuf_read(&audio_buffer, buf, period_size);
 
@@ -142,6 +150,7 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 	int err, dir;
 	snd_pcm_hw_params_t *hwparams;
 	snd_pcm_sw_params_t *swparams;
+	pthread_attr_t attr;
 
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
@@ -245,8 +254,16 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 
 	sfx_audbuf_init(&audio_buffer, self->conf);
 
+	if (pthread_mutex_init(&mutex, NULL) != 0) {
+		sciprintf("[SND:ALSA] Failed to create mutex\n");
+		return SFX_ERROR;
+	}
+
 	run_thread = 1;
-	pthread_create(&thread, NULL, alsa_thread, NULL);
+	if (pthread_create(&thread, NULL, alsa_thread, self) != 0) {
+		sciprintf("[SND:ALSA] Failed to create thread\n");
+		return SFX_ERROR;
+	}
 
 	return SFX_OK;
 }
@@ -257,6 +274,7 @@ pcmout_alsa_output(sfx_pcm_device_t *self, byte *buf,
 {
 	if (ts)
 		sfx_audbuf_write_timestamp(&audio_buffer, *ts);
+
 	sfx_audbuf_write(&audio_buffer, buf, count);
 	return SFX_OK;
 }
@@ -278,6 +296,8 @@ pcmout_alsa_exit(sfx_pcm_device_t *self)
 		sciprintf("OK\n");
 	else
 		sciprintf("Failed\n");
+
+	pthread_mutex_destroy(&mutex);
 
 	if ((err = snd_pcm_drop(handle)) < 0) {
 		sciprintf("[SND:ALSA] Can't stop PCM device: %s\n", snd_strerror(err));
@@ -313,6 +333,28 @@ timer_alsa_stop(void)
 	return SFX_OK;
 }
 
+static int
+timer_alsa_block(void)
+{
+	if (pthread_mutex_lock(&mutex) != 0) {
+		fprintf(stderr, "[SND:ALSA] Failed to lock mutex\n");
+		return SFX_ERROR;
+	}
+
+	return SFX_OK;
+}
+
+static int
+timer_alsa_unblock(void)
+{
+	if (pthread_mutex_unlock(&mutex) != 0) {
+		fprintf(stderr, "[SND:ALSA] Failed to unlock mutex\n");
+		return SFX_ERROR;
+	}
+
+	return SFX_OK;
+}
+
 #define ALSA_PCM_VERSION "0.2"
 
 sfx_timer_t pcmout_alsa_timer = {
@@ -322,7 +364,9 @@ sfx_timer_t pcmout_alsa_timer = {
 	0,
 	timer_alsa_set_option,
 	timer_alsa_init,
-	timer_alsa_stop
+	timer_alsa_stop,
+	timer_alsa_block,
+	timer_alsa_unblock
 };
 
 sfx_pcm_device_t sfx_pcm_driver_alsa = {
@@ -339,4 +383,5 @@ sfx_pcm_device_t sfx_pcm_driver_alsa = {
 	NULL
 };
 
+#endif /* HAVE_PTHREAD */
 #endif /* HAVE_ALSA */

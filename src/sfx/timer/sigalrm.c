@@ -32,8 +32,14 @@
 #include <sys/time.h>
 #include <signal.h>
 
+#ifdef HAVE_PTHREAD
+#include <pthread.h>
+#define sigprocmask pthread_sigmask
+#endif
+
 static void (*sig_callback)(void *) = NULL;
 static void *sig_callback_data = NULL;
+static sigset_t sigset;
 
 static void
 timer_handler(int i)
@@ -83,6 +89,9 @@ sigalrm_init(void (*callback)(void *), void *data)
 
 	sigalrm_start();
 
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGALRM);
+
 	return SFX_OK;
 }
 
@@ -107,6 +116,31 @@ sigalrm_stop(void)
 	return SFX_OK;
 }
 
+
+static int
+sigalrm_block(void)
+{
+	if (sigprocmask(SIG_BLOCK, &sigset, NULL) != 0) {
+		fprintf(stderr, "Error: Failed to block sigalrm\n");
+		return SFX_ERROR;
+	}
+
+	return SFX_OK;
+}
+
+
+static int
+sigalrm_unblock(void)
+{
+	if (sigprocmask(SIG_UNBLOCK, &sigset, NULL) != 0) {
+		fprintf(stderr, "Error: Failed to unblock sigalrm\n");
+		return SFX_ERROR;
+	}
+
+	return SFX_OK;
+}
+
+
 sfx_timer_t sfx_timer_sigalrm = {
 	"sigalrm",
 	"0.1",
@@ -114,7 +148,9 @@ sfx_timer_t sfx_timer_sigalrm = {
 	0,
 	&sigalrm_set_option,
 	&sigalrm_init,
-	&sigalrm_stop
+	&sigalrm_stop,
+	&sigalrm_block,
+	&sigalrm_unblock
 };
 
 #endif /* HAVE_SETITIMER */

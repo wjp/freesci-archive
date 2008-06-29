@@ -225,6 +225,22 @@ timer_sdl_stop(void)
 	return SFX_OK;
 }
 
+static int
+timer_sdl_block(void)
+{
+	SDL_LockAudio();
+
+	return SFX_OK;
+}
+
+static int
+timer_sdl_unblock(void)
+{
+	SDL_UnlockAudio();
+
+	return SFX_OK;
+}
+
 #define SDL_PCM_VERSION "0.1"
 
 sfx_timer_t pcmout_sdl_timer = {
@@ -234,7 +250,9 @@ sfx_timer_t pcmout_sdl_timer = {
 	0,
 	timer_sdl_set_option,
 	timer_sdl_init,
-	timer_sdl_stop
+	timer_sdl_stop,
+	timer_sdl_block,
+	timer_sdl_unblock
 };
 
 sfx_pcm_device_t sfx_pcm_driver_sdl = {
