@@ -584,7 +584,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 	struct twochannel_data c_old = fs->ch_old;
 	struct twochannel_data c_new = fs->ch_new;
 
-	int frames_read;
+	int frames_read = 0;
 	int frames_left;
 	int write_offset; /* Iterator for translation */
 	int delay_frames = 0; /* Number of frames (dest buffer) at the beginning we skip */
@@ -660,11 +660,13 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 
 	RELEASE_LOCK();
 	/* Make sure we have sufficient information */
-	frames_read =
-		f->poll(f, wr_dest,
-			frames_nr
-			- delay_frames
-			- fs->frame_bufstart);
+	if (frames_nr > delay_frames + fs->frame_bufstart)
+		frames_read =
+			f->poll(f, wr_dest,
+				frames_nr
+				- delay_frames
+				- fs->frame_bufstart);
+
 	ACQUIRE_LOCK();
 	fs = self->feeds + add_result;
 

@@ -1,3 +1,20 @@
+2008-07-02  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/mixer/soft.c (mix_compute_input_linear): Make sure we
+	don't request a negative amount of bytes from a PCM feed.
+
+	* configure.ac: Changed version to 0.6.5-devel.
+	* README: Removed warning.
+	* TODO: Updated.
+
+2008-06-29  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* configure.ac: Check for pthread separately.
+
+	* src/include/sfx_timer.h, src/sfx/pcm_device/alsa.c,
+	src/sfx/pcm_device/sdl.c, src/sfx/timer/sigalrm.c: Added block() and
+	unblock() functions to the timers.
+
 2008-06-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/seq/mt32.c, src/sfx/seq/map-mt32-to-gm.c,
