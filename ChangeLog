@@ -1,3 +1,7 @@
+2008-07-05  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/said.y: Fix handling of parentheses in said specs.
+
 2008-07-02  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/mixer/soft.c (mix_compute_input_linear): Make sure we

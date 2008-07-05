@@ -397,6 +397,26 @@ vocab_lookup_word(char *word, int word_len,
 	return NULL;
 }
 
+int
+vocab_get_said_spec_length(byte *addr)
+{
+	int result = 0;
+
+	while (*addr != 0xff)
+	{
+		if (*addr < 0xf0)
+		{
+			result += 2;
+			addr += 2;
+		} else
+		{
+			result += 1;
+			addr += 1;
+		}
+	}
+
+	return result + 1;
+}
 
 void
 vocab_decypher_said_block(state_t *s, byte *addr)
