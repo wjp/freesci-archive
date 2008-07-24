@@ -420,7 +420,7 @@ sci_mkpath(const char *path);
 int
 sci_fd_size(int fd);
 /* Returns the filesize of an open file
-** Paramaters: (int) fd: File descriptor of open file
+** Parameters: (int) fd: File descriptor of open file
 ** Returns   : (int) filesize of file pointed to by fd, -1 on error
 */ 
 
@@ -433,6 +433,12 @@ sci_file_size(const char *fname);
 
 char *
 _fcaseseek(const char *fname, sci_dir_t *dir);
+/* Returns the case-sensitive filename of a file.
+** Expects *dir to be uninitialized and the caller to free it afterwards.
+** Parameters: (const char *) fname: Name of file to get case-sensitive.
+**             (sci_dir_t *) dir: Directory to find file within.
+** Returns   : (char *) Case-sensitive filename of the file.
+*/
 
 /* Simple heuristic to work around array handling peculiarity in SQ4:
 It uses StrAt() to read the individual elements, so we must determine

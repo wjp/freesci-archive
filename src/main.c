@@ -884,7 +884,7 @@ get_file_directory(char* directory, const char* file)
 	end = directory + strlen(directory) - 1;
 	while ((end >= directory) && (end != 0))
 	{
-		if ( (*end == '\\') || (*end == '/') )
+		if (*end == G_DIR_SEPARATOR)
 		{
 			*end = 0;
 			break;

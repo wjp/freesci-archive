@@ -599,15 +599,19 @@ sci_sched_yield()
 
 char *
 _fcaseseek(const char *fname, sci_dir_t *dir)
-		 /* Expects *dir to be uninitialized and the caller to
-		 ** free it afterwards  */
+/* Expects *dir to be uninitialized and the caller to
+ ** free it afterwards  */
 {
 	char *buf, *iterator;
 	char _buf[14];
 	char *retval = NULL, *name;
 
-	if ((strchr(fname, '/')) || (strchr(fname, '\\'))) {
-		fprintf(stderr, "fcaseopen() does not support subdirs\n");
+#ifdef _MSC_VER
+	return fname;
+#endif
+
+	if (strchr(fname, G_DIR_SEPARATOR)) {
+		fprintf(stderr, "_fcaseseek() does not support subdirs\n");
 		BREAKPOINT();
 	}
 
@@ -666,26 +670,29 @@ sci_open(const char *fname, int flags)
 	sci_dir_t dir;
 	char *name;
 	int file = SCI_INVALID_FD;
-	char *slash = strrchr(fname, G_DIR_SEPARATOR);
+	char *separator_pos;
 	char *path;
-	char *caller_cwd = sci_getcwd();
+	char *caller_cwd;
 
 	sci_init_dir(&dir);
-	if (slash)
+
+	separator_pos = strrchr(fname, G_DIR_SEPARATOR);
+	if (separator_pos)
 	{
-		path = (char *) malloc(slash-fname+1);
-		path[slash-fname] = 0;
-		strncpy(path, fname, slash-fname);
+		path = (char *) malloc(separator_pos-fname+1);
+		path[separator_pos-fname] = 0;
+		strncpy(path, fname, separator_pos-fname);
 		chdir(path);
 		free(path);
 	}
 
-	name = _fcaseseek(slash ? slash + 1 : fname, &dir);
+	name = _fcaseseek(separator_pos ? separator_pos + 1 : fname, &dir);
 	if (name)
 		file = open(name, flags);
 
 	sci_finish_find(&dir); /* Free memory */
 
+	caller_cwd = sci_getcwd();
 	chdir(caller_cwd);
 	free(caller_cwd);
 

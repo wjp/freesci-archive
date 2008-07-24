@@ -447,9 +447,9 @@ scir_add_appropriate_sources(resource_mgr_t *mgr,
 	int fd;
 	char fullname[PATH_MAX];
 
-	if (dir[strlen(dir)-1] != '\\' && dir[strlen(dir)-1] != '/')
+	if (dir[strlen(dir)-1] != G_DIR_SEPARATOR)
 	{
-		trailing_slash = "/"; /* FIXME: Win32? */
+		trailing_slash = G_DIR_SEPARATOR_S;
 	}
 
 	name = (char *)malloc(strlen(dir) + 1 +
