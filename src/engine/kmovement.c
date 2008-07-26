@@ -245,6 +245,66 @@ kInitBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 #define MOVING_ON_X (((axis == _K_BRESEN_AXIS_X)&&bi1) || dx)
 #define MOVING_ON_Y (((axis == _K_BRESEN_AXIS_Y)&&bi1) || dy)
 
+static enum {
+	IGNORE_MOVECNT,
+	INCREMENT_MOVECNT,
+	UNINITIALIZED
+} handle_movecnt = UNINITIALIZED;
+	
+int parse_reg_t(state_t *s, char *str, reg_t *dest); /* In scriptconsole.c */
+
+static int 
+checksum_bytes(byte *data, int size)
+{
+	int result = 0;
+	int i;
+
+	for (i = 0; i < size; i++)
+	{
+		result += *data;
+		data++;
+	}
+
+	return result;
+}
+
+static void
+bresenham_autodetect(state_t *s)
+{
+	reg_t motion_class;
+
+	if (!parse_reg_t(s, "?Motion", &motion_class))
+	{
+		object_t *obj = obj_get(s, motion_class);
+		reg_t fptr;
+		byte *buf;
+		
+		if (obj == NULL)
+		{
+			SCIkwarn(SCIkWARNING,"bresenham_autodetect failed!");
+			handle_movecnt = INCREMENT_MOVECNT; /* Most games do this, so best guess */
+			return;
+		}
+		
+		if (lookup_selector(s, motion_class, s->selector_map.doit, NULL, &fptr) != SELECTOR_METHOD)
+		{
+			SCIkwarn(SCIkWARNING,"bresenham_autodetect failed!");
+			handle_movecnt = INCREMENT_MOVECNT; /* Most games do this, so best guess */
+			return;
+		}
+
+		buf = s->seg_manager.heap[fptr.segment]->data.script.buf + fptr.offset;
+		handle_movecnt = (SCI_VERSION_MAJOR(s->version) == 0 ||
+				  checksum_bytes(buf, 8) == 0x216);
+		sciprintf("b-moveCnt action based on checksum: %s\n", handle_movecnt == IGNORE_MOVECNT ?
+			  "ignore" : "increment");
+	} else
+	{
+		SCIkwarn(SCIkWARNING,"bresenham_autodetect failed!");
+		handle_movecnt = INCREMENT_MOVECNT; /* Most games do this, so best guess */
+	}
+}
+
 reg_t
 kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
@@ -260,6 +320,9 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	if (SCI_VERSION_MAJOR(s->version)>0)
 		signal&=~_K_VIEW_SIG_FLAG_HIT_OBSTACLE;
+
+	if (handle_movecnt == UNINITIALIZED)
+		bresenham_autodetect(s);
 
 	PUT_SEL32(client, signal, make_reg(0, signal)); /* This is a NOP for SCI0 */
 	oldx = x;
@@ -285,12 +348,26 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 
 	PUT_SEL32V(mover, b_di, bdi);
-/*	PUT_SELECTOR(mover, b_movCnt, movcnt - 1); *//* Needed for HQ1/Ogre? */
 
 	x += dx;
 	y += dy;
 
+//	sciprintf("movecnt %d, move speed %d\n", movcnt, max_movcnt);
 
+	if (handle_movecnt)
+	{
+		if (max_movcnt > movcnt)
+		{
+			++movcnt;
+			PUT_SEL32V(mover, b_movCnt, movcnt); /* Needed for HQ1/Ogre? */
+			return NULL_REG;
+		}
+		else
+		{
+			movcnt = 0;
+			PUT_SEL32V(mover, b_movCnt, movcnt); /* Needed for HQ1/Ogre? */
+		}
+	}
  	if ((MOVING_ON_X
 	     && (((x < destx) && (oldx >= destx)) /* Moving left, exceeded? */
 		 ||
@@ -342,12 +419,6 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		SCIkdebug(SCIkBRESEN, "Finished mover "PREG" by collision\n", PRINT_REG(mover));
 		completed = 1;
-	} else {
-		++movcnt;
-		if (movcnt > max_movcnt)
-			movcnt = 0;
-
-		PUT_SEL32V(mover, b_movCnt, movcnt); /* Needed for HQ1/Ogre? */
 	}
 
 	if (SCI_VERSION_MAJOR(s->version)>0)

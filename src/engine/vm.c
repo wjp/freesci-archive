@@ -254,7 +254,7 @@ get_class_address(state_t *s, int classnr, int lock, reg_t caller)
 
 			if (!class->reg.segment) {
 				sciprintf("[VM] Trying to instantiate class %x by instantiating script 0x%x (%03d) failed;"
-					  " switching to baffled mode.\n", classnr, class->script);
+					  " Entering debugger.\n", classnr, class->script);
 				script_error_flag = script_debug_flag = 1;
 				return NULL_REG;
 			}
