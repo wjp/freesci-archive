@@ -338,20 +338,6 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 	bdelta = GET_SEL32SV(mover, b_incr);
 	axis = GET_SEL32SV(mover, b_xAxis);
 
-	if ((bdi += bi1) > 0) {
-		bdi += bi2;
-
-		if (axis == _K_BRESEN_AXIS_X)
-			dx += bdelta;
-		else
-			dy += bdelta;
-	}
-
-	PUT_SEL32V(mover, b_di, bdi);
-
-	x += dx;
-	y += dy;
-
 //	sciprintf("movecnt %d, move speed %d\n", movcnt, max_movcnt);
 
 	if (handle_movecnt)
@@ -368,6 +354,21 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 			PUT_SEL32V(mover, b_movCnt, movcnt); /* Needed for HQ1/Ogre? */
 		}
 	}
+
+	if ((bdi += bi1) > 0) {
+		bdi += bi2;
+
+		if (axis == _K_BRESEN_AXIS_X)
+			dx += bdelta;
+		else
+			dy += bdelta;
+	}
+
+	PUT_SEL32V(mover, b_di, bdi);
+
+	x += dx;
+	y += dy;
+
  	if ((MOVING_ON_X
 	     && (((x < destx) && (oldx >= destx)) /* Moving left, exceeded? */
 		 ||
