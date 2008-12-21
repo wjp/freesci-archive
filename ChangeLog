@@ -1,3 +1,12 @@
+2008-12-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* doc/sci.tex: Added information regarding Amiga SCI1 music (WIP).
+
+2008-12-11  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kmovement.c (kDoBresen): Fixes the 'teleportation'
+	problem of the b-moveCnt patch.
+
 2008-07-26  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kmovement.c: Implement autodetection of b-moveCnt behavior.

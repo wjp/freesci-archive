@@ -3314,6 +3314,76 @@ All instruments have a samplerate of 20000Hz. With pitch changes off, the instru
 
 The Amiga has four audio channels. Channels 0 and 3 are panned hard left and channels 1 and 2 are panned hard right. The first MIDI channel with playmask 0x40 is mapped to channel 0, the second to channel 1, etc. The driver seems to ignore all pan and volume commands.
 
+\subsection{Amiga Sound (SCI1)}
+\label{amigasound1}\hypertarget{amigasound1}{}%
+
+The SCI1 Amiga sound driver adds several features: multiple samples per instrument, variable samplerates and pitch bend support.
+
+The sound bank header contains pointers to the 128 instruments (NULL indicates instrument not used):\\
+\\
+\begin{tabular}{ll}
+{\texttt{{[0000]..[0003]}}}&(uint32) pointer to instrument 0 \\
+{\texttt{{..}}} \\
+{\texttt{{[01fc]..[01ff]}}}&(uint32) pointer to instrument 127 \\
+\end{tabular} \\
+\\
+\noindent Each instrument has samples assigned to ranges of notes:\\
+\\
+\begin{tabular}{ll}
+{\texttt{{[00]..[07]}}}&Instrument name  \\
+{\texttt{{[08][09]}}}&Unused (always 0)  \\
+{\texttt{{[0a]}}}&List of note range data, terminated with 0xff 0xff \\
+\end{tabular} \\
+\\
+\noindent Note range data:\\
+\\
+\begin{tabular}{ll}
+{\texttt{{[00][01]}}}&(int16) Start note number [0-127] \\
+{\texttt{{[02][03]}}}&(int16) End note number (inclusive) [0-127] \\
+{\texttt{{[04]..[07]}}}&(uint32) pointer to sample data \\
+{\texttt{{[08][09]}}}&(int16) Transpose value
+{\texttt{{[0a]}}}&Attack speed [0-31] \\
+{\texttt{{[0b]}}}&Attack target velocity [0-64] \\
+{\texttt{{[0c]}}}&Decay speed [0-31] \\
+{\texttt{{[0d]}}}&Decay target velocity [0-64] \\
+{\texttt{{[0e]}}}&Release speed [0-31] \\
+{\texttt{{[0f]}}}&Unknown (always 0) \\
+{\texttt{{[10][11]}}}&(int16) Fixed note number for this instrument, or -1 \\
+{\texttt{{[12][13]}}}&(int16) $0$ = looping on, $<> 0$ = looping off \\
+\end{tabular} \\
+\\
+\noindent The transpose value is linear. A value of 0x10 transposes a note to the next higher note, but all other transpositions are based on the difference in frequency between these two notes. As a result, a value of 0x20 will \emph{not} transpose a note by two, but fall slightly short of that.\\
+\\
+\noindent Sample data header (phase 2 is used for looping):\\
+\\
+\begin{tabular}{ll}
+{\texttt{{[00]..[07]}}}&Sample name  \\
+{\texttt{{[08][09]}}}&(int16) $0$ = unsigned samples, $<> 0$ = signed samples \\
+{\texttt{{[0a][0b]}}}&(int16) Start offset of phase 1 \\
+{\texttt{{[0c][0d]}}}&(int16) End offset (inclusive) of phase 1 \\
+{\texttt{{[0e][0f]}}}&(int16) Start offset of phase 2 \\
+{\texttt{{[10][11]}}}&(int16) End offset (inclusive) of phase 2 \\
+{\texttt{{[12][13]}}}&(int16) Native MIDI note for this sample \\
+{\texttt{{[14][17]}}}&(uint32) Pointer to period table \\
+\end{tabular} \\
+
+The Amiga sound system uses period lengths to determine the sample rate. A period length is the amount of CPU ticks that a single byte should take. For NTSC Amiga machines, samplerate relates to period length as follows: samplerate = 3579545 / period length.
+
+A period table contains period lengths for an entire octave. To simplify the implementation of the transpose value, the table contains two additional semitones, one before the first semitone of the octave and one after the last. Additionally, in order to support pitch bends the table contains 3 additional entries after every semitone at 25 cent intervals (100 cents equal 1 semitone), resulting in 56 entries total. This table contains period lengths for the lowest octave. Dividing a period length by two transposes a note to the next octave.\\
+\\
+\begin{tabular}{ll}
+{\texttt{{[0000]..[0003]}}}&(uint32) period for cent 0 \\
+{\texttt{{[0004]..[0007]}}}&(uint32) period for cent 25 \\
+{\texttt{{[0008]..[000b]}}}&(uint32) period for cent 50 \\
+{\texttt{{[000c]..[000f]}}}&(uint32) period for cent 75 \\
+{\texttt{{[0010]..[0013]}}}&(uint32) period for cent 100 (octave starts here) \\
+{\texttt{{..}}} \\
+{\texttt{{[00dc]..[00df]}}}&(uint32) period for cent 1375 \\
+{\texttt{{[00e0]..[00e3]}}}&(uint16) samplerate in Hz used to generate the table (not used by SSCI) \\
+\end{tabular} \\
+
+MIDI notes are not used directly when doing table lookups. Every sample has a native MIDI note that needs to be taken as a base. If the sample is played back at the native MIDI note, the period length is obtained from the 8th semitone in the table (cent 800) at the 11th octave, i.e. the value at offset 0x0080 in the table, divided by two 10 times. This period length will also correspond to the samplerate at the end of the table.
+
 \subsection{General MIDI and MT-32 (SCI1)}
 \label{genmidi}\hypertarget{genmidi}{}%
 
