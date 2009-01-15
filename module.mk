@@ -93,7 +93,7 @@ MODULE_OBJS = \
 	src/sfx/timer/scummvm.o \
 	src/sfx/timer/timers.o
 
-CPPFLAGS+=-DSCUMMVM -Iengines/sci/src/include
+CPPFLAGS+=-DSCUMMVM -I$(srcdir)/engines/sci/src/include
 
 # Build .c files as C++
 %.o: %.c
