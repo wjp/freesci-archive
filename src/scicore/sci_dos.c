@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <sci_dos.h>
+#include <string.h>
 
 #define G_VA_COPY(ap1, ap2)     ((ap1) = (ap2))
 

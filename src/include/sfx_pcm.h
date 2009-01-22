@@ -31,7 +31,7 @@
 #include <sfx_core.h>
 #include <sfx_timer.h>
 #include <sfx_time.h>
-
+#include <scitypes.h>
 
 /* A number of standard options most devices will support */
 #define SFX_PCM_OPTION_RATE "rate"            /* Sampling rate: Number of samples per second */

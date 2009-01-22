@@ -34,10 +34,6 @@
 #include <gc.h>
 #include <sfx_player.h>
 
-#if !defined (_WIN32)
-#include <sys/resource.h>
-#endif
-
 #ifdef HAVE_SETJMP_H
 #include <setjmp.h>
 #endif

@@ -31,6 +31,7 @@
 
 #include <sys/time.h>
 #include <signal.h>
+#include <stdio.h>
 
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
@@ -39,7 +40,7 @@
 
 static void (*sig_callback)(void *) = NULL;
 static void *sig_callback_data = NULL;
-static sigset_t sigset;
+static sigset_t current_sigset;
 
 static void
 timer_handler(int i)
@@ -89,8 +90,8 @@ sigalrm_init(void (*callback)(void *), void *data)
 
 	sigalrm_start();
 
-	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGALRM);
+	sigemptyset(&current_sigset);
+	sigaddset(&current_sigset, SIGALRM);
 
 	return SFX_OK;
 }
@@ -120,7 +121,7 @@ sigalrm_stop(void)
 static int
 sigalrm_block(void)
 {
-	if (sigprocmask(SIG_BLOCK, &sigset, NULL) != 0) {
+	if (sigprocmask(SIG_BLOCK, &current_sigset, NULL) != 0) {
 		fprintf(stderr, "Error: Failed to block sigalrm\n");
 		return SFX_ERROR;
 	}
@@ -132,7 +133,7 @@ sigalrm_block(void)
 static int
 sigalrm_unblock(void)
 {
-	if (sigprocmask(SIG_UNBLOCK, &sigset, NULL) != 0) {
+	if (sigprocmask(SIG_UNBLOCK, &current_sigset, NULL) != 0) {
 		fprintf(stderr, "Error: Failed to unblock sigalrm\n");
 		return SFX_ERROR;
 	}

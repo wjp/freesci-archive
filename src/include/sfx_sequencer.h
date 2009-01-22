@@ -29,6 +29,7 @@
 #include <sfx_core.h>
 #include <stdio.h>
 #include <sfx_device.h>
+#include <scitypes.h>
 
 #define SFX_SEQ_PATCHFILE_NONE -1
 

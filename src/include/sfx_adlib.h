@@ -23,10 +23,6 @@
 #ifndef _SFX_ADLIB_H_
 #define _SFX_ADLIB_H_
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif /* HAVE_CONFIG_H */
-
 #include <resource.h>
 
 

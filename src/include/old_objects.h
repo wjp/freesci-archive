@@ -2,6 +2,7 @@
 #define OLD_OBJECTS_H
 
 #include <sciresource.h>
+#include <util.h>
 
 #ifdef __cplusplus
 #  define new new_

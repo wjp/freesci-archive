@@ -28,7 +28,6 @@
 #ifndef _SCI_DOS_H_
 #define _SCI_DOS_H_
 
-#include <time.h>
 #include <stdarg.h>
 
 #ifndef HAVE_DIRENT_H
@@ -56,8 +55,6 @@ typedef unsigned long gulong;
 typedef gint gboolean;
 
 typedef void* gpointer;
-
-typedef struct timeval GTimeVal;
 
 #define g_new0(type, count) ((type*)g_malloc0((unsigned)sizeof(type) * (count)))
 #define g_new(type, count) ((type*)sci_malloc((unsigned)sizeof(type) * (count)))

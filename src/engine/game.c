@@ -43,12 +43,7 @@
 #include <engine.h>
 #include <versions.h>
 #include <kernel.h>
-#include <kdebug.h>
 #include <kernel_types.h>
-
-#if !defined (_WIN32)
-#include <sys/resource.h>
-#endif
 
 /* Structures and data from vm.c: */
 extern calls_struct_t *send_calls;

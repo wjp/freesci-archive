@@ -34,7 +34,6 @@
 #include <sciresource.h>
 #include <script.h>
 #include <vocabulary.h>
-#include <uinput.h>
 #include <console.h>
 #include <vm.h>
 #include <menubar.h>

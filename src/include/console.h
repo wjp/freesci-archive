@@ -45,7 +45,6 @@
 #include <sci_dos.h>
 #endif
 
-#include <uinput.h>
 #define SCI_CONSOLE
 #include <gfx_operations.h>
 

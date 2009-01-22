@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+#include <gc.h>
 #include <sciresource.h>
 #include <engine.h>
 #ifdef _WIN32
@@ -33,7 +34,6 @@
 
 #include <gfx_operations.h>
 #include <kernel_types.h>
-#include <gc.h>
 
 
 /* New kernel functions */

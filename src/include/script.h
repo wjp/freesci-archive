@@ -21,7 +21,6 @@
 #define SCRIPT_H
 
 #include <sciresource.h>
-#include <util.h>
 
 /*#define SCRIPT_DEBUG */
 

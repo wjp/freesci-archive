@@ -25,16 +25,17 @@
 ***************************************************************************/
 /* Script debugger functionality. Absolutely not threadsafe. */
 
+#include <gc.h>
 #include <sciresource.h>
 #include <engine.h>
 #include <console.h>
 #include <kdebug.h>
 #include <vocabulary.h>
-#include <kernel_compat.h>
 #include <kernel_types.h>
-#include <gc.h>
 #include <sci_midi.h>
 #include <sci_widgets.h>
+#include <reg_t_hashmap.h>
+
 #ifdef _WIN32
 #	include <win32/sci_win32.h>
 #	include <windows.h>
@@ -1656,7 +1657,7 @@ c_vmvarlist(state_t *s)
 int
 c_vmvars(state_t *s)
 {
-	char *vartype_pre = strchr(varabbrev, *cmd_params[0].str);
+	const char *vartype_pre = strchr(varabbrev, *cmd_params[0].str);
 	int vartype;
 	int idx = cmd_params[1].val;
 

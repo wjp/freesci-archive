@@ -29,6 +29,7 @@
 #include <engine.h>
 #include <kernel_compat.h>
 #include <kernel_types.h>
+#include <heap.h>
 
 #define EMU_HEAP_START_ADDR 1000
 

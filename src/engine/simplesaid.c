@@ -26,12 +26,10 @@
 ***************************************************************************/
 
 
+#ifdef SCI_SIMPLE_SAID_CODE
+
 #include <engine.h>
 #include <kdebug.h>
-
-
-
-#ifdef SCI_SIMPLE_SAID_CODE
 
 static int current_pword;
 static int said_pos;

@@ -70,7 +70,6 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include <errno.h>
 #include <resource.h>
 
 #ifdef _WIN32

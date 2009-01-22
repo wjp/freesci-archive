@@ -439,8 +439,8 @@ sci_finish_find(sci_dir_t *dir)
 int
 sci_mkpath(const char *path)
 {
-	const char *path_pos = path;
-        char *nextsep = NULL;
+	const char *path_position = path;
+        char *next_separator = NULL;
 
         if (chdir(G_DIR_SEPARATOR_S)) { /* Go to root */
                 sciprintf("Error: Could not change to root directory '%s'!\n",
@@ -449,28 +449,28 @@ sci_mkpath(const char *path)
         }
 
         do {
-                if (nextsep)
-                        *nextsep = G_DIR_SEPARATOR_S[0];
-                nextsep = strchr(path_pos, G_DIR_SEPARATOR_S[0]);
+                if (next_separator)
+                        *next_separator = G_DIR_SEPARATOR_S[0];
+                next_separator = (char *)strchr(path_position, G_DIR_SEPARATOR_S[0]);
 
-                if (nextsep)
-                        *nextsep = 0;
+                if (next_separator)
+                        *next_separator = 0;
 
-		if (*path_pos) { /* Unless we're at the first slash... */
-			if (chdir(path_pos)) {
-				if (scimkdir(path_pos, 0700) || chdir(path_pos)) {
+		if (*path_position) { /* Unless we're at the first slash... */
+			if (chdir(path_position)) {
+				if (scimkdir(path_position, 0700) || chdir(path_position)) {
 					sciprintf("Error: Could not create subdirectory '%s' in",
-						  path_pos);
-					if (nextsep)
-						*nextsep = G_DIR_SEPARATOR_S[0];
+						  path_position);
+					if (next_separator)
+						*next_separator = G_DIR_SEPARATOR_S[0];
 					sciprintf(" '%s'!\n", path);
 					return -2;
 				}
 			}
 		}
-		path_pos = nextsep + 1;
+		path_position = next_separator + 1;
 
-        } while (nextsep);
+        } while (next_separator);
 
         return 0;
 }
@@ -670,23 +670,23 @@ sci_open(const char *fname, int flags)
 	sci_dir_t dir;
 	char *name;
 	int file = SCI_INVALID_FD;
-	char *separator_pos;
+	char *separator_position;
 	char *path;
 	char *caller_cwd;
 
 	sci_init_dir(&dir);
 
-	separator_pos = strrchr(fname, G_DIR_SEPARATOR);
-	if (separator_pos)
+	separator_position = (char *)strrchr(fname, G_DIR_SEPARATOR);
+	if (separator_position)
 	{
-		path = (char *) malloc(separator_pos-fname+1);
-		path[separator_pos-fname] = 0;
-		strncpy(path, fname, separator_pos-fname);
+		path = (char *) malloc(separator_position-fname+1);
+		path[separator_position-fname] = 0;
+		strncpy(path, fname, separator_position-fname);
 		chdir(path);
 		free(path);
 	}
 
-	name = _fcaseseek(separator_pos ? separator_pos + 1 : fname, &dir);
+	name = _fcaseseek(separator_position ? separator_position + 1 : fname, &dir);
 	if (name)
 		file = open(name, flags);
 

@@ -31,10 +31,6 @@
 #  include <windows.h>
 #endif
 
-#ifdef HAVE_SYS_TIME_H
-#  include <sys/time.h>
-#endif
-
 #ifdef __BEOS__
 #  include <be/kernel/OS.h>
 #endif

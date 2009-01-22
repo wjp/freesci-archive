@@ -28,8 +28,6 @@
 #ifndef _SCI_EXE_DEC_H_
 #define _SCI_EXE_DEC_H_
 
-#include <exe.h>
-
 typedef struct _exe_handle exe_handle_t;
 
 typedef struct _exe_decompressor {
