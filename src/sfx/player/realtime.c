@@ -159,7 +159,7 @@ rt_timer_callback(void)
 }
 
 static resource_t *
-find_patch(resource_mgr_t *resmgr, char *seq, int patchfile)
+find_patch(resource_mgr_t *resmgr, const char *seq, int patchfile)
 {
 	resource_t *res = NULL;
 

@@ -295,7 +295,7 @@ bresenham_autodetect(state_t *s)
 
 		buf = s->seg_manager.heap[fptr.segment]->data.script.buf + fptr.offset;
 		handle_movecnt = (SCI_VERSION_MAJOR(s->version) == 0 ||
-				  checksum_bytes(buf, 8) == 0x216);
+				  checksum_bytes(buf, 8) == 0x216) ? INCREMENT_MOVECNT : IGNORE_MOVECNT;
 		sciprintf("b-moveCnt action based on checksum: %s\n", handle_movecnt == IGNORE_MOVECNT ?
 			  "ignore" : "increment");
 	} else

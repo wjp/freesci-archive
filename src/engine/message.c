@@ -50,7 +50,7 @@ static
 void index_record_get_text_2101(index_record_cursor_t *cursor, char *buffer, int buffer_size)
 {
 	int offset = getUInt16(cursor->index_record + 2);
-	char *stringptr = cursor->resource_beginning + offset;
+	char *stringptr = (char *)cursor->resource_beginning + offset;
 	
 	strncpy(buffer, stringptr, buffer_size);
 }
@@ -87,7 +87,7 @@ static
 void index_record_get_text_3411(index_record_cursor_t *cursor, char *buffer, int buffer_size)
 {
 	int offset = getUInt16(cursor->index_record + 5);
-	char *stringptr = cursor->resource_beginning + offset;
+	char *stringptr = (char *)cursor->resource_beginning + offset;
 	
 	strncpy(buffer, stringptr, buffer_size);
 }
