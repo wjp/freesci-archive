@@ -33,7 +33,7 @@ struct _exe_handle
 	FILE *f;
 };
 
-#include <exe_dec.h>
+#include "exe_dec.h"
 
 static exe_handle_t *
 raw_open(const char *filename)

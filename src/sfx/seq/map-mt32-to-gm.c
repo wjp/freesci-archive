@@ -33,7 +33,7 @@
 #include <sciresource.h>
 #include <engine.h>
 #include <stdarg.h>
-#include <sfx-instrument-map.h>
+#include "instrument-map.h"
 
 #define DEBUG_MT32_TO_GM
 

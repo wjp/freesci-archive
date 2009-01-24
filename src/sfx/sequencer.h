@@ -28,7 +28,7 @@
 #endif /* HAVE_CONFIG_H */
 #include <sfx_core.h>
 #include <stdio.h>
-#include <sfx_device.h>
+#include "device.h"
 #include <scitypes.h>
 
 #define SFX_SEQ_PATCHFILE_NONE -1

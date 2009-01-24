@@ -54,7 +54,7 @@ TODO:
 #error NOTE: This file MUST be compiled as C++. In Visual C++, use the /Tp command line option.
 #endif
 
-#include <graphics_directx.h>
+#include "dx_driver.h"
 
 #define TO_STRING2(x) #x
 #define TO_STRING(x) TO_STRING2(x)

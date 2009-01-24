@@ -29,9 +29,9 @@
 #include <engine.h>
 #include <versions.h>
 #include <kdebug.h>
-#include <kernel_types.h>
+#include "kernel_types.h"
 #include <seg_manager.h>
-#include <gc.h>
+#include "gc.h"
 #include <sfx_player.h>
 
 #ifdef HAVE_SETJMP_H

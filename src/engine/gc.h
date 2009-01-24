@@ -22,7 +22,6 @@
 #ifndef GC_H_
 #define GC_H_
 
-#include <seg_manager.h>
 #include <reg_t_hashmap.h>
 #include <engine.h>
 

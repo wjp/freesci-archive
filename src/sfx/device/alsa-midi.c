@@ -26,7 +26,7 @@
 ***************************************************************************/
 
 #include <sfx_engine.h>
-#include <sfx_device.h>
+#include "../device.h"
 #ifdef HAVE_ALSA
 
 #include <alsa/asoundlib.h>

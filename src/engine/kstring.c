@@ -28,7 +28,7 @@
 
 #include <sciresource.h>
 #include <engine.h>
-#include <message.h>
+#include "message.h"
 
 #define CHECK_OVERFLOW1(pt, size, rv) \
 	if (((pt) - (str_base)) + (size) > maxsize) { \

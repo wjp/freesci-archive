@@ -58,7 +58,7 @@
 
 #ifdef DRAW_GRAPHICS
 #  ifdef HAVE_LIBPNG
-#    include <graphics_png.h>
+#    include "graphics_png.h"
 #  endif /* HAVE_LIBPNG */
 #endif /* DRAW_GRAPHICS */
 

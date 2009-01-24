@@ -25,7 +25,7 @@
 
 ***************************************************************************/
 
-#include <sfx_audiobuf.h>
+#include "audiobuf.h"
 
 #define NO_BUFFER_UNDERRUN		0
 #define SAW_BUFFER_UNDERRUN		1

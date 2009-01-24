@@ -25,7 +25,7 @@
 
 ***************************************************************************/
 
-#include <sfx_mixer.h>
+#include "../mixer.h"
 #include <sci_memory.h>
 
 /* Max. number of microseconds in difference allowed between independent audio streams */

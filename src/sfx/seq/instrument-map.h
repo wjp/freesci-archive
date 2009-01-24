@@ -32,7 +32,7 @@
 
 #include <stdlib.h>
 #include "resource.h"
-#include "sfx_device.h"
+#include "../device.h"
 
 #define SFX_INSTRUMENTS_NR	0x80
 #define SFX_RHYTHM_NR		0x80

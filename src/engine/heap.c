@@ -4,7 +4,7 @@
 
 #include <engine.h>
 #include <console.h>
-#include <heap.h>
+#include "heap.h"
 
 #define assert_in_range(pos) assert(pos>=1000 && pos<=0xffff)
 

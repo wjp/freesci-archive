@@ -30,7 +30,7 @@
 #include <sfx_timer.h>
 #include <sfx_iterator_internal.h>
 #include <sfx_player.h>
-#include <sfx_mixer.h>
+#include "mixer.h"
 #include <sci_midi.h>
 
 

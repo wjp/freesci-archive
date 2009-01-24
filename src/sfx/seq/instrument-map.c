@@ -28,7 +28,7 @@
 #include <assert.h>
 #include "sci_midi.h"
 #include "sci_memory.h"
-#include "sfx-instrument-map.h"
+#include "instrument-map.h"
 #include "sfx_engine.h"
 
 sfx_instrument_map_t *

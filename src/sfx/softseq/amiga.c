@@ -29,7 +29,7 @@
 
 #include "resource.h"
 #include "sci_memory.h"
-#include "sfx_softseq.h"
+#include "../softseq.h"
 
 #define FREQUENCY 44100
 #define CHANNELS_NR 10

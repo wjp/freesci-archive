@@ -25,13 +25,13 @@
 ***************************************************************************/
 /* Script debugger functionality. Absolutely not threadsafe. */
 
-#include <gc.h>
+#include "gc.h"
 #include <sciresource.h>
 #include <engine.h>
 #include <console.h>
 #include <kdebug.h>
 #include <vocabulary.h>
-#include <kernel_types.h>
+#include "kernel_types.h"
 #include <sci_midi.h>
 #include <sci_widgets.h>
 #include <reg_t_hashmap.h>

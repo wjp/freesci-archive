@@ -27,8 +27,8 @@
 /* Polled player, mostly for PCM-based thingies (which _can_ poll, after all) */
 
 #include <sfx_player.h>
-#include <sfx_softseq.h>
-#include <sfx_mixer.h>
+#include "../softseq.h"
+#include "../mixer.h"
 
 static song_iterator_t *play_it;
 static int play_paused = 0;

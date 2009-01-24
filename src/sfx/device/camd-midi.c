@@ -31,7 +31,7 @@
 #ifdef HAVE_PROTO_CAMD_H
 
 #include "sfx_engine.h"
-#include "sfx_device.h"
+#include "../device.h"
 
 #include <proto/camd.h>
 #include <proto/dos.h>

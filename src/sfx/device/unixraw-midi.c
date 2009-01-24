@@ -26,7 +26,7 @@
 ***************************************************************************/
 
 #include <sfx_engine.h>
-#include <sfx_device.h>
+#include "../device.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

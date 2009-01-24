@@ -43,7 +43,7 @@
 #include <engine.h>
 #include <versions.h>
 #include <kernel.h>
-#include <kernel_types.h>
+#include "kernel_types.h"
 
 /* Structures and data from vm.c: */
 extern calls_struct_t *send_calls;

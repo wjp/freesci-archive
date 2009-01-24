@@ -31,7 +31,7 @@
 #  include <config.h>
 #endif
 
-#include <sfx_softseq.h>
+#include "../softseq.h"
 
 extern sfx_softseq_t sfx_softseq_opl2;
 extern sfx_softseq_t sfx_softseq_SN76496;

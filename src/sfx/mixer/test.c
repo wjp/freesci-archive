@@ -27,7 +27,7 @@
 /* Mixer inspection/test program */
 
 
-#include <sfx_mixer.h>
+#include "../mixer.h"
 #include <time.h>
 
 #if 0

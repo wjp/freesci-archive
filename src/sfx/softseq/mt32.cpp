@@ -26,9 +26,9 @@
 ***************************************************************************/
 
 extern "C" {
-#include "sfx_softseq.h"
-#include "sfx_sequencer.h"
-#include "sfx_device.h"
+#include "../softseq.h"
+#include "../sequencer.h"
+#include "../device.h"
 #include "resource.h"
 #include "sci_memory.h"
 }

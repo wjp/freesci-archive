@@ -19,7 +19,7 @@
 ***************************************************************************/
 
 #include <sfx_pcm.h>
-#include <sfx_audiobuf.h>
+#include "audiobuf.h"
 
 #ifdef HAVE_SDL
 

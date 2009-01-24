@@ -27,7 +27,7 @@
 
 ***************************************************************************/
 
-#include <sfx_audiobuf.h>
+#include "audiobuf.h"
 #if 0
 sfx_audio_buf_t buf;
 

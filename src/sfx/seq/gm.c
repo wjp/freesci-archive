@@ -32,9 +32,9 @@
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
-#include <sfx_sequencer.h>
-#include <sfx_device.h>
-#include <sfx-instrument-map.h>
+#include "../sequencer.h"
+#include "../device.h"
+#include "instrument-map.h"
 #include <resource.h>
 
 static midi_writer_t *writer = NULL;

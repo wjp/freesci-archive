@@ -17,7 +17,7 @@
 
 ***************************************************************************/
 
-#include <sfx_adlib.h>
+#include "adlib.h"
 
 adlib_instr adlib_sbi[96];
 

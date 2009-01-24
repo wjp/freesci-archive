@@ -25,7 +25,7 @@
 
 ***************************************************************************/
 
-#include <sfx_sequencer.h>
+#include "../sequencer.h"
 #include <resource.h>
 
 #ifndef SCUMMVM

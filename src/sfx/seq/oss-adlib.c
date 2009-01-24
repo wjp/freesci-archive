@@ -21,11 +21,11 @@
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
-#include <sfx_sequencer.h>
+#include "../sequencer.h"
 
 #ifdef HAVE_SYS_SOUNDCARD_H
 
-#include <sfx_adlib.h>
+#include "../adlib.h"
 
 #include <sys/ioctl.h>
 #include <sys/time.h>

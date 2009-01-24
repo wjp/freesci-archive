@@ -18,11 +18,7 @@
 
 ***************************************************************************/
 
-#include <gc.h>
-#include <vm_types.h>
-#include <reg_t_hashmap.h>
-#include <seg_manager.h>
-#include <engine.h>
+#include "gc.h"
 
 #define WORKLIST_CHUNK_SIZE 32
 

@@ -28,7 +28,7 @@
 ***************************************************************************/
 /* PC speaker software sequencer for FreeSCI */
 
-#include <sfx_softseq.h>
+#include "../softseq.h"
 #include <sci_midi.h>
 
 #define FREQUENCY 94020

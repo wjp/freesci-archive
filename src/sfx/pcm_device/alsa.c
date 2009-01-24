@@ -28,7 +28,7 @@
 /* Based on ALSA's pcm.c example. */
 
 #include <sfx_pcm.h>
-#include <sfx_audiobuf.h>
+#include "audiobuf.h"
 
 #ifdef HAVE_ALSA
 #ifdef HAVE_PTHREAD

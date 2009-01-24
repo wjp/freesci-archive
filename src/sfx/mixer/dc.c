@@ -25,7 +25,7 @@
 
 ***************************************************************************/
 
-#include <sfx_mixer.h>
+#include "../mixer.h"
 #include <sci_memory.h>
 #include <dc/sound/sound.h>
 #include <stream.h>

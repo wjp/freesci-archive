@@ -41,7 +41,6 @@
 #include <versions.h>
 #include <kernel.h>
 #include <gfx_state_internal.h>
-#include <seg_manager.h>
 #include <sfx_engine.h>
 
 #define FREESCI_CURRENT_SAVEGAME_VERSION 7

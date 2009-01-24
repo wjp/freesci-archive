@@ -32,7 +32,7 @@
 
 #include <sfx_core.h>
 #include <sfx_pcm.h>
-#include <sfx_sequencer.h>
+#include "sequencer.h"
 #include <resource.h>
 
 

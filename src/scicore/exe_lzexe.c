@@ -29,7 +29,7 @@
 
 #include <stdio.h>
 #include <sci_memory.h>
-#include <exe_dec.h>
+#include "exe_dec.h"
 
 /* Macro to interpret two sequential bytes as an unsigned integer. */
 #define UINT16(A) ((*((A) + 1) << 8) + *(A))

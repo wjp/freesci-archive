@@ -589,19 +589,19 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 				RelativePath="..\..\..\include\event.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\exe.h">
+				RelativePath="..\..\..\scicore\exe.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\exe_dec.h">
+				RelativePath="..\..\..\scicore\exe_dec.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\game_select.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\games.h">
+				RelativePath="..\..\..\scicore\games.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\gc.h">
+				RelativePath="..\..\..\engine\gc.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\gfx_driver.h">
@@ -634,13 +634,13 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 				RelativePath="..\..\..\include\gfx_widgets.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\graphics_directx.h">
+				RelativePath="..\..\..\gfx\drivers\dx_driver.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\hashmap.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\heap.h">
+				RelativePath="..\..\..\engine\heap.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\heapmgr.h">
@@ -655,10 +655,10 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 				RelativePath="..\..\..\include\kernel.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\kernel_compat.h">
+				RelativePath="..\..\..\engine\kernel_compat.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\kernel_types.h">
+				RelativePath="..\..\..\engine\kernel_types.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\list.h">
@@ -688,7 +688,7 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 				RelativePath="..\..\..\include\sci_conf.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\sci_graphics.h">
+				RelativePath="..\..\..\engine\sci_graphics.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\sci_memory.h">
@@ -712,20 +712,20 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 				RelativePath="..\..\..\include\seg_manager.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\sfx-instrument-map.h"
+				RelativePath="..\..\..\sfx\seq\instrument-map.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\sfx_adlib.h">
+				RelativePath="..\..\..\sfx\adlib.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\sfx_audiobuf.h">
+				RelativePath="..\..\..\sfx\pcm_device\audiobuf.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\sfx_core.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\sfx_device.h">
+				RelativePath="..\..\..\sfx\device.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\sfx_engine.h">
@@ -737,7 +737,7 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 				RelativePath="..\..\..\include\sfx_iterator_internal.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\sfx_mixer.h">
+				RelativePath="..\..\..\sfx\mixer.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\sfx_pcm.h">
@@ -746,10 +746,10 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 				RelativePath="..\..\..\include\sfx_player.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\sfx_sequencer.h">
+				RelativePath="..\..\..\sfx\sequencer.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\sfx_softseq.h">
+				RelativePath="..\..\..\sfx\softseq.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\sfx_songlib.h">

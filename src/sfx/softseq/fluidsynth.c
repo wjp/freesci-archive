@@ -32,9 +32,9 @@
 
 #include <fluidsynth.h>
 
-#include "sfx_softseq.h"
-#include "sfx_sequencer.h"
-#include "sfx_device.h"
+#include "../softseq.h"
+#include "../sequencer.h"
+#include "../device.h"
 #include "resource.h"
 
 static sfx_sequencer_t *gmseq;

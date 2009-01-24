@@ -28,7 +28,7 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-#include <sfx_device.h>
+#include "../device.h"
 #include <stdio.h>
 
 #ifndef SCUMMVM

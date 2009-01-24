@@ -35,7 +35,7 @@
 #include <sfx_engine.h>
 #include <engine.h>
 #include <assert.h>
-#include <heap.h>
+#include "heap.h"
 
 #ifdef _MSC_VER
 #include <direct.h>

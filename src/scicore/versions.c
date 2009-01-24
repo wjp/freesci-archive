@@ -23,8 +23,8 @@
 #include <engine.h>
 #include <resource.h>
 #include <ctype.h>
-#include <games.h>
-#include <exe.h>
+#include "games.h"
+#include "exe.h"
 
 /* Maxmimum number of bytes to hash from start of file */
 #define VERSION_DETECT_HASH_SIZE 1000000

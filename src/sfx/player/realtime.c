@@ -29,7 +29,7 @@
 ** enough, I guess.  */
 
 #include <sfx_player.h>
-#include <sfx_sequencer.h>
+#include "../sequencer.h"
 
 static sfx_sequencer_t *seq;
 
