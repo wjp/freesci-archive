@@ -30,7 +30,6 @@
 #include <gfx_widgets.h>
 #include <gfx_resmgr.h>
 #include <gfx_options.h>
-#include <gfx_sci.h>
 
 int
 gfxr_interpreter_options_hash(gfx_resource_type_t type, int version,

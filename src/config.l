@@ -27,8 +27,6 @@
 
 %{
 #include <engine.h>
-#include <gfx_system.h>
-#include <gfx_tools.h>
 #include <gfx_resource.h>
 #include <sci_conf.h>
 #include <stddef.h>

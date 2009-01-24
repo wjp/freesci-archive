@@ -796,10 +796,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\gfx_drivers_list.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\include\gfx_operations.h"
 				>
 			</File>
@@ -817,14 +813,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\include\gfx_resource.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\gfx_sci.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\gfx_state.h"
 				>
 			</File>
 			<File
@@ -889,14 +877,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\include\menubar.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\midi_device.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\midiout.h"
 				>
 			</File>
 			<File

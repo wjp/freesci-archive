@@ -607,9 +607,6 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 				RelativePath="..\..\..\include\gfx_driver.h">
 			</File>
 			<File
-				RelativePath="..\..\..\include\gfx_drivers_list.h">
-			</File>
-			<File
 				RelativePath="..\..\..\include\gfx_operations.h">
 			</File>
 			<File
@@ -623,12 +620,6 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 			</File>
 			<File
 				RelativePath="..\..\..\include\gfx_resource.h">
-			</File>
-			<File
-				RelativePath="..\..\..\include\gfx_sci.h">
-			</File>
-			<File
-				RelativePath="..\..\..\include\gfx_state.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\gfx_state_internal.h">
@@ -677,12 +668,6 @@ copy /y $(SolutionDir)..\..\..\..\SDL\lib\sdl.dll $(OutDir)\
 			</File>
 			<File
 				RelativePath="..\..\..\include\menubar.h">
-			</File>
-			<File
-				RelativePath="..\..\..\include\midi_device.h">
-			</File>
-			<File
-				RelativePath="..\..\..\include\midiout.h">
 			</File>
 			<File
 				RelativePath="..\..\..\include\modules.h">
